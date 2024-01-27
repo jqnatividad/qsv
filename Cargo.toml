@@ -120,6 +120,7 @@ indicatif = "0.17"
 itertools = "0.12"
 itoa = "1"
 jemallocator = { version = "0.5", optional = true }
+jsonpath_lib = { version = "0.3", optional = true }
 jsonschema = { version = "0.17", features = [
     "resolve-file",
     "resolve-http",
@@ -136,7 +137,7 @@ mlua = { version = "0.9", features = [
 num_cpus = "1"
 odht = "0.3"
 phf = { version = "0.11", features = ["macros"], optional = true }
-polars = { version = "0.36", features = [
+polars = { version = "0.37", features = [
     "lazy",
     "streaming",
     "object",
@@ -144,12 +145,13 @@ polars = { version = "0.36", features = [
     "cross_join",
     "semi_anti_join",
     "sql",
+    "extract_jsonpath",
+    "binary_encoding",
     "json",
     "parquet",
     "ipc",
     "performant",
     "cse",
-    "horizontal_concat",
     "avro",
 ], optional = true }
 pyo3 = { version = "0.20", features = ["auto-initialize"], optional = true }
@@ -233,10 +235,15 @@ rusqlite = { version = "0.29", features = ["bundled"] }
 serial_test = { version = "3.0", features = ["file_locks"] }
 
 [patch.crates-io]
+# needed as dynfmt doesn't work in release mode without this
 dynfmt    = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
+# needed to get latest dependencies. Even though dependabot PRs are merged, but there are no new releases
 grex      = { git = "https://github.com/pemistahl/grex", rev = "8f6b35cee5f911311c2e0ef6e56f333e4c896112" }
+# needed to get rid of old hashbrown dependency
 halfbrown = { git = "https://github.com/licenser/halfbrown", rev = "7cecc29422ae2775abe35a2e430f1678b4f1aa76" }
 gender_guesser = { git = "https://github.com/jqnatividad/gender_guesser", branch = "bundle_namdict_txt"}
+# needed for polars 0.37
+jsonpath_lib = { git = "https://github.com/ritchie46/jsonpath", branch = "improve_compiled" }
 
 [features]
 default = ["mimalloc"]
@@ -294,7 +301,7 @@ to = ["csvs_convert"]
 to_parquet = ["csvs_convert/parquet"]
 lite = []
 datapusher_plus = ["self_update"]
-polars = ["dep:polars", "smartstring"]
+polars = ["dep:polars", "smartstring", "jsonpath_lib"]
 feature_capable = []
 nightly = [
     "regex/unstable",
