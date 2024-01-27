@@ -1925,6 +1925,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "gender_guesser"
+version = "0.2.0"
+source = "git+https://github.com/jqnatividad/gender_guesser?branch=bundle_namdict_txt#bbd8c88601607c4e66493664fd584f8e33b7d841"
+
+[[package]]
 name = "generator"
 version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4019,6 +4024,7 @@ dependencies = [
  "flexi_logger",
  "futures",
  "futures-util",
+ "gender_guesser",
  "geosuggest-core",
  "geosuggest-utils",
  "governor",
