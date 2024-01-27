@@ -143,6 +143,9 @@ sqlp options:
                               Only use this when you get out of memory errors.
     --no-optimizations        Disable non-default query optimizations. This will make queries slower.
                               Only use this when you get query errors.
+    --truncate-ragged-lines   Truncate ragged lines when parsing CSVs. If set, rows with more
+                              columns than the header will be truncated. If not set, the query
+                              will fail.
     --ignore-errors           Ignore errors when parsing CSVs. If set, rows with errors
                               will be skipped. If not set, the query will fail.
                               Only use this when debugging queries, as polars does batched
@@ -218,26 +221,27 @@ static DEFAULT_ZSTD_COMPRESSION_LEVEL: i32 = 3;
 
 #[derive(Deserialize, Clone)]
 struct Args {
-    arg_input:             Vec<PathBuf>,
-    arg_sql:               String,
-    flag_format:           String,
-    flag_try_parsedates:   bool,
-    flag_infer_len:        Option<usize>,
-    flag_low_memory:       bool,
-    flag_no_optimizations: bool,
-    flag_ignore_errors:    bool,
-    flag_datetime_format:  Option<String>,
-    flag_date_format:      Option<String>,
-    flag_time_format:      Option<String>,
-    flag_float_precision:  Option<usize>,
-    flag_rnull_values:     String,
-    flag_wnull_value:      String,
-    flag_compression:      String,
-    flag_compress_level:   Option<i32>,
-    flag_statistics:       bool,
-    flag_output:           Option<String>,
-    flag_delimiter:        Option<Delimiter>,
-    flag_quiet:            bool,
+    arg_input:                  Vec<PathBuf>,
+    arg_sql:                    String,
+    flag_format:                String,
+    flag_try_parsedates:        bool,
+    flag_infer_len:             Option<usize>,
+    flag_low_memory:            bool,
+    flag_no_optimizations:      bool,
+    flag_ignore_errors:         bool,
+    flag_truncate_ragged_lines: bool,
+    flag_datetime_format:       Option<String>,
+    flag_date_format:           Option<String>,
+    flag_time_format:           Option<String>,
+    flag_float_precision:       Option<usize>,
+    flag_rnull_values:          String,
+    flag_wnull_value:           String,
+    flag_compression:           String,
+    flag_compress_level:        Option<i32>,
+    flag_statistics:            bool,
+    flag_output:                Option<String>,
+    flag_delimiter:             Option<Delimiter>,
+    flag_quiet:                 bool,
 }
 
 #[derive(Default, Clone, PartialEq)]
@@ -501,6 +505,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .with_infer_schema_length(args.flag_infer_len)
             .with_try_parse_dates(args.flag_try_parsedates)
             .with_ignore_errors(args.flag_ignore_errors)
+            .truncate_ragged_lines(args.flag_truncate_ragged_lines)
             .low_memory(args.flag_low_memory)
             .finish()?;
         ctx.register(table_name, lf.with_optimizations(optimization_state));
