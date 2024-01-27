@@ -504,6 +504,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
+    // safety: we just checked that sel is not empty in the previous line
     let column_index = *sel.iter().next().unwrap();
 
     let mut headers = rdr.headers()?.clone();
@@ -536,6 +537,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // first, get the fields used in the dynfmt template
         let formatstr_re: &'static Regex = crate::regex_oncelock!(r"\{(?P<key>\w+)?\}");
         for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
+            // safety: we already checked that the regex match is valid
             dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
         }
         // we sort the fields so we can do binary_search
@@ -1125,23 +1127,28 @@ fn apply_operations(
                 *cell = cell.replace(comparand, replacement);
             },
             Operations::Regex_Replace => {
+                // safety: we set REGEX_REPLACE in validate_operations()
                 let regexreplace = REGEX_REPLACE.get().unwrap();
                 *cell = regexreplace.replace_all(cell, replacement).to_string();
             },
             Operations::Censor => {
+                // safety: we set CENSOR in validate_operations()
                 let censor = CENSOR.get().unwrap();
                 *cell = censor.censor(cell);
             },
             Operations::Censor_Check => {
+                // safety: we set CENSOR in validate_operations()
                 let censor = CENSOR.get().unwrap();
                 *cell = censor.check(cell).to_string();
             },
             Operations::Censor_Count => {
+                // safety: we set CENSOR in validate_operations()
                 let censor = CENSOR.get().unwrap();
                 *cell = censor.count(cell).to_string();
             },
             Operations::Thousands => {
                 if let Ok(num) = cell.parse::<f64>() {
+                    //safety: we set THOUSANDS_POLICY in validate_operations()
                     let mut temp_string = num.separate_by_policy(*THOUSANDS_POLICY.get().unwrap());
 
                     // if there is a decimal separator (fractional part > 0.0), use the requested
@@ -1167,6 +1174,7 @@ fn apply_operations(
             },
             Operations::Round => {
                 if let Ok(num) = cell.parse::<f64>() {
+                    // safety: we set ROUND_PLACES in validate_operations()
                     *cell = util::round_num(num, *ROUND_PLACES.get().unwrap());
                 }
             },
@@ -1237,11 +1245,13 @@ fn apply_operations(
             },
             Operations::Simod => *cell = osa_distance(cell, comparand).to_string(),
             Operations::Eudex => {
+                // safety: we set EUDEX_COMPARAND_HASH in validate_operations()
                 let eudex_comparand_hash = EUDEX_COMPARAND_HASH.get().unwrap();
                 let cell_hash = Hash::new(cell);
                 *cell = format!("{}", (cell_hash - *eudex_comparand_hash).similar());
             },
             Operations::Sentiment => {
+                // safety: we set SENTIMENT_ANALYZER in validate_operations()
                 let sentiment_analyzer = SENTIMENT_ANALYZER
                     .get_or_init(vader_sentiment::SentimentIntensityAnalyzer::new);
                 let sentiment_scores = sentiment_analyzer.polarity_scores(cell);
@@ -1250,6 +1260,7 @@ fn apply_operations(
             Operations::Whatlang => {
                 let lang_info = detect(cell);
                 if let Some(lang_info) = lang_info {
+                    // safety: we set WHATLANG_CONFIDENCE_THRESHOLD in validate_operations()
                     let whatlang_confidence_threshold =
                         *WHATLANG_CONFIDENCE_THRESHOLD.get().unwrap();
                     let lang_confidence = lang_info.confidence();

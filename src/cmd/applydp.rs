@@ -333,6 +333,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
+    // safety: we just checked that sel is not empty in the previous line
     let column_index = *sel.iter().next().unwrap();
 
     let mut headers = rdr.headers()?.clone();
@@ -365,6 +366,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // first, get the fields used in the dynfmt template
         let formatstr_re: &'static Regex = crate::regex_oncelock!(r"\{(?P<key>\w+)?\}");
         for format_fields in formatstr_re.captures_iter(&args.flag_formatstr) {
+            // safety: we already checked that the regex match is valid
             dynfmt_fields.push(format_fields.name("key").unwrap().as_str());
         }
         // we sort the fields so we can do binary_search
@@ -734,11 +736,13 @@ fn applydp_operations(
                 *cell = cell.replace(comparand, replacement);
             },
             Operations::Regex_Replace => {
+                // safety: we set REGEX_REPLACE in validate_operations()
                 let regexreplace = REGEX_REPLACE.get().unwrap();
                 *cell = regexreplace.replace_all(cell, replacement).to_string();
             },
             Operations::Round => {
                 if let Ok(num) = cell.parse::<f64>() {
+                    // safety: we set ROUND_PLACES in validate_operations()
                     *cell = util::round_num(num, *ROUND_PLACES.get().unwrap());
                 }
             },
