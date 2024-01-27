@@ -3,7 +3,7 @@ Apply a series of transformation functions to given CSV column/s. This can be us
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has five subcommands:
- 1. operations*   - 36 string, format, currency, regex & NLP operators.
+ 1. operations*   - 37 string, format, currency, regex & NLP operators.
  2. emptyreplace* - replace empty cells with <--replacement> string.
  3. datefmt*      - Formats recognized date/s (19 formats recognized) to
                     a specified date format using <--formatstr>.
@@ -73,6 +73,7 @@ It has 36 supported operations:
       with --comparand. Automatically rounds values to two decimal places. Specify
       "euro" formatting (e.g. 1.000,00 instead of 1,000.00 ) by setting --formatstr to "euro".
       Specify conversion rate by setting --replacement to a number.
+  * gender_guess: Guess the gender of a name.
   * copy: Mark a column for copying
   * simdl: Damerau-Levenshtein similarity to --comparand
   * simdln: Normalized Damerau-Levenshtein similarity to --comparand (between 0.0 & 1.0)
@@ -358,6 +359,7 @@ use cpc::{eval, units::Unit};
 use data_encoding::BASE64;
 use dynfmt::Format;
 use eudex::Hash;
+use gender_guesser::Gender;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::debug;
 use qsv_currency::Currency;
@@ -402,6 +404,7 @@ enum Operations {
     Encode,
     Escape,
     Eudex,
+    Gender_Guess,
     Len,
     Lower,
     Ltrim,
@@ -999,6 +1002,13 @@ fn validate_operations(
                 }
                 whatlang_invokes = whatlang_invokes.saturating_add(1);
             },
+            Operations::Gender_Guess => {
+                if flag_new_column.is_none() {
+                    return fail_incorrectusage_clierror!(
+                        "--new_column (-c) is required for Gender_Guess"
+                    );
+                }
+            },
             _ => {},
         }
         ops_vec.push(operation);
@@ -1081,6 +1091,18 @@ fn apply_operations(
                         .unwrap_or_default()
                         .to_owned(),
                     Err(e) => format!("decoding error: {e:?}"),
+                };
+            },
+            Operations::Gender_Guess => {
+                let gender_detector = gender_guesser::Detector::new();
+                *cell = match gender_detector.get_gender(cell) {
+                    Gender::Male => "Male".to_string(),
+                    Gender::Female => "Female".to_string(),
+                    Gender::MayBeMale => "MayBeMale".to_string(),
+                    Gender::MayBeFemale => "MayBeFemale".to_string(),
+                    Gender::BothMaleFemale => "BothMaleFemale".to_string(),
+                    Gender::NotSure => "NotSure".to_string(),
+                    Gender::NotFound => "NotFound".to_string(),
                 };
             },
             Operations::Escape => {
