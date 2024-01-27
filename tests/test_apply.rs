@@ -48,6 +48,61 @@ fn apply_ops_upper() {
 }
 
 #[test]
+fn apply_ops_gender_guess() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name"],
+            svec!["Peter"],
+            svec!["Michael"],
+            svec!["Joel"],
+            svec!["Hussein"],
+            svec!["Ian"],
+            svec!["Enrique"],
+            svec!["Ana"],
+            svec!["Olivia"],
+            svec!["Mackenzie"],
+            svec!["Adair"],
+            svec!["Aaf"],
+            svec!["Voldemort"],
+            svec!["Sami"],
+            svec!["Minhaj"],
+            svec!["Abdurrahman"],
+            svec!["Abbe"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("gender_guess")
+        .arg("name")
+        .args(["--new-column", "Gender"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name", "Gender"],
+        svec!["Peter", "Male"],
+        svec!["Michael", "Male"],
+        svec!["Joel", "Male"],
+        svec!["Hussein", "Male"],
+        svec!["Ian", "Male"],
+        svec!["Enrique", "Male"],
+        svec!["Ana", "Female"],
+        svec!["Olivia", "Female"],
+        svec!["Mackenzie", "NotSure"],
+        svec!["Adair", "MayBeMale"],
+        svec!["Aaf", "MayBeFemale"],
+        svec!["Voldemort", "NotFound"],
+        svec!["Sami", "Male"],
+        svec!["Minhaj", "NotFound"],
+        svec!["Abdurrahman", "Male"],
+        svec!["Abbe", "NotSure"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn apply_ops_escape() {
     let wrk = Workdir::new("apply");
     wrk.create(
