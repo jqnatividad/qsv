@@ -491,7 +491,7 @@ fn sqlp_string_functions() {
         svec!["scol"],
         svec!["true"],
         svec!["true"],
-        svec!["true"],
+        svec!["false"],
         svec!["true"],
         svec!["false"],
     ];
@@ -523,7 +523,7 @@ fn sqlp_string_functions() {
         svec!["scol"],
         svec!["abc"],
         svec!["abc"],
-        svec!["abc"],
+        svec!["   "],
         svec!["a"],
         svec!["b"],
     ];
@@ -539,7 +539,7 @@ fn sqlp_string_functions() {
         svec!["scol"],
         svec!["bc"],
         svec!["bc"],
-        svec!["bc"],
+        svec!["  "],
         svec![""],
         svec![""],
     ];
@@ -555,7 +555,7 @@ fn sqlp_string_functions() {
         svec!["scol"],
         svec!["ABCDE"],
         svec!["ABC"],
-        svec!["ABC"],
+        svec!["    ABC"],
         svec!["A"],
         svec!["B"],
     ];
@@ -571,7 +571,7 @@ fn sqlp_string_functions() {
         svec!["scol"],
         svec!["abcde"],
         svec!["abc"],
-        svec!["abc"],
+        svec!["    abc"],
         svec!["a"],
         svec!["b"],
     ];
@@ -587,7 +587,7 @@ fn sqlp_string_functions() {
         svec!["scol"],
         svec!["5"],
         svec!["3"],
-        svec!["3"],
+        svec!["7"],
         svec!["1"],
         svec!["1"],
     ];
@@ -603,7 +603,7 @@ fn sqlp_string_functions() {
         svec!["scol"],
         svec!["5"],
         svec!["3"],
-        svec!["3"],
+        svec!["7"],
         svec!["1"],
         svec!["1"],
     ];
@@ -1177,6 +1177,199 @@ fn sqlp_sql_tsv() {
     let got = wrk.read_to_string(&output_file);
 
     let expected = "idx\tval\n0\tABC\n1\tabc\n2\t000\n3\tA0C\n4\ta0c\n";
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_binary_functions() {
+    let wrk = Workdir::new("sqlp_sql_binary_functions");
+    wrk.create("dummy.csv", vec![svec!["dummy"], svec!["0"]]);
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("dummy.csv")
+        .arg(
+            r#"
+        SELECT *,
+          -- bit strings
+          b''                 AS b0,
+          b'1001'             AS b1,
+          b'11101011'         AS b2,
+          b'1111110100110010' AS b3,
+          -- hex strings
+          x''                 AS x0,
+          x'FF'               AS x1,
+          x'4142'             AS x2,
+          x'DeadBeef'         AS x3,
+        FROM dummy
+        "#,
+        )
+        .args(["--format", "parquet"]);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn sqlp_length_fns() {
+    let wrk = Workdir::new("sqlp_sql_length_fns");
+    wrk.create(
+        "test.csv",
+        vec![svec!["words"], svec!["Cafe"], svec![""], svec!["東京"]],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.csv").arg(
+        r#"
+        SELECT
+              words,
+              LENGTH(words) AS n_chrs1,
+              CHAR_LENGTH(words) AS n_chrs2,
+              CHARACTER_LENGTH(words) AS n_chrs3,
+              OCTET_LENGTH(words) AS n_bytes,
+              BIT_LENGTH(words) AS n_bits
+            FROM test
+"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["words", "n_chrs1", "n_chrs2", "n_chrs3", "n_bytes", "n_bits"],
+        svec!["Cafe", "4", "4", "4", "4", "32"],
+        svec!["", "", "", "", "", ""],
+        svec!["東京", "2", "2", "2", "6", "48"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_nullif_coalesce() {
+    let wrk = Workdir::new("sqlp_nullif_coalesce");
+    wrk.create(
+        "test.csv",
+        vec![
+            svec!["x", "y", "z"],
+            svec!["1", "5", "3"],
+            svec!["", "4", "4"],
+            svec!["2", "", ""],
+            svec!["3", "3", "3"],
+            svec!["", "", "6"],
+            svec!["4", "2", ""],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.csv").arg(
+        r#"
+        SELECT
+          COALESCE(x,y,z) as "coalsc",
+          NULLIF(x, y) as "nullif x_y",
+          NULLIF(y, z) as "nullif y_z",
+          IFNULL(x, y) as "ifnull x_y",
+          IFNULL(y,-1) as "inullf y_z",
+          COALESCE(x, NULLIF(y,z)) as "both"
+        FROM test
+"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "coalsc",
+            "nullif x_y",
+            "nullif y_z",
+            "ifnull x_y",
+            "inullf y_z",
+            "both"
+        ],
+        svec!["1", "1", "5", "1", "5", "1"],
+        svec!["4", "", "", "4", "4", ""],
+        svec!["2", "2", "", "2", "-1", "2"],
+        svec!["3", "", "", "3", "3", "3"],
+        svec!["6", "", "", "", "-1", ""],
+        svec!["4", "4", "2", "4", "2", "4"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_div_sign() {
+    let wrk = Workdir::new("sqlp_div_sign");
+    wrk.create(
+        "test.csv",
+        vec![
+            svec!["a", "b"],
+            svec!["10.0", "-100.5"],
+            svec!["20.0", "7.0"],
+            svec!["30.0", "2.5"],
+            svec!["40.0", ""],
+            svec!["50.0", "-3.14"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.csv").arg(
+        r#"
+        SELECT
+            a / b AS a_div_b,
+            a // b AS a_floordiv_b,
+            SIGN(b) AS b_sign,
+        FROM test
+"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["a_div_b", "a_floordiv_b", "b_sign"],
+        svec!["-0.09950248756218906", "-1", "-1"],
+        svec!["2.857142857142857", "2", "1"],
+        svec!["12.0", "12", "1"],
+        svec!["", "", ""],
+        svec!["-15.92356687898089", "-16", "-1"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_string_replace() {
+    let wrk = Workdir::new("sqlp_string_replace");
+    wrk.create(
+        "test.csv",
+        vec![
+            svec!["words"],
+            svec!["Yemeni coffee is the best coffee"],
+            svec![""],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.csv").arg(
+        r#"
+        SELECT
+        REPLACE(
+          REPLACE(words, 'coffee', 'tea'),
+          'Yemeni',
+          'English breakfast'
+        )
+        FROM test
+"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["words"],
+        svec!["English breakfast tea is the best tea"],
+    ];
 
     assert_eq!(got, expected);
 }
