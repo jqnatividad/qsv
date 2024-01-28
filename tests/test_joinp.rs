@@ -20,6 +20,26 @@ macro_rules! joinp_test {
     };
 }
 
+macro_rules! joinp_test_tab {
+    ($name0:ident, $fun:expr) => {
+        mod $name0 {
+            use std::process;
+
+            #[allow(unused_imports)]
+            use super::{make_rows, setup};
+            use crate::workdir::Workdir;
+
+            #[test]
+            fn headers() {
+                let wrk = setup(stringify!($name0));
+                let mut cmd = wrk.command("joinp");
+                cmd.args(&["city", "cities.tsv", "city", "places.tab"]);
+                $fun(wrk, cmd);
+            }
+        }
+    };
+}
+
 macro_rules! joinp_test_comments {
     ($name2:ident, $fun:expr) => {
         mod $name2 {
@@ -87,9 +107,13 @@ fn setup(name: &str) -> Workdir {
     ];
 
     let wrk = Workdir::new(name);
-    wrk.create("cities.csv", cities);
+    wrk.create("cities.csv", cities.clone());
     wrk.create("cities_comments.csv", cities_comments);
-    wrk.create("places.csv", places);
+    wrk.create("places.csv", places.clone());
+
+    // create TSV/TAB versions
+    wrk.create_with_delim("cities.tsv", cities, b'\t');
+    wrk.create_with_delim("places.tab", places, b'\t');
 
     // create snappy compressed versions
     let out_file = wrk.path("cities.csv.sz").to_string_lossy().to_string();
@@ -133,6 +157,22 @@ joinp_test!(joinp_inner, |wrk: Workdir, mut cmd: process::Command| {
     );
     assert_eq!(got, expected);
 });
+
+joinp_test_tab!(
+    joinp_inner_tab,
+    |wrk: Workdir, mut cmd: process::Command| {
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+            ],
+        );
+        assert_eq!(got, expected);
+    }
+);
 
 joinp_test_comments!(
     joinp_inner_comments,
@@ -185,6 +225,25 @@ joinp_test!(
     }
 );
 
+joinp_test_tab!(
+    joinp_outer_left_tab,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("--left");
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["New York", "NY", ""],
+                svec!["San Francisco", "CA", ""],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+            ],
+        );
+        assert_eq!(got, expected);
+    }
+);
+
 joinp_test_comments!(
     joinp_outer_left_comments,
     |wrk: Workdir, mut cmd: process::Command| {
@@ -206,6 +265,22 @@ joinp_test_comments!(
 
 joinp_test!(
     joinp_outer_left_filter_left,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("--left").args(["--filter-left", "city = 'Boston'"]);
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+            ],
+        );
+        assert_eq!(got, expected);
+    }
+);
+
+joinp_test_tab!(
+    joinp_outer_left_filter_left_tab,
     |wrk: Workdir, mut cmd: process::Command| {
         cmd.arg("--left").args(["--filter-left", "city = 'Boston'"]);
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -400,6 +475,16 @@ joinp_test_comments!(
 
 joinp_test!(
     joinp_left_semi,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("--left-semi");
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(true, vec![svec!["Boston", "MA"], svec!["Buffalo", "NY"]]);
+        assert_eq!(got, expected);
+    }
+);
+
+joinp_test_tab!(
+    joinp_left_semi_tab,
     |wrk: Workdir, mut cmd: process::Command| {
         cmd.arg("--left-semi");
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
