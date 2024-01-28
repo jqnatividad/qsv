@@ -162,7 +162,7 @@ joinp options:
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
-    -d, --delimiter <arg>  The field delimiter for reading CSV data.
+    -d, --delimiter <arg>  The field delimiter for reading/writing CSV data.
                            Must be a single character. (default: ,)
     -Q, --quiet            Do not return join shape to stderr.
 "#;
@@ -520,7 +520,7 @@ impl Args {
                 .has_header(true)
                 .with_missing_is_null(self.flag_nulls)
                 .with_comment_prefix(comment_char.as_deref())
-                .with_separator(delim)
+                .with_separator(tsvtab_delim(&self.arg_input1, delim))
                 .with_infer_schema_length(num_rows)
                 .with_try_parse_dates(try_parsedates)
                 .low_memory(low_memory)
@@ -545,7 +545,7 @@ impl Args {
                 .has_header(true)
                 .with_missing_is_null(self.flag_nulls)
                 .with_comment_prefix(comment_char.as_deref())
-                .with_separator(delim)
+                .with_separator(tsvtab_delim(&self.arg_input2, delim))
                 .with_infer_schema_length(num_rows)
                 .with_try_parse_dates(try_parsedates)
                 .low_memory(low_memory)
@@ -578,5 +578,21 @@ impl Args {
                 self.flag_null_value.clone()
             },
         })
+    }
+}
+
+fn tsvtab_delim(file: &str, orig_delim: u8) -> u8 {
+    // if the file has a TSV or TAB extension, we automatically use tab as the delimiter
+    let inputfile_extension = Path::new(file)
+        .extension()
+        .and_then(std::ffi::OsStr::to_str)
+        .unwrap_or_default();
+
+    if inputfile_extension.eq_ignore_ascii_case("tsv")
+        || inputfile_extension.eq_ignore_ascii_case("tab")
+    {
+        b'\t'
+    } else {
+        orig_delim
     }
 }
