@@ -441,9 +441,12 @@ impl JoinStruct {
             join_results
         };
 
-        // no need to use buffered writer here, as CsvWriter already does that
+        let mut out_delim = self.delim;
         let mut out_writer = match self.output {
             Some(ref output_file) => {
+                out_delim = tsvtab_delim(output_file, self.delim);
+
+                // no need to use buffered writer here, as CsvWriter already does that
                 let path = Path::new(&output_file);
                 Box::new(File::create(path).unwrap()) as Box<dyn Write>
             },
@@ -455,7 +458,7 @@ impl JoinStruct {
 
         CsvWriter::new(&mut out_writer)
             .include_header(true)
-            .with_separator(self.delim)
+            .with_separator(out_delim)
             .with_datetime_format(self.datetime_format)
             .with_date_format(self.date_format)
             .with_time_format(self.time_format)
@@ -581,9 +584,11 @@ impl Args {
     }
 }
 
-fn tsvtab_delim(file: &str, orig_delim: u8) -> u8 {
-    // if the file has a TSV or TAB extension, we automatically use tab as the delimiter
-    let inputfile_extension = Path::new(file)
+/// if the file has a TSV or TAB extension, we automatically use tab as the delimiter
+/// otherwise, we use the delimiter specified by the user
+pub fn tsvtab_delim<P: AsRef<Path>>(file: P, orig_delim: u8) -> u8 {
+    let inputfile_extension = file
+        .as_ref()
         .extension()
         .and_then(std::ffi::OsStr::to_str)
         .unwrap_or_default();
