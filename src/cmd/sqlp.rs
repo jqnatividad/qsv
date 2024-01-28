@@ -210,6 +210,7 @@ use serde::Deserialize;
 use tempfile;
 
 use crate::{
+    cmd::joinp::tsvtab_delim,
     config::{Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     util,
     util::process_input,
@@ -277,20 +278,8 @@ impl OutputMode {
             }
 
             let w = match args.flag_output {
-                Some(x) => {
-                    let path = Path::new(&x);
-                    // if the output file ends with ".tsv" or ".tab", we use tab as the delimiter
-                    let output_extension = path
-                        .extension()
-                        .map_or("", |ext| ext.to_str().unwrap_or_default());
-                    delim = if *self == OutputMode::Csv
-                        && output_extension.eq_ignore_ascii_case("tsv")
-                        || output_extension.eq_ignore_ascii_case("tab")
-                    {
-                        b'\t'
-                    } else {
-                        delim
-                    };
+                Some(path) => {
+                    delim = tsvtab_delim(path.clone(), delim);
                     Box::new(File::create(path)?) as Box<dyn Write>
                 },
                 None => Box::new(io::stdout()) as Box<dyn Write>,
@@ -420,14 +409,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let output_mode: OutputMode = args.flag_format.parse().unwrap_or(OutputMode::Csv);
     let no_output: OutputMode = OutputMode::None;
 
-    let mut delim = if let Some(delimiter) = args.flag_delimiter {
+    let delim = if let Some(delimiter) = args.flag_delimiter {
         delimiter.as_byte()
     } else if let Ok(delim) = env::var("QSV_DEFAULT_DELIMITER") {
         Delimiter::decode_delimiter(&delim)?.as_byte()
     } else {
         b','
     };
-    let orig_delim = delim;
 
     let comment_char = if let Ok(comment_char) = env::var("QSV_COMMENT_CHAR") {
         Some(comment_char)
@@ -477,7 +465,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut table_aliases = HashMap::with_capacity(args.arg_input.len());
     let mut lossy_table_name = Cow::default();
     let mut table_name;
-    let mut inputfile_extension;
 
     for (idx, table) in args.arg_input.iter().enumerate() {
         // as we are using the table name as alias, we need to make sure that the table name is a
@@ -489,20 +476,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 lossy_table_name = table.to_string_lossy();
                 &lossy_table_name
             });
-
-        // if the file has a TSV or TAB extension, we automatically use tab as the delimiter
-        inputfile_extension = Path::new(table)
-            .extension()
-            .and_then(std::ffi::OsStr::to_str)
-            .unwrap_or_default();
-
-        if inputfile_extension.eq_ignore_ascii_case("tsv")
-            || inputfile_extension.eq_ignore_ascii_case("tab")
-        {
-            delim = b'\t';
-        } else {
-            delim = orig_delim;
-        }
 
         table_aliases.insert(table_name.to_string(), format!("_t_{}", idx + 1));
 
@@ -517,7 +490,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .with_missing_is_null(true)
             .with_comment_prefix(comment_char.as_deref())
             .with_null_values(Some(NullValues::AllColumns(rnull_values.clone())))
-            .with_separator(delim)
+            .with_separator(tsvtab_delim(table, delim))
             .with_infer_schema_length(args.flag_infer_len)
             .with_try_parse_dates(args.flag_try_parsedates)
             .with_ignore_errors(args.flag_ignore_errors)
