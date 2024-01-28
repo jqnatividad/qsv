@@ -1748,3 +1748,93 @@ fn sqlp_string_position() {
 
     assert_eq!(got, expected);
 }
+
+#[test]
+fn sqlp_date_part() {
+    let wrk = Workdir::new("sqlp_date_part");
+    wrk.create(
+        "datestbl.csv",
+        vec![svec!["datecol"], svec!["20-01-2012 10:30:20"]],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("datestbl.csv")
+        .arg(
+            r#"
+        SELECT 
+            DATE_PART(datecol, 'isoyear') as c1,
+            DATE_PART(datecol, 'month') as c2,
+            DATE_PART(datecol, 'day') as c3,
+            DATE_PART(datecol, 'hour') as c4,
+            DATE_PART(datecol, 'minute') as c5,
+            DATE_PART(datecol, 'second') as c6,
+            DATE_PART(datecol, 'millisecond') as c61,
+            DATE_PART(datecol, 'microsecond') as c62,
+            DATE_PART(datecol, 'nanosecond') as c63,
+            DATE_PART(datecol, 'isoweek') as c7,
+            DATE_PART(datecol, 'dayofyear') as c8,
+            DATE_PART(datecol, 'dayofweek') as c9,
+            DATE_PART(datecol, 'time') as c10,
+            DATE_PART(datecol, 'decade') as c11,
+            DATE_PART(datecol, 'century') as c12,
+            DATE_PART(datecol, 'millennium') as c13,
+            DATE_PART(datecol, 'quarter') as c14,
+      FROM datestbl
+"#,
+        )
+        .arg("--try-parsedates");
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "c1", "c2", "c3", "c4", "c5", "c6", "c61", "c62", "c63", "c7", "c8", "c9", "c10",
+            "c11", "c12", "c13", "c14"
+        ],
+        svec![
+            "2012",
+            "1",
+            "20",
+            "10",
+            "30",
+            "20",
+            "20000.0",
+            "20000000.0",
+            "20000000000.0",
+            "3",
+            "20",
+            "5",
+            "10:30:20.000000000",
+            "201",
+            "21",
+            "3",
+            "1"
+        ],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_date() {
+    let wrk = Workdir::new("sqlp_date");
+    wrk.create("dummy.csv", vec![svec!["c1"], svec![""]]);
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("dummy.csv").arg(
+        r#"
+        SELECT 
+            DATE('2021-03-15') as c1,
+            DATE('2021-03-15 10:30:20', '%Y-%m-%d %H:%M:%S') as c2,
+        FROM dummy
+"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["c1", "c2"], svec!["2021-03-15", "2021-03-15"]];
+
+    assert_eq!(got, expected);
+}
