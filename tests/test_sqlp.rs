@@ -1838,3 +1838,52 @@ fn sqlp_date() {
 
     assert_eq!(got, expected);
 }
+
+#[test]
+fn sqlp_autotab_delim() {
+    let wrk = Workdir::new("sqlp_autotab_delim");
+    wrk.create_with_delim(
+        "cities_array.tsv",
+        vec![
+            svec!["countryid", "cities"],
+            svec!["DB", "Dubai,Abu Dhabi,Sharjah"],
+            svec!["IN", "Mumbai,Delhi,Bangalore"],
+            svec!["US", "New York,Los Angeles,Chicago"],
+            svec!["UK", "London,Birmingham,Manchester"],
+            svec!["CN", "Beijing"],
+            svec!["RU", "Moscow"],
+            svec!["NL", "Amsterdam"],
+            svec!["IT", "Rome,Milan,Turin,Naples,Venice"],
+        ],
+        b'\t',
+    );
+
+    let output_file = wrk.path("output.tsv").to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("cities_array.tsv")
+        .arg(
+            r#"
+            SELECT 
+                countryid, cities
+            FROM cities_array
+    "#,
+        )
+        .args(["--output", &output_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let got = wrk.read_to_string(&output_file);
+    let expected = r#"countryid	cities
+DB	Dubai,Abu Dhabi,Sharjah
+IN	Mumbai,Delhi,Bangalore
+US	New York,Los Angeles,Chicago
+UK	London,Birmingham,Manchester
+CN	Beijing
+RU	Moscow
+NL	Amsterdam
+IT	Rome,Milan,Turin,Naples,Venice
+"#;
+
+    assert_eq!(got, expected);
+}
