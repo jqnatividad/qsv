@@ -1918,7 +1918,7 @@ fn setup_helpers(
                 if log_enabled!(log::Level::Debug) {
                     log::debug!("qsv command stdout: {child_stdout} stderr: {child_stderr}");
                 } else {
-                    log::info!("qsv command executed.");
+                    log::info!("qsv command executed: {qsv_args}");
                 }
 
                 let output_table = luau.create_table()?;
