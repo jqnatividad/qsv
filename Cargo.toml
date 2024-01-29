@@ -201,7 +201,7 @@ smartstring = { version = "1", optional = true }
 snap = "1"
 strsim = { version = "0.11", optional = true }
 strum = { version = "0.26", features = ["phf"] }
-strum_macros = "0.25"
+strum_macros = "0.26"
 sysinfo = "0.30"
 tabwriter = "1.4"
 tempfile = "3"
