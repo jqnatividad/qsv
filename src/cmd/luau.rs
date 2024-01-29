@@ -1955,16 +1955,21 @@ fn setup_helpers(
         enum ShellCmd {
             Awk,
             Cat,
+            Ckan,
+            Ckanapi,
             Cp,
             Cut,
             Df,
             Echo,
             Grep,
             Head,
+            Jq,
+            Jql,
             Ls,
             Mkdir,
             Mv,
             Nl,
+            Psql,
             Pwd,
             Rg,
             Sed,
@@ -1983,8 +1988,8 @@ fn setup_helpers(
             return helper_err!(
                 "qsv_shellcmd",
                 "Invalid shell command: \"{shellcmd}\". Only the following commands are allowed: \
-                 awk, cat, cp, cut, df, echo, rg, grep, head, ls, mkdir, mv, nl, pwd, sed, sort, \
-                 tail, touch, tr, uname, uniq, wc, whoami"
+                 awk, cat, ckan, ckanapi, cp, cut, df, echo, rg, grep, head, jq, jql, ls, mkdir, \
+                 mv, nl, psql, pwd, sed, sort, tail, touch, tr, uname, uniq, wc, whoami"
             );
         };
 
