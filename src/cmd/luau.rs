@@ -246,7 +246,7 @@ use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{debug, info, log_enabled};
 use mlua::{Lua, LuaSerdeExt, Value};
 use serde::Deserialize;
-use simple_home_dir::expand_tilde;
+use simple_expand_tilde::expand_tilde;
 use strum_macros::IntoStaticStr;
 use tempfile;
 

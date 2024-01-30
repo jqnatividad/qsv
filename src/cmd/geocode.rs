@@ -383,7 +383,7 @@ use rayon::{
 use regex::Regex;
 use serde::Deserialize;
 use serde_json::json;
-use simple_home_dir::expand_tilde;
+use simple_expand_tilde::expand_tilde;
 use tempfile::tempdir;
 use url::Url;
 use uuid::Uuid;
