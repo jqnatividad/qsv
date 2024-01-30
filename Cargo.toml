@@ -194,9 +194,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_stacker = { version = "0.1", optional = true }
 serde_urlencoded = { version = "0.7", optional = true }
-simple-home-dir = { version = "0.2", features = [
-    "expand_tilde",
-], optional = true }
+simple-expand-tilde = { version = "0.1.4", optional = true }
 smartstring = { version = "1", optional = true }
 snap = "1"
 strsim = { version = "0.11", optional = true }
@@ -241,6 +239,7 @@ dynfmt    = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clip
 grex      = { git = "https://github.com/pemistahl/grex", rev = "8f6b35cee5f911311c2e0ef6e56f333e4c896112" }
 # needed to get rid of old hashbrown dependency
 halfbrown = { git = "https://github.com/licenser/halfbrown", rev = "7cecc29422ae2775abe35a2e430f1678b4f1aa76" }
+# nam_dict.txt file needed to be loaded from filesystem upstream, our fork has it bundled
 gender_guesser = { git = "https://github.com/jqnatividad/gender_guesser", branch = "bundle_namdict_txt"}
 # needed for polars 0.37
 jsonpath_lib = { git = "https://github.com/ritchie46/jsonpath", branch = "improve_compiled" }
@@ -293,9 +292,9 @@ geocode = [
     "geosuggest-core",
     "geosuggest-utils",
     "phf",
-    "simple-home-dir",
+    "simple-expand-tilde",
 ]
-luau = ["mlua", "sanitize-filename", "simple-home-dir"]
+luau = ["mlua", "sanitize-filename", "simple-expand-tilde"]
 python = ["pyo3"]
 to = ["csvs_convert"]
 to_parquet = ["csvs_convert/parquet"]
