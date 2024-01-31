@@ -255,9 +255,11 @@ Click [here](https://docs.rs/file-format/latest/file_format/#reader-features) fo
 
 ### Extended Input Support
 
-The `cat`, `headers`, `sqlp` & `to` commands have extended input support (🗄️). If the input is empty, the command will try to copy stdin. If it's not empty, it will check if its a directory, and if so, add all the files in the directory as input files.
+The `cat`, `headers`, `sqlp` & `to` commands have extended input support (🗄️). If the input is `-` or empty, the command will try to use stdin as input. If it's not, it will check if its a directory, and if so, add all the files in the directory as input files.
 
-If its a file, it will first check if it has an `.infile-list` extension. If it does, it will load the text file and parse each line as an input file path. This is a much faster and convenient way to process a large number of input files, without having to pass them all as separate command-line arguments. Further, the file paths can be anywhere in the file system, even on separate volumes. If the path is not fully qualified, it will be treated as relative to the current working directory.
+If its a file, it will first check if it has an `.infile-list` extension. If it does, it will load the text file and parse each line as an input file path. This is a much faster and convenient way to process a large number of input files, without having to pass them all as separate command-line arguments. Further, the file paths can be anywhere in the file system, even on separate volumes. If an input file path is not fully qualified, it will be treated as relative to the current working directory.
+
+For both directory and `.infile-list` input, snappy compressed files with a `.sz` extension will be automatically decompressed.
 
 Finally, if its just a regular file, it will be treated as a regular input file.
 

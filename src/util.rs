@@ -1553,7 +1553,7 @@ pub fn process_input(
         }
         return fail_clierror!("{custom_empty_stdin_errmsg}");
     }
-    log::debug!("processed input: {:?}", processed_input);
+    log::debug!("processed input file/s: {:?}", processed_input);
     Ok(processed_input)
 }
 
