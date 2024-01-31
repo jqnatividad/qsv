@@ -30,7 +30,7 @@
 | [apply](/src/cmd/apply.rs#L2)<br>✨🚀🧠🤖🔣 | Apply series of string, date, math & currency transformations to given CSV column/s. It also has some basic [NLP](https://en.wikipedia.org/wiki/Natural_language_processing) functions ([similarity](https://crates.io/crates/strsim), [sentiment analysis](https://crates.io/crates/vader_sentiment), [profanity](https://docs.rs/censor/latest/censor/), [eudex](https://github.com/ticki/eudex#eudex-a-blazingly-fast-phonetic-reductionhashing-algorithm) & [language detection](https://crates.io/crates/whatlang)).  |
 | <a name="applydp_deeplink"></a>[applydp](/src/cmd/applydp.rs#L2)<br>🚀🔣 ![CKAN](docs/images/ckan.png)| applydp is a slimmed-down version of `apply` with only [Datapusher+](https://github.com/dathere/datapusher-plus) relevant subcommands/operations (`qsvdp` binary variant only). |
 | [behead](/src/cmd/behead.rs#L2) | Drop headers from a CSV.  |
-| [cat](/src/cmd/cat.rs#L2)<br>📁 | Concatenate CSV files by row or by column. |
+| [cat](/src/cmd/cat.rs#L2)<br>🗄️ | Concatenate CSV files by row or by column. |
 | [count](/src/cmd/count.rs#L2)<br>📇🏎️ | Count the rows in a CSV file. (13.98 seconds for a 15gb, 27m row NYC 311 dataset without an index. Instantaneous with an index.) |
 | [dedup](/src/cmd/dedup.rs#L2)<br>🤯🚀 | Remove duplicate rows (See also `extdedup`, `extsort`, `sort` & `sortcheck` commands). |
 | [describegpt](/src/cmd/describegpt.rs#L2)<br>🌐🤖 | Infer extended metadata about a CSV using a GPT model from [OpenAI's API](https://platform.openai.com/docs/introduction). |
@@ -50,7 +50,7 @@
 | [foreach](/src/cmd/foreach.rs#L3)<br>✨ | Loop over a CSV to execute shell commands. (not available on Windows)  |
 | [frequency](/src/cmd/frequency.rs#L2)<br>📇😣🏎️ | Build [frequency tables](https://statisticsbyjim.com/basics/frequency-table/) of each column. Uses multithreading to go faster if an index is present. |
 | [geocode](/src/cmd/geocode.rs#L2)<br>✨🧠🌐🚀🔣 | Geocodes a location against an updatable local copy of the [Geonames](https://www.geonames.org/) cities database. With caching and multi-threading, it geocodes up to 360,000 records/sec! |
-| [headers](/src/cmd/headers.rs#L2)<br>📁 | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
+| [headers](/src/cmd/headers.rs#L2)<br>🗄️ | Show the headers of a CSV. Or show the intersection of all headers between many CSV files. |
 | [index](/src/cmd/index.rs#L2) | Create an index (📇) for a CSV. This is very quick (even the 15gb, 28m row NYC 311 dataset takes all of 14 seconds to index) & provides constant time indexing/random access into the CSV. With an index, `count`, `sample` & `slice` work instantaneously; random access mode is enabled in `luau`; and multithreading (🏎️) is enabled for the `frequency`, `split`, `stats`, `schema` & `tojsonl` commands. |
 | [input](/src/cmd/input.rs#L2) | Read CSV data with special commenting, quoting, trimming, line-skipping & non-UTF8 encoding handling rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2) | Inner, outer, right, cross, anti & semi joins. Automatically creates a simple, in-memory hash index to make it fast.  |
@@ -75,10 +75,10 @@
 | [sort](/src/cmd/sort.rs#L2)<br>🚀🤯 | Sorts CSV data in alphabetical (with case-insensitive option), numerical, reverse, unique or random (with optional seed) order (See also `extsort` & `sortcheck` commands).  |
 | [sortcheck](/src/cmd/sortcheck.rs#L2)<br>📇 | Check if a CSV is sorted. With the --json options, also retrieve record count, sort breaks & duplicate count. |
 | [split](/src/cmd/split.rs#L2)<br>📇🏎️ | Split one CSV file into many CSV files of N chunks. Uses multithreading to go faster if an index is present. |
-| [sqlp](/src/cmd/sqlp.rs#L2)<br>✨🚀🐻‍❄️📁 | Run [Polars](https://pola.rs) SQL queries against several CSVs - converting queries to blazing-fast [LazyFrame](https://docs.pola.rs/user-guide/lazy/using/) expressions, processing larger than memory CSV files. |
+| [sqlp](/src/cmd/sqlp.rs#L2)<br>✨🚀🐻‍❄️🗄️ | Run [Polars](https://pola.rs) SQL queries against several CSVs - converting queries to blazing-fast [LazyFrame](https://docs.pola.rs/user-guide/lazy/using/) expressions, processing larger than memory CSV files. |
 | [stats](/src/cmd/stats.rs#L2)<br>📇🤯🏎️ | Compute [summary statistics](https://en.wikipedia.org/wiki/Summary_statistics) (sum, min/max/range, min/max length, mean, stddev, variance, nullcount, sparsity, quartiles, IQR, lower/upper fences, skewness, median, mode/s, antimode/s & cardinality) & make GUARANTEED data type inferences (Null, String, Float, Integer, Date, DateTime, Boolean) for each column in a CSV.<br>Uses multithreading to go faster if an index is present (with an index, can compile "streaming" stats on NYC's 311 data (15gb, 28m rows) in less than 7.3 seconds). |
 | [table](/src/cmd/table.rs#L2)<br>🤯 | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter).  To interactively view CSV files, qsv pairs well with [csvlens](https://github.com/YS-L/csvlens#csvlens). |
-| [to](/src/cmd/to.rs#L2)<br>✨🚀📁 | Convert CSV files to [PostgreSQL](https://www.postgresql.org), [SQLite](https://www.sqlite.org/index.html), XLSX, [Parquet](https://parquet.apache.org) and [Data Package](https://datahub.io/docs/data-packages/tabular). |
+| [to](/src/cmd/to.rs#L2)<br>✨🚀🗄️ | Convert CSV files to [PostgreSQL](https://www.postgresql.org), [SQLite](https://www.sqlite.org/index.html), XLSX, [Parquet](https://parquet.apache.org) and [Data Package](https://datahub.io/docs/data-packages/tabular). |
 | [tojsonl](/src/cmd/tojsonl.rs#L3)<br>📇😣🚀🔣 | Smartly converts CSV to a newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)). By scanning the CSV first, it "smartly" infers the appropriate JSON data type for each column. See `jsonl` command to convert JSONL to CSV. |
 | [transpose](/src/cmd/transpose.rs#L2)<br>🤯 | Transpose rows/columns of a CSV.  |
 | [validate](/src/cmd/validate.rs#L2)<br>📇🚀🌐 | Validate CSV data blazingly-fast using [JSON Schema Validation](https://json-schema.org/draft/2020-12/json-schema-validation.html) & put invalid records into a separate file with an accompanying detailed validation error report file (e.g. _up to 930,000 rows/second_ using [NYC's 311 schema](https://github.com/jqnatividad/qsv/blob/master/resources/test/311_Service_Requests_from_2010_to_Present-2022-03-04.csv.schema.json) generated by the `schema` command).<br>If no JSON schema file is provided, validates if a CSV conforms to the [RFC 4180 standard](#rfc-4180-csv-standard) and is UTF-8 encoded. |
@@ -90,7 +90,7 @@
 🤯: loads entire CSV into memory, though `dedup`, `stats` & `transpose` have "streaming" modes as well.  
 😣: uses additional memory proportional to the cardinality of the columns in the CSV.  
 🧠: expensive operations are memoized (cached) with available inter-session Redis caching for fetch commands.  
-📁: `.infile-list` support.  
+🗄️: [Extended input support](#extended-input-support).  
 🐻‍❄️: command powered by [Pola.rs](https://pola.rs) engine.  
 🤖: command uses Natural Language Processing & General AI techniques.  
 🏎️: multithreaded and/or faster when an index (📇) is available.  
@@ -253,7 +253,13 @@ It can detect more than 120 file formats, including MS Office/Open Document file
 PDF, PNG, JPEG and specialized geospatial formats like GPX, GML, KML, TML, TMX, TSX, TTML.
 Click [here](https://docs.rs/file-format/latest/file_format/#reader-features) for a complete list.
 
-Finally, the `cat`, `headers`, `sqlp` & `to` commands can also read from a list of files in a `.infile-list` file. An infile-list file is a text file with a `.infile-list` extension, with one file path per line. It's a much faster and more convenient way to process a large number of input files, without having to pass them all as separate command-line arguments.
+### Extended Input Support
+
+The `cat`, `headers`, `sqlp` & `to` commands have extended input support (🗄️). If the input is empty, the command will try to copy stdin. If it's not empty, it will check if its a directory, and if so, add all the files in the directory as input files.
+
+If its a file, it will first check if it has an `.infile-list` extension. If it does, it will load the text file and parse each line as an input file path. This is a much faster and convenient way to process a large number of input files, without having to pass them all as separate command-line arguments. Further, the file paths can be anywhere in the file system, even on separate volumes. If the path is not fully qualified, it will be treated as relative to the current working directory.
+
+Finally, if its just a regular file, it will be treated as a regular input file.
 
 ### Snappy Compression/Decompression
 
