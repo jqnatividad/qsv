@@ -4614,9 +4614,9 @@ dependencies = [
 
 [[package]]
 name = "rust_decimal"
-version = "1.33.1"
+version = "1.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06676aec5ccb8fc1da723cc8c0f9a46549f21ebb8753d3915c6c41db1e7f1dc4"
+checksum = "d7de2711cae7bdec993f4d2319352599ceb0d003e9f7900ea7c6ef4c5fc16831"
 dependencies = [
  "arrayvec",
  "borsh",
