@@ -236,7 +236,7 @@ serial_test = { version = "3.0", features = ["file_locks"] }
 # needed as dynfmt doesn't work in release mode without this
 dynfmt    = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 # needed to get latest dependencies. Even though dependabot PRs are merged, but there are no new releases
-grex      = { git = "https://github.com/pemistahl/grex", rev = "8f6b35cee5f911311c2e0ef6e56f333e4c896112" }
+grex      = { git = "https://github.com/pemistahl/grex", rev = "86f8633d9a4ba18a99b2fe7e425a0a0b319c2d06" }
 # needed to get rid of old hashbrown dependency
 halfbrown = { git = "https://github.com/licenser/halfbrown", rev = "7cecc29422ae2775abe35a2e430f1678b4f1aa76" }
 # nam_dict.txt file needed to be loaded from filesystem upstream, our fork has it bundled
