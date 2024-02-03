@@ -4,11 +4,26 @@ Splits the given CSV data into chunks.
 The files are written to the directory given with the name '{start}.csv',
 where {start} is the index of the first record of the chunk (starting at 0).
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_split.rs.
+Examples:
+    qsv split outdir --size 100 --filename chunk_{}.csv input.csv
+
+    qsv split outdir -s 100 --filename chunk_{}.csv --pad 5 input.csv
+
+    qsv split . -s 100 input.csv
+
+    cat in.csv | qsv split outdir -s 1000 
+
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_split.rs.
 
 Usage:
     qsv split [options] <outdir> [<input>]
     qsv split --help
+
+split arguments:
+    <outdir>              The directory where the output files will be written.
+                          If it does not exist, it will be created.
+    <input>               The CSV file to read. If not given, input is read from
+                          STDIN.
 
 split options:
     -s, --size <arg>       The number of records to write into each chunk.
@@ -66,6 +81,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_size == 0 {
         return fail_incorrectusage_clierror!("--size must be greater than 0.");
     }
+
+    // check if outdir is set correctly
+    if Path::new(&args.arg_outdir).is_file() && args.arg_input.is_none() {
+        return fail_incorrectusage_clierror!("<outdir> is not specified or is a file.");
+    }
+
     fs::create_dir_all(&args.arg_outdir)?;
 
     match args.rconfig().indexed()? {
