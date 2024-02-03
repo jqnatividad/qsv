@@ -502,3 +502,18 @@ fn split_custom_filename_padded() {
     assert!(wrk.path("prefix-002.csv").exists());
     assert!(wrk.path("prefix-004.csv").exists());
 }
+
+#[test]
+fn split_nooutdir() {
+    let wrk = Workdir::new("split_nooutdir");
+    wrk.create("in.csv", data(true));
+
+    let mut cmd = wrk.command("split");
+    cmd.args(["--size", "2"]).arg("in.csv");
+    wrk.run(&mut cmd);
+
+    wrk.assert_err(&mut cmd);
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "usage error: <outdir> is not specified or is a file.\n";
+    assert_eq!(got, expected);
+}
