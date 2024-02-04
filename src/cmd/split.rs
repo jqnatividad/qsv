@@ -146,7 +146,7 @@ impl Args {
         let args = self.clone();
         let chunk_size;
         let nchunks = if let Some(flag_chunks) = args.flag_chunks {
-            chunk_size = idx.count() as usize / flag_chunks;
+            chunk_size = (idx.count() as f64 / flag_chunks as f64).ceil() as usize;
             flag_chunks
         } else {
             chunk_size = args.flag_size;
