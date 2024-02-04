@@ -261,7 +261,7 @@ Quote Char: none
 Flexible: false
 Is UTF8: true
 Detected Mime Type: text/plain
-Detected Kind: Text
+Detected Kind: Other
 Retrieved Size (bytes): 27
 File Size (bytes): 27
 Sampled Records: 2
@@ -275,7 +275,7 @@ Fields:
     1:  Unsigned  h2
     2:  Text      h3"#;
 
-    assert!(dos2unix(&got).trim_end().ends_with(expected_end.trim_end()));
+    assert!(dos2unix(&got).trim_end().ends_with(expected_end));
 }
 
 #[test]
