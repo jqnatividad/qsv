@@ -1,7 +1,7 @@
 static USAGE: &str = r#"
 Splits the given CSV data into chunks.
 
-Uses multithreading to go faster if the given CSV data has an index.
+Uses multithreading to go faster if the CSV has an index.
 
 The files are written to the directory given with the name '{start}.csv',
 where {start} is the index of the first record of the chunk (starting at 0).
@@ -9,15 +9,15 @@ where {start} is the index of the first record of the chunk (starting at 0).
 Examples:
     qsv split outdir --size 100 --filename chunk_{}.csv input.csv
 
-    qsv split outdir -s 100 --filename chunk_{}.csv --pad 5 input.csv
+    qsv split outputdir -s 100 --filename chunk_{}.csv --pad 5 input.csv
 
     qsv split . -s 100 input.csv
 
-    cat in.csv | qsv split outdir -s 1000
+    cat in.csv | qsv split mysplitoutput -s 1000
 
     qsv split outdir --chunks 10 input.csv
 
-    qsv split outdir -c 10 -j 4 input.csv
+    qsv split splitoutdir -c 10 -j 4 input.csv
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_split.rs.
 
@@ -116,9 +116,9 @@ impl Args {
         let mut rdr = rconfig.reader()?;
         let headers = rdr.byte_headers()?.clone();
 
-        let chunk_size = if self.flag_chunks.is_some() {
+        let chunk_size = if let Some(flag_chunks) = self.flag_chunks {
             let count = util::count_rows(&rconfig)?;
-            let chunk = self.flag_chunks.unwrap();
+            let chunk = flag_chunks;
             if chunk == 0 {
                 return fail_incorrectusage_clierror!("--chunk must be greater than 0.");
             }
