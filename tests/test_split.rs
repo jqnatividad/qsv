@@ -78,6 +78,47 @@ k,l
 }
 
 #[test]
+fn split_chunks() {
+    let wrk = Workdir::new("split_chunks");
+    wrk.create("in.csv", data(true));
+
+    let mut cmd = wrk.command("split");
+    cmd.args(["--chunks", "3"])
+        .arg(&wrk.path("."))
+        .arg("in.csv");
+    wrk.run(&mut cmd);
+
+    split_eq!(
+        wrk,
+        "0.csv",
+        "\
+h1,h2
+a,b
+c,d
+"
+    );
+    split_eq!(
+        wrk,
+        "2.csv",
+        "\
+h1,h2
+e,f
+g,h
+"
+    );
+    split_eq!(
+        wrk,
+        "4.csv",
+        "\
+h1,h2
+i,j
+k,l
+"
+    );
+    assert!(!wrk.path("6.csv").exists());
+}
+
+#[test]
 fn split_a_lot() {
     let wrk = Workdir::new("split_a_lot");
     wrk.create("in.csv", data(true));
@@ -175,12 +216,96 @@ k,l
 }
 
 #[test]
+fn split_chunks_padding() {
+    let wrk = Workdir::new("split_chunks_padding");
+    wrk.create("in.csv", data(true));
+
+    let mut cmd = wrk.command("split");
+    cmd.args(["--chunks", "3"])
+        .arg("--pad")
+        .arg("4")
+        .arg(&wrk.path("."))
+        .arg("in.csv");
+    wrk.run(&mut cmd);
+
+    split_eq!(
+        wrk,
+        "0000.csv",
+        "\
+h1,h2
+a,b
+c,d
+"
+    );
+    split_eq!(
+        wrk,
+        "0002.csv",
+        "\
+h1,h2
+e,f
+g,h
+"
+    );
+    split_eq!(
+        wrk,
+        "0004.csv",
+        "\
+h1,h2
+i,j
+k,l
+"
+    );
+    assert!(!wrk.path("0006.csv").exists());
+}
+
+#[test]
 fn split_idx() {
     let wrk = Workdir::new("split_idx");
     wrk.create_indexed("in.csv", data(true));
 
     let mut cmd = wrk.command("split");
     cmd.args(["--size", "2"]).arg(&wrk.path(".")).arg("in.csv");
+    wrk.run(&mut cmd);
+
+    split_eq!(
+        wrk,
+        "0.csv",
+        "\
+h1,h2
+a,b
+c,d
+"
+    );
+    split_eq!(
+        wrk,
+        "2.csv",
+        "\
+h1,h2
+e,f
+g,h
+"
+    );
+    split_eq!(
+        wrk,
+        "4.csv",
+        "\
+h1,h2
+i,j
+k,l
+"
+    );
+    assert!(!wrk.path("6.csv").exists());
+}
+
+#[test]
+fn split_chunks_idx() {
+    let wrk = Workdir::new("split_chunks_idx");
+    wrk.create_indexed("in.csv", data(true));
+
+    let mut cmd = wrk.command("split");
+    cmd.args(["--chunks", "3"])
+        .arg(&wrk.path("."))
+        .arg("in.csv");
     wrk.run(&mut cmd);
 
     split_eq!(
@@ -251,12 +376,86 @@ k,l
 }
 
 #[test]
+fn split_chunks_no_headers() {
+    let wrk = Workdir::new("split_chunks_no_headers");
+    wrk.create("in.csv", data(false));
+
+    let mut cmd = wrk.command("split");
+    cmd.args(["--no-headers", "--chunks", "3"])
+        .arg(&wrk.path("."))
+        .arg("in.csv");
+    wrk.run(&mut cmd);
+
+    split_eq!(
+        wrk,
+        "0.csv",
+        "\
+a,b
+c,d
+"
+    );
+    split_eq!(
+        wrk,
+        "2.csv",
+        "\
+e,f
+g,h
+"
+    );
+    split_eq!(
+        wrk,
+        "4.csv",
+        "\
+i,j
+k,l
+"
+    );
+}
+
+#[test]
 fn split_no_headers_idx() {
     let wrk = Workdir::new("split_no_headers_idx");
     wrk.create_indexed("in.csv", data(false));
 
     let mut cmd = wrk.command("split");
     cmd.args(["--no-headers", "--size", "2"])
+        .arg(&wrk.path("."))
+        .arg("in.csv");
+    wrk.run(&mut cmd);
+
+    split_eq!(
+        wrk,
+        "0.csv",
+        "\
+a,b
+c,d
+"
+    );
+    split_eq!(
+        wrk,
+        "2.csv",
+        "\
+e,f
+g,h
+"
+    );
+    split_eq!(
+        wrk,
+        "4.csv",
+        "\
+i,j
+k,l
+"
+    );
+}
+
+#[test]
+fn split_chunks_no_headers_idx() {
+    let wrk = Workdir::new("split_chunks_no_headers_idx");
+    wrk.create_indexed("in.csv", data(false));
+
+    let mut cmd = wrk.command("split");
+    cmd.args(["--no-headers", "--chunks", "3"])
         .arg(&wrk.path("."))
         .arg("in.csv");
     wrk.run(&mut cmd);
@@ -434,6 +633,68 @@ i,j
 k,l
 "
     );
+}
+
+#[test]
+fn split_chunks_a_lot() {
+    let wrk = Workdir::new("split_chunks_a_lot");
+    wrk.create("in.csv", data(true));
+
+    let mut cmd = wrk.command("split");
+    cmd.args(["--chunks", "10"])
+        .arg(&wrk.path("."))
+        .arg("in.csv");
+    wrk.run(&mut cmd);
+
+    split_eq!(
+        wrk,
+        "0.csv",
+        "\
+h1,h2
+a,b
+"
+    );
+    split_eq!(
+        wrk,
+        "1.csv",
+        "\
+h1,h2
+c,d
+"
+    );
+    split_eq!(
+        wrk,
+        "2.csv",
+        "\
+h1,h2
+e,f
+"
+    );
+    split_eq!(
+        wrk,
+        "3.csv",
+        "\
+h1,h2
+g,h
+"
+    );
+    split_eq!(
+        wrk,
+        "4.csv",
+        "\
+h1,h2
+i,j
+"
+    );
+    split_eq!(
+        wrk,
+        "5.csv",
+        "\
+h1,h2
+k,l
+"
+    );
+    assert!(!wrk.path("6.csv").exists());
 }
 
 #[test]
