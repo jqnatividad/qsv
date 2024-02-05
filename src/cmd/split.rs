@@ -64,6 +64,7 @@ Common options:
                            appear in all chunks as the header row.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
+    -Q, --quiet            Do not display an output summmary to stderr.
 "#;
 
 use std::{fs, io, path::Path};
@@ -89,6 +90,7 @@ struct Args {
     flag_pad:        usize,
     flag_no_headers: bool,
     flag_delimiter:  Option<Delimiter>,
+    flag_quiet:      bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -116,6 +118,7 @@ impl Args {
         let mut rdr = rconfig.reader()?;
         let headers = rdr.byte_headers()?.clone();
 
+        #[allow(clippy::cast_precision_loss)]
         let chunk_size = if let Some(flag_chunks) = self.flag_chunks {
             let count = util::count_rows(&rconfig)?;
             let chunk = flag_chunks;
@@ -129,28 +132,44 @@ impl Args {
 
         let mut wtr = self.new_writer(&headers, 0, self.flag_pad)?;
         let mut i = 0;
+        let mut nchunks: usize = 0;
         let mut row = csv::ByteRecord::new();
         while rdr.read_byte_record(&mut row)? {
             if i > 0 && i % chunk_size == 0 {
                 wtr.flush()?;
+                nchunks += 1;
                 wtr = self.new_writer(&headers, i, self.flag_pad)?;
             }
             wtr.write_byte_record(&row)?;
             i += 1;
         }
         wtr.flush()?;
+
+        if !self.flag_quiet {
+            eprintln!(
+                "Wrote {} chunks to '{}'. Rows/chunk: {} Num records: {}",
+                nchunks + 1,
+                Path::new(&self.arg_outdir).canonicalize()?.display(),
+                chunk_size,
+                i
+            );
+        }
+
         Ok(())
     }
 
     fn parallel_split(&self, idx: &Indexed<fs::File, fs::File>) -> CliResult<()> {
         let args = self.clone();
         let chunk_size;
+        let idx_count = idx.count();
+
+        #[allow(clippy::cast_precision_loss)]
         let nchunks = if let Some(flag_chunks) = args.flag_chunks {
-            chunk_size = (idx.count() as f64 / flag_chunks as f64).ceil() as usize;
+            chunk_size = (idx_count as f64 / flag_chunks as f64).ceil() as usize;
             flag_chunks
         } else {
             chunk_size = args.flag_size;
-            util::num_of_chunks(idx.count() as usize, self.flag_size)
+            util::num_of_chunks(idx_count as usize, self.flag_size)
         };
         if nchunks == 1 {
             // there's only one chunk, we can just do a sequential split
@@ -186,6 +205,16 @@ impl Args {
             // the only way this can fail is if we cannot write to the file
             wtr.flush().unwrap();
         });
+
+        if !args.flag_quiet {
+            eprintln!(
+                "Wrote {} chunks to '{}'. Rows/chunk: {} Num records: {}",
+                nchunks,
+                Path::new(&self.arg_outdir).canonicalize()?.display(),
+                chunk_size,
+                idx_count
+            );
+        }
 
         Ok(())
     }
