@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.14.0
+bm_version=3.15.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -272,6 +272,11 @@ function cleanup_files {
   rm -f results/run_info_work.tsv
   rm -f results/entry.csv
   rm -r -f split_tempdir
+  rm -r -f split_tempdir_chunks
+  rm -r -f split_tempdir_idx
+  rm -r -f split_tempdir_idx_j1
+  rm -r -f split_tempdir_chunks_idx
+  rm -r -f split_tempdir_chunks_idx_j1
   rm -f benchmark_work.*
   rm -r -f benchmark_work
   rm -f extsort_sorted.csv
@@ -530,8 +535,11 @@ run sortcheck_sorted "$qsv_bin" sortcheck data_sorted.csv
 run sortcheck_unsorted "$qsv_bin" sortcheck data_unsorted.csv
 run sortcheck_unsorted_all "$qsv_bin" sortcheck --all data_unsorted.csv
 run split "$qsv_bin" split --size 50000 split_tempdir "$data"
-run --index split_index "$qsv_bin" split --size 50000 split_tempdir "$data"
-run --index split_index_j1 "$qsv_bin" split --size 50000 -j 1 split_tempdir "$data"
+run split_chunks "$qsv_bin" split --chunks 20 split_tempdir_chunks "$data"
+run --index split_index "$qsv_bin" split --size 50000 split_tempdir_idx "$data"
+run --index split_index_j1 "$qsv_bin" split --size 50000 -j 1 split_tempdir_idx_j1 "$data"
+run --index split_chunks_index "$qsv_bin" split --chunks 20 split_tempdir_chunks_idx "$data"
+run --index split_chunks_index_j1 "$qsv_bin" split --chunks 20 -j 1 split_tempdir_chunks_idx_j1
 run sqlp "$qsv_bin" sqlp "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_format_arrow "$qsv_bin" sqlp --format arrow "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_format_json "$qsv_bin" sqlp --format json "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
