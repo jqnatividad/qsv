@@ -249,7 +249,7 @@ The `to` command converts CSVs to `.xlsx`, [Parquet](https://parquet.apache.org)
 The `sqlp` command returns query results in CSV, JSON, Parquet, [Apache Arrow IPC](https://arrow.apache.org/docs/format/Columnar.html#ipc-file-format) & [Apache AVRO](https://avro.apache.org) formats. Polars SQL also supports reading external files directly in various formats with its `read_ndjson`, `read_csv`, `read_parquet` & `read_ipc` [table functions](https://github.com/pola-rs/polars/blob/fa59ffc1685043b44476dcb2a3f3804460ead5c5/crates/polars-sql/src/table_functions.rs#L11-L36).
 
 The `sniff` command can also detect the mime type of any file with the `--no-infer` or `--just-mime` options, may it be local or remote (http and https schemes supported).
-It can detect more than 120 file formats, including MS Office/Open Document files, JSON, XML, 
+It can detect more than 130 file formats, including MS Office/Open Document files, JSON, XML, 
 PDF, PNG, JPEG and specialized geospatial formats like GPX, GML, KML, TML, TMX, TSX, TTML.
 Click [here](https://docs.rs/file-format/latest/file_format/#reader-features) for a complete list.
 
