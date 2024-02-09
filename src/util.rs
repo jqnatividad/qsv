@@ -154,8 +154,6 @@ pub fn version() -> String {
     enabled_features.push_str("fetch;");
     #[cfg(all(feature = "foreach", not(feature = "lite")))]
     enabled_features.push_str("foreach;");
-    #[cfg(all(feature = "generate", not(feature = "lite")))]
-    enabled_features.push_str("generate;");
     #[cfg(all(feature = "geocode", not(feature = "lite")))]
     enabled_features.push_str("geocode;");
 
