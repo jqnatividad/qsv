@@ -127,7 +127,7 @@ To find out your jobs setting, call `qsv --version`.
 The `--version` option shows a lot of information about qsv. It displays:
 * qsv version
 * the memory allocator (`standard`, `mimalloc` or `jemalloc`)
-* all enabled features (`apply`, `fetch`, `foreach`, `generate`, `luau`, `polars`, `python`, `self_update` & `to`)
+* all enabled features (`apply`, `fetch`, `foreach`, `luau`, `polars`, `python`, `self_update` & `to`)
 * Python version linked if the `python` feature was enabled
 * Luau version embedded if the `luau` feature was enabled
 * the number of processors to use for multi-threading commands
@@ -141,16 +141,16 @@ The `--version` option shows a lot of information about qsv. It displays:
 
 ```bash
 $ qsv --version
-qsv 0.88.2-mimalloc-apply;fetch;foreach;generate;Luau 0.561;python-3.11.0 (v3.11.0:deaf509e8f, Oct 24 2022, 14:43:23) [Clang 13.0.0 (clang-1300.0.29.30)];to;self_update-8-8;3.66 GiB-913.00 MiB-3.69 GiB-16.00 GiB (aarch64-apple-darwin compiled with Rust 1.67.1) compiled
+qsv 0.122.0-mimalloc-apply;fetch;foreach;Luau 0.606;python-3.11.0 (v3.11.0:deaf509e8f, Oct 24 2022, 14:43:23) [Clang 13.0.0 (clang-1300.0.29.30)];to;self_update-8-8;3.66 GiB-913.00 MiB-3.69 GiB-16.00 GiB (aarch64-apple-darwin compiled with Rust 1.75.0) compiled
 ```
 
-Shows that I'm running qsv version 0.88.2, with the `mimalloc` allocator (instead of `standard` or `jemalloc`), and I have the `apply`, `fetch`, `foreach`, `generate`, `luau`, `python`, `self_update` and `to` features enabled, with the exact version of the embedded Luau interpreter, and the python version qsv is dynamically linked against. 
+Shows that I'm running qsv version 0.122.0, with the `mimalloc` allocator (instead of `standard` or `jemalloc`), and I have the `apply`, `fetch`, `foreach`, `luau`, `python`, `to` and `self_update` features enabled, with the exact version of the embedded Luau interpreter, and the python version qsv is dynamically linked against. 
 
 It shows qsv will use 8 logical processors out of 8 detected when running multithreaded commands.
 
 It also shows that I can have a maximum input file size of 3.66 GiB for "non-streaming" commands (see [Memory Management](https://github.com/jqnatividad/qsv#memory-management) for more info), 913.00 MiB of free swap memory, 3.69 GiB of available memory and 16.00 GiB of total memory.
 
-The qsv binary was built to target the aarch64-apple-darwin platform (Apple Silicon), compiled using Rust 1.67.1. The binary was `compiled` using `cargo build`.
+The qsv binary was built to target the aarch64-apple-darwin platform (Apple Silicon), compiled using Rust 1.75.0. The binary was `compiled` using `cargo build`.
 
 ## Caching
 qsv employs several caching strategies to improve performance:
