@@ -136,7 +136,9 @@ qsv is also distributed by several package managers and distros. Check each pack
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/qsv.svg)](https://repology.org/project/qsv/versions)
 
-Note that qsv provided by these package managers/distros often do not enable all features (Homebrew, for instance, only enables the `apply` and `luau` features). If you want the latest version, you can always install from source or download the prebuilt binaries.
+Note that qsv provided by these package managers/distros often do not enable all features (Homebrew, for instance, only enables the `apply` and `luau` features).
+
+To find out what features are enabled in a package/distro's qsv, run `qsv --version` ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#version-details)).
 
 ### Option 3: Install with Rust
 
