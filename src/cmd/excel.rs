@@ -610,6 +610,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             // push the ryu-formatted float value if its
                             // not an integer or the candidate
                             // integer is too big or too small to be an i64
+                            #[allow(clippy::cast_precision_loss)]
                             if float_val.fract().abs() > f64::EPSILON
                                 || float_val > i64::MAX as f64
                                 || float_val < i64::MIN as f64
