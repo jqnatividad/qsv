@@ -206,7 +206,7 @@ fn excel_xlsx_data_types() {
         svec!["int", "float", "bool", "date", "duration", "string", "emojis", "foreign"], 
         svec!["1", "1.1", "true", "2001-09-11", "PT37200S", "The", "The", "敏捷的棕色狐狸在森林里奔跑"], 
         svec!["2", "1.32434354545454", "false", "2023-10-07", "PT85523S", "quick", "🍔", "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"], 
-        svec!["3", "0.423546456564534", "1", "1941-12-07", "P1DT24323S", "brown", "is", "Le rusé goupil franchit d'un bond le chien somnolent."], 
+        svec!["3", "0.423546456564534", "1", "1941-12-07", "PT110723S", "brown", "is", "Le rusé goupil franchit d'un bond le chien somnolent."], 
         svec!["4", "-54545.6565756785", "0", "2001-09-11 08:30:00", "PT84600S", "fox", "💩", "El rápido zorro marrón"], 
         svec!["5", "-5446563454.43546", "true", "1945-08-06 08:15:00", "PT40S", "jumped", "🙀", "いろはにほへとちりぬるをわかよたれそつねならむうゐのおくやまけふこえてあさきゆめみしゑひもせす"]
     ];
