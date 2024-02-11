@@ -176,18 +176,18 @@ fn excel_date_xlsx_date_format() {
     let expected = vec![
         svec!["date", "plaincol"],
         svec![
-            "1980-12-25",
+            "Thu 1980-12-25",
             "it will still parse the dates below as date even if plaincol is not in the default \
              --dates-whitelist because the cell format was set to date"
         ],
-        svec!["Tue 2001-09-11 08:30:00", "2001-09-11"],
+        svec!["Tue 2001-09-11 08:30:00", "Tue 2001-09-11"],
         svec!["not a date", "Tue 2001-09-11 08:30:00"],
         svec![
             "Wednesday, Mar-14-2012",
             "the date below is not parsed as a date coz we didn't explicitly set the cell format \
              to a date format and \"plaincol\" is not in the --dates-whitelist"
         ],
-        svec!["2001-09-11", "9/11/01 8:30 am"],
+        svec!["Tue 2001-09-11", "9/11/01 8:30 am"],
     ];
     assert_eq!(got, expected);
 }
@@ -204,11 +204,11 @@ fn excel_xlsx_data_types() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["int", "float", "bool", "date", "duration", "string", "emojis", "foreign"], 
-        svec!["1", "1.1", "true", "2001-09-11", "0.4305555555555556", "The", "The", "敏捷的棕色狐狸在森林里奔跑"], 
-        svec!["2", "1.32434354545454", "false", "2023-10-07", "0.989849537037037", "quick", "🍔", "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"],
-        svec!["3", "0.423546456564534", "1", "1941-12-07", "1.2815162037037038", "brown", "is", "Le rusé goupil franchit d'un bond le chien somnolent."], 
-        svec!["4", "-54545.6565756785", "0", "2001-09-11 08:30:00", "0.9791666666666666", "fox", "💩", "El rápido zorro marrón"],
-        svec!["5", "-5446563454.43546", "true", "1945-08-06 08:15:00", "0.0004629629629629629", "jumped", "🙀", "いろはにほへとちりぬるをわかよたれそつねならむうゐのおくやまけふこえてあさきゆめみしゑひもせす"]
+        svec!["1", "1.1", "true", "2001-09-11", "PT37200S", "The", "The", "敏捷的棕色狐狸在森林里奔跑"], 
+        svec!["2", "1.32434354545454", "false", "2023-10-07", "PT85523S", "quick", "🍔", "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"], 
+        svec!["3", "0.423546456564534", "1", "1941-12-07", "P1DT24323S", "brown", "is", "Le rusé goupil franchit d'un bond le chien somnolent."], 
+        svec!["4", "-54545.6565756785", "0", "2001-09-11 08:30:00", "PT84600S", "fox", "💩", "El rápido zorro marrón"], 
+        svec!["5", "-5446563454.43546", "true", "1945-08-06 08:15:00", "PT40S", "jumped", "🙀", "いろはにほへとちりぬるをわかよたれそつねならむうゐのおくやまけふこえてあさきゆめみしゑひもせす"]
     ];
     assert_eq!(got, expected);
 }

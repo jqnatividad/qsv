@@ -83,6 +83,8 @@ Excel options:
                                for the full list of supported formats.
                                Note that if a date format is invalid, qsv will fall back and
                                return the date as if no date-format was specified.
+     --keep-zero-time          Keep the time part of a date-time field if it is 00:00:00.
+                               By default, qsv will remove the time part if it is 00:00:00.
      --range <range>           An Excel format range, like C:T or C3:T25, to extract to the CSV.
      -j, --jobs <arg>          The number of jobs to run in parallel.
                                When not set, the number of jobs is set to the number of CPUs detected.
@@ -97,7 +99,7 @@ Common options:
 
 use std::{cmp, fmt::Write, path::PathBuf};
 
-use calamine::{open_workbook_auto, DataType, Range, Reader, SheetType};
+use calamine::{open_workbook_auto, Data, Range, Reader, SheetType};
 use indicatif::HumanCount;
 use log::info;
 use rayon::prelude::*;
@@ -110,17 +112,18 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:        String,
-    flag_sheet:       String,
-    flag_metadata:    String,
-    flag_flexible:    bool,
-    flag_trim:        bool,
-    flag_output:      Option<String>,
-    flag_delimiter:   Option<Delimiter>,
-    flag_quiet:       bool,
-    flag_date_format: Option<String>,
-    flag_range:       String,
-    flag_jobs:        Option<usize>,
+    arg_input:           String,
+    flag_sheet:          String,
+    flag_metadata:       String,
+    flag_flexible:       bool,
+    flag_trim:           bool,
+    flag_output:         Option<String>,
+    flag_delimiter:      Option<Delimiter>,
+    flag_quiet:          bool,
+    flag_date_format:    Option<String>,
+    flag_keep_zero_time: bool,
+    flag_range:          String,
+    flag_jobs:           Option<usize>,
 }
 
 #[derive(PartialEq)]
@@ -529,19 +532,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     info!("exporting sheet ({sheet})... processing first row as header...");
     let first_row = match rows_iter.next() {
         Some(first_row) => first_row,
-        None => &[DataType::Empty],
+        None => &[Data::Empty],
     };
     for cell in first_row {
         col_name = match *cell {
-            DataType::String(ref s) => s.to_string(),
-            DataType::Empty => String::new(),
-            DataType::Error(ref _e) => String::new(),
-            DataType::Int(ref i) => i.to_string(),
-            DataType::DateTime(ref f) | DataType::Float(ref f) => f.to_string(),
-            DataType::Bool(ref b) => b.to_string(),
-            DataType::DateTimeIso(ref dt) => dt.to_string(),
-            DataType::DurationIso(ref d) => d.to_string(),
-            DataType::Duration(ref d) => d.to_string(),
+            Data::String(ref s) => s.to_string(),
+            Data::Empty => String::new(),
+            Data::Error(ref _e) => String::new(),
+            Data::Int(ref i) => i.to_string(),
+            Data::Float(ref f) => f.to_string(),
+            Data::DateTime(ref exceldatetime) => exceldatetime.to_string(),
+            Data::Bool(ref b) => b.to_string(),
+            Data::DateTimeIso(ref dt) => dt.to_string(),
+            Data::DurationIso(ref d) => d.to_string(),
+            // Data::Duration(ref d) => d.to_string(),
         };
         record.push_field(&col_name);
     }
@@ -580,16 +584,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // set chunk_size to number of rows per core/thread
     let chunk_size = row_count.div_ceil(ncpus);
+    let keep_zero_time = args.flag_keep_zero_time;
 
     let processed_rows: Vec<Vec<csv::StringRecord>> = rows
         .par_chunks(chunk_size)
         .map(|chunk| {
             let mut record = csv::StringRecord::with_capacity(500, col_count);
             let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
-            let mut cell_date_flag: bool = false;
-            let mut float_val = 0_f64;
-            let mut float_flag: bool = false;
-            let mut work_date;
+            let mut float_val;
+            let mut work_date = String::new();
             let mut ryu_buffer = ryu::Buffer::new();
             let mut itoa_buffer = itoa::Buffer::new();
             let mut formatted_date = String::new();
@@ -599,39 +602,35 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             for row in chunk {
                 for cell in *row {
                     match *cell {
-                        DataType::Empty => record.push_field(""),
-                        DataType::String(ref s) => record.push_field(s),
-                        DataType::Int(ref i) => record.push_field(itoa_buffer.format(*i)),
-                        DataType::Float(ref f) => {
+                        Data::Empty => record.push_field(""),
+                        Data::String(ref s) => record.push_field(s),
+                        Data::Int(ref i) => record.push_field(itoa_buffer.format(*i)),
+                        Data::Float(ref f) => {
                             float_val = *f;
-                            float_flag = true;
-                            cell_date_flag = false;
+                            // push the ryu-formatted float value if its
+                            // not an integer or the candidate
+                            // integer is too big or too small to be an i64
+                            #[allow(clippy::cast_precision_loss)]
+                            if float_val.fract().abs() > f64::EPSILON
+                                || float_val > i64::MAX as f64
+                                || float_val < i64::MIN as f64
+                            {
+                                record.push_field(ryu_buffer.format_finite(float_val));
+                            } else {
+                                // its an i64 integer. We can't use ryu to format it, because it
+                                // will be formatted as a
+                                // float (have a ".0"). So we use itoa.
+                                record.push_field(itoa_buffer.format(float_val as i64));
+                            }
                         },
-                        DataType::DateTime(ref f) => {
-                            float_val = *f;
-                            float_flag = true;
-                            cell_date_flag = true;
-                        },
-                        DataType::Error(ref e) => record.push_field(&format!("{e:?}")),
-                        DataType::Bool(ref b) => {
-                            record.push_field(if *b { "true" } else { "false" });
-                        },
-                        DataType::DateTimeIso(ref dt) => record.push_field(dt),
-                        DataType::DurationIso(ref d) => record.push_field(d),
-                        DataType::Duration(ref d) => record.push_field(ryu_buffer.format(*d)),
-                    };
-
-                    #[allow(clippy::cast_precision_loss)]
-                    if float_flag {
-                        if cell_date_flag {
-                            // its a date, so convert it
-                            work_date = if float_val.fract() > f64::EPSILON {
-                                // if it has a fractional part, then its a datetime
-                                if let Some(dt) = cell.as_datetime() {
+                        Data::DateTime(ref edt) => {
+                            if edt.is_datetime() {
+                                work_date.clear();
+                                if let Some(dt) = edt.as_datetime() {
                                     if date_format.is_empty() {
                                         // no date format specified, so we'll just use the
                                         // default format for the datetime
-                                        dt.to_string()
+                                        work_date = dt.to_string();
                                     } else {
                                         // a date format was specified, so we'll use it
                                         (formatted_date).clear();
@@ -640,51 +639,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                         {
                                             // the format string was ok, so use to_string()
                                             // to actually apply the DelayedFormat
-                                            formatted_date.to_string()
+                                            work_date = formatted_date.to_string();
                                         } else {
                                             // if there was a format error, revert to the
                                             // default format
-                                            dt.to_string()
+                                            work_date = dt.to_string();
                                         }
                                     }
-                                } else {
-                                    format!("ERROR: Cannot convert {float_val} to datetime")
-                                }
-                            } else if let Some(d) = cell.as_date() {
-                                // if it has no fractional part and calamine can return it
-                                // as_date, then its a date
-                                if date_format.is_empty() {
-                                    d.to_string()
-                                } else {
-                                    formatted_date.clear();
-                                    if write!(formatted_date, "{}", d.format(&date_format)).is_ok()
-                                    {
-                                        formatted_date.to_string()
-                                    } else {
-                                        d.to_string()
+                                    if !keep_zero_time && work_date.ends_with(" 00:00:00") {
+                                        work_date.truncate(work_date.len() - 9);
                                     }
                                 }
                             } else {
-                                format!("ERROR: Cannot convert {float_val} to date")
+                                // its not a datetime, its a duration
+                                work_date = edt.as_duration().unwrap().to_string();
                             };
+
                             record.push_field(&work_date);
-                        // its not a date, so just push the ryu-formatted float value if its
-                        // not an integer or the candidate
-                        // integer is too big or too small to be an i64
-                        } else if float_val.fract().abs() > f64::EPSILON
-                            || float_val > i64::MAX as f64
-                            || float_val < i64::MIN as f64
-                        {
-                            record.push_field(ryu_buffer.format_finite(float_val));
-                        } else {
-                            // its an i64 integer. We can't use ryu to format it, because it
-                            // will be formatted as a
-                            // float (have a ".0"). So we use itoa.
-                            record.push_field(itoa_buffer.format(float_val as i64));
-                        }
-                        // reset the float flag
-                        float_flag = false;
-                    }
+                        },
+                        Data::Error(ref e) => record.push_field(&format!("{e:?}")),
+                        Data::Bool(ref b) => {
+                            record.push_field(if *b { "true" } else { "false" });
+                        },
+                        Data::DateTimeIso(ref dt) => record.push_field(dt),
+                        Data::DurationIso(ref d) => record.push_field(d),
+                    };
                 }
 
                 if trim {
