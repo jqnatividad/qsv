@@ -53,6 +53,20 @@ fn excel_open_xlsx_readpassword() {
 }
 
 #[test]
+fn excel_open_ods_readpassword() {
+    let wrk = Workdir::new("excel_open_ods_readpassword");
+
+    let ods_file = wrk.load_test_file("password-protected-password123.ods");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg(ods_file);
+
+    let got = wrk.output_stderr(&mut cmd);
+    assert_eq!(got, "Ods error: Workbook is password protected\n");
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
 fn excel_open_flexible_xls() {
     let wrk = Workdir::new("excel_open_flexible_xls");
 
