@@ -249,9 +249,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let sheet_names = workbook.sheet_names();
     if sheet_names.is_empty() {
-        if ods_flag {
-            return fail_clierror!("{path} may be password protected.");
-        };
         return fail!("No sheets found.");
     }
     let num_sheets = sheet_names.len();
