@@ -545,7 +545,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Data::Bool(ref b) => b.to_string(),
             Data::DateTimeIso(ref dt) => dt.to_string(),
             Data::DurationIso(ref d) => d.to_string(),
-            // Data::Duration(ref d) => d.to_string(),
         };
         record.push_field(&col_name);
     }
@@ -566,9 +565,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     info!("header: {record:?}");
     wtr.write_record(&record)?;
 
+    let no_date_format;
     let date_format = if let Some(df) = args.flag_date_format {
+        no_date_format = false;
         df
     } else {
+        no_date_format = true;
         String::new()
     };
 
@@ -584,6 +586,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // set chunk_size to number of rows per core/thread
     let chunk_size = row_count.div_ceil(ncpus);
+
     let keep_zero_time = args.flag_keep_zero_time;
 
     let processed_rows: Vec<Vec<csv::StringRecord>> = rows
@@ -592,7 +595,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let mut record = csv::StringRecord::with_capacity(500, col_count);
             let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
             let mut float_val;
-            let mut work_date = String::new();
+            let mut work_date;
             let mut ryu_buffer = ryu::Buffer::new();
             let mut itoa_buffer = itoa::Buffer::new();
             let mut formatted_date = String::new();
@@ -625,15 +628,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         },
                         Data::DateTime(ref edt) => {
                             if edt.is_datetime() {
-                                work_date.clear();
                                 if let Some(dt) = edt.as_datetime() {
-                                    if date_format.is_empty() {
+                                    if no_date_format {
                                         // no date format specified, so we'll just use the
                                         // default format for the datetime
                                         work_date = dt.to_string();
                                     } else {
                                         // a date format was specified, so we'll use it
-                                        (formatted_date).clear();
+                                        formatted_date.clear();
                                         if write!(formatted_date, "{}", dt.format(&date_format))
                                             .is_ok()
                                         {
@@ -649,9 +651,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                     if !keep_zero_time && work_date.ends_with(" 00:00:00") {
                                         work_date.truncate(work_date.len() - 9);
                                     }
+                                } else {
+                                    // if the datetime is invalid, just return the datetime as a
+                                    // string this should never
+                                    // happen as we did a is_datetime check
+                                    // before we got here. We're just doing it so that work_date
+                                    // is initialized properly without wasting an allocation
+                                    work_date = edt.to_string();
                                 }
                             } else {
                                 // its not a datetime, its a duration
+                                // return the duration as a string in ISO 8601 format
+                                // https://www.digi.com/resources/documentation/digidocs/90001488-13/reference/r_iso_8601_duration_format.htm
+                                // safety: we know this is a duration coz we did a is_datetime check
+                                // above & ExcelDataTime only has 2 variants, DateTime & Duration
                                 work_date = edt.as_duration().unwrap().to_string();
                             };
 
@@ -667,6 +680,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
 
                 if trim {
+                    // record.trim() is faster than trimming each field piecemeal
                     record.trim();
                     record.iter().for_each(|field| {
                         if field.contains('\n') {
