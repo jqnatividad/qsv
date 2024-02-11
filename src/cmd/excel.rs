@@ -653,7 +653,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 // its not a datetime, its a duration
                                 work_date = edt.as_duration().unwrap().to_string();
                             };
-                            
+
                             record.push_field(&work_date);
                         },
                         Data::Error(ref e) => record.push_field(&format!("{e:?}")),
