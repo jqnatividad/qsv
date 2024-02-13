@@ -1456,6 +1456,7 @@ impl Commute for Stats {
 }
 
 #[allow(clippy::enum_variant_names)]
+#[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Copy, PartialEq, Default, Serialize, Deserialize)]
 enum FieldType {
     // The default - TNull, is the most specific type.
@@ -1496,8 +1497,9 @@ impl FieldType {
             || current_type == FieldType::TNull
         {
             if let Ok(int_val) = atoi_simd::parse::<i64>(sample) {
-                // leading zero, its a string (e.g. zip codes)
-                if sample[0] == b'0' && int_val != 0 {
+                // safety: we know sample is not empty
+                if int_val != 0 && unsafe { sample.get_unchecked(0) == &b'0' } {
+                    // leading zero, its a string (e.g. zip codes)
                     return (TString, None);
                 }
                 return (TInteger, None);
