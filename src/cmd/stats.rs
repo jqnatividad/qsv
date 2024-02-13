@@ -1491,36 +1491,50 @@ impl FieldType {
             return (FieldType::TString, None);
         }
 
-        let Ok(string) = from_utf8(sample) else {
-            // if the string is not valid utf8, we assume it is a binary string
-            // and return a string type
-            return (FieldType::TString, None);
-        };
-
-        if current_type == FieldType::TFloat
+        let utf8_string = if current_type == FieldType::TFloat
             || current_type == FieldType::TInteger
             || current_type == FieldType::TNull
         {
             if let Ok(int_val) = atoi_simd::parse::<i64>(sample) {
                 // leading zero, its a string (e.g. zip codes)
-                if string.as_bytes()[0] == b'0' && int_val != 0 {
+                if sample[0] == b'0' && int_val != 0 {
                     return (TString, None);
                 }
                 return (TInteger, None);
             }
 
+            let Ok(string) = from_utf8(sample) else {
+                // if the string is not valid utf8, we assume it is a binary string
+                // and return a string type
+                return (FieldType::TString, None);
+            };
+
             if string.parse::<f64>().is_ok() {
                 return (TFloat, None);
             }
-        }
+
+            Some(string)
+        } else {
+            None
+        };
 
         if infer_dates
             && (current_type == FieldType::TDate
                 || current_type == FieldType::TDateTime
                 || current_type == FieldType::TNull)
         {
+            // if we already have a utf8 string, use it, otherwise, convert the sample to a utf8 string
+            // if the sample is not valid utf8, we assume it is a binary string and return a string type
+            let date_string = if let Some(s) = utf8_string {
+                s
+            } else if let Ok(s) = from_utf8(sample) {
+                s
+            } else {
+                return (FieldType::TString, None);
+            };
+
             if let Ok(parsed_date) =
-                parse_with_preference(string, DMY_PREFERENCE.load(Ordering::Relaxed))
+                parse_with_preference(date_string, DMY_PREFERENCE.load(Ordering::Relaxed))
             {
                 // get date in rfc3339 format, if it ends with "T00:00:00+00:00"
                 // its a Date type, otherwise, its DateTime.
