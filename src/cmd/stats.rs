@@ -1523,8 +1523,8 @@ impl FieldType {
                 || current_type == FieldType::TDateTime
                 || current_type == FieldType::TNull)
         {
-            // if we already have a utf8 string, use it, otherwise, convert the sample to a utf8 string
-            // if the sample is not valid utf8, we assume it is a binary string and return a string type
+            // if we already have a utf8 string, use it, otherwise, convert sample to utf8
+            // if the sample isn't valid utf8, we assume a binary string & return a string type
             let date_string = if let Some(s) = utf8_string {
                 s
             } else if let Ok(s) = from_utf8(sample) {
