@@ -2049,8 +2049,8 @@ dependencies = [
 
 [[package]]
 name = "grex"
-version = "1.4.4"
-source = "git+https://github.com/pemistahl/grex?rev=86f8633d9a4ba18a99b2fe7e425a0a0b319c2d06#86f8633d9a4ba18a99b2fe7e425a0a0b319c2d06"
+version = "1.4.5"
+source = "git+https://github.com/pemistahl/grex?rev=7b476fe9034c1dbc327c7e592a00e20747ea04e8#7b476fe9034c1dbc327c7e592a00e20747ea04e8"
 dependencies = [
  "itertools",
  "lazy_static",
