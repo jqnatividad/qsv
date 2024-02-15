@@ -351,7 +351,7 @@ impl FromStr for OutputMode {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
+        match s.to_ascii_lowercase().as_str() {
             "csv" => Ok(OutputMode::Csv),
             "json" => Ok(OutputMode::Json),
             "parquet" => Ok(OutputMode::Parquet),
@@ -376,7 +376,7 @@ impl FromStr for PqtCompression {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
+        match s.to_ascii_lowercase().as_str() {
             "uncompressed" => Ok(PqtCompression::Uncompressed),
             "gzip" => Ok(PqtCompression::Gzip),
             "snappy" => Ok(PqtCompression::Snappy),

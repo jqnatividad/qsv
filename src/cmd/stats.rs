@@ -316,7 +316,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             false
         } else {
             let p = args.flag_output.clone().unwrap();
-            p.to_lowercase().ends_with(".sz")
+            p.to_ascii_lowercase().ends_with(".sz")
         },
         canonical_input_path: String::new(),
         canonical_stats_path: String::new(),
@@ -888,7 +888,7 @@ fn init_date_inference(
     let dmy_preferred = prefer_dmy || util::get_envvar_flag("QSV_PREFER_DMY");
     DMY_PREFERENCE.store(dmy_preferred, Ordering::Relaxed);
 
-    let whitelist_lower = flag_whitelist.to_lowercase();
+    let whitelist_lower = flag_whitelist.to_ascii_lowercase();
     log::info!("inferring dates with date-whitelist: {whitelist_lower}");
 
     let infer_date_flags = if whitelist_lower == "all" {

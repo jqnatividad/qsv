@@ -131,7 +131,7 @@ impl Config {
                     .unwrap_or_default()
                     .to_str()
                     .unwrap()
-                    .to_lowercase();
+                    .to_ascii_lowercase();
                 let mut snappy = false;
                 let delim = if file_extension == "tsv" || file_extension == "tab" {
                     b'\t'

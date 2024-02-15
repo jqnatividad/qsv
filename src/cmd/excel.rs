@@ -231,7 +231,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .extension()
         .and_then(std::ffi::OsStr::to_str)
         .unwrap_or_default()
-        .to_lowercase();
+        .to_ascii_lowercase();
     let ods_flag = match format.as_str() {
         "xls" | "xlsx" | "xlsm" | "xlsb" => false,
         "ods" => true,

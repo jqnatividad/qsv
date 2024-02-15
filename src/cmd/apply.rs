@@ -595,7 +595,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // we set it to empty string
     let flag_replacement = if apply_cmd == ApplySubCmd::Operations
         && ops_vec.contains(&Operations::Regex_Replace)
-        && args.flag_replacement.to_lowercase() == NULL_VALUE
+        && args.flag_replacement.to_ascii_lowercase() == NULL_VALUE
     {
         String::new()
     } else {

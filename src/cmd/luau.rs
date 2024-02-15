@@ -1413,7 +1413,7 @@ fn create_index(arg_input: &Option<String>) -> Result<bool, CliError> {
         return Ok(false);
     };
 
-    if input.to_lowercase().ends_with(".sz") {
+    if input.to_ascii_lowercase().ends_with(".sz") {
         log::warn!("qsv_autoindex() does not work with snappy files.");
         return Ok(false);
     }
@@ -1481,7 +1481,7 @@ fn setup_helpers(
             let val = luau.from_value::<serde_json::Value>(val)?;
             let val_str = &serde_json::to_string_pretty(&val).unwrap_or_default();
             if idx == 0 {
-                log_level = val_str.trim_matches('"').to_lowercase();
+                log_level = val_str.trim_matches('"').to_ascii_lowercase();
             } else {
                 log_msg.push_str(val_str.trim_matches('"'));
                 if idx == u8::MAX {
