@@ -301,22 +301,22 @@ Should you need to re-encode CSV/TSV files, you can use the `input` command to "
 
 Alternatively, if you want to truly transcode to UTF-8, there are several utilities like [`iconv`](https://en.wikipedia.org/wiki/Iconv) that you can use to do so on [Linux/macOS](https://stackoverflow.com/questions/805418/how-can-i-find-encoding-of-a-file-via-a-script-on-linux) & [Windows](https://superuser.com/questions/1163753/converting-text-file-to-utf-8-on-windows-command-prompt).
 
-### Windows Excel Usage Note
+### Windows Powershell and Windows Excel Usage Note
 
-Unlike other modern operating systems, Microsoft Windows' [default encoding is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file & trying to open it with Excel (which ignores the comma delimiter, with everything in the first column if the file is UTF16-LE encoded):
+Unlike other modern operating systems, Microsoft Windows' [default encoding](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-7.4) [is UTF16-LE](https://stackoverflow.com/questions/66072117/why-does-windows-use-utf-16le). This will cause problems when redirecting qsv's output to a CSV file in Powershell & trying to open it with Excel - everything will be in the first column, as the UTF16-LE encoded CSV file will not be properly recognized by Excel.
 
 ```
 # the following command will produce a UTF16-LE encoded CSV file on Windows
 qsv stats wcp.csv > wcpstats.csv
 ```
 
-Which is weird, since you would think [Microsoft's own Excel would properly recognize UTF16-LE encoded CSV files](https://answers.microsoft.com/en-us/msoffice/forum/all/opening-csv-file-with-utf16-encoding-in-excel-2010/ed522cb9-e88d-4b82-b88e-a2d4bd99f874?auth=1). Regardless, to create a properly UTF-8 encoded file on Windows, use the `--output` option instead:
+Which is weird, since you'd think [Microsoft's own Excel would properly recognize UTF16-LE encoded CSV files](https://answers.microsoft.com/en-us/msoffice/forum/all/opening-csv-file-with-utf16-encoding-in-excel-2010/ed522cb9-e88d-4b82-b88e-a2d4bd99f874?auth=1). Regardless, to create a properly UTF-8 encoded file on Windows, use the `--output` option instead:
 
 ```
-# so instead of redirecting stdout to a file
+# so instead of redirecting stdout to a file on Windows
 qsv stats wcp.csv > wcpstats.csv
 
-# do this instead
+# do this instead, so it will be properly UTF-8 encoded
 qsv stats wcp.csv --output wcpstats.csv
 ```
 
@@ -324,7 +324,9 @@ Alternatively, qsv can add a [Byte Order Mark](https://en.wikipedia.org/wiki/Byt
 
 This will allow Excel on Windows to properly recognize the CSV file as UTF-8 encoded.
 
-Note that this problem does not occur on Excel on macOS, as macOS uses UTF-8 as its default encoding.
+Note that this is not a problem with Excel on macOS, as macOS (like most other *nixes) uses UTF-8 as its default encoding.
+
+Nor is it a problem with qsv output files produced on other operating systems, as Excel on Windows can properly recognize UTF-8 encoded CSV files.
 
 ## Interpreters
 For complex data-wrangling tasks, you can use Luau and Python scripts.
