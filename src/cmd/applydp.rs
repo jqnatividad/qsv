@@ -441,6 +441,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let flag_new_column = args.flag_new_column;
 
     let prefer_dmy = args.flag_prefer_dmy || rconfig.get_dmy_preference();
+    let flag_keep_zero_time = args.flag_keep_zero_time;
 
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
@@ -525,12 +526,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 if let Ok(format_date) = parsed_date {
                                     let formatted_date =
                                         format_date.format(&flag_formatstr).to_string();
-                                    if !args.flag_keep_zero_time
+                                    if !flag_keep_zero_time
                                         && formatted_date.ends_with("T00:00:00+00:00")
                                     {
-                                        cell = formatted_date[..10].to_string();
+                                        formatted_date[..10].clone_into(&mut cell);
                                     } else {
-                                        cell = formatted_date;
+                                        formatted_date.clone_into(&mut cell);
                                     }
                                 }
                             }
