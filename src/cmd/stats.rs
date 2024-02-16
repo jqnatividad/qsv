@@ -266,6 +266,7 @@ static RECORD_COUNT: OnceLock<u64> = OnceLock::new();
 
 // number of milliseconds per day
 const MS_IN_DAY: f64 = 86_400_000.0;
+const MS_IN_DAY_INT: i64 = 86_400_000;
 // number of decimal places when rounding days
 // 5 decimal places give us millisecond precision
 const DAY_DECIMAL_PLACES: u32 = 5;
@@ -1532,16 +1533,21 @@ impl FieldType {
             } else if let Ok(s) = from_utf8(sample) {
                 s
             } else {
+                // the string is not valid utf8, we assume it is a binary string
+                // and return a string type
                 return (FieldType::TString, None);
             };
 
             if let Ok(parsed_date) =
                 parse_with_preference(date_string, DMY_PREFERENCE.load(Ordering::Relaxed))
             {
-                // get date in rfc3339 format, if it ends with "T00:00:00+00:00"
-                // its a Date type, otherwise, its DateTime.
+                // check if the tstamp (Unix Epoch format) modulo by 86400000 (ms in a day)
+                // if the remainder is 0, we says its Date type candidate, otherwise, its DateTime.
+                // this is a performance optimization to avoid parsing the date to rfc3339
+                // and then checking if the time component is T00:00:00, as was done previously
+                // see https://stackoverflow.com/questions/40948290/is-it-safe-to-use-modulo-operator-with-unix-epoch-timestamp
                 let ts_val = parsed_date.timestamp_millis();
-                if parsed_date.to_rfc3339().ends_with("T00:00:00+00:00") {
+                if ts_val % MS_IN_DAY_INT == 0 {
                     return (TDate, Some(ts_val));
                 }
                 return (TDateTime, Some(ts_val));
@@ -1713,7 +1719,10 @@ impl TypedMinMax {
                 #[allow(clippy::cast_precision_loss)]
                 self.floats.add(n as f64);
             },
-            TDate | TDateTime => {
+            // it must be a TDate or TDateTime
+            // we use _ here for the match to avoid
+            // the overhead of matching on the OR value, however minor
+            _ => {
                 let n = atoi_simd::parse::<i64>(sample).unwrap();
                 self.dates.add(n);
             },
