@@ -180,10 +180,7 @@ use std::{
     iter::repeat,
     path::{Path, PathBuf},
     str,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        OnceLock,
-    },
+    sync::OnceLock,
 };
 
 use gzp::{par::compress::ParCompressBuilder, snap::Snap};
@@ -261,7 +258,6 @@ struct StatsArgs {
 }
 
 static INFER_DATE_FLAGS: OnceLock<Vec<bool>> = OnceLock::new();
-static DMY_PREFERENCE: AtomicBool = AtomicBool::new(false);
 static RECORD_COUNT: OnceLock<u64> = OnceLock::new();
 
 // number of milliseconds per day
@@ -286,6 +282,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_infer_boolean && !args.flag_cardinality {
         args.flag_cardinality = true;
     }
+
+    // check prefer_dmy env var
+    args.flag_prefer_dmy = args.flag_prefer_dmy || util::get_envvar_flag("QSV_PREFER_DMY");
 
     // set stdout output flag
     let stdout_output_flag = args.flag_output.is_none();
@@ -624,12 +623,7 @@ impl Args {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
 
-        init_date_inference(
-            self.flag_infer_dates,
-            self.flag_prefer_dmy,
-            &headers,
-            whitelist,
-        )?;
+        init_date_inference(self.flag_infer_dates, &headers, whitelist)?;
 
         let stats = self.compute(&sel, rdr.byte_records());
         Ok((headers, stats))
@@ -649,12 +643,7 @@ impl Args {
         let mut rdr = self.rconfig().reader()?;
         let (headers, sel) = self.sel_headers(&mut rdr)?;
 
-        init_date_inference(
-            self.flag_infer_dates,
-            self.flag_prefer_dmy,
-            &headers,
-            whitelist,
-        )?;
+        init_date_inference(self.flag_infer_dates, &headers, whitelist)?;
 
         let chunk_size = util::chunk_size(idx_count as usize, util::njobs(self.flag_jobs));
         let nchunks = util::num_of_chunks(idx_count as usize, chunk_size);
@@ -715,8 +704,9 @@ impl Args {
 
         // safety: we know INFER_DATE_FLAGS is Some because we called init_date_inference
         let infer_date_flags = INFER_DATE_FLAGS.get().unwrap();
-        // so we don't need to get flag_infer_boolean from big args struct for each iteration
+        // so we don't need to get infer_boolean/prefer_dmy from big args struct for each iteration
         let infer_boolean = self.flag_infer_boolean;
+        let prefer_dmy = self.flag_prefer_dmy;
 
         // safety: because we're using iterators and INFER_DATE_FLAGS has the same size,
         // we know we don't need to bounds check
@@ -729,6 +719,7 @@ impl Args {
                         field,
                         *infer_date_flags.get_unchecked(i),
                         infer_boolean,
+                        prefer_dmy,
                     );
                     i += 1;
                 }
@@ -874,7 +865,6 @@ fn stats_path(stats_csv_path: &Path, stdin_flag: bool) -> PathBuf {
 #[inline]
 fn init_date_inference(
     infer_dates: bool,
-    prefer_dmy: bool,
     headers: &csv::ByteRecord,
     flag_whitelist: &str,
 ) -> Result<(), String> {
@@ -886,14 +876,11 @@ fn init_date_inference(
         return Ok(());
     }
 
-    let dmy_preferred = prefer_dmy || util::get_envvar_flag("QSV_PREFER_DMY");
-    DMY_PREFERENCE.store(dmy_preferred, Ordering::Relaxed);
-
     let whitelist_lower = flag_whitelist.to_ascii_lowercase();
     log::info!("inferring dates with date-whitelist: {whitelist_lower}");
 
     let infer_date_flags = if whitelist_lower == "all" {
-        log::info!("inferring dates for ALL fields with DMY preference: {dmy_preferred}");
+        log::info!("inferring dates for ALL fields");
         vec![true; headers.len()]
     } else {
         let mut header_str = String::new();
@@ -910,9 +897,7 @@ fn init_date_inference(
                     .iter()
                     .any(|whitelist_item| header_str.contains(whitelist_item));
                 if date_found {
-                    log::info!(
-                        "inferring dates for {header_str} with DMY preference: {dmy_preferred}"
-                    );
+                    log::info!("inferring dates for {header_str}");
                 }
                 date_found
             })
@@ -1017,8 +1002,9 @@ impl Stats {
     }
 
     #[inline]
-    fn add(&mut self, sample: &[u8], infer_dates: bool, infer_boolean: bool) {
-        let (sample_type, timestamp_val) = FieldType::from_sample(infer_dates, sample, self.typ);
+    fn add(&mut self, sample: &[u8], infer_dates: bool, infer_boolean: bool, prefer_dmy: bool) {
+        let (sample_type, timestamp_val) =
+            FieldType::from_sample(infer_dates, prefer_dmy, sample, self.typ);
         self.typ.merge(sample_type);
 
         // we're inferring --typesonly, so don't add samples to compute statistics
@@ -1481,6 +1467,7 @@ impl FieldType {
     #[inline]
     pub fn from_sample(
         infer_dates: bool,
+        prefer_dmy: bool,
         sample: &[u8],
         current_type: FieldType,
     ) -> (FieldType, Option<i64>) {
@@ -1538,9 +1525,7 @@ impl FieldType {
                 return (FieldType::TString, None);
             };
 
-            if let Ok(parsed_date) =
-                parse_with_preference(date_string, DMY_PREFERENCE.load(Ordering::Relaxed))
-            {
+            if let Ok(parsed_date) = parse_with_preference(date_string, prefer_dmy) {
                 // check if the tstamp (Unix Epoch format) modulo by 86400000 (ms in a day)
                 // if the remainder is 0, we says its Date type candidate, otherwise, its DateTime.
                 // this is a performance optimization to avoid parsing the date to rfc3339
