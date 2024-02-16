@@ -2430,19 +2430,19 @@ checksum = "72167d68f5fce3b8655487b8038691a3c9984ee769590f93f2a631f4ad64e4f5"
 
 [[package]]
 name = "jql-parser"
-version = "7.1.3"
+version = "7.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e87de549d592b714938aea35bffefe56f3e833798e26103e12d8c932d2e06a18"
+checksum = "7b6fa7fa54ce9bb46ec207d33584ce261e00547c6c3822de801052f65921e82f"
 dependencies = [
  "thiserror",
- "winnow",
+ "winnow 0.6.1",
 ]
 
 [[package]]
 name = "jql-runner"
-version = "7.1.3"
+version = "7.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95e288ee1f0db09ef58496d15e3b78529e26be6b70887167b664544fd1ca3019"
+checksum = "f55c3e664f44b6d800b0e47f6924c2f24078fa2b1f65efd19feba6d1d0bb6326"
 dependencies = [
  "jql-parser",
  "rayon",
@@ -5555,7 +5555,7 @@ checksum = "6a8534fd7f78b5405e860340ad6575217ce99f38d4d5c8f2442cb5ecb50090e1"
 dependencies = [
  "indexmap",
  "toml_datetime",
- "winnow",
+ "winnow 0.5.40",
 ]
 
 [[package]]
@@ -6181,6 +6181,15 @@ name = "winnow"
 version = "0.5.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f593a95398737aeed53e489c785df13f3618e41dbcd6718c6addbf1395aa6876"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
+name = "winnow"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d90f4e0f530c4c69f62b80d839e9ef3855edc9cba471a160c4d692deed62b401"
 dependencies = [
  "memchr",
 ]
