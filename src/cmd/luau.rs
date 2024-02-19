@@ -248,7 +248,6 @@ use mlua::{Lua, LuaSerdeExt, Value};
 use serde::Deserialize;
 use simple_expand_tilde::expand_tilde;
 use strum_macros::IntoStaticStr;
-use tempfile;
 
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},

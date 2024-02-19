@@ -1,5 +1,4 @@
 use std::{
-    borrow::ToOwned,
     env, fs,
     io::{self, Read},
     path::{Path, PathBuf},

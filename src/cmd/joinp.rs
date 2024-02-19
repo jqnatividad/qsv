@@ -184,7 +184,6 @@ use polars::{
     sql::SQLContext,
 };
 use serde::Deserialize;
-use smartstring;
 use tempfile::tempdir;
 
 use crate::{cmd::sqlp::compress_output_if_needed, config::Delimiter, util, CliError, CliResult};

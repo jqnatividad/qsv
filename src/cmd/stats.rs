@@ -173,7 +173,6 @@ with >480 tests.
 */
 
 use std::{
-    borrow::ToOwned,
     default::Default,
     fmt, fs, io,
     io::Write,

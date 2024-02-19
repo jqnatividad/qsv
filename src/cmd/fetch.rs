@@ -201,7 +201,6 @@ use log::{
     Level::{Debug, Trace, Warn},
 };
 use rand::Rng;
-use redis;
 use regex::Regex;
 use reqwest::{
     blocking::Client,

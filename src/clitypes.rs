@@ -1,6 +1,5 @@
 #![macro_use]
 use std::{
-    borrow::ToOwned,
     fmt, io,
     process::{ExitCode, Termination},
     sync::OnceLock,

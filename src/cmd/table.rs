@@ -33,7 +33,7 @@ Common options:
                            CSV into memory using CONSERVATIVE heuristics.
 "#;
 
-use std::{borrow::Cow, convert::From};
+use std::borrow::Cow;
 
 use serde::Deserialize;
 use tabwriter::{Alignment, TabWriter};

@@ -78,7 +78,6 @@ use std::{
 use indexmap::{IndexMap, IndexSet};
 use serde::Deserialize;
 use strum_macros::EnumString;
-use tempfile;
 
 use crate::{
     config::{Config, Delimiter},

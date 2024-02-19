@@ -207,7 +207,6 @@ use polars::{
     sql::SQLContext,
 };
 use serde::Deserialize;
-use tempfile;
 
 use crate::{
     cmd::joinp::tsvtab_delim,

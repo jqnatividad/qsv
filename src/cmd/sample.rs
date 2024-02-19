@@ -66,7 +66,7 @@ Common options:
 
 use std::{io, str::FromStr};
 
-use rand::{self, rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
+use rand::{rngs::StdRng, seq::SliceRandom, Rng, SeedableRng};
 use rand_hc::Hc128Rng;
 use rand_xoshiro::Xoshiro256Plus;
 use serde::Deserialize;

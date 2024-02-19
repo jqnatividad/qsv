@@ -60,7 +60,6 @@ use std::{
 
 use gzp::{par::compress::ParCompressBuilder, snap::Snap, ZWriter};
 use serde::Deserialize;
-use snap;
 use tempfile::NamedTempFile;
 use url::Url;
 

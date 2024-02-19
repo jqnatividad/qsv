@@ -192,7 +192,6 @@ use log::{
     Level::{Debug, Trace, Warn},
 };
 use rand::Rng;
-use redis;
 use regex::Regex;
 use reqwest::{
     blocking::Client,
@@ -200,7 +199,6 @@ use reqwest::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use serde_urlencoded;
 use simdutf8::basic::from_utf8;
 use url::Url;
 
