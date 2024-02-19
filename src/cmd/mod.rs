@@ -54,7 +54,6 @@ pub mod pseudo;
 pub mod python;
 pub mod rename;
 pub mod replace;
-#[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod reverse;
 pub mod safenames;
 pub mod sample;

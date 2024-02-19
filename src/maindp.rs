@@ -70,6 +70,7 @@ macro_rules! command_list {
     pseudo      Pseudonymise the values of a column
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
+    reverse     Reverse rows of CSV data
     safenames   Modify a CSV's header names to db-safe names
     sample      Randomly sample CSV data
     search      Search CSV data with a regex
@@ -247,6 +248,7 @@ enum Command {
     Pseudo,
     Rename,
     Replace,
+    Reverse,
     Safenames,
     Sample,
     Search,
@@ -298,6 +300,7 @@ impl Command {
             Command::Pseudo => cmd::pseudo::run(argv),
             Command::Rename => cmd::rename::run(argv),
             Command::Replace => cmd::replace::run(argv),
+            Command::Reverse => cmd::reverse::run(argv),
             Command::Safenames => cmd::safenames::run(argv),
             Command::Sample => cmd::sample::run(argv),
             Command::Search => cmd::search::run(argv),

@@ -86,7 +86,6 @@ mod test_pseudo;
 mod test_py;
 mod test_rename;
 mod test_replace;
-#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_reverse;
 mod test_safenames;
 mod test_sample;
