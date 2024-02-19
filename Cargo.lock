@@ -1966,9 +1966,9 @@ dependencies = [
 
 [[package]]
 name = "geosuggest-core"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9064dddd054b2025317cd0a08400ec67ba7c92e264fdb470a778f11a3c04676"
+checksum = "91e0947451b44b3726127b4b1ae366fd6ab7303fac736a01e476ac4a7ed67e0a"
 dependencies = [
  "bincode",
  "csv",
@@ -2512,9 +2512,9 @@ dependencies = [
 
 [[package]]
 name = "kiddo"
-version = "4.0.0"
+version = "4.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "772929f90d2cc9bb2594c2732f956f5bb7223d7c52d30eb2a236a80594219413"
+checksum = "9d2f8d9e1bc7c6919ad2cdc83472a9a4b5ed2ea2c5392c9514fdf958a7920f9a"
 dependencies = [
  "az",
  "divrem",
@@ -2527,9 +2527,6 @@ dependencies = [
  "log",
  "num-traits",
  "ordered-float 4.2.0",
- "rand",
- "rand_chacha",
- "rayon",
  "sorted-vec",
  "tracing",
  "tracing-subscriber",
