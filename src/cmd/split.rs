@@ -74,7 +74,7 @@ split options:
                            This option is mutually exclusive with --size and --chunks.
     --sep-factor <arg>     The factor to use when estimating the size of the
                            separators (delimiters, quotes & spaces) in the CSV data 
-                           when splitting by size. [default: 1.5]
+                           when splitting by --kb-size. [default: 1.5]
 
     -j, --jobs <arg>       The number of splitting jobs to run in parallel.
                            This only works when the given CSV data has
