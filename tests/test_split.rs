@@ -778,3 +778,53 @@ fn split_nooutdir() {
     let expected = "usage error: <outdir> is not specified or is a file.\n";
     assert_eq!(got, expected);
 }
+
+#[test]
+fn split_kbsize_boston_2k() {
+    let wrk = Workdir::new("split_kbsize_boston_2k");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("split");
+    cmd.args(["--kb-size", "5"])
+        .arg(&wrk.path("."))
+        .arg(test_file);
+    wrk.run(&mut cmd);
+
+    assert!(wrk.path("0.csv").exists());
+    assert!(wrk.path("11.csv").exists());
+    assert!(wrk.path("20.csv").exists());
+    assert!(wrk.path("29.csv").exists());
+    assert!(wrk.path("39.csv").exists());
+    assert!(wrk.path("48.csv").exists());
+    assert!(wrk.path("57.csv").exists());
+    assert!(wrk.path("68.csv").exists());
+    assert!(wrk.path("78.csv").exists());
+    assert!(wrk.path("88.csv").exists());
+    assert!(wrk.path("98.csv").exists());
+}
+
+#[test]
+fn split_kbsize_boston_2k_padded() {
+    let wrk = Workdir::new("split_kbsize_boston_2k_padded");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("split");
+    cmd.args(["--kb-size", "5"])
+        .arg(&wrk.path("."))
+        .args(["--filename", "testme-{}.csv"])
+        .args(["--pad", "3"])
+        .arg(test_file);
+    wrk.run(&mut cmd);
+
+    assert!(wrk.path("testme-000.csv").exists());
+    assert!(wrk.path("testme-011.csv").exists());
+    assert!(wrk.path("testme-020.csv").exists());
+    assert!(wrk.path("testme-029.csv").exists());
+    assert!(wrk.path("testme-039.csv").exists());
+    assert!(wrk.path("testme-048.csv").exists());
+    assert!(wrk.path("testme-057.csv").exists());
+    assert!(wrk.path("testme-068.csv").exists());
+    assert!(wrk.path("testme-078.csv").exists());
+    assert!(wrk.path("testme-088.csv").exists());
+    assert!(wrk.path("testme-098.csv").exists());
+}
