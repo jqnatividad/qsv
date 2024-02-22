@@ -140,8 +140,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     fs::create_dir_all(&args.arg_outdir)?;
 
-    if args.flag_kb_size.is_some() {
-        args.split_by_kb_size()
+    if let Some(kb_size) = args.flag_kb_size {
+        args.split_by_kb_size(kb_size)
     } else {
         // we're splitting by rowcount or by number of chunks
         match args.rconfig().indexed()? {
@@ -158,7 +158,7 @@ impl From<simdutf8::basic::Utf8Error> for CliError {
 }
 
 impl Args {
-    fn split_by_kb_size(&self) -> CliResult<()> {
+    fn split_by_kb_size(&self, chunk_size: usize) -> CliResult<()> {
         let rconfig = self.rconfig();
         let mut rdr = rconfig.reader()?;
         let headers = rdr.byte_headers()?.clone();
@@ -170,9 +170,6 @@ impl Args {
         let header_string =
             simdutf8::basic::from_utf8(&headerbuf_wtr.into_inner().unwrap())?.to_string();
         let header_byte_size = header_string.len();
-
-        // safety: we know that the flag is set
-        let chunk_size = self.flag_kb_size.unwrap();
 
         let mut wtr = self.new_writer(&headers, 0, self.flag_pad)?;
         let mut i = 0;
@@ -211,7 +208,6 @@ impl Args {
                 )?);
                 buf_next_string.len()
             } else {
-                buf_next_string.clear();
                 0
             };
 
@@ -231,7 +227,7 @@ impl Args {
 
         if !self.flag_quiet {
             eprintln!(
-                "Wrote chunk/s to '{}'. Size/chunk: ~{}KB Num chunks: {}",
+                "Wrote chunk/s to '{}'. Size/chunk: <= {}KB; Num chunks: {}",
                 Path::new(&self.arg_outdir).canonicalize()?.display(),
                 chunk_size,
                 num_chunks + 1
