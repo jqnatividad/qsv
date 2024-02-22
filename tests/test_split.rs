@@ -792,15 +792,16 @@ fn split_kbsize_boston_2k() {
 
     assert!(wrk.path("0.csv").exists());
     assert!(wrk.path("11.csv").exists());
-    assert!(wrk.path("20.csv").exists());
-    assert!(wrk.path("29.csv").exists());
-    assert!(wrk.path("39.csv").exists());
-    assert!(wrk.path("48.csv").exists());
-    assert!(wrk.path("57.csv").exists());
-    assert!(wrk.path("68.csv").exists());
+    assert!(wrk.path("19.csv").exists());
+    assert!(wrk.path("27.csv").exists());
+    assert!(wrk.path("36.csv").exists());
+    assert!(wrk.path("45.csv").exists());
+    assert!(wrk.path("52.csv").exists());
+    assert!(wrk.path("61.csv").exists());
+    assert!(wrk.path("70.csv").exists());
     assert!(wrk.path("78.csv").exists());
-    assert!(wrk.path("88.csv").exists());
-    assert!(wrk.path("98.csv").exists());
+    assert!(wrk.path("86.csv").exists());
+    assert!(wrk.path("95.csv").exists());
 }
 
 #[test]
@@ -818,13 +819,14 @@ fn split_kbsize_boston_2k_padded() {
 
     assert!(wrk.path("testme-000.csv").exists());
     assert!(wrk.path("testme-011.csv").exists());
-    assert!(wrk.path("testme-020.csv").exists());
-    assert!(wrk.path("testme-029.csv").exists());
-    assert!(wrk.path("testme-039.csv").exists());
-    assert!(wrk.path("testme-048.csv").exists());
-    assert!(wrk.path("testme-057.csv").exists());
-    assert!(wrk.path("testme-068.csv").exists());
+    assert!(wrk.path("testme-019.csv").exists());
+    assert!(wrk.path("testme-027.csv").exists());
+    assert!(wrk.path("testme-036.csv").exists());
+    assert!(wrk.path("testme-045.csv").exists());
+    assert!(wrk.path("testme-052.csv").exists());
+    assert!(wrk.path("testme-061.csv").exists());
+    assert!(wrk.path("testme-070.csv").exists());
     assert!(wrk.path("testme-078.csv").exists());
-    assert!(wrk.path("testme-088.csv").exists());
-    assert!(wrk.path("testme-098.csv").exists());
+    assert!(wrk.path("testme-086.csv").exists());
+    assert!(wrk.path("testme-095.csv").exists());
 }
