@@ -166,10 +166,14 @@ impl Args {
         let mut headerbuf_wtr = csv::WriterBuilder::new().from_writer(vec![]);
 
         headerbuf_wtr.write_byte_record(&headers)?;
-        // safety: we know the inner vec is valid
-        let header_string =
-            simdutf8::basic::from_utf8(&headerbuf_wtr.into_inner().unwrap())?.to_string();
-        let header_byte_size = header_string.len();
+        let header_byte_size = if self.flag_no_headers {
+            0
+        } else {
+            // safety: we know the inner vec is valid
+            let header_string =
+                simdutf8::basic::from_utf8(&headerbuf_wtr.into_inner().unwrap())?.to_string();
+            header_string.len()
+        };
 
         let mut wtr = self.new_writer(&headers, 0, self.flag_pad)?;
         let mut i = 0;
