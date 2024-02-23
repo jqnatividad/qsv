@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.15.0
+bm_version=3.16.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -273,6 +273,7 @@ function cleanup_files {
   rm -f results/entry.csv
   rm -r -f split_tempdir
   rm -r -f split_tempdir_chunks
+  rm -r -f split_tempdir_kbs
   rm -r -f split_tempdir_idx
   rm -r -f split_tempdir_idx_j1
   rm -r -f split_tempdir_chunks_idx
@@ -536,6 +537,7 @@ run sortcheck_unsorted "$qsv_bin" sortcheck data_unsorted.csv
 run sortcheck_unsorted_all "$qsv_bin" sortcheck --all data_unsorted.csv
 run split "$qsv_bin" split --size 50000 split_tempdir "$data"
 run split_chunks "$qsv_bin" split --chunks 20 split_tempdir_chunks "$data"
+run split_kbsize "$qsv_bin" split --kb-size 10000 split_tempdir_kbs "$data"
 run --index split_index "$qsv_bin" split --size 50000 split_tempdir_idx "$data"
 run --index split_index_j1 "$qsv_bin" split --size 50000 -j 1 split_tempdir_idx_j1 "$data"
 run --index split_chunks_index "$qsv_bin" split --chunks 20 split_tempdir_chunks_idx "$data"
