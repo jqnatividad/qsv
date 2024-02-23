@@ -107,7 +107,7 @@ use crate::{
     config::{Config, Delimiter},
     index::Indexed,
     util::{self, FilenameTemplate},
-    CliError, CliResult,
+    CliResult,
 };
 
 #[derive(Clone, Deserialize)]
@@ -124,8 +124,6 @@ struct Args {
     flag_delimiter:  Option<Delimiter>,
     flag_quiet:      bool,
 }
-
-static UTF8_ERROR: &str = "UTF-8 Encoding error";
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -151,28 +149,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 }
 
-impl From<simdutf8::basic::Utf8Error> for CliError {
-    fn from(_: simdutf8::basic::Utf8Error) -> Self {
-        CliError::Encoding(UTF8_ERROR.to_string())
-    }
-}
-
 impl Args {
     fn split_by_kb_size(&self, chunk_size: usize) -> CliResult<()> {
         let rconfig = self.rconfig();
         let mut rdr = rconfig.reader()?;
         let headers = rdr.byte_headers()?.clone();
 
-        let mut headerbuf_wtr = csv::WriterBuilder::new().from_writer(vec![]);
-
-        headerbuf_wtr.write_byte_record(&headers)?;
         let header_byte_size = if self.flag_no_headers {
             0
         } else {
+            let mut headerbuf_wtr = csv::WriterBuilder::new().from_writer(vec![]);
+            headerbuf_wtr.write_byte_record(&headers)?;
+
             // safety: we know the inner vec is valid
-            let header_string =
-                simdutf8::basic::from_utf8(&headerbuf_wtr.into_inner().unwrap())?.to_string();
-            header_string.len()
+            headerbuf_wtr.into_inner().unwrap().len()
         };
 
         let mut wtr = self.new_writer(&headers, 0, self.flag_pad)?;
@@ -180,37 +170,25 @@ impl Args {
         let mut num_chunks = 0;
         let mut row = csv::ByteRecord::new();
         let chunk_size_bytes = chunk_size * 1024;
-        let mut buf_curr_string = String::with_capacity(chunk_size_bytes);
-        let mut buf_next_string = String::with_capacity(chunk_size_bytes);
         let mut chunk_size_bytes_left = chunk_size_bytes - header_byte_size;
 
         let mut not_empty = rdr.read_byte_record(&mut row)?;
-        let mut curr_size_bytes = buf_curr_string.len();
-        chunk_size_bytes_left -= curr_size_bytes;
+        let mut curr_size_bytes;
+        let mut next_size_bytes;
         wtr.write_byte_record(&row)?;
 
         while not_empty {
             let mut buf_curr_wtr = csv::WriterBuilder::new().from_writer(vec![]);
             buf_curr_wtr.write_byte_record(&row)?;
-            buf_curr_string.clear();
-            buf_curr_string.push_str(simdutf8::basic::from_utf8(
-                &buf_curr_wtr
-                    .into_inner()
-                    .map_err(|_| CliError::Encoding(UTF8_ERROR.to_string()))?,
-            )?);
-            curr_size_bytes = buf_curr_string.len();
+
+            curr_size_bytes = buf_curr_wtr.into_inner().unwrap().len();
 
             not_empty = rdr.read_byte_record(&mut row)?;
-            let next_size_bytes = if not_empty {
+            next_size_bytes = if not_empty {
                 let mut buf_next_wtr = csv::WriterBuilder::new().from_writer(vec![]);
                 buf_next_wtr.write_byte_record(&row)?;
-                buf_next_string.clear();
-                buf_next_string.push_str(simdutf8::basic::from_utf8(
-                    &buf_next_wtr
-                        .into_inner()
-                        .map_err(|_| CliError::Encoding(UTF8_ERROR.to_string()))?,
-                )?);
-                buf_next_string.len()
+
+                buf_next_wtr.into_inner().unwrap().len()
             } else {
                 0
             };
