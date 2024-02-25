@@ -1,8 +1,8 @@
 static USAGE: &str = r#"
-Splits the given CSV data into chunks. It has three modes: by rowcount, by number of chunks
-and by size.
+Splits the given CSV data into chunks. It has three modes: by size (rowcount),
+by number of chunks and by kb-size.
 
-When splitting by rowcount, the CSV data is split into chunks of the given number of
+When splitting by size, the CSV data is split into chunks of the given number of
 rows. The last chunk may have fewer rows if the number of records is not evenly
 divisible by the given rowcount.
 
@@ -15,10 +15,10 @@ When splitting by kb-size, the CSV data is split into chunks of the given size i
 The number of rows in each chunk may vary, but the size of each chunk will not exceed the
 desired size.
 
-Uses multithreading to go faster if the CSV has an index when splitting by rowcount or
-by number of chunks. Splitting by size is always done sequentially with a single thread.
+Uses multithreading to go faster if the CSV has an index when splitting by size or
+by number of chunks. Splitting by kb-size is always done sequentially with a single thread.
 
-The default is to split by rowcount with a chunk size of 500.
+The default is to split by size with a chunk size of 500.
 
 The files are written to the directory given with the name '{start}.csv',
 where {start} is the index of the first record of the chunk (starting at 0).
