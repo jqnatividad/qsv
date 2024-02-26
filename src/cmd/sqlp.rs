@@ -87,6 +87,11 @@ Example queries:
   qsv sqlp data.csv "select * from data join read_ndjson('data2.jsonl') as t2 on data.c1 = t2.c1"
   qsv sqlp data.csv "select * from data join read_ipc('data2.arrow') as t2 ON data.c1 = t2.c1"
 
+  # you can also directly load CSVs using the Polars SQL read_csv function. This is useful when you
+  # want to bypass the CSV parser and use the Polars LazyFrame directly for well-formed CSVs,
+  # making for even faster queries.
+  qsv sqlp small_dummy.csv "select * from read_csv('data.csv') order by col1 desc limit 100"
+
   # use stdin as input
   cat data.csv | qsv sqlp - 'select * from stdin'
   cat data.csv | qsv sqlp - data2.csv 'select * from stdin join data2 on stdin.col1 = data2.col1'
