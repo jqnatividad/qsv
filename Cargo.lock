@@ -500,7 +500,7 @@ checksum = "16e62a023e7c117e27523144c5d2459f4397fcc3cab0085af8e2224f643a0193"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -511,7 +511,7 @@ checksum = "c980ee35e870bd1a4d2c8294d4c04d0499e67bca1e4b5cefcc693c2fa00caea9"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -610,7 +610,7 @@ dependencies = [
  "regex",
  "rustc-hash",
  "shlex",
- "syn 2.0.50",
+ "syn 2.0.51",
  "which",
 ]
 
@@ -682,7 +682,7 @@ dependencies = [
  "proc-macro-crate",
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
  "syn_derive",
 ]
 
@@ -709,9 +709,9 @@ dependencies = [
 
 [[package]]
 name = "bstr"
-version = "1.9.0"
+version = "1.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c48f0051a4b4c5e0b6d365cd04af53aeaa209e3cc15ec2cdb69e73cc87fbd0dc"
+checksum = "05efc5cfd9110c8416e471df0e96702d58690178e206e61b7173706673c93706"
 dependencies = [
  "memchr",
  "serde",
@@ -768,7 +768,7 @@ checksum = "965ab7eb5f8f97d2a083c799f3a1b994fc397b2fe2da5d1da1626ce15a39f2b1"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -822,13 +822,16 @@ dependencies = [
  "ahash 0.8.9",
  "cached_proc_macro",
  "cached_proc_macro_types",
+ "directories",
  "hashbrown 0.14.3",
  "instant",
  "once_cell",
  "r2d2",
  "redis",
+ "rmp-serde",
  "serde",
  "serde_json",
+ "sled",
  "thiserror",
 ]
 
@@ -875,9 +878,9 @@ checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 
 [[package]]
 name = "cc"
-version = "1.0.86"
+version = "1.0.88"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f9fa1897e4325be0d68d48df6aa1a71ac2ed4d27723887e7754192705350730"
+checksum = "02f341c093d19155a6e41631ce5971aac4e9a868262212153124c15fa22d1cdc"
 dependencies = [
  "libc",
 ]
@@ -1211,7 +1214,7 @@ dependencies = [
  "bitflags 2.4.2",
  "crossterm_winapi",
  "libc",
- "parking_lot",
+ "parking_lot 0.12.1",
  "winapi",
 ]
 
@@ -1345,7 +1348,7 @@ checksum = "f46882e17999c6cc590af592290432be3bce0428cb0d5f8b6715e4dc7b383eb3"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -1393,7 +1396,7 @@ dependencies = [
  "hashbrown 0.14.3",
  "lock_api",
  "once_cell",
- "parking_lot_core",
+ "parking_lot_core 0.9.9",
 ]
 
 [[package]]
@@ -1479,6 +1482,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "directories"
+version = "4.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f51c5d4ddabd36886dd3e1438cb358cdcb0d7c499cb99cb4ac2e38e18b5cb210"
+dependencies = [
+ "dirs-sys",
+]
+
+[[package]]
+name = "dirs-sys"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b1d1d91c932ef41c0f2663aa8b0ca0342d444d842c06914aa0a7e352d0bada6"
+dependencies = [
+ "libc",
+ "redox_users",
+ "winapi",
+]
+
+[[package]]
 name = "divrem"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1516,9 +1539,9 @@ dependencies = [
 
 [[package]]
 name = "dyn-clone"
-version = "1.0.16"
+version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "545b22097d44f8a9581187cdf93de7a71e4722bf51200cfaba810865b49a495d"
+checksum = "0d6ef0072f8a535281e4876be788938b528e9a1d43900b82c2569af7da799125"
 
 [[package]]
 name = "dynfmt"
@@ -1593,7 +1616,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -1716,7 +1739,7 @@ checksum = "1ee447700ac8aa0b2f2bd7bc4462ad686ba06baa6727ac149a2d6277f0d240fd"
 dependencies = [
  "cfg-if",
  "libc",
- "redox_syscall",
+ "redox_syscall 0.4.1",
  "windows-sys 0.52.0",
 ]
 
@@ -1825,6 +1848,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs2"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9564fc758e15025b46aa6643b1b77d047d1a56a1aea6e01002ac0c7026876213"
+dependencies = [
+ "libc",
+ "winapi",
+]
+
+[[package]]
 name = "fslock"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1896,7 +1929,7 @@ checksum = "87750cf4b7a4c0625b1529e4c543c2182106e4dedc60a2a6455e00d212c489ac"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -1933,6 +1966,15 @@ dependencies = [
  "pin-project-lite",
  "pin-utils",
  "slab",
+]
+
+[[package]]
+name = "fxhash"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
+dependencies = [
+ "byteorder",
 ]
 
 [[package]]
@@ -2040,7 +2082,7 @@ dependencies = [
  "futures-timer",
  "no-std-compat",
  "nonzero_ext",
- "parking_lot",
+ "parking_lot 0.12.1",
  "portable-atomic",
  "quanta",
  "rand",
@@ -2101,9 +2143,9 @@ dependencies = [
 
 [[package]]
 name = "half"
-version = "2.3.1"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc52e53916c08643f1b56ec082790d1e86a32e58dc5268f897f313fbae7b4872"
+checksum = "b5eceaaeec696539ddaf7b333340f1af35a5aa87ae3e4f3ead0532f72affab2e"
 dependencies = [
  "cfg-if",
  "crunchy",
@@ -2156,9 +2198,9 @@ checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 
 [[package]]
 name = "hermit-abi"
-version = "0.3.6"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd5256b483761cd23699d0da46cc6fd2ee3be420bbe6d020ae4a091e70b7e9fd"
+checksum = "379dada1584ad501b383485dd706b8afb7a70fcbc7f4da7d780638a5a6124a60"
 
 [[package]]
 name = "hex"
@@ -2479,7 +2521,7 @@ dependencies = [
  "memchr",
  "num-cmp",
  "once_cell",
- "parking_lot",
+ "parking_lot 0.12.1",
  "percent-encoding",
  "regex",
  "reqwest",
@@ -2671,6 +2713,17 @@ checksum = "3979b5c37ece694f1f5e51e7ecc871fdb0f517ed04ee45f88d15d6d553cb9664"
 dependencies = [
  "cc",
  "libc",
+]
+
+[[package]]
+name = "libredox"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85c833ca1e66078851dba29046874e38f08b2c883700aa29a03ddd3b23814ee8"
+dependencies = [
+ "bitflags 2.4.2",
+ "libc",
+ "redox_syscall 0.4.1",
 ]
 
 [[package]]
@@ -3167,12 +3220,37 @@ checksum = "b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39"
 
 [[package]]
 name = "parking_lot"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d17b78036a60663b797adeaee46f5c9dfebb86948d1255007a1d6be0271ff99"
+dependencies = [
+ "instant",
+ "lock_api",
+ "parking_lot_core 0.8.6",
+]
+
+[[package]]
+name = "parking_lot"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3742b2c103b9f06bc9fff0a37ff4912935851bee6d36f3c02bcc755bcfec228f"
 dependencies = [
  "lock_api",
- "parking_lot_core",
+ "parking_lot_core 0.9.9",
+]
+
+[[package]]
+name = "parking_lot_core"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60a2cfe6f0ad2bfc16aefa463b497d5c7a5ecd44a23efa72aa342d90177356dc"
+dependencies = [
+ "cfg-if",
+ "instant",
+ "libc",
+ "redox_syscall 0.2.16",
+ "smallvec",
+ "winapi",
 ]
 
 [[package]]
@@ -3183,7 +3261,7 @@ checksum = "4c42a9226546d68acdd9c0a280d17ce19bfe27a46bf68784e4066115788d008e"
 dependencies = [
  "cfg-if",
  "libc",
- "redox_syscall",
+ "redox_syscall 0.4.1",
  "smallvec",
  "windows-targets 0.48.5",
 ]
@@ -3351,7 +3429,7 @@ dependencies = [
  "phf_shared 0.11.2",
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -3389,7 +3467,7 @@ checksum = "266c042b60c9c76b8d53061e52b2e0d1116abc57cefc8c5cd671619a56ac3690"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -3886,7 +3964,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a41cf62165e97c7f814d2221421dbb9afcbcdb0a88068e5ea206e19951c2cbb5"
 dependencies = [
  "proc-macro2",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -3991,7 +4069,7 @@ dependencies = [
  "indoc",
  "libc",
  "memoffset",
- "parking_lot",
+ "parking_lot 0.12.1",
  "portable-atomic",
  "pyo3-build-config",
  "pyo3-ffi",
@@ -4028,7 +4106,7 @@ dependencies = [
  "proc-macro2",
  "pyo3-macros-backend",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -4041,7 +4119,7 @@ dependencies = [
  "proc-macro2",
  "pyo3-build-config",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -4270,7 +4348,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51de85fb3fb6524929c8a2eb85e6b6d363de4e8c48f9e2c2eac4944abc181c93"
 dependencies = [
  "log",
- "parking_lot",
+ "parking_lot 0.12.1",
  "scheduled-thread-pool",
 ]
 
@@ -4392,11 +4470,31 @@ dependencies = [
 
 [[package]]
 name = "redox_syscall"
+version = "0.2.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb5a58c1855b4b6819d59012155603f0b22ad30cad752600aadfcb695265519a"
+dependencies = [
+ "bitflags 1.3.2",
+]
+
+[[package]]
+name = "redox_syscall"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4722d768eff46b75989dd134e5c353f0d6296e5aaa3132e776cbdb56be7731aa"
 dependencies = [
  "bitflags 1.3.2",
+]
+
+[[package]]
+name = "redox_users"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a18479200779601e498ada4e8c1e1f50e3ee19deb0259c25825a98b5603b2cb4"
+dependencies = [
+ "getrandom",
+ "libredox",
+ "thiserror",
 ]
 
 [[package]]
@@ -4416,7 +4514,7 @@ checksum = "5fddb4f8d99b0a2ebafc65a87a69a7b9875e4b1ae1f00db265d300ef7f28bccc"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -4707,7 +4805,7 @@ version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3cbc66816425a074528352f5789333ecff06ca41b36b0b0efdfbb29edc391a19"
 dependencies = [
- "parking_lot",
+ "parking_lot 0.12.1",
 ]
 
 [[package]]
@@ -4803,7 +4901,7 @@ checksum = "7eb0b34b42edc17f6b7cac84a52a1c5f0e1bb2227e997ca9011ea3dd34e8610b"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -4851,7 +4949,7 @@ dependencies = [
  "futures",
  "lazy_static",
  "log",
- "parking_lot",
+ "parking_lot 0.12.1",
  "serial_test_derive",
 ]
 
@@ -4863,7 +4961,7 @@ checksum = "b93fb4adc70021ac1b47f7d45e8cc4169baaa7ea58483bc5b721d19a26202212"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -4983,6 +5081,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f92a496fb766b417c996b9c5e57daf2f7ad3b0bebe1ccfca4856390e3d3bb67"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "sled"
+version = "0.34.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f96b4737c2ce5987354855aed3797279def4ebf734436c6aa4552cf8e169935"
+dependencies = [
+ "crc32fast",
+ "crossbeam-epoch",
+ "crossbeam-utils",
+ "fs2",
+ "fxhash",
+ "libc",
+ "log",
+ "parking_lot 0.11.2",
 ]
 
 [[package]]
@@ -5193,7 +5307,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustversion",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -5206,7 +5320,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustversion",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -5228,9 +5342,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.50"
+version = "2.0.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74f1bdc9872430ce9b75da68329d1c1746faf50ffac5f19e02b71e37ff881ffb"
+checksum = "6ab617d94515e94ae53b8406c628598680aa0c9587474ecbe58188f7b345d66c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5246,7 +5360,7 @@ dependencies = [
  "proc-macro-error",
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -5358,7 +5472,7 @@ checksum = "a953cb265bef375dae3de6663da4d3804eee9682ea80d8e2542529b73c531c81"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -5463,7 +5577,7 @@ dependencies = [
  "libc",
  "mio",
  "num_cpus",
- "parking_lot",
+ "parking_lot 0.12.1",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.5.6",
@@ -5479,7 +5593,7 @@ checksum = "5b8a1e28f2deaa14e508979454cb3a223b10b938b45af148bc0986de36f1923b"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -5495,7 +5609,7 @@ dependencies = [
  "futures-channel",
  "futures-util",
  "log",
- "parking_lot",
+ "parking_lot 0.12.1",
  "percent-encoding",
  "phf 0.11.2",
  "pin-project-lite",
@@ -5575,7 +5689,7 @@ checksum = "34704c8d6ebcbc939824180af020566b01a7c01f80641264eba0999f6c2b6be7"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -5636,7 +5750,7 @@ checksum = "f03ca4cb38206e2bef0700092660bb74d696f808514dae47fa1467cbfe26e96e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
@@ -5870,7 +5984,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
  "wasm-bindgen-shared",
 ]
 
@@ -5904,7 +6018,7 @@ checksum = "642f325be6301eb8107a83d12a8ac6c1e1c54345a7ef1a9261962dfefda09e66"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -6248,7 +6362,7 @@ checksum = "9ce1b18ccd8e73a9321186f97e46f9f04b778851177567b1975109d26a08d2a6"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.50",
+ "syn 2.0.51",
 ]
 
 [[package]]
