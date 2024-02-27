@@ -489,6 +489,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         && !is_sql_script
         && !args.flag_no_optimizations
         && !args.flag_try_parsedates
+        && args.flag_infer_len != Some(250)
         && !args.flag_low_memory
         && !args.flag_truncate_ragged_lines
         && !args.flag_ignore_errors
@@ -511,9 +512,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let sql = args.arg_sql.clone();
         // the regex is case-insensitive and allows for the table name to be enclosed in single or
         // double quotes or not enclosed at all. It also allows for the table name to be
-        // aliased as _t_1
+        // aliased as _t_1.
         let from_clause_regex =
-            Regex::new(&format!(r#"(?i)FROM\s+['"]?({table_name}|_t_1)['"]?"#)).unwrap();
+            Regex::new(&format!(r#"(?i)FROM\s+['"]?({table_name}|_t_1)['"]?"#))?;
         let modified_query = from_clause_regex.replace_all(
             &sql,
             format!("FROM read_csv('{}')", input.to_string_lossy()),
