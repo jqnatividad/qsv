@@ -89,7 +89,7 @@ Example queries:
 
   # you can also directly load CSVs using the Polars SQL read_csv function. This is useful when you
   # want to bypass the CSV parser and use the Polars LazyFrame directly for well-formed CSVs,
-  # making for even faster queries.
+  # making for even exponentially faster queries.
    qsv sqlp small_dummy.csv "select * from read_csv('data.csv') order by col1 desc limit 100"
 
   Note that sqlp will automatically use this "fast path" optimization when there is only 
@@ -487,9 +487,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // parse and register it as a table in the SQL context using Polars SQL's read_csv function
     if args.arg_input.len() == 1
         && !is_sql_script
+        && !args.flag_no_optimizations
         && !args.flag_try_parsedates
         && !args.flag_low_memory
-        && !args.flag_no_optimizations
         && !args.flag_truncate_ragged_lines
         && !args.flag_ignore_errors
         && args.flag_rnull_values.is_empty()
