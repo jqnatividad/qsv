@@ -1237,7 +1237,7 @@ fn sqlp_length_fns() {
     let expected = vec![
         svec!["words", "n_chrs1", "n_chrs2", "n_chrs3", "n_bytes", "n_bits"],
         svec!["Cafe", "4", "4", "4", "4", "32"],
-        svec!["", "", "", "", "", ""],
+        svec!["", "0", "0", "0", "0", "0"],
         svec!["東京", "2", "2", "2", "6", "48"],
     ];
 
@@ -1371,6 +1371,7 @@ fn sqlp_string_replace() {
     let expected = vec![
         svec!["words"],
         svec!["English breakfast tea is the best tea"],
+        svec!(""),
     ];
 
     assert_eq!(got, expected);

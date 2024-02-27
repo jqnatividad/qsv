@@ -13,94 +13,97 @@ Returns the shape of the query result (number of rows, number of columns) to std
 
 Example queries:
 
-  qsv sqlp data.csv 'select * from data where col1 > 10 order by col2 desc limit 20'
+   qsv sqlp data.csv 'select * from data where col1 > 10 order by col2 desc limit 20'
 
-  qsv sqlp data.csv 'select col1, col2 as friendlyname from data' --format parquet --output data.parquet
+   qsv sqlp data.csv 'select col1, col2 as friendlyname from data' --format parquet --output data.parquet
 
   # enclose column names with spaces in double quotes
-  qsv sqlp data.csv 'select "col 1", "col 2" from data'
+   qsv sqlp data.csv 'select "col 1", "col 2" from data'
 
-  qsv sqlp data.csv data2.csv 'select * from data join data2 on data.colname = data2.colname'
+   qsv sqlp data.csv data2.csv 'select * from data join data2 on data.colname = data2.colname'
 
-  qsv sqlp data.csv data2.csv 'SELECT col1 FROM data WHERE col1 IN (SELECT col2 FROM data2)'
+   qsv sqlp data.csv data2.csv 'SELECT col1 FROM data WHERE col1 IN (SELECT col2 FROM data2)'
 
-  qsv sqlp data1.csv data2.csv 'SELECT * FROM data1 UNION ALL BY NAME SELECT * FROM data2'
+   qsv sqlp data1.csv data2.csv 'SELECT * FROM data1 UNION ALL BY NAME SELECT * FROM data2'
 
-  qsv sqlp tbl_a.csv tbl_b.csv tbl_c.csv "SELECT * FROM tbl_a \
-    RIGHT ANTI JOIN tbl_b USING (b) \
-    LEFT SEMI JOIN tbl_c USING (c)"
+   qsv sqlp tbl_a.csv tbl_b.csv tbl_c.csv "SELECT * FROM tbl_a \
+     RIGHT ANTI JOIN tbl_b USING (b) \
+     LEFT SEMI JOIN tbl_c USING (c)"
 
   # use "_t_N" aliases to refer to input files, where N is the 1-based index
   # of the input file/s. For example, _t_1 refers to the first input file, _t_2
   # refers to the second input file, and so on.
-  qsv sqlp data.csv data2.csv 'select * from _t_1 join _t_2 on _t_1.colname = _t_2.colname'
+   qsv sqlp data.csv data2.csv 'select * from _t_1 join _t_2 on _t_1.colname = _t_2.colname'
 
-  qsv sqlp data.csv 'SELECT col1, count(*) AS cnt FROM data GROUP BY col1 ORDER BY cnt DESC, col1 ASC'
+   qsv sqlp data.csv 'SELECT col1, count(*) AS cnt FROM data GROUP BY col1 ORDER BY cnt DESC, col1 ASC'
 
-  qsv sqlp data.csv "select lower(col1), substr(col2, 2, 4) from data WHERE starts_with(col1, 'foo')"
+   qsv sqlp data.csv "select lower(col1), substr(col2, 2, 4) from data WHERE starts_with(col1, 'foo')"
 
-  qsv sqlp data.csv "select COALESCE(NULLIF(col2, ''), 'foo') from data"
+   qsv sqlp data.csv "select COALESCE(NULLIF(col2, ''), 'foo') from data"
 
-  qsv sqlp tbl1.csv "SELECT x FROM tbl1 WHERE x IN (SELECT y FROM tbl1)"
+   qsv sqlp tbl1.csv "SELECT x FROM tbl1 WHERE x IN (SELECT y FROM tbl1)"
 
   # Use a SQL script to run a long, complex SQL query or to run SEVERAL SQL queries.
   # When running several queries, each query needs to be separated by a semicolon,
   # the last query will be returned as the result.
   # Typically, earlier queries are used to create tables that can be used in later queries.
   # See test_sqlp/sqlp_boston311_sql_script() for an example.
-  qsv sqlp data.csv data2.csv data3.csv data4.csv script.sql --format json --output data.json
+   qsv sqlp data.csv data2.csv data3.csv data4.csv script.sql --format json --output data.json
 
   # use Common Table Expressions (CTEs) using WITH to simplify complex queries
-  qsv sqlp people.csv "WITH millennials AS (SELECT * FROM people WHERE age >= 25 and age <= 40) \
-    SELECT * FROM millennials WHERE STARTS_WITH(name,'C')"
+   qsv sqlp people.csv "WITH millennials AS (SELECT * FROM people WHERE age >= 25 and age <= 40) \
+     SELECT * FROM millennials WHERE STARTS_WITH(name,'C')"
 
   # CASE statement
-  qsv sqlp data.csv "select CASE WHEN col1 > 10 THEN 'foo' WHEN col1 > 5 THEN 'bar' ELSE 'baz' END from data"
-  qsv sqlp data.csv "select CASE col*5 WHEN 10 THEN 'foo' WHEN 5 THEN 'bar' ELSE 'baz' END from _t_1"
+   qsv sqlp data.csv "select CASE WHEN col1 > 10 THEN 'foo' WHEN col1 > 5 THEN 'bar' ELSE 'baz' END from data"
+   qsv sqlp data.csv "select CASE col*5 WHEN 10 THEN 'foo' WHEN 5 THEN 'bar' ELSE 'baz' END from _t_1"
 
   # spaceship operator: "<=>" (three-way comparison operator)
   #  returns -1 if left < right, 0 if left == right, 1 if left > right
   # https://en.wikipedia.org/wiki/Three-way_comparison#Spaceship_operator
-  qsv sqlp data.csv data2.csv "select data.c2 <=> data2.c2 from data join data2 on data.c1 = data2.c1"
+   qsv sqlp data.csv data2.csv "select data.c2 <=> data2.c2 from data join data2 on data.c1 = data2.c1"
 
   # regex operators: "~" (contains pattern, case-sensitive); "~*" (contains pattern, case-insensitive)
   #   "!~" (does not contain pattern, case-sensitive); "!~*" (does not contain pattern, case-insensitive)
-    qsv sqlp data.csv "select * from data WHERE col1 ~ '^foo' AND col2 > 10"
-    qsv sqlp data.csv "select * from data WHERE col1 !~* 'bar$' AND col2 > 10"
+   qsv sqlp data.csv "select * from data WHERE col1 ~ '^foo' AND col2 > 10"
+   qsv sqlp data.csv "select * from data WHERE col1 !~* 'bar$' AND col2 > 10"
 
   # regexp_like function: regexp_like(<string>, <pattern>, <optional flags>)
   # returns true if <string> matches <pattern>, false otherwise
   #   <optional flags> can be one or more of the following:
   #   'c' (case-sensitive - default), 'i' (case-insensitive), 'm' (multiline)
-  qsv sqlp data.csv "select * from data WHERE regexp_like(col1, '^foo') AND col2 > 10"
+   qsv sqlp data.csv "select * from data WHERE regexp_like(col1, '^foo') AND col2 > 10"
   # case-insensitive regexp_like
-  qsv sqlp data.csv "select * from data WHERE regexp_like(col1, '^foo', 'i') AND col2 > 10"
+   qsv sqlp data.csv "select * from data WHERE regexp_like(col1, '^foo', 'i') AND col2 > 10"
 
   # regexp match using a literal pattern
-    qsv sqlp data.csv "select idx,val from data WHERE val regexp '^foo'"
+   qsv sqlp data.csv "select idx,val from data WHERE val regexp '^foo'"
 
   # regexp match using patterns from another column
-    qsv sqlp data.csv "select idx,val from data WHERE val regexp pattern_col"
+   qsv sqlp data.csv "select idx,val from data WHERE val regexp pattern_col"
 
   # use Parquet, JSONL and Arrow files in SQL queries
-  qsv sqlp data.csv "select * from data join read_parquet('data2.parquet') as t2 ON data.c1 = t2.c1"
-  qsv sqlp data.csv "select * from data join read_ndjson('data2.jsonl') as t2 on data.c1 = t2.c1"
-  qsv sqlp data.csv "select * from data join read_ipc('data2.arrow') as t2 ON data.c1 = t2.c1"
+   qsv sqlp data.csv "select * from data join read_parquet('data2.parquet') as t2 ON data.c1 = t2.c1"
+   qsv sqlp data.csv "select * from data join read_ndjson('data2.jsonl') as t2 on data.c1 = t2.c1"
+   qsv sqlp data.csv "select * from data join read_ipc('data2.arrow') as t2 ON data.c1 = t2.c1"
 
   # you can also directly load CSVs using the Polars SQL read_csv function. This is useful when you
   # want to bypass the CSV parser and use the Polars LazyFrame directly for well-formed CSVs,
   # making for even faster queries.
-  qsv sqlp small_dummy.csv "select * from read_csv('data.csv') order by col1 desc limit 100"
+   qsv sqlp small_dummy.csv "select * from read_csv('data.csv') order by col1 desc limit 100"
+
+  Note that sqlp will automatically use this "fast path" optimization when there is only 
+  one input file and no CSV parsing options are used.
 
   # use stdin as input
-  cat data.csv | qsv sqlp - 'select * from stdin'
-  cat data.csv | qsv sqlp - data2.csv 'select * from stdin join data2 on stdin.col1 = data2.col1'
+   cat data.csv | qsv sqlp - 'select * from stdin'
+   cat data.csv | qsv sqlp - data2.csv 'select * from stdin join data2 on stdin.col1 = data2.col1'
 
   # automatic snappy decompression/compression
-  qsv sqlp data.csv.sz 'select * from data where col1 > 10' --output result.csv.sz
+   qsv sqlp data.csv.sz 'select * from data where col1 > 10' --output result.csv.sz
 
   # explain query plan
-  qsv sqlp data.csv 'explain select * from data where col1 > 10 order by col2 desc limit 20'
+   qsv sqlp data.csv 'explain select * from data where col1 > 10 order by col2 desc limit 20'
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sqlp.rs.
 
@@ -121,7 +124,7 @@ sqlp arguments:
     sql                    The SQL query/ies to run. Each input file will be available as a table
                            named after the file name (without the extension), or as "_t_N"
                            where N is the 1-based index.
-                           If the input ends with ".sql", the input will be read as a SQL script file,
+                           If the query ends with ".sql", it will be read as a SQL script file,
                            with each SQL query separated by a semicolon. It will execute the queries
                            in order, and the result of the LAST query will be returned as the result.
 
@@ -147,7 +150,10 @@ sqlp options:
                               but will be slower. It will also process LazyFrames in streaming mode.
                               Only use this when you get out of memory errors.
     --no-optimizations        Disable non-default query optimizations. This will make queries slower.
-                              Only use this when you get query errors.
+                              Use this when you get query errors or to force CSV parsing when there
+                              is only one input file, no CSV parsing options are used and its not
+                              a SQL script. Otherwise, the CSV will be read directly into a LazyFrame
+                              using the fast path with the read_csv SQL function.
     --truncate-ragged-lines   Truncate ragged lines when parsing CSVs. If set, rows with more
                               columns than the header will be truncated. If not set, the query
                               will fail. Use this only when you get an error about ragged lines.
@@ -211,6 +217,7 @@ use polars::{
     },
     sql::SQLContext,
 };
+use regex::Regex;
 use serde::Deserialize;
 
 use crate::{
@@ -465,43 +472,96 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
     }
 
+    // check if the input is a SQL script (ends with .sql)
+    let is_sql_script = std::path::Path::new(&args.arg_sql)
+        .extension()
+        .map_or(false, |ext| ext.eq_ignore_ascii_case("sql"));
+
     let mut ctx = SQLContext::new();
     let mut table_aliases = HashMap::with_capacity(args.arg_input.len());
     let mut lossy_table_name = Cow::default();
     let mut table_name;
 
-    for (idx, table) in args.arg_input.iter().enumerate() {
-        // as we are using the table name as alias, we need to make sure that the table name is a
-        // valid identifier. if its not utf8, we use the lossy version
-        table_name = Path::new(table)
+    // if there is only one input file and its a CSV and no CSV parsing options are used,
+    // we can use the fast path to read the CSV directly into a LazyFrame without having to
+    // parse and register it as a table in the SQL context using Polars SQL's read_csv function
+    if args.arg_input.len() == 1
+        && !is_sql_script
+        && (!args.flag_try_parsedates
+            && !args.flag_low_memory
+            && !args.flag_no_optimizations
+            && !args.flag_truncate_ragged_lines
+            && !args.flag_ignore_errors
+            && args.flag_rnull_values.is_empty()
+            && comment_char.is_none()
+            && std::path::Path::new(&args.arg_input[0])
+                .extension()
+                .map_or(false, |ext| ext.eq_ignore_ascii_case("csv")))
+    {
+        // replace all instances of the FROM clause case-insensitive in the SQL query with the
+        // read_csv function using a regex
+        let input = &args.arg_input[0];
+        let table_name = Path::new(input)
             .file_stem()
             .and_then(std::ffi::OsStr::to_str)
             .unwrap_or_else(|| {
-                lossy_table_name = table.to_string_lossy();
+                lossy_table_name = input.to_string_lossy();
                 &lossy_table_name
             });
-
-        table_aliases.insert(table_name.to_string(), format!("_t_{}", idx + 1));
-
+        let sql = args.arg_sql.clone();
+        // the regex is case-insensitive and allows for the table name to be enclosed in single or
+        // double quotes or not enclosed at all. It also allows for the table name to be
+        // aliased as _t_1
+        let from_clause_regex =
+            Regex::new(&format!(r#"(?i)FROM\s+['"]?({table_name}|_t_1)['"]?"#)).unwrap();
+        let modified_query = from_clause_regex.replace_all(
+            &sql,
+            format!("FROM read_csv('{}')", input.to_string_lossy()),
+        );
+        args.arg_sql = modified_query.to_string();
         if debuglog_flag {
-            log::debug!(
-                "Registering table: {table_name} as {alias}",
-                alias = table_aliases.get(table_name).unwrap(),
-            );
+            log::debug!("Using fast path - Modified Query: {modified_query}");
         }
-        let lf = LazyCsvReader::new(table)
-            .has_header(true)
-            .with_missing_is_null(true)
-            .with_comment_prefix(comment_char.as_deref())
-            .with_null_values(Some(NullValues::AllColumns(rnull_values.clone())))
-            .with_separator(tsvtab_delim(table, delim))
-            .with_infer_schema_length(args.flag_infer_len)
-            .with_try_parse_dates(args.flag_try_parsedates)
-            .with_ignore_errors(args.flag_ignore_errors)
-            .truncate_ragged_lines(args.flag_truncate_ragged_lines)
-            .low_memory(args.flag_low_memory)
-            .finish()?;
-        ctx.register(table_name, lf.with_optimizations(optimization_state));
+    } else {
+        if debuglog_flag {
+            // Using the slow path to read and parse the CSV/s into tables in the SQL context.
+            log::debug!("Using the slow path...");
+        }
+        // we have more than one input and/or we are using CSV parsing options, so we need to
+        // parse the CSV first, and register the input files as tables in the SQL context
+        for (idx, table) in args.arg_input.iter().enumerate() {
+            // as we are using the table name as alias, we need to make sure that the table name is
+            // a valid identifier. if its not utf8, we use the lossy version
+            table_name = Path::new(table)
+                .file_stem()
+                .and_then(std::ffi::OsStr::to_str)
+                .unwrap_or_else(|| {
+                    lossy_table_name = table.to_string_lossy();
+                    &lossy_table_name
+                });
+
+            table_aliases.insert(table_name.to_string(), format!("_t_{}", idx + 1));
+
+            if debuglog_flag {
+                log::debug!(
+                    "Registering table: {table_name} as {alias}",
+                    alias = table_aliases.get(table_name).unwrap(),
+                );
+            }
+            let lf = LazyCsvReader::new(table)
+                .has_header(true)
+                .with_missing_is_null(true)
+                .with_comment_prefix(comment_char.as_deref())
+                .with_null_values(Some(NullValues::AllColumns(rnull_values.clone())))
+                .with_separator(tsvtab_delim(table, delim))
+                .with_infer_schema_length(args.flag_infer_len)
+                .with_try_parse_dates(args.flag_try_parsedates)
+                .with_ignore_errors(args.flag_ignore_errors)
+                .truncate_ragged_lines(args.flag_truncate_ragged_lines)
+                .low_memory(args.flag_low_memory)
+                .finish()?;
+            ctx.register(table_name, lf.with_optimizations(optimization_state));
+        }
     }
 
     if debuglog_flag {
@@ -510,10 +570,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // check if the query is a SQL script
-    let queries = if std::path::Path::new(&args.arg_sql)
-        .extension()
-        .map_or(false, |ext| ext.eq_ignore_ascii_case("sql"))
-    {
+    let queries = if is_sql_script {
         let mut file = File::open(&args.arg_sql)?;
         let mut sql_script = String::new();
         file.read_to_string(&mut sql_script)?;
