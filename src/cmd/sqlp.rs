@@ -487,16 +487,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // parse and register it as a table in the SQL context using Polars SQL's read_csv function
     if args.arg_input.len() == 1
         && !is_sql_script
-        && (!args.flag_try_parsedates
-            && !args.flag_low_memory
-            && !args.flag_no_optimizations
-            && !args.flag_truncate_ragged_lines
-            && !args.flag_ignore_errors
-            && args.flag_rnull_values.is_empty()
-            && comment_char.is_none()
-            && std::path::Path::new(&args.arg_input[0])
-                .extension()
-                .map_or(false, |ext| ext.eq_ignore_ascii_case("csv")))
+        && !args.flag_try_parsedates
+        && !args.flag_low_memory
+        && !args.flag_no_optimizations
+        && !args.flag_truncate_ragged_lines
+        && !args.flag_ignore_errors
+        && args.flag_rnull_values.is_empty()
+        && comment_char.is_none()
+        && std::path::Path::new(&args.arg_input[0])
+            .extension()
+            .map_or(false, |ext| ext.eq_ignore_ascii_case("csv"))
     {
         // replace all instances of the FROM clause case-insensitive in the SQL query with the
         // read_csv function using a regex
