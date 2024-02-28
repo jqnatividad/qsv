@@ -93,7 +93,8 @@ Example queries:
    qsv sqlp small_dummy.csv "select * from read_csv('data.csv') order by col1 desc limit 100"
 
   Note that sqlp will automatically use this "fast path" optimization when there is only 
-  one input file and no CSV parsing options are used.
+  one input CSV file, no CSV parsing options are used, its not a SQL script and the
+  `--no-optimizations` flag is not set.
 
   # use stdin as input
    cat data.csv | qsv sqlp - 'select * from stdin'
@@ -161,8 +162,9 @@ sqlp options:
                               will be skipped. If not set, the query will fail.
                               Only use this when debugging queries, as polars does batched
                               parsing and will skip the entire batch where the error occurred.
-    --rnull-values <arg>      The comma-delimited list of strings to consider as null values
-                              when READING CSV files.
+    --rnull-values <arg>      The comma-delimited list of case-sensitive strings to consider as
+                              null values when READING CSV files (e.g. NULL, NONE, <empty string>).
+                              Use "<empty string>" to consider an empty string a null value.
                               (default: <empty string>)
 
                               CSV OUTPUT FORMAT ONLY:
@@ -409,7 +411,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         args.flag_rnull_values
             .split(',')
-            .map(String::from)
+            .map(|value| {
+                if value == "<empty string>" {
+                    String::new()
+                } else {
+                    value.to_string()
+                }
+            })
             .collect()
     };
 

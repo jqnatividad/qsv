@@ -341,36 +341,39 @@ fn sqlp_null_aware_equality_checks() {
 }
 
 #[test]
-fn sqlp_rnull_values() {
-    let wrk = Workdir::new("sqlp_rnull_values");
+fn sqlp_rnull_values_wnull_value() {
+    let wrk = Workdir::new("sqlp_rnull_values_wnull_value");
     wrk.create(
         "test_null.csv",
         vec![
             svec!["a", "b"],
-            svec!["1", "NULL"],
+            svec!["1", "Nothing"],
             svec!["2", "NA"],
             svec!["3", "Dunno"],
             svec!["4", "4"],
             svec!["5", ""],
             svec!("6", "6"),
+            svec!("7", "DUNNO"),
         ],
     );
 
     let mut cmd = wrk.command("sqlp");
 
     cmd.arg("test_null.csv")
-        .args(["--rnull-values", "NULL,NA,Dunno"])
+        .args(["--rnull-values", "Nothing,NA,<empty string>,Dunno"])
+        .args(["--wnull-value", "NULL"])
         .arg("SELECT * FROM test_null");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["a", "b"],
-        svec!["1", ""],
-        svec!["2", ""],
-        svec!["3", ""],
+        svec!["1", "NULL"],
+        svec!["2", "NULL"],
+        svec!["3", "NULL"],
         svec!["4", "4"],
-        svec!["5", ""],
+        svec!["5", "NULL"],
         svec!["6", "6"],
+        svec!["7", "DUNNO"],
     ];
     assert_eq!(got, expected);
 }
