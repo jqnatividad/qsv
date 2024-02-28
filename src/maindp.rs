@@ -1,5 +1,5 @@
 #![cfg_attr(
-    feature = "cargo-clippy",
+    clippy,
     allow(
         clippy::cast_possible_truncation,
         clippy::cast_possible_wrap,
