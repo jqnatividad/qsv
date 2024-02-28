@@ -75,6 +75,7 @@ byteorder = "1.5"
 bytes = "1"
 cached = { version = "0.49", default-features = false, features = [
     "ahash",
+    "disk_store",
     "proc_macro",
     "redis_ahash",
 ], optional = true }
@@ -285,6 +286,7 @@ fetch = [
     "redis",
     "serde_stacker",
     "serde_urlencoded",
+    "simple-expand-tilde",
 ]
 foreach = []
 geocode = [

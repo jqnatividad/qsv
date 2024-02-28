@@ -383,7 +383,7 @@ macro_rules! update_cache_info {
 
         let hit_ratio = ($cache_hits as f64 / $num_rows as f64) * 100.0;
         $progress.set_message(format!(
-            " of {} records. Redis cache hit ratio: {hit_ratio:.2}%",
+            " of {} records. Cache hit ratio: {hit_ratio:.2}%",
             HumanCount($progress.length().unwrap()),
         ));
     };
