@@ -161,7 +161,8 @@ Fetch options:
                                CACHING OPTIONS:
     --no-mem-cache             Do not use in-memory cache. If this option is not set and --redis-cache
                                or --disk-cache are also not set, the default in-memory cache is used.
-    --disk-cache <dir>         Use a disk cache for responses. The directory <dir> is where the cache is stored.
+    --disk-cache               Use a disk cache for responses.
+    --disk-cache-dir <dir>     The directory <dir> where the disk-cache is stored.
                                [default: ~/.qsv/cache/fetch]
     --redis-cache              Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
@@ -193,7 +194,7 @@ use std::{fs, num::NonZeroU32, sync::OnceLock, thread, time};
 use cached::{
     proc_macro::{cached, io_cached},
     stores::DiskCacheBuilder,
-    Cached, DiskCache, IOCached, RedisCache, Return,
+    Cached, IOCached, RedisCache, Return,
 };
 use dynfmt::Format;
 use governor::{
@@ -228,31 +229,32 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    arg_url_column:    SelectColumns,
-    arg_input:         Option<String>,
-    flag_url_template: Option<String>,
-    flag_new_column:   Option<String>,
-    flag_jql:          Option<String>,
-    flag_jqlfile:      Option<String>,
-    flag_pretty:       bool,
-    flag_rate_limit:   u32,
-    flag_timeout:      u16,
-    flag_http_header:  Vec<String>,
-    flag_max_retries:  u8,
-    flag_max_errors:   u64,
-    flag_store_error:  bool,
-    flag_cookies:      bool,
-    flag_user_agent:   Option<String>,
-    flag_report:       String,
-    flag_no_mem_cache: bool,
-    flag_disk_cache:   Option<String>,
-    flag_redis_cache:  bool,
-    flag_cache_error:  bool,
-    flag_flush_cache:  bool,
-    flag_output:       Option<String>,
-    flag_no_headers:   bool,
-    flag_delimiter:    Option<Delimiter>,
-    flag_progressbar:  bool,
+    arg_url_column:      SelectColumns,
+    arg_input:           Option<String>,
+    flag_url_template:   Option<String>,
+    flag_new_column:     Option<String>,
+    flag_jql:            Option<String>,
+    flag_jqlfile:        Option<String>,
+    flag_pretty:         bool,
+    flag_rate_limit:     u32,
+    flag_timeout:        u16,
+    flag_http_header:    Vec<String>,
+    flag_max_retries:    u8,
+    flag_max_errors:     u64,
+    flag_store_error:    bool,
+    flag_cookies:        bool,
+    flag_user_agent:     Option<String>,
+    flag_report:         String,
+    flag_no_mem_cache:   bool,
+    flag_disk_cache:     bool,
+    flag_disk_cache_dir: Option<String>,
+    flag_redis_cache:    bool,
+    flag_cache_error:    bool,
+    flag_flush_cache:    bool,
+    flag_output:         Option<String>,
+    flag_no_headers:     bool,
+    flag_delimiter:      Option<Delimiter>,
+    flag_progressbar:    bool,
 }
 
 // connect to Redis at localhost, using database 1 by default when --redis is enabled
@@ -332,7 +334,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .unwrap();
 
     // setup response caching
-    let diskcache_dir = if let Some(dir) = &args.flag_disk_cache {
+    let diskcache_dir = if let Some(dir) = &args.flag_disk_cache_dir {
         if dir.starts_with('~') {
             // expand the tilde
             let expanded_dir = expand_tilde(dir).unwrap();
@@ -344,7 +346,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         String::new()
     };
 
-    let cache_type = if args.flag_disk_cache.is_some() && args.flag_no_mem_cache {
+    let cache_type = if args.flag_disk_cache {
         // if --flush-cache is set, flush the cache directory first if it exists
         if args.flag_flush_cache
             && !diskcache_dir.is_empty()
@@ -733,11 +735,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if was_cached {
                         disk_cache_hits += 1;
                     }
-                    // if !args.flag_cache_error && final_response.status_code != 200 {
-                    //     // let mut cache = GET_DISKCACHE_RESPONSE.lock().unwrap();
-                    //     let mut cache = DISKCACHE.get().unwrap();
-                    //     cache.cache_remove(&url);
-                    // }
+                    if !args.flag_cache_error && final_response.status_code != 200 {
+                        let _ = GET_DISKCACHE_RESPONSE.cache_remove(&url);
+                    }
                 },
                 CacheType::Redis => {
                     intermediate_redis_value = get_redis_response(
@@ -938,17 +938,16 @@ fn get_cached_response(
 // so we need to include the values of flag_jql, flag_store_error, flag_pretty and
 // include_existing_columns in the cache key
 #[io_cached(
+    disk = true,
     type = "cached::DiskCache<String, FetchResponse>",
     key = "String",
-    convert = r#"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"#,
+    convert = r##"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"##,
     create = r##"{
         let cache_dir = DISKCACHE_DIR.get().unwrap();
-        let dc = DiskCacheBuilder::new("fetchdcache")
+        DiskCacheBuilder::new("fetchdcache")
             .set_disk_directory(cache_dir)
             .build()
-            .expect("error building disk cache");
-        //DISKCACHE.set(dc).unwrap();
-        dc
+            .expect("error building disk cache")
     }"##,
     map_error = r##"|e| CliError::Other(format!("Diskcache Error: {:?}", e))"##,
     with_cached_flag = true
@@ -983,7 +982,7 @@ fn get_diskcache_response(
 #[io_cached(
     type = "cached::RedisCache<String, String>",
     key = "String",
-    convert = r#"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"#,
+    convert = r##"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"##,
     create = r##" {
         let redis_config = REDISCONFIG.get().unwrap();
         RedisCache::new("f", redis_config.ttl_secs)
