@@ -204,7 +204,7 @@ fn fetch_simple_redis() {
     cmd.arg("URL")
         .arg("data.csv")
         .arg("--store-error")
-        .arg("--redis")
+        .arg("--redis-cache")
         .arg("--rate-limit")
         .arg("2");
 
