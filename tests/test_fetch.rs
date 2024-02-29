@@ -229,9 +229,9 @@ fn fetch_simple_diskcache() {
         vec![
             svec!["URL"],
             svec!["https://api.zippopotam.us/us/99999"],
-            svec!["  http://api.zippopotam.us/us/90210"],
+            svec!["https://api.zippopotam.us/us/90210"],
             svec!["https://api.zippopotam.us/us/94105"],
-            svec!["http://api.zippopotam.us/us/92802"],
+            svec!["https://api.zippopotam.us/us/92802"],
             svec!["thisisnotaurl"],
             // svec!["https://query.wikidata.org/sparql?query=SELECT%20?dob%20WHERE%20{wd:Q42%20wdt:P569%20?dob.}&format=json"],
         ],
@@ -241,15 +241,15 @@ fn fetch_simple_diskcache() {
     use std::{env, fs};
     let temp_dir = env::temp_dir().join("dcache");
     fs::create_dir_all(&temp_dir).unwrap();
+    let dc_dir = temp_dir.as_os_str().to_str().unwrap();
 
     let mut cmd = wrk.command("fetch");
     cmd.arg("URL")
         .arg("data.csv")
         .arg("--store-error")
         .arg("--disk-cache")
-        .args(&["--disk-cache-dir", temp_dir.as_os_str().to_str().unwrap()])
-        .arg("--rate-limit")
-        .arg("2");
+        .args(&["--disk-cache-dir", dc_dir])
+        .args(&["--rate-limit", "2"]);
 
     let got = wrk.stdout::<String>(&mut cmd);
 
@@ -264,7 +264,40 @@ fn fetch_simple_diskcache() {
 
     wrk.assert_success(&mut cmd);
 
-    assert!(temp_dir.join("fetchdcache_v1/conf").exists());
+    assert!(temp_dir.join("fetch_v1/conf").exists());
+
+    let mut cmd2 = wrk.command("fetch");
+    cmd2.arg("URL")
+        .arg("data.csv")
+        .arg("--store-error")
+        .arg("--disk-cache")
+        .args(&["--disk-cache-dir", dc_dir])
+        .args(&["--report", "short"]);
+
+    let got = wrk.stdout::<String>(&mut cmd2);
+    assert_eq!(got, expected);
+
+    // sleep for a bit to make sure the cache is written to disk
+    std::thread::sleep(std::time::Duration::from_secs(2));
+
+    let fetchreport = wrk.read_to_string("data.csv.fetch-report.tsv");
+    wrk.create_from_string("no-elapsed.tsv", &fetchreport);
+
+    // remove the elapsed_ms column from the report as this is not deterministic
+    let mut cmd3 = wrk.command("select");
+    cmd3.arg("!elapsed_ms").arg("no-elapsed.tsv");
+
+    let fetchreport_noelapsed = wrk.stdout::<String>(&mut cmd3);
+    // read the output file and compare it with the expected output
+    assert_eq!(
+        fetchreport_noelapsed,
+        r#"url,status,cache_hit,retries,response
+https://api.zippopotam.us/us/99999,404,1,5,"{""errors"":[{""title"":""HTTP ERROR"",""detail"":""HTTP ERROR 404 - Not Found""}]}"
+https://api.zippopotam.us/us/90210,200,1,0,"{""post code"":""90210"",""country"":""United States"",""country abbreviation"":""US"",""places"":[{""place name"":""Beverly Hills"",""longitude"":""-118.4065"",""state"":""California"",""state abbreviation"":""CA"",""latitude"":""34.0901""}]}"
+https://api.zippopotam.us/us/94105,200,1,0,"{""post code"":""94105"",""country"":""United States"",""country abbreviation"":""US"",""places"":[{""place name"":""San Francisco"",""longitude"":""-122.3892"",""state"":""California"",""state abbreviation"":""CA"",""latitude"":""37.7864""}]}"
+https://api.zippopotam.us/us/92802,200,0,0,"{""post code"":""92802"",""country"":""United States"",""country abbreviation"":""US"",""places"":[{""place name"":""Anaheim"",""longitude"":""-117.9228"",""state"":""California"",""state abbreviation"":""CA"",""latitude"":""33.8085""}]}"
+thisisnotaurl,404,0,0,"{""errors"":[{""title"":""Invalid URL"",""detail"":""relative URL without a base""}]}""#
+    );
 }
 
 #[test]
