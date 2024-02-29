@@ -160,21 +160,32 @@ Fetch options:
 
                                CACHING OPTIONS:
     --no-mem-cache             Do not use in-memory cache. If this option is not set and --redis-cache
-                               or --disk-cache are also not set, the default in-memory cache is used.
-    --disk-cache               Use a disk cache for responses.
-    --disk-cache-dir <dir>     The directory <dir> where the disk-cache is stored.
-                               [default: ~/.qsv/cache/fetch]
+                               or --disk-cache are also not set, the default in-memory cache is used and only
+                               caches responses for the current fetch session.
+    --disk-cache               Use a persistent disk cache for responses. The cache is stored in the directory
+                               specified by --disk-cache-dir. If the directory does not exist, it will be
+                               created. If the directory exists, it will be used as is.
+                               It has a default Time To Live (TTL)/lifespan of 28 days and cache hits do not
+                               refresh the TTL of cached values.
+                               Adjust the QSV_DISKCACHE_TTL_SECS & QSV_DISKCACHE_TTL_REFRESH env vars
+                               to change DiskCache settings.
+    --disk-cache-dir <dir>     The directory <dir> to store the disk cache. Note that if the directory
+                               does not exist, it will be created. If the directory exists, it will be used as is,
+                               and will not be flushed. This option allows you to maintain several disk caches
+                               for different fetch jobs (e.g. one for geocoding, another for weather, etc.)
+                               [default: ~/.qsv/cache]
     --redis-cache              Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
                                Adjust the QSV_REDIS_CONNSTR, QSV_REDIS_MAX_POOL_SIZE, QSV_REDIS_TTL_SECONDS & 
-                               QSV_REDIS_TTL_REFRESH respectively to change Redis settings.
+                               QSV_REDIS_TTL_REFRESH env vars respectively to change Redis settings.
                                This option is ignored if the --disk-cache option is enabled.
 
     --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
                                the cached error is returned. Otherwise, the fetch is attempted again 
                                for --max-retries.
-    --flush-cache              Flush all the keys in the current cache on startup.                               
+    --flush-cache              Flush all the keys in the current cache on startup. This only applies to
+                               Disk and Redis caches.
 
 Common options:
     -h, --help                 Display this message
@@ -261,6 +272,10 @@ struct Args {
 static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/1";
 static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
+
+// disk cache TTL is also 28 days by default
+static DEFAULT_DISKCACHE_TTL_SECS: u64 = 60 * 60 * 24 * 28;
+
 static TIMEOUT_SECS: OnceLock<u64> = OnceLock::new();
 
 const FETCH_REPORT_PREFIX: &str = "qsv_fetch_";
@@ -306,6 +321,23 @@ impl RedisConfig {
     }
 }
 
+#[derive(Debug)]
+struct DiskCacheConfig {
+    ttl_secs:    u64,
+    ttl_refresh: bool,
+}
+impl DiskCacheConfig {
+    fn new() -> DiskCacheConfig {
+        Self {
+            ttl_secs:    std::env::var("QSV_DISKCACHE_TTL_SECS")
+                .unwrap_or_else(|_| DEFAULT_DISKCACHE_TTL_SECS.to_string())
+                .parse()
+                .unwrap_or(DEFAULT_DISKCACHE_TTL_SECS),
+            ttl_refresh: util::get_envvar_flag("QSV_DISKCACHE_TTL_REFRESH"),
+        }
+    }
+}
+
 #[derive(Default, PartialEq)]
 enum CacheType {
     #[default]
@@ -323,8 +355,8 @@ struct FetchResponse {
 }
 
 static DISKCACHE_DIR: OnceLock<String> = OnceLock::new();
-// static DISKCACHE: OnceLock<DiskCache<String, FetchResponse>> = OnceLock::new();
 static REDISCONFIG: OnceLock<RedisConfig> = OnceLock::new();
+static DISKCACHECONFIG: OnceLock<DiskCacheConfig> = OnceLock::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -363,6 +395,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
         DISKCACHE_DIR.set(diskcache_dir).unwrap();
+        // initialize DiskCache Config
+        DISKCACHECONFIG.set(DiskCacheConfig::new()).unwrap();
         CacheType::Disk
     } else if args.flag_redis_cache {
         // initialize Redis Config
@@ -600,7 +634,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .clone()
             .unwrap_or_else(|| "stdin.csv".to_string());
 
-        report_wtr = Config::new(&Some(report_path.clone() + FETCH_REPORT_SUFFIX)).writer()?;
+        report_wtr = Config::new(&Some(report_path.clone() + FETCH_REPORT_SUFFIX))
+            .delimiter(Some(Delimiter(b'\t')))
+            .writer()?;
         let mut report_headers = if report == ReportKind::Detailed {
             headers.clone()
         } else {
@@ -734,9 +770,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     was_cached = intermediate_value.was_cached;
                     if was_cached {
                         disk_cache_hits += 1;
+                        // log::debug!("Disk cache hit for {url} hit: {disk_cache_hits}");
                     }
                     if !args.flag_cache_error && final_response.status_code != 200 {
                         let _ = GET_DISKCACHE_RESPONSE.cache_remove(&url);
+                        // log::debug!("Removed Disk cache for {url}");
                     }
                 },
                 CacheType::Redis => {
@@ -940,12 +978,16 @@ fn get_cached_response(
 #[io_cached(
     disk = true,
     type = "cached::DiskCache<String, FetchResponse>",
+    cache_prefix_block = r##"{ "dc_" }"##,
     key = "String",
     convert = r##"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"##,
     create = r##"{
         let cache_dir = DISKCACHE_DIR.get().unwrap();
-        DiskCacheBuilder::new("fetchdcache")
+        let diskcache_config = DISKCACHECONFIG.get().unwrap();
+        DiskCacheBuilder::new("fetch")
             .set_disk_directory(cache_dir)
+            .set_lifespan(diskcache_config.ttl_secs)
+            .set_refresh(diskcache_config.ttl_refresh)
             .build()
             .expect("error building disk cache")
     }"##,
