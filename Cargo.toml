@@ -116,7 +116,12 @@ gzp = { version = "0.11", default-features = false, features = [
     "snappy_default",
 ] }
 hashbrown = { version = "0.14", optional = true }
+
+# pinned to 0.7.5 as 0.7.6 introduces a breaking change
+# that prevents enabling the geocode feature
+# https://github.com/Xudong-Huang/generator-rs/issues/54
 generator = { version = "=0.7.5", optional = true }
+
 indexmap = "2.2"
 indicatif = "0.17"
 itertools = "0.12"
