@@ -72,6 +72,13 @@ struct Args {
     flag_delimiter:  Option<Delimiter>,
 }
 
+enum EnumOperation {
+    Increment,
+    Uuid,
+    Constant(String),
+    Copy(usize),
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let mut rconfig = Config::new(&args.arg_input)
@@ -113,30 +120,47 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
+    let enum_operation = if let Some(constant_value) = &args.flag_constant {
+        if constant_value == NULL_VALUE {
+            EnumOperation::Constant(String::new())
+        } else {
+            EnumOperation::Constant(constant_value.to_string())
+        }
+    } else if args.flag_uuid {
+        EnumOperation::Uuid
+    } else if copy_operation {
+        EnumOperation::Copy(copy_index)
+    } else {
+        EnumOperation::Increment
+    };
+
     let mut record = csv::ByteRecord::new();
     let mut counter: u64 = args.flag_start;
+    let mut itoa_buffer = itoa::Buffer::new();
 
     while rdr.read_byte_record(&mut record)? {
-        if let Some(constant_value) = &args.flag_constant {
-            if constant_value == NULL_VALUE {
-                record.push_field(b"");
-            } else {
+        match enum_operation {
+            EnumOperation::Increment => {
+                record.push_field(itoa_buffer.format(counter).as_bytes());
+                counter += 1;
+            },
+            EnumOperation::Uuid => {
+                let id = Uuid::new_v4();
+                record.push_field(
+                    id.as_hyphenated()
+                        .encode_lower(&mut Uuid::encode_buffer())
+                        .as_bytes(),
+                );
+            },
+            EnumOperation::Constant(ref constant_value) => {
                 record.push_field(constant_value.as_bytes());
-            }
-        } else if copy_operation {
-            #[allow(clippy::unnecessary_to_owned)]
-            record.push_field(&record[copy_index].to_vec());
-        } else if args.flag_uuid {
-            let id = Uuid::new_v4();
-            record.push_field(
-                id.as_hyphenated()
-                    .encode_lower(&mut Uuid::encode_buffer())
-                    .as_bytes(),
-            );
-        } else {
-            record.push_field(counter.to_string().as_bytes());
-            counter += 1;
+            },
+            EnumOperation::Copy(copy_index) => {
+                #[allow(clippy::unnecessary_to_owned)]
+                record.push_field(&record[copy_index].to_vec());
+            },
         }
+
         wtr.write_byte_record(&record)?;
     }
     Ok(wtr.flush()?)
