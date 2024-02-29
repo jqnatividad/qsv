@@ -3,23 +3,23 @@ Add a new column enumerating the lines of a CSV file. This can be useful to keep
 track of a specific line order, give a unique identifier to each line or even
 make a copy of the contents of a column.
 
-The enum function can currently be used to perform the following tasks:
+The enum function has four modes of operation:
 
-  Add an incremental identifier to each of the lines:
+  1. INCREMENT. Add an incremental identifier to each of the lines:
     $ qsv enum file.csv
 
-  Add a uuid v4 to each of the lines:
+  2. UUID. Add a uuid v4 to each of the lines:
     $ qsv enum --uuid file.csv
 
-  Create a new column filled with a given value:
+  3. CONSTANT. Create a new column filled with a given value:
     $ qsv enum --constant 0
 
-  Copy the contents of a column to a new one:
+  4. COPY. Copy the contents of a column to a new one:
     $ qsv enum --copy names
 
   Finally, note that you should also be able to shuffle the lines of a CSV file
   by sorting on the generated uuids:
-    $ qsv enum uuid file.csv | qsv sort -s uuid > shuffled.csv
+    $ qsv enum --uuid file.csv | qsv sort -s uuid > shuffled.csv
 
 Usage:
     qsv enum [options] [<input>]
@@ -29,8 +29,11 @@ enum options:
     -c, --new-column <name>  Name of the column to create.
                              Will default to "index".
     --start <value>          The value to start the enumeration from.
-                             Only applies when not using other enum options.
+                             Only applies in Increment mode.
                              (default: 0)
+    --increment <value>      The value to increment the enumeration by.
+                             Only applies in Increment mode.
+                             (default: 1)
     --constant <value>       Fill a new column with the given value.
                              Changes the default column name to "constant".
                              To specify a null value, pass the literal "<NULL>".
@@ -65,6 +68,7 @@ struct Args {
     arg_input:       Option<String>,
     flag_new_column: Option<String>,
     flag_start:      u64,
+    flag_increment:  Option<u64>,
     flag_constant:   Option<String>,
     flag_copy:       Option<SelectColumns>,
     flag_uuid:       bool,
@@ -143,12 +147,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut itoa_buffer = itoa::Buffer::new();
     #[allow(unused_assignments)]
     let mut colcopy: Vec<u8> = Vec::with_capacity(20);
+    let increment = args.flag_increment.unwrap_or(1);
 
     while rdr.read_byte_record(&mut record)? {
         match enum_operation {
             EnumOperation::Increment => {
                 record.push_field(itoa_buffer.format(counter).as_bytes());
-                counter += 1;
+                counter += increment;
             },
             EnumOperation::Uuid => {
                 let id = Uuid::new_v4();
