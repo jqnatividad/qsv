@@ -28,6 +28,33 @@ fn enumerate() {
 }
 
 #[test]
+fn enumerate_counter() {
+    let wrk = Workdir::new("enumerate_counter");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "13"],
+            svec!["b", "24"],
+            svec!["c", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("enum");
+    cmd.args(&["--start", "10"]).arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "index"],
+        svec!["a", "13", "10"],
+        svec!["b", "24", "11"],
+        svec!["c", "72", "12"],
+        svec!["d", "7", "13"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn enumerate_column_name() {
     let wrk = Workdir::new("enum");
     wrk.create(

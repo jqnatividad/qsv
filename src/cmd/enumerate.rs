@@ -28,6 +28,8 @@ Usage:
 enum options:
     -c, --new-column <name>  Name of the column to create.
                              Will default to "index".
+    --start <value>          The value to start the enumeration from.
+                             (default: 0)
     --constant <value>       Fill a new column with the given value.
                              Changes the default column name to "constant".
                              To specify a null value, pass the literal "<NULL>".
@@ -61,6 +63,7 @@ const NULL_VALUE: &str = "<NULL>";
 struct Args {
     arg_input:       Option<String>,
     flag_new_column: Option<String>,
+    flag_start:      u64,
     flag_constant:   Option<String>,
     flag_copy:       Option<SelectColumns>,
     flag_uuid:       bool,
@@ -111,7 +114,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut record = csv::ByteRecord::new();
-    let mut counter: u64 = 0;
+    let mut counter: u64 = args.flag_start;
 
     while rdr.read_byte_record(&mut record)? {
         if let Some(constant_value) = &args.flag_constant {
