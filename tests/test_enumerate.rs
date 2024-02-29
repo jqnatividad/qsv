@@ -163,6 +163,33 @@ fn enumerate_copy() {
 }
 
 #[test]
+fn enumerate_copy_long_to_short() {
+    let wrk = Workdir::new("enumerate_copy_long_to_short");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "13 this is a long string"],
+            svec!["b", "24 a shorter one"],
+            svec!["c", "72 shorter"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("enum");
+    cmd.arg("--copy").arg("number").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "number_copy"],
+        svec!["a", "13 this is a long string", "13 this is a long string"],
+        svec!["b", "24 a shorter one", "24 a shorter one"],
+        svec!["c", "72 shorter", "72 shorter"],
+        svec!["d", "7", "7"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn enumerate_copy_name() {
     let wrk = Workdir::new("enum");
     wrk.create(
