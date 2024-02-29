@@ -27,7 +27,7 @@ jobs:
     runs-on: self-hosted
     strategy:
       matrix:
-        rust: [nightly-2024-01-24]
+        rust: [nightly-2024-02-23]
         job:
           - os: macos
             os-name: macos
