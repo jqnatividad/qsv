@@ -29,6 +29,7 @@ enum options:
     -c, --new-column <name>  Name of the column to create.
                              Will default to "index".
     --start <value>          The value to start the enumeration from.
+                             Only applies when not using other enum options.
                              (default: 0)
     --constant <value>       Fill a new column with the given value.
                              Changes the default column name to "constant".
@@ -75,8 +76,8 @@ struct Args {
 enum EnumOperation {
     Increment,
     Uuid,
-    Constant(String),
-    Copy(usize),
+    Constant,
+    Copy,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -120,23 +121,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
-    let enum_operation = if let Some(constant_value) = &args.flag_constant {
-        if constant_value == NULL_VALUE {
-            EnumOperation::Constant(String::new())
-        } else {
-            EnumOperation::Constant(constant_value.to_string())
-        }
+    let constant_value = if args.flag_constant == Some(NULL_VALUE.to_string()) {
+        b""
+    } else {
+        args.flag_constant.as_deref().unwrap_or("").as_bytes()
+    };
+
+    let enum_operation = if args.flag_constant.is_some() {
+        EnumOperation::Constant
     } else if args.flag_uuid {
         EnumOperation::Uuid
     } else if copy_operation {
-        EnumOperation::Copy(copy_index)
+        EnumOperation::Copy
     } else {
         EnumOperation::Increment
     };
 
+    // amortize allocations
     let mut record = csv::ByteRecord::new();
     let mut counter: u64 = args.flag_start;
     let mut itoa_buffer = itoa::Buffer::new();
+    #[allow(unused_assignments)]
+    let mut colcopy: Vec<u8> = Vec::with_capacity(20);
 
     while rdr.read_byte_record(&mut record)? {
         match enum_operation {
@@ -152,12 +158,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         .as_bytes(),
                 );
             },
-            EnumOperation::Constant(ref constant_value) => {
-                record.push_field(constant_value.as_bytes());
+            EnumOperation::Constant => {
+                record.push_field(constant_value);
             },
-            EnumOperation::Copy(copy_index) => {
-                #[allow(clippy::unnecessary_to_owned)]
-                record.push_field(&record[copy_index].to_vec());
+            EnumOperation::Copy => {
+                colcopy = record[copy_index].to_vec();
+                record.push_field(&colcopy);
             },
         }
 
