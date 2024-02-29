@@ -139,7 +139,7 @@ mlua = { version = "0.9", features = [
 num_cpus = "1"
 odht = "0.3"
 phf = { version = "0.11", features = ["macros"], optional = true }
-polars = { version = "0.37", features = [
+polars = { version = "0.38", features = [
     "lazy",
     "streaming",
     "object",
