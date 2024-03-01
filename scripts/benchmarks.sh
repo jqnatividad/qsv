@@ -42,13 +42,14 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.16.0
+bm_version=3.17.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
 
 # the path to the qsv binary, change this if you're not using the prebuilt binaries
 # e.g. you compiled a tuned version of qsv with different features and/or CPU optimizations enabled
+# qsv_bin=../target/release/qsv
 qsv_bin=qsv
 # the path to the qsv binary that we dogfood to run the benchmarks
 # we use several optional features when dogfooding qsv (apply, luau & to)
@@ -442,6 +443,9 @@ run dedup "$qsv_bin" dedup "$data"
 run dedup_sorted "$qsv_bin" dedup data_sorted.csv
 run diff "$qsv_bin" diff "$data" data_unsorted.csv
 run enum "$qsv_bin" enum "$data"
+run enum_uuid "$qsv_bin" enum --uuid "$data"
+run enum_constant "$qsv_bin" enum --constant "NYC" "$data"
+run enum_copy "$qsv_bin" enum --copy Agency "$data"
 run excel "$qsv_bin" excel benchmark_data.xlsx
 run exclude "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
 run --index exclude_index "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
@@ -543,8 +547,11 @@ run --index split_index_j1 "$qsv_bin" split --size 50000 -j 1 split_tempdir_idx_
 run --index split_chunks_index "$qsv_bin" split --chunks 20 split_tempdir_chunks_idx "$data"
 run --index split_chunks_index_j1 "$qsv_bin" split --chunks 20 -j 1 split_tempdir_chunks_idx_j1
 run sqlp "$qsv_bin" sqlp "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_aggregations "$qsv_bin" sqlp "$data" -Q '"select Borough, count(*) from _t_1 where \"Complaint Type\"='\''Noise'\'' group by Borough"'
 run sqlp_format_arrow "$qsv_bin" sqlp --format arrow "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_format_avro "$qsv_bin" sqlp --format avro "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_format_json "$qsv_bin" sqlp --format json "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_format_jsonl "$qsv_bin" sqlp --format jsonl "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_format_parquet "$qsv_bin" sqlp --format parquet "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_format_parquet_statistics "$qsv_bin" sqlp --format parquet --statistics "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_lowmemory "$qsv_bin" sqlp "$data" -Q --low-memory '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
