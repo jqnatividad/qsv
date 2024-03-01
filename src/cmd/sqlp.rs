@@ -5,8 +5,8 @@ grouping, sorting, and more - working on larger than memory CSV files.
 Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame expressions.
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/rs-0.38.0/crates/polars-sql/src/functions.rs
-https://github.com/pola-rs/polars/blob/rs-0.38.0/crates/polars-sql/src/keywords.rs and
+https://github.com/pola-rs/polars/blob/rs-0.38.1/crates/polars-sql/src/functions.rs
+https://github.com/pola-rs/polars/blob/rs-0.38.1/crates/polars-sql/src/keywords.rs and
 https://github.com/pola-rs/polars/issues/7227
 
 Returns the shape of the query result (number of rows, number of columns) to stderr.
@@ -133,6 +133,7 @@ sqlp options:
     --format <arg>            The output format to use. Valid values are:
                                 csv      Comma-separated values
                                 json     JSON
+                                jsonl    JSONL (JSON Lines)
                                 parquet  Apache Parquet
                                 arrow    Apache Arrow IPC
                                 avro     Apache Avro
@@ -178,10 +179,14 @@ sqlp options:
     --wnull-value <arg>       The string to use when WRITING null values.
                               (default: <empty string>)
 
-                              PARQUET OUTPUT FORMAT ONLY:
-    --compression <arg>       The compression codec to use when writing parquet files.
-                                Valid values are: zstd, lz4raw, gzip, snappy, uncompressed
+                              ARROW/AVRO/PARQUET OUTPUT FORMATS ONLY:
+    --compression <arg>       The compression codec to use when writing arrow or parquet files.
+                                For Arrow, valid values are: zstd, lz4, uncompressed
+                                For Avro, valid values are: deflate, snappy, uncompressed (default)
+                                For Parquet, valid values are: zstd, lz4raw, gzip, snappy, uncompressed
                               (default: zstd)
+
+                              PARQUET OUTPUT FORMAT ONLY:
     --compress-level <arg>    The compression level to use when using zstd or gzip compression.
                               When using zstd, valid values are -7 to 22, with -7 being the
                               lowest compression level and 22 being the highest compression level.
@@ -212,10 +217,11 @@ use std::{
 };
 
 use polars::{
-    io::avro::AvroWriter,
+    io::avro::{AvroWriter, Compression as AvroCompression},
     prelude::{
-        CsvWriter, DataFrame, GzipLevel, IpcWriter, JsonWriter, LazyCsvReader, LazyFileListReader,
-        NullValues, ParquetCompression, ParquetWriter, SerWriter, ZstdLevel,
+        CsvWriter, DataFrame, GzipLevel, IpcCompression, IpcWriter, JsonFormat, JsonWriter,
+        LazyCsvReader, LazyFileListReader, NullValues, ParquetCompression, ParquetWriter,
+        SerWriter, ZstdLevel,
     },
     sql::SQLContext,
 };
@@ -263,6 +269,7 @@ enum OutputMode {
     #[default]
     Csv,
     Json,
+    Jsonl,
     Parquet,
     Arrow,
     Avro,
@@ -309,12 +316,17 @@ impl OutputMode {
                     .with_null_value(args.flag_wnull_value)
                     .include_bom(util::get_envvar_flag("QSV_OUTPUT_BOM"))
                     .finish(&mut df),
-                OutputMode::Json => JsonWriter::new(&mut w).finish(&mut df),
+                OutputMode::Json => JsonWriter::new(&mut w)
+                    .with_json_format(JsonFormat::Json)
+                    .finish(&mut df),
+                OutputMode::Jsonl => JsonWriter::new(&mut w)
+                    .with_json_format(JsonFormat::JsonLines)
+                    .finish(&mut df),
                 OutputMode::Parquet => {
                     let compression: PqtCompression = args
                         .flag_compression
                         .parse()
-                        .unwrap_or(PqtCompression::Lz4Raw);
+                        .unwrap_or(PqtCompression::Uncompressed);
 
                     let parquet_compression = match compression {
                         PqtCompression::Uncompressed => ParquetCompression::Uncompressed,
@@ -342,8 +354,38 @@ impl OutputMode {
                         .finish(&mut df)
                         .map(|_| ())
                 },
-                OutputMode::Arrow => IpcWriter::new(&mut w).finish(&mut df),
-                OutputMode::Avro => AvroWriter::new(&mut w).finish(&mut df),
+                OutputMode::Arrow => {
+                    let compression: ArrowCompression = args
+                        .flag_compression
+                        .parse()
+                        .unwrap_or(ArrowCompression::Uncompressed);
+
+                    let ipc_compression: Option<IpcCompression> = match compression {
+                        ArrowCompression::Uncompressed => None,
+                        ArrowCompression::Lz4 => Some(IpcCompression::LZ4),
+                        ArrowCompression::Zstd => Some(IpcCompression::ZSTD),
+                    };
+
+                    IpcWriter::new(&mut w)
+                        .with_compression(ipc_compression)
+                        .finish(&mut df)
+                },
+                OutputMode::Avro => {
+                    let compression: QsvAvroCompression = args
+                        .flag_compression
+                        .parse()
+                        .unwrap_or(QsvAvroCompression::Uncompressed);
+
+                    let avro_compression = match compression {
+                        QsvAvroCompression::Uncompressed => None,
+                        QsvAvroCompression::Deflate => Some(AvroCompression::Deflate),
+                        QsvAvroCompression::Snappy => Some(AvroCompression::Snappy),
+                    };
+
+                    AvroWriter::new(&mut w)
+                        .with_compression(avro_compression)
+                        .finish(&mut df)
+                },
                 OutputMode::None => Ok(()),
             };
 
@@ -367,6 +409,7 @@ impl FromStr for OutputMode {
         match s.to_ascii_lowercase().as_str() {
             "csv" => Ok(OutputMode::Csv),
             "json" => Ok(OutputMode::Json),
+            "jsonl" => Ok(OutputMode::Jsonl),
             "parquet" => Ok(OutputMode::Parquet),
             "arrow" => Ok(OutputMode::Arrow),
             "avro" => Ok(OutputMode::Avro),
@@ -384,6 +427,21 @@ enum PqtCompression {
     Zstd,
     Lz4Raw,
 }
+#[derive(Default, Copy, Clone)]
+enum ArrowCompression {
+    #[default]
+    Uncompressed,
+    Lz4,
+    Zstd,
+}
+
+#[derive(Default, Copy, Clone)]
+enum QsvAvroCompression {
+    #[default]
+    Uncompressed,
+    Deflate,
+    Snappy,
+}
 
 impl FromStr for PqtCompression {
     type Err = String;
@@ -395,7 +453,33 @@ impl FromStr for PqtCompression {
             "snappy" => Ok(PqtCompression::Snappy),
             "lz4raw" => Ok(PqtCompression::Lz4Raw),
             "zstd" => Ok(PqtCompression::Zstd),
-            _ => Err(format!("Invalid compression format: {s}")),
+            _ => Err(format!("Invalid Parquet compression format: {s}")),
+        }
+    }
+}
+
+impl FromStr for ArrowCompression {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "uncompressed" => Ok(ArrowCompression::Uncompressed),
+            "lz4" => Ok(ArrowCompression::Lz4),
+            "zstd" => Ok(ArrowCompression::Zstd),
+            _ => Err(format!("Invalid Arrow compression format: {s}")),
+        }
+    }
+}
+
+impl FromStr for QsvAvroCompression {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "uncompressed" => Ok(QsvAvroCompression::Uncompressed),
+            "deflate" => Ok(QsvAvroCompression::Deflate),
+            "snappy" => Ok(QsvAvroCompression::Snappy),
+            _ => Err(format!("Invalid Avro compression format: {s}")),
         }
     }
 }
