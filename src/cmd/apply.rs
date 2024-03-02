@@ -5,11 +5,9 @@ perform typical data-wrangling tasks and/or to harmonize some values, etc.
 It has five subcommands:
  1. operations*   - 37 string, format, currency, regex & NLP operators.
  2. emptyreplace* - replace empty cells with <--replacement> string.
- 3. datefmt*      - Formats recognized date/s (19 formats recognized) to
-                    a specified date format using <--formatstr>.
- 4. dynfmt        - Dynamically constructs a new column from other columns using
+ 3. dynfmt        - Dynamically constructs a new column from other columns using
                     the <--formatstr> template.
- 5. calcconv      - parse and evaluate math expressions, with support for units
+ 4. calcconv      - parse and evaluate math expressions, with support for units
                     and conversions.
     * subcommand is multi-column capable.
 
@@ -169,44 +167,6 @@ case insensitive with 'None'.
 
 $ qsv apply emptyreplace --replacement None '/(?i)^observation/' file.csv
 
-DATEFMT (multi-column capable)
-Formats recognized date/s to a specified format using <--formatstr>.
-See https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats for
-recognized date formats.
-See https://docs.rs/chrono/latest/chrono/format/strftime/ for 
-accepted date formats for --formatstr.
-Defaults to ISO 8601/RFC 3339 format when --formatstr is not specified.
-( "%Y-%m-%dT%H:%M:%S%z" - e.g. 2001-07-08T00:34:60.026490+09:30 )
-
-Examples:
-Format dates in Open Date column to ISO 8601/RFC 3339 format:
-
-  $ qsv apply datefmt 'Open Date' file.csv
-
-Format multiple date columns in file.csv to ISO 8601/RFC 3339 format:
-
-  $ qsv apply datefmt 'Open Date,Modified Date,Closed Date' file.csv
-
-Format all columns that end with "_date" case-insensitive in file.csv to ISO 8601/RFC 3339 format:
-
-  $ qsv apply datefmt '\(?i)_date$\' file.csv
-
-Format dates in OpenDate column using '%Y-%m-%d' format:
-
-  $ qsv apply datefmt OpenDate --formatstr '%Y-%m-%d' file.csv
-
-Format multiple date columns using '%Y-%m-%d' format:
-
-  $ qsv apply datefmt OpenDate,CloseDate,ReopenDate --formatstr '%Y-%m-%d' file.csv
-
-Get the week number for OpenDate and store it in the week_number column:
-
-  $ qsv apply dateformat OpenDate --formatstr '%V' --new-column week_number file.csv
-
-Get the day of the week for several date columns and store it in the corresponding weekday columns:
-
-  $ qsv apply dateformat OpenDate,CloseDate --formatstr '%u' --rename Open_weekday,Close_weekday file.csv
-
 DYNFMT
 Dynamically constructs a new column from other columns using the <--formatstr> template.
 The template can contain arbitrary characters. To insert a column value, enclose the
@@ -266,7 +226,6 @@ For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/
 Usage:
 qsv apply operations <operations> [options] <column> [<input>]
 qsv apply emptyreplace --replacement=<string> [options] <column> [<input>]
-qsv apply datefmt [--formatstr=<string>] [options] <column> [<input>]
 qsv apply dynfmt --formatstr=<string> [options] --new-column=<name> [<input>]
 qsv apply calcconv --formatstr=<string> [options] --new-column=<name> [<input>]
 qsv apply --help
@@ -274,7 +233,7 @@ qsv apply --help
 apply arguments:
     <column>                        The column/s to apply the transformation to.
                                     Note that the <column> argument supports multiple columns
-                                    for the operations, emptyreplace & datefmt subcommands.
+                                    for the operations & emptyreplace subcommands.
                                     See 'qsv select --help' for the format details.
 
     OPERATIONS subcommand:
@@ -284,12 +243,6 @@ apply arguments:
     EMPTYREPLACE subcommand:
         --replacement=<string>      The string to use to replace empty values.
         <column>                    The column/s to check for emptiness.
-
-    DATEFMT subcommand:
-        --formatstr=<string>        The date format to use for the datefmt operation.
-                                    See DATEFMT section in the --formatstr option below
-                                    for more details.
-        <column>                    The date column/s to apply the datefmt operation to.
 
     DYNFMT subcommand:
         --formatstr=<string>        The template to use for the dynfmt operation.
@@ -309,10 +262,6 @@ apply options:
                                 Also used with numtocurrency operation to specify currency symbol.
     -R, --replacement=<string>  The string to use for the replace & emptyreplace operations.
                                 Also used with numtocurrency operation to conversion rate.
-    --prefer-dmy                Prefer to parse dates in dmy format. Otherwise, use mdy format.
-                                Only used with the DATEFMT subcommand.
-    --keep-zero-time            If a formatted date ends with "T00:00:00+00:00", keep the time
-                                instead of removing it. Only used with the DATEFMT subcommand.
     -f, --formatstr=<string>    This option is used by several subcommands:
 
                                 OPERATIONS: 
@@ -328,12 +277,6 @@ apply options:
 
                                   round
                                     The number of decimal places to round to (default: 3)
-
-                                DATEFMT: The date format to use. For formats, see
-                                  https://docs.rs/chrono/latest/chrono/format/strftime/
-                                  Default to ISO 8601 / RFC 3339 date & time format -
-                                  "%Y-%m-%dT%H:%M:%S%z" - e.g. 2001-07-08T00:34:60.026490+09:30
-                                  [default: %+]
 
                                 DYNFMT: the template to use to construct a new column.
 
@@ -363,7 +306,6 @@ use gender_guesser::Gender;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::debug;
 use qsv_currency::Currency;
-use qsv_dateparser::parse_with_preference;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::IntoParallelRefIterator,
@@ -436,27 +378,24 @@ enum Operations {
 
 #[derive(Deserialize)]
 struct Args {
-    arg_column:          SelectColumns,
-    cmd_operations:      bool,
-    arg_operations:      String,
-    cmd_datefmt:         bool,
-    cmd_dynfmt:          bool,
-    cmd_emptyreplace:    bool,
-    cmd_calcconv:        bool,
-    arg_input:           Option<String>,
-    flag_rename:         Option<String>,
-    flag_comparand:      String,
-    flag_replacement:    String,
-    flag_prefer_dmy:     bool,
-    flag_keep_zero_time: bool,
-    flag_formatstr:      String,
-    flag_batch:          u32,
-    flag_jobs:           Option<usize>,
-    flag_new_column:     Option<String>,
-    flag_output:         Option<String>,
-    flag_no_headers:     bool,
-    flag_delimiter:      Option<Delimiter>,
-    flag_progressbar:    bool,
+    arg_column:       SelectColumns,
+    cmd_operations:   bool,
+    arg_operations:   String,
+    cmd_dynfmt:       bool,
+    cmd_emptyreplace: bool,
+    cmd_calcconv:     bool,
+    arg_input:        Option<String>,
+    flag_rename:      Option<String>,
+    flag_comparand:   String,
+    flag_replacement: String,
+    flag_formatstr:   String,
+    flag_batch:       u32,
+    flag_jobs:        Option<usize>,
+    flag_new_column:  Option<String>,
+    flag_output:      Option<String>,
+    flag_no_headers:  bool,
+    flag_delimiter:   Option<Delimiter>,
+    flag_progressbar: bool,
 }
 
 static CENSOR: OnceLock<Censor> = OnceLock::new();
@@ -486,7 +425,6 @@ static INDIANCOMMA_POLICY: SeparatorPolicy = SeparatorPolicy {
 #[derive(PartialEq)]
 enum ApplySubCmd {
     Operations,
-    DateFmt,
     DynFmt,
     EmptyReplace,
     CalcConv,
@@ -572,8 +510,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Err(e) => return Err(e),
         }
         ApplySubCmd::Operations
-    } else if args.cmd_datefmt {
-        ApplySubCmd::DateFmt
     } else if args.cmd_dynfmt {
         ApplySubCmd::DynFmt
     } else if args.cmd_emptyreplace {
@@ -615,9 +551,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
-
-    let prefer_dmy = args.flag_prefer_dmy || rconfig.get_dmy_preference();
-    let flag_keep_zero_time = args.flag_keep_zero_time;
 
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
@@ -686,31 +619,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             record[*col_index].clone_into(&mut cell);
                             if cell.trim().is_empty() {
                                 cell = flag_replacement.clone();
-                            }
-                            if flag_new_column.is_some() {
-                                record.push_field(&cell);
-                            } else {
-                                record = replace_column_value(&record, *col_index, &cell);
-                            }
-                        }
-                    },
-                    ApplySubCmd::DateFmt => {
-                        let mut cell = String::new();
-                        for col_index in &*sel {
-                            record[*col_index].clone_into(&mut cell);
-                            if !cell.is_empty() {
-                                let parsed_date = parse_with_preference(&cell, prefer_dmy);
-                                if let Ok(format_date) = parsed_date {
-                                    let formatted_date =
-                                        format_date.format(&flag_formatstr).to_string();
-                                    if !flag_keep_zero_time
-                                        && formatted_date.ends_with("T00:00:00+00:00")
-                                    {
-                                        formatted_date[..10].clone_into(&mut cell);
-                                    } else {
-                                        formatted_date.clone_into(&mut cell);
-                                    }
-                                }
                             }
                             if flag_new_column.is_some() {
                                 record.push_field(&cell);
