@@ -41,6 +41,7 @@ mod test_cat;
 mod test_combos;
 mod test_comments;
 mod test_count;
+mod test_datefmt;
 mod test_dedup;
 mod test_describegpt;
 mod test_diff;
