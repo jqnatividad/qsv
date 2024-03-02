@@ -96,6 +96,7 @@ fn main() -> QsvExitCode {
         "    behead      Drop header from CSV file
     cat         Concatenate by row or column
     count       Count records
+    datefmt     Format date and time strings
     dedup       Remove redundant rows
     describegpt Infer extended metadata using a LLM
     diff        Find the difference between two CSVs
@@ -317,6 +318,7 @@ enum Command {
     Behead,
     Cat,
     Count,
+    Datefmt,
     Dedup,
     Describegpt,
     Diff,
@@ -400,6 +402,7 @@ impl Command {
             Command::Apply => cmd::apply::run(argv),
             Command::Cat => cmd::cat::run(argv),
             Command::Count => cmd::count::run(argv),
+            Command::Datefmt => cmd::datefmt::run(argv),
             Command::Dedup => cmd::dedup::run(argv),
             Command::Describegpt => cmd::describegpt::run(argv),
             Command::Diff => cmd::diff::run(argv),

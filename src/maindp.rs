@@ -55,6 +55,7 @@ macro_rules! command_list {
         "
     applydp     Apply series of transformations to a column
     count       Count records
+    datefmt     Format date and time strings
     describegpt Infer extended metadata using a LLM
     diff        Find the difference between two CSVs
     dedup       Remove redundant rows
@@ -232,6 +233,7 @@ Please choose one of the following commands:",
 enum Command {
     ApplyDP,
     Count,
+    Datefmt,
     Dedup,
     Describegpt,
     Diff,
@@ -280,6 +282,7 @@ impl Command {
         match self {
             Command::ApplyDP => cmd::applydp::run(argv),
             Command::Count => cmd::count::run(argv),
+            Command::Datefmt => cmd::datefmt::run(argv),
             Command::Dedup => cmd::dedup::run(argv),
             Command::Describegpt => cmd::describegpt::run(argv),
             Command::Diff => cmd::diff::run(argv),
