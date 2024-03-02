@@ -2,7 +2,7 @@ static USAGE: &str = r#"
 Apply a series of transformation functions to given CSV column/s. This can be used to
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
-It has five subcommands:
+It has four subcommands:
  1. operations*   - 37 string, format, currency, regex & NLP operators.
  2. emptyreplace* - replace empty cells with <--replacement> string.
  3. dynfmt        - Dynamically constructs a new column from other columns using
@@ -25,7 +25,8 @@ number of transformed columns with the --rename option is the same. e.g.:
 
 # trim and fold to uppercase the col1,col2 and col3 columns and rename them
 # to newcol1,newcol2 and newcol3
-$ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv
+
+ $ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv
 
 It has 36 supported operations:
 
