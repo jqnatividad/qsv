@@ -22,7 +22,7 @@ macro_rules! command_list {
     behead      Drop header from CSV file
     cat         Concatenate by row or column
     count       Count records
-    datefmt     Format date and time columns
+    datefmt     Format date/datetime columns
     dedup       Remove redundant rows
     describegpt Infer extended metadata using a LLM
     diff        Find the difference between two CSVs

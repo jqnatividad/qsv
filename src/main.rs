@@ -96,7 +96,7 @@ fn main() -> QsvExitCode {
         "    behead      Drop header from CSV file
     cat         Concatenate by row or column
     count       Count records
-    datefmt     Format date and time strings
+    datefmt     Format date/datetime strings
     dedup       Remove redundant rows
     describegpt Infer extended metadata using a LLM
     diff        Find the difference between two CSVs

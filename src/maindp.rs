@@ -55,7 +55,7 @@ macro_rules! command_list {
         "
     applydp     Apply series of transformations to a column
     count       Count records
-    datefmt     Format date and time strings
+    datefmt     Format date/datetime strings
     describegpt Infer extended metadata using a LLM
     diff        Find the difference between two CSVs
     dedup       Remove redundant rows
