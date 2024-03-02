@@ -1095,13 +1095,11 @@ fn test_hw_survey() {
     assert!(send_hwsurvey("qsv", false, "0.0.2", "0.0.1", true).is_ok());
 }
 
-#[cfg(any(feature = "apply", feature = "datapusher_plus", feature = "geocode"))]
 pub struct ColumnNameParser {
     chars: Vec<char>,
     pos:   usize,
 }
 
-#[cfg(any(feature = "apply", feature = "datapusher_plus", feature = "geocode"))]
 impl ColumnNameParser {
     pub fn new(s: &str) -> ColumnNameParser {
         ColumnNameParser {
