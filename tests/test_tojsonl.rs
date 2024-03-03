@@ -351,3 +351,25 @@ fn tojsonl_boston_trim() {
 
     assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
 }
+
+#[test]
+fn tojsonl_issue_1649_false_positive_tf() {
+    let wrk = Workdir::new("tojsonl_issue_1649_false_positive_tf");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["id", "name"],
+            svec!["1", "François Hollande"],
+            svec!["2", "Tarja Halonen"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"id":1,"name":"François Hollande"}
+{"id":2,"name":"Tarja Halonen"}"#;
+
+    assert_eq!(got, expected);
+}
