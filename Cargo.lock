@@ -41,7 +41,7 @@ dependencies = [
  "actix-rt",
  "actix-service",
  "actix-utils",
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "base64",
  "bitflags 2.4.2",
  "brotli",
@@ -142,7 +142,7 @@ dependencies = [
  "actix-server",
  "actix-service",
  "actix-utils",
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "bytes",
  "bytestring",
  "cfg-if",
@@ -211,9 +211,9 @@ dependencies = [
 
 [[package]]
 name = "ahash"
-version = "0.8.10"
+version = "0.8.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b79b82693f705137f8fb9b37871d99e4f9a7df12b917eed79c3d3954830a60b"
+checksum = "e89da841a80418a9b391ebaea17f5c112ffaaa96f621d2c285b5174da76b9011"
 dependencies = [
  "cfg-if",
  "const-random",
@@ -302,7 +302,7 @@ version = "49.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5bc25126d18a012146a888a0298f2c22e1150327bd2765fc76d710a556b2d614"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "arrow-arith",
  "arrow-array",
  "arrow-buffer",
@@ -336,7 +336,7 @@ version = "49.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6bda9acea48b25123c08340f3a8ac361aa0f74469bb36f5ee9acf923fce23e9d"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "arrow-buffer",
  "arrow-data",
  "arrow-schema",
@@ -409,7 +409,7 @@ version = "49.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "361249898d2d6d4a6eeb7484be6ac74977e48da12a4dd81a708d620cc558117a"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "arrow-array",
  "arrow-buffer",
  "arrow-data",
@@ -433,7 +433,7 @@ version = "49.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f6208466590960efc1d2a7172bc4ff18a67d6e25c529381d7f96ddaf0dc4036"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "arrow-array",
  "arrow-buffer",
  "arrow-data",
@@ -819,7 +819,7 @@ version = "0.49.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f251fd1e72720ca07bf5d8e310f54a193fd053479a1f6342c6663ee4fa01cf96"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "cached_proc_macro",
  "cached_proc_macro_types",
  "directories",
@@ -1270,7 +1270,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf378965e48a7d858973826f7e7ef4a09c38543d0c074195f126023e30572fb5"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "crossbeam-channel",
  "csv",
  "mown",
@@ -2176,7 +2176,7 @@ version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "290f1a1d9242c78d09ce40a5e87e7554ee637af1351968159f4952f028f75604"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "allocator-api2",
  "rayon",
 ]
@@ -2510,7 +2510,7 @@ version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a071f4f7efc9a9118dfb627a0a94ef247986e1ab8606a4c806ae2b3aa3b6978"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "anyhow",
  "base64",
  "bytecount",
@@ -3540,7 +3540,7 @@ version = "0.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48e71d30a9fa503bc3baaff3b4c48f08d402c442a50ea7fb9d475ce7b575425a"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "atoi",
  "atoi_simd",
  "avro-schema",
@@ -3603,7 +3603,7 @@ version = "0.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "99e0885a8f1bd1f4d928f5eaa852825bf647b6b5e21e171b6af838f77b6565f3"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "bitflags 2.4.2",
  "bytemuck",
  "chrono",
@@ -3649,7 +3649,7 @@ version = "0.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "45f694b918ba2ee7e6f13e8415598f94009c390a9e61c95e6b9c26c8fe1a1a54"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "async-trait",
  "atoi_simd",
  "bytes",
@@ -3687,7 +3687,7 @@ version = "0.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fd7c4d33540a22cd49ccb9b4da77999604ba986707d4568be57fde2f719954ae"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "chrono",
  "fallible-streaming-iterator",
  "hashbrown 0.14.3",
@@ -3708,7 +3708,7 @@ version = "0.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56e3b40272d24142bcecb2979b19ec8d8c1a14036cb3cea09ce8fb8a4a43bcde"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "bitflags 2.4.2",
  "glob",
  "once_cell",
@@ -3732,7 +3732,7 @@ version = "0.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd5bad61c2fa1977eb65bb719f12d4f68b908edf1106b91b3ab9615f9df8843e"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "argminmax",
  "base64",
  "bytemuck",
@@ -3765,7 +3765,7 @@ version = "0.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06d84fb9b005a19ca523406df371d9329466ae87df48922d0d3d8955072502a4"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "async-stream",
  "base64",
  "brotli",
@@ -3816,7 +3816,7 @@ version = "0.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56493c0e13aaccfcae59985db34da30cd4893e57edc9715d8688c96d7e911d47"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "bytemuck",
  "chrono-tz",
  "once_cell",
@@ -3892,7 +3892,7 @@ version = "0.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fca7938ee789314ac92a0bf6c1c4e5eaeb5e428241df2519fd70f21dba49194"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "bytemuck",
  "hashbrown 0.14.3",
  "indexmap",
@@ -4138,7 +4138,7 @@ version = "0.122.0"
 dependencies = [
  "actix-governor",
  "actix-web",
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "anyhow",
  "assert-json-diff",
  "atoi_simd",
@@ -4283,7 +4283,7 @@ version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b68ab81ec4d30ca0551669280539990d00aca0554120bb7c2b55102fd755fac"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "num-traits",
  "rayon",
  "serde",
@@ -4478,7 +4478,7 @@ version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c580d9cbbe1d1b479e8d67cf9daf6a62c957e6846048408b80b43ac3f6af84cd"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "combine",
  "itoa",
  "percent-encoding",
@@ -5053,7 +5053,7 @@ version = "0.13.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2faf8f101b9bc484337a6a6b0409cf76c139f2fb70a9e3aee6b6774be7bfbf76"
 dependencies = [
- "ahash 0.8.10",
+ "ahash 0.8.11",
  "getrandom",
  "halfbrown",
  "lexical-core",
