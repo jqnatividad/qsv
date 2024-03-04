@@ -122,6 +122,51 @@ fn tojsonl_boolean_1or0() {
 {"col1":false,"col2":"Bob"}"#;
     assert_eq!(got, expected);
 }
+#[test]
+#[serial]
+fn tojsonl_noboolean_1or0() {
+    let wrk = Workdir::new("tojsonl_noboolean_1or0");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["1", "Mark"],
+            svec!["0", "John"],
+            svec!["0", "Bob"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("--no-boolean").arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"col1":1,"col2":"Mark"}
+{"col1":0,"col2":"John"}
+{"col1":0,"col2":"Bob"}"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+#[serial]
+fn tojsonl_noboolean_tworecords() {
+    let wrk = Workdir::new("tojsonl_noboolean_tworecords");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["1", "Mark"],
+            svec!["0", "John"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"col1":1,"col2":"Mark"}
+{"col1":0,"col2":"John"}"#;
+    assert_eq!(got, expected);
+}
 
 #[test]
 #[serial]
@@ -370,6 +415,28 @@ fn tojsonl_issue_1649_false_positive_tf() {
     let got: String = wrk.stdout(&mut cmd);
     let expected = r#"{"id":1,"name":"François Hollande"}
 {"id":2,"name":"Tarja Halonen"}"#;
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn tojsonl_issue_1649_false_positive_tf_2recs() {
+    let wrk = Workdir::new("tojsonl_issue_1649_false_positive_tf_2_recs");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["id", "name"],
+            svec!["1", "Fanuel"],
+            svec!["2", "Travis"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"id":1,"name":"Fanuel"}
+{"id":2,"name":"Travis"}"#;
 
     assert_eq!(got, expected);
 }
