@@ -20,7 +20,7 @@ Format multiple date columns in file.csv to ISO 8601/RFC 3339 format:
 
 Format all columns that end with "_date" case-insensitive in file.csv to ISO 8601/RFC 3339 format:
 
-  $ qsv datefmt '\(?i)_date$\' file.csv
+  $ qsv datefmt '/(?i) date$/' file.csv
 
 Format dates in OpenDate column using '%Y-%m-%d' format:
 
