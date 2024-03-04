@@ -174,18 +174,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let val1 = if vals[0].is_null() {
                         '_'
                     } else {
-                        // check the first domain value, if its a string
-                        // get the first character of val1 lowercase
-                        if let Some(str_val) = vals[0].as_str() {
-                            boolcheck_first_lower_char(str_val)
-                        } else if let Some(int_val) = vals[0].as_u64() {
-                            // else, its an integer (as we only do enum constraints
-                            // for string and integers), and see if its 1 or 0
+                        // check the first domain value, if its an integer
+                        // see if its 1 or 0
+                        if let Some(int_val) = vals[0].as_u64() {
                             match int_val {
                                 1 => '1',
                                 0 => '0',
                                 _ => '*', // its something else
                             }
+                        } else if let Some(str_val) = vals[0].as_str() {
+                            // else, if its a string, get the first character of val1 lowercase
+                            boolcheck_first_lower_char(str_val)
                         } else {
                             '*'
                         }
@@ -193,14 +192,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     // same as above, but for the 2nd domain value
                     let val2 = if vals[1].is_null() {
                         '_'
-                    } else if let Some(str_val) = vals[1].as_str() {
-                        boolcheck_first_lower_char(str_val)
                     } else if let Some(int_val) = vals[1].as_u64() {
                         match int_val {
                             1 => '1',
                             0 => '0',
                             _ => '*',
                         }
+                    } else if let Some(str_val) = vals[1].as_str() {
+                        boolcheck_first_lower_char(str_val)
                     } else {
                         '*'
                     };
@@ -343,16 +342,30 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
 #[inline]
 fn boolcheck_first_lower_char(field_str: &str) -> char {
-    #[allow(clippy::iter_nth_zero)]
-    let first_char = field_str.chars().nth(0).unwrap_or('_').to_ascii_lowercase();
-    let second_char = field_str.chars().nth(1).unwrap_or('_').to_ascii_lowercase();
+    let mut chars = field_str.chars();
+    let first_char = chars.next().unwrap_or('_').to_ascii_lowercase();
 
-    // screen for false positive matches for boolean fields
-    // e.g. 100 and 04 are not boolean, even though the first char is
-    // 1 and 0 respectively
-    if (first_char == '1' || first_char == '0') && second_char != '_' {
-        'f'
+    if first_char == '1' || first_char == '0' {
+        let second_char = chars.next().unwrap_or('_').to_ascii_lowercase();
+        if second_char == '_' {
+            first_char
+        } else {
+            'f'
+        }
     } else {
-        first_char
+        let field_str_len = field_str.len();
+        if field_str_len < 2 {
+            return first_char;
+        }
+        let lower_str = field_str[..field_str_len].to_ascii_lowercase();
+        if lower_str == "yes"
+            || lower_str == "no"
+            || lower_str.starts_with("tr")
+            || lower_str.starts_with("fa")
+        {
+            first_char
+        } else {
+            '_'
+        }
     }
 }
