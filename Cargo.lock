@@ -4178,7 +4178,6 @@ dependencies = [
  "futures",
  "futures-util",
  "gender_guesser",
- "generator",
  "geosuggest-core",
  "geosuggest-utils",
  "governor",
