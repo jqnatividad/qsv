@@ -358,28 +358,16 @@ fn boolcheck(field_str: &str) -> char {
     let mut chars = field_str.chars();
     let first_char = chars.next().unwrap_or('_').to_ascii_lowercase();
 
-    if first_char == '1' || first_char == '0' {
-        let second_char = chars.next().unwrap_or('_').to_ascii_lowercase();
-        if second_char == '_' {
-            first_char
-        } else {
-            'f'
-        }
+    if field_str.len() < 2 {
+        return first_char;
+    }
+    if field_str.eq_ignore_ascii_case("true")
+        || field_str.eq_ignore_ascii_case("false")
+        || field_str.eq_ignore_ascii_case("yes")
+        || field_str.eq_ignore_ascii_case("no")
+    {
+        first_char
     } else {
-        let field_str_len = field_str.len();
-        if field_str_len < 2 {
-            return first_char;
-        }
-        let lower_str = field_str.to_ascii_lowercase();
-        if lower_str == "yes"
-            || lower_str == "no"
-            || lower_str == "true"
-            || lower_str == "false"
-            || (field_str_len == 1 && (first_char == 't' || first_char == 'f'))
-        {
-            first_char
-        } else {
-            '_'
-        }
+        '_'
     }
 }
