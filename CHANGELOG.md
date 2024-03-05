@@ -8,31 +8,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.123.0] - 2024-03-05
 
+# [OPEN DATA DAY 2024](https://opendataday.org) Release! 🎉🎉🎉
+
+## Highlights:
+This is the biggest release ever with 300+ commits! qsv 0.123.0 continues to focus on performance, stability and reliability as we continue setting the stage for qsv's big brother - qsv pro.
+
+We've been baking qsv pro for a while now, and it's almost ready for release. qsv pro is a Desktop Data Wrangling tool marrying an Excel-like UI with the power of qsv, backed by cloud-based data cleaning, enrichment and enhancement service that's easy to use for casual Excel users and Data Publishers, yet powerful enough for data scientists and data engineers.
+
+It's almost ready for release, so stay tuned!
+
+* `sqlp` now has automatic `read_csv()` fast path optimization, making optimized queries [EXPONENTIALLY FASTER](https://github.com/jqnatividad/qsv/discussions/1620) - e.g it just takes 0.38 seconds to do a non-trivial SQL aggregation on a 18 column, 657mb CSV with 7.43 million rows! It also now supports JSONL output format and compression support for AVRO and Arrow output formats.
+* `fetch` now has a `--disk-cache` option, so you can cache web service responses to disk, complete with cache control and expiry handling!
+* `jsonl` is now multithreaded with additional `--batch` and `--job` options.
+* `split` now has three modes: split by record count, split by number of chunks and split by file size.
+* `datefmt` is a new top-level command for date formatting. We extracted it from `apply` to make it easier to use, and to set the stage for expanded date and timezone handling.
+* `enum` now has a `--start` option.
+* `excel` now has a `--keep-zero-time` option and now has improved datetime/duration parsing/handling with upgrade of calamine from 0.23 to 0.24.
+* `tojsonl` now has `--trim` and `--no-boolean` options and eliminated false positive boolean inferences. 
+
+---
+
 ### Added
-* `apply`: add `gender_guess` operation by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1569
-* `datefmt`: new top-level command for date formatting.  by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1638
-* `enum`: add `--start` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1631
-* `excel`: added `--keep-zero-time` option and bumped calamine from 0.23 to 0.24 https://github.com/jqnatividad/qsv/pull/1595
-* `fetch`: add `--disk-cache` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1621
-* `jsonl`: major performance refactor! Now multithreaded with addl `--batch` and `--job` options by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1553
-* `sniff`: added addl mimetype/file formats detected by bumping `file-format` from 0.23 to 0.24 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1589
-* `split`: add `<outdir>` error handling and add usage text examples by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1585
-* `split`: added `--chunks` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1587
-* `split`: add `--kb-size` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1613
+* `apply`: add `gender_guess` operation https://github.com/jqnatividad/qsv/pull/1569
+* `datefmt`: new top-level command for date formatting.  https://github.com/jqnatividad/qsv/pull/1638
+* `enum`: add `--start` option https://github.com/jqnatividad/qsv/pull/1631
+* `excel`: added `--keep-zero-time` option; improved datetime/duration parsing/handling with upgrade of calamine from 0.23 to 0.24 https://github.com/jqnatividad/qsv/pull/1595
+* `fetch`: add `--disk-cache` option https://github.com/jqnatividad/qsv/pull/1621
+* `jsonl`: major performance refactor! Now multithreaded with addl `--batch` and `--job` options https://github.com/jqnatividad/qsv/pull/1553
+* `sniff`: added addl mimetype/file formats detected by bumping `file-format` from 0.23 to 0.24 https://github.com/jqnatividad/qsv/pull/1589
+* `split`: add `<outdir>` error handling and add usage text examples https://github.com/jqnatividad/qsv/pull/1585
+* `split`: added `--chunks` option https://github.com/jqnatividad/qsv/pull/1587
+* `split`: add `--kb-size` option https://github.com/jqnatividad/qsv/pull/1613
 * `sqlp`: added JSONL output format and compression support for AVRO and Arrow output formats in https://github.com/jqnatividad/qsv/pull/1635
-* `tojsonl`: add  `--trim` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1554
-* Add QSV_DOTENV_PATH env var by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1562
+* `tojsonl`: add  `--trim` option https://github.com/jqnatividad/qsv/pull/1554
+* Add QSV_DOTENV_PATH env var https://github.com/jqnatividad/qsv/pull/1562
 * Add license scan report and status by @fossabot in https://github.com/jqnatividad/qsv/pull/1550
+* Added several benchmarks for new/changed commands
 
 ### Changed
 * `luau`: bumped Luau from 0.606 to 0.614
-* `split`: migrate to rayon from threadpool by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1555
-* `split`: refactored to actually create chunks <= desired `--kb-size`, obviating need for hacky `--sep-factor` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1615
-* `tojsonl`: improved true/false boolean inferencing  false positive handling by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1641
-* `tojsonl`: fine-tune boolean inferencing by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1643
+* `freq`: major performance refactor - https://github.com/jqnatividad/qsv/commit/1a3a4b4f54f7459ce120c2bc907385ad72d34d8e
+* `split`: migrate to rayon from threadpool https://github.com/jqnatividad/qsv/pull/1555
+* `split`: refactored to actually create chunks <= desired `--kb-size`, obviating need for hacky `--sep-factor` option https://github.com/jqnatividad/qsv/pull/1615
+* `tojsonl`: improved true/false boolean inferencing  false positive handling https://github.com/jqnatividad/qsv/pull/1641
+* `tojsonl`: fine-tune boolean inferencing https://github.com/jqnatividad/qsv/pull/1643
+* `schema`: use parallel sort when sorting enums for fields https://github.com/jqnatividad/qsv/commit/523c60a36bf45b4df5e66f3951a91948c22d5261
 * Use array for rustflags to avoid conflicts with user flags by @clarfonthey in https://github.com/jqnatividad/qsv/pull/1548
 * Make it easier and more consistent to package for distros by @alerque in https://github.com/jqnatividad/qsv/pull/1549
-* Replace `simple_home_dir` with `simple_expand_tilde` crate by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1578
+* Replace `simple_home_dir` with `simple_expand_tilde` crate https://github.com/jqnatividad/qsv/pull/1578
 * build(deps): bump rayon from 1.8.0 to 1.8.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1547
 * build(deps): bump rayon from 1.8.1 to 1.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1623
 * build(deps): bump uuid from 1.6.1 to 1.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1551
@@ -52,7 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * build(deps): bump serde_json from 1.0.111 to 1.0.112 by @dependabot in https://github.com/jqnatividad/qsv/pull/1567
 * build(deps): bump serde_json from 1.0.112 to 1.0.113 by @dependabot in https://github.com/jqnatividad/qsv/pull/1576
 * build(deps): bump serde_json from 1.0.113 to 1.0.114 by @dependabot in https://github.com/jqnatividad/qsv/pull/1610
-* bump Polars from 0.36 to 0.37 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1570
+* bump Polars from 0.36 to 0.37 https://github.com/jqnatividad/qsv/pull/1570
 * build(deps): bump strum from 0.25.0 to 0.26.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1572
 * build(deps): bump indexmap from 2.1.0 to 2.2.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1575
 * build(deps): bump indexmap from 2.2.1 to 2.2.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1579
@@ -87,9 +110,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * build(deps): bump polars from 0.38.0 to 0.38.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1634
 * build(deps): bump sysinfo from 0.30.5 to 0.30.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1636
 * build(deps): bump qsv-sniffer from 0.10.1 to 0.10.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1644
+* deps: bump halfbrown from 0.24 to 0.25 https://github.com/jqnatividad/qsv/commit/b32fc7161715fc0d3cc96b1566f89354bea36abf
+* apply select clippy suggestions
+* update several indirect dependencies
+* pin Rust nightly to 2024-02-23 - the nightly that Polars 0.38 can be built with
 
 ### Fixed
 * fix: fix feature = "cargo-clippy" deprecation by @rex4539 in https://github.com/jqnatividad/qsv/pull/1626
+* `stats`: fixed cache.json file not being updated properly https://github.com/jqnatividad/qsv/commit/b9c43713b0943baf2d70eb7089e1d8f05b848b9d
+
+### Removed
+* Removed `datefmt` subcommand from `apply` https://github.com/jqnatividad/qsv/pull/1638
 
 ## New Contributors
 * @clarfonthey made their first contribution in https://github.com/jqnatividad/qsv/pull/1548
