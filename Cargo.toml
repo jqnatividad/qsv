@@ -237,8 +237,6 @@ serial_test = { version = "3.0", features = ["file_locks"] }
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "cb70109" }
-# needed to get rid of old hashbrown dependency
-halfbrown = { git = "https://github.com/licenser/halfbrown", rev = "7cecc29" }
 # nam_dict.txt file needed to be loaded from filesystem upstream, and not vendored, causing runtime errors
 # we created a PR to fix this, and it's been merged, but not released
 gender_guesser = { git = "https://github.com/Raduc4/gender_guesser", rev = "dd1c0e0" }
