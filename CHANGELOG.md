@@ -6,6 +6,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.123.0] - 2024-03-05
+
+### Added
+* `apply`: add `gender_guess` operation by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1569
+* `datefmt`: new top-level command for date formatting.  by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1638
+* `enum`: add `--start` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1631
+* `excel`: added `--keep-zero-time` option and bumped calamine from 0.23 to 0.24 https://github.com/jqnatividad/qsv/pull/1595
+* `fetch`: add `--disk-cache` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1621
+* `jsonl`: major performance refactor! Now multithreaded with addl `--batch` and `--job` options by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1553
+* `sniff`: added addl mimetype/file formats detected by bumping `file-format` from 0.23 to 0.24 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1589
+* `split`: add `<outdir>` error handling and add usage text examples by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1585
+* `split`: added `--chunks` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1587
+* `split`: add `--kb-size` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1613
+* `sqlp`: added JSONL output format and compression support for AVRO and Arrow output formats in https://github.com/jqnatividad/qsv/pull/1635
+* `tojsonl`: add  `--trim` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1554
+* Add QSV_DOTENV_PATH env var by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1562
+* Add license scan report and status by @fossabot in https://github.com/jqnatividad/qsv/pull/1550
+
+### Changed
+* `luau`: bumped Luau from 0.606 to 0.614
+* `split`: migrate to rayon from threadpool by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1555
+* `split`: refactored to actually create chunks <= desired `--kb-size`, obviating need for hacky `--sep-factor` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1615
+* `tojsonl`: improved true/false boolean inferencing  false positive handling by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1641
+* `tojsonl`: fine-tune boolean inferencing by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1643
+* Use array for rustflags to avoid conflicts with user flags by @clarfonthey in https://github.com/jqnatividad/qsv/pull/1548
+* Make it easier and more consistent to package for distros by @alerque in https://github.com/jqnatividad/qsv/pull/1549
+* Replace `simple_home_dir` with `simple_expand_tilde` crate by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1578
+* build(deps): bump rayon from 1.8.0 to 1.8.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1547
+* build(deps): bump rayon from 1.8.1 to 1.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1623
+* build(deps): bump uuid from 1.6.1 to 1.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1551
+* build(deps): bump jql-runner from 7.1.2 to 7.1.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1552
+* build(deps): bump jql-runner from 7.1.3 to 7.1.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1602
+* build(deps): bump jql-runner from 7.1.5 to 7.1.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1637
+* build(deps): bump flexi_logger from 0.27.3 to 0.27.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1556
+* build(deps): bump regex from 1.10.2 to 1.10.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1557
+* build(deps): bump cached from 0.47.0 to 0.48.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1558
+* build(deps): bump cached from 0.48.0 to 0.48.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1560
+* build(deps): bump chrono from 0.4.31 to 0.4.32 by @dependabot in https://github.com/jqnatividad/qsv/pull/1559
+* build(deps): bump chrono from 0.4.32 to 0.4.33 by @dependabot in https://github.com/jqnatividad/qsv/pull/1566
+* build(deps): bump mlua from 0.9.4 to 0.9.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1565
+* build(deps): bump mlua from 0.9.5 to 0.9.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1632
+* build(deps): bump serde from 1.0.195 to 1.0.196 by @dependabot in https://github.com/jqnatividad/qsv/pull/1568
+* build(deps): bump serde from 1.0.196 to 1.0.197 by @dependabot in https://github.com/jqnatividad/qsv/pull/1612
+* build(deps): bump serde_json from 1.0.111 to 1.0.112 by @dependabot in https://github.com/jqnatividad/qsv/pull/1567
+* build(deps): bump serde_json from 1.0.112 to 1.0.113 by @dependabot in https://github.com/jqnatividad/qsv/pull/1576
+* build(deps): bump serde_json from 1.0.113 to 1.0.114 by @dependabot in https://github.com/jqnatividad/qsv/pull/1610
+* bump Polars from 0.36 to 0.37 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1570
+* build(deps): bump strum from 0.25.0 to 0.26.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1572
+* build(deps): bump indexmap from 2.1.0 to 2.2.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1575
+* build(deps): bump indexmap from 2.2.1 to 2.2.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1579
+* build(deps): bump indexmap from 2.2.2 to 2.2.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1601
+* build(deps): bump indexmap from 2.2.4 to 2.2.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1633
+* build(deps): bump robinraju/release-downloader from 1.8 to 1.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1574
+* build(deps): bump itertools from 0.12.0 to 0.12.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1577
+* build(deps): bump rust_decimal from 1.33.1 to 1.34.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1580
+* build(deps): bump rust_decimal from 1.34.0 to 1.34.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1582
+* build(deps): bump rust_decimal from 1.34.2 to 1.34.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1597
+* build(deps): bump reqwest from 0.11.23 to 0.11.24 by @dependabot in https://github.com/jqnatividad/qsv/pull/1581
+* build(deps): bump tokio from 1.35.1 to 1.36.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1583
+* build(deps): bump tempfile from 3.9.0 to 3.10.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1590
+* build(deps): bump tempfile from 3.10.0 to 3.10.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1622
+* build(deps): bump indicatif from 0.17.7 to 0.17.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1598
+* build(deps): bump csvs_convert from 0.8.8 to 0.8.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1596
+* build(deps): bump ahash from 0.8.7 to 0.8.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1599
+* build(deps): bump ahash from 0.8.8 to 0.8.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1611
+* build(deps): bump ahash from 0.8.9 to 0.8.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1624
+* build(deps): bump ahash from 0.8.10 to 0.8.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1640
+* build(deps): bump governor from 0.6.0 to 0.6.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1603
+* build(deps): bump semver from 1.0.21 to 1.0.22 by @dependabot in https://github.com/jqnatividad/qsv/pull/1606
+* build(deps): bump ryu from 1.0.16 to 1.0.17 by @dependabot in https://github.com/jqnatividad/qsv/pull/1605
+* build(deps): bump anyhow from 1.0.79 to 1.0.80 by @dependabot in https://github.com/jqnatividad/qsv/pull/1604
+* build(deps): bump geosuggest-core from 0.6.0 to 0.6.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1607
+* build(deps): bump geosuggest-utils from 0.6.0 to 0.6.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1608
+* build(deps): bump pyo3 from 0.20.2 to 0.20.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1616
+* build(deps): bump cached from 0.48.1 to 0.49.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1618
+* build(deps): bump crossbeam-channel from 0.5.11 to 0.5.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1627
+* build(deps): bump log from 0.4.20 to 0.4.21 by @dependabot in https://github.com/jqnatividad/qsv/pull/1628
+* build(deps): bump polars from 0.37.0 to 0.38.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1629
+* build(deps): bump polars from 0.38.0 to 0.38.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1634
+* build(deps): bump sysinfo from 0.30.5 to 0.30.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1636
+* build(deps): bump qsv-sniffer from 0.10.1 to 0.10.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1644
+
+### Fixed
+* fix: fix feature = "cargo-clippy" deprecation by @rex4539 in https://github.com/jqnatividad/qsv/pull/1626
+
+## New Contributors
+* @clarfonthey made their first contribution in https://github.com/jqnatividad/qsv/pull/1548
+* @alerque made their first contribution in https://github.com/jqnatividad/qsv/pull/1549
+* @fossabot made their first contribution in https://github.com/jqnatividad/qsv/pull/1550
+* @rex4539 made their first contribution in https://github.com/jqnatividad/qsv/pull/1626
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.122.0...0.123.0
+
 ## [0.122.0] - 2024-01-17
 
 ## 👉  **REQUEST FOR USE CASES**: 👈 
