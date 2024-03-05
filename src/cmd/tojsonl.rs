@@ -356,7 +356,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 #[inline]
 fn boolcheck(field_str: &str) -> char {
     let mut chars = field_str.chars();
-    let first_char = chars.next().unwrap_or('_').to_ascii_lowercase();
+    let mut first_char = chars.next().unwrap_or('_');
+    first_char.make_ascii_lowercase();
 
     if field_str.len() < 2 {
         return first_char;
