@@ -875,15 +875,15 @@ fn init_date_inference(
         return Ok(());
     }
 
-    let whitelist_lower = flag_whitelist.to_ascii_lowercase();
-    log::info!("inferring dates with date-whitelist: {whitelist_lower}");
-
-    let infer_date_flags = if whitelist_lower == "all" {
+    let infer_date_flags = if flag_whitelist.eq_ignore_ascii_case("all") {
         log::info!("inferring dates for ALL fields");
         vec![true; headers.len()]
     } else {
         let mut header_str = String::new();
         let mut date_found = false;
+        let whitelist_lower = flag_whitelist.to_lowercase();
+        log::info!("inferring dates with date-whitelist: {whitelist_lower}");
+
         let whitelist = whitelist_lower
             .split(',')
             .map(str::trim)
