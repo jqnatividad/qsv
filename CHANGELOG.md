@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # [OPEN DATA DAY 2024](https://opendataday.org) Release! 🎉🎉🎉
 
 ## Highlights:
-This is the biggest release ever with 300+ commits! qsv 0.123.0 continues to focus on performance, stability and reliability as we continue setting the stage for qsv's big brother - qsv pro.
+This is the biggest release ever with 330+ commits! qsv 0.123.0 continues to focus on performance, stability and reliability as we continue setting the stage for qsv's big brother - qsv pro.
 
 We've been baking qsv pro for a while now, and it's almost ready for release. qsv pro is a Desktop Data Wrangling tool marrying an Excel-like UI with the power of qsv, backed by cloud-based data cleaning, enrichment and enhancement service that's easy to use for casual Excel users and Data Publishers, yet powerful enough for data scientists and data engineers.
 
