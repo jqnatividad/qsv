@@ -579,6 +579,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // parse and register it as a table in the SQL context using Polars SQL's read_csv function
     if args.arg_input.len() == 1
         && !is_sql_script
+        && delim == b','
         && !args.flag_no_optimizations
         && !args.flag_try_parsedates
         && args.flag_infer_len != Some(250)
