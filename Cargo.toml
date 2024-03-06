@@ -239,7 +239,7 @@ dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_
 grex = { git = "https://github.com/pemistahl/grex", rev = "cb70109" }
 # nam_dict.txt file needed to be loaded from filesystem upstream, and not vendored, causing runtime errors
 # we created a PR to fix this, and it's been merged, but not released
-gender_guesser = { git = "https://github.com/Raduc4/gender_guesser", rev = "dd1c0e0" }
+gender_guesser = { git = "https://github.com/jqnatividad/gender_guesser", branch = "bundle_namdict_txt" }
 
 [features]
 default = ["mimalloc"]
