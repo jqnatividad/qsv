@@ -10,14 +10,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # [OPEN DATA DAY 2024](https://opendataday.org) Release! 🎉🎉🎉
 
-## Highlights:
-This is the biggest release ever with 330+ commits! qsv 0.123.0 continues to focus on performance, stability and reliability as we continue setting the stage for qsv's big brother - qsv pro.
+In celebration of [Open Data Day](https://en.wikipedia.org/wiki/International_Open_Data_Day), we're releasing qsv 0.123.0 - the biggest release ever with [330+ commits](https://github.com/jqnatividad/qsv/compare/0.122.0...0.123.0)! qsv 0.123.0 continues to focus on performance, stability and reliability as we continue setting the stage for qsv's big brother - qsv pro.
 
-We've been baking qsv pro for a while now, and it's almost ready for release. qsv pro is a Desktop Data Wrangling tool marrying an Excel-like UI with the power of qsv, backed by cloud-based data cleaning, enrichment and enhancement service that's easy to use for casual Excel users and Data Publishers, yet powerful enough for data scientists and data engineers.
+We've been baking qsv pro for a while now, and it's almost ready for release. qsv pro is a cross-platform Desktop Data Wrangling tool marrying an Excel-like UI with the power of qsv, backed by cloud-based data cleaning, enrichment and enhancement service that's easy to use for casual Excel users and Data Publishers, yet powerful enough for data scientists and data engineers.
 
 It's almost ready for release, so stay tuned!
 
-* `sqlp` now has automatic `read_csv()` fast path optimization, making optimized queries [EXPONENTIALLY FASTER](https://github.com/jqnatividad/qsv/discussions/1620) - e.g it just takes 0.38 seconds to do a non-trivial SQL aggregation on a 18 column, 657mb CSV with 7.43 million rows! It also now supports JSONL output format and compression support for AVRO and Arrow output formats.
+## Highlights:
+
+* `sqlp` now has automatic `read_csv()` fast path optimization, often making optimized queries run [dramatically faster](https://github.com/jqnatividad/qsv/discussions/1620) - e.g what took 6.09 seconds for a non-trivial SQL aggregation on a 18 column, 657mb CSV with 7.43 million rows  now takes just 0.14 seconds with the optimization - 🚀 **43.5x FASTER** 🚀 !
+```bash
+# with fast path optimization turned off
+/usr/bin/time qsv sqlp taxi.csv --no-optimizations "select VendorID,sum(total_amount) from taxi group by VendorID order by VendorID"
+VendorID,total_amount
+1,52377417.52985942
+2,89959869.13054822
+4,600584.610000027
+(3, 2)
+        6.09 real         6.82 user         0.16 sys
+
+# with fast path optimization!
+ /usr/bin/time qsv sqlp taxi.csv "select VendorID,sum(total_amount) from taxi group by VendorID order by VendorID"
+VendorID,total_amount
+1,52377417.52985942
+2,89959869.13054822
+4,600584.610000027
+(3, 2)
+        0.14 real         1.09 user         0.09 sys
+``` 
+* `sqlp` now supports JSONL output format and adds compression support for Avro and Arrow output formats.
 * `fetch` now has a `--disk-cache` option, so you can cache web service responses to disk, complete with cache control and expiry handling!
 * `jsonl` is now multithreaded with additional `--batch` and `--job` options.
 * `split` now has three modes: split by record count, split by number of chunks and split by file size.
@@ -76,6 +97,8 @@ It's almost ready for release, so stay tuned!
 * build(deps): bump serde_json from 1.0.112 to 1.0.113 by @dependabot in https://github.com/jqnatividad/qsv/pull/1576
 * build(deps): bump serde_json from 1.0.113 to 1.0.114 by @dependabot in https://github.com/jqnatividad/qsv/pull/1610
 * bump Polars from 0.36 to 0.37 https://github.com/jqnatividad/qsv/pull/1570
+* build(deps): bump polars from 0.37.0 to 0.38.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1629
+* build(deps): bump polars from 0.38.0 to 0.38.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1634
 * build(deps): bump strum from 0.25.0 to 0.26.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1572
 * build(deps): bump indexmap from 2.1.0 to 2.2.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1575
 * build(deps): bump indexmap from 2.2.1 to 2.2.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1579
@@ -106,8 +129,6 @@ It's almost ready for release, so stay tuned!
 * build(deps): bump cached from 0.48.1 to 0.49.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1618
 * build(deps): bump crossbeam-channel from 0.5.11 to 0.5.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1627
 * build(deps): bump log from 0.4.20 to 0.4.21 by @dependabot in https://github.com/jqnatividad/qsv/pull/1628
-* build(deps): bump polars from 0.37.0 to 0.38.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1629
-* build(deps): bump polars from 0.38.0 to 0.38.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1634
 * build(deps): bump sysinfo from 0.30.5 to 0.30.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1636
 * build(deps): bump qsv-sniffer from 0.10.1 to 0.10.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1644
 * deps: bump halfbrown from 0.24 to 0.25 https://github.com/jqnatividad/qsv/commit/b32fc7161715fc0d3cc96b1566f89354bea36abf
