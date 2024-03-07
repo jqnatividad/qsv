@@ -1567,12 +1567,19 @@ pub fn replace_column_value(
         .collect()
 }
 
+/// format a SystemTime from a file's metadata to a string using the format specifier
+#[inline]
 pub fn format_systemtime(time: SystemTime, format_specifier: &str) -> String {
+    // safety: we know the duration since UNIX EPOCH is always positive
+    // as we're using this helper to format file metadata SystemTime
+    // So if the duration is negative, then a file was created before UNIX EPOCH
+    // which is impossible as the UNIX EPOCH is the start of time for file systems
+    // we use expect here as we want it to panic if the file was created before UNIX EPOCH
     let timestamp = time
         .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap()
+        .expect("SystemTime before UNIX EPOCH")
         .as_secs();
-    let naive = chrono::NaiveDateTime::from_timestamp_opt(timestamp as i64, 0).unwrap_or_default();
-    let datetime = chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(naive, chrono::Utc);
+
+    let datetime = chrono::DateTime::from_timestamp(timestamp as i64, 0).unwrap_or_default();
     format!("{datetime}", datetime = datetime.format(format_specifier))
 }
