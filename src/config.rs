@@ -362,7 +362,7 @@ impl Config {
     pub fn reader_file_stdin(&self) -> io::Result<csv::Reader<Box<dyn SeekRead + 'static>>> {
         Ok(match self.path {
             None => {
-                // Create a buffer in memory when stdin needs to be indexed
+                // Create a buffer in memory for stdin
                 let mut buffer: Vec<u8> = Vec::new();
                 let stdin = io::stdin();
                 stdin.lock().read_to_end(&mut buffer)?;
