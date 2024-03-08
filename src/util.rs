@@ -38,7 +38,7 @@ macro_rules! regex_oncelock {
 // leave at least 20% of the available memory free
 const DEFAULT_FREEMEMORY_HEADROOM_PCT: u8 = 20;
 
-static ROW_COUNT: OnceLock<u64> = OnceLock::new();
+static ROW_COUNT: OnceLock<Option<u64>> = OnceLock::new();
 
 pub type ByteString = Vec<u8>;
 
@@ -294,10 +294,10 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
     } else {
         // index does not exist or is stale,
         // count records by iterating through records
-        // Do this only once per invocation and cache the result, so we don't
-        // have to re-count rows every time we need to know the row count for CSVs
-        // that don't have an index.
-        let rc = ROW_COUNT.get_or_init(|| {
+        // Do this only once per invocation and cache the result in ROW_COUNT,
+        // so we don't have to re-count rows every time we need to know the
+        // rowcount for CSVs that don't have an index.
+        let count_opt = ROW_COUNT.get_or_init(|| {
             if let Ok(mut rdr) = conf.reader() {
                 let mut count = 0_u64;
                 let mut _record = csv::ByteRecord::new();
@@ -305,17 +305,15 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
                 while rdr.read_byte_record(&mut _record).unwrap_or_default() {
                     count += 1;
                 }
-                count
+                Some(count)
             } else {
-                // sentinel value to indicate that we were unable to count rows
-                u64::MAX
+                None
             }
         });
 
-        if *rc < u64::MAX {
-            Ok(*rc)
-        } else {
-            Err(CliError::Other("Unable to get row count".to_string()))
+        match *count_opt {
+            Some(count) => Ok(count),
+            None => Err(CliError::Other("Unable to get row count".to_string())),
         }
     }
 }
