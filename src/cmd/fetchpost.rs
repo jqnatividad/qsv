@@ -626,7 +626,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         if literal_url_used {
-            url = literal_url.clone();
+            url.clone_from(&literal_url);
         } else if let Ok(s) = from_utf8(&record[column_index]) {
             s.clone_into(&mut url);
         } else {

@@ -976,7 +976,7 @@ pub fn safe_header_names(
     for header_name in headers {
         let reserved_found = if let Some(reserved_names_vec) = reserved_names.clone() {
             if keep_case {
-                buf_wrk = header_name.to_owned();
+                header_name.clone_into(&mut buf_wrk);
             } else {
                 to_lowercase_into(header_name, &mut buf_wrk);
             };

@@ -1215,7 +1215,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         if !invalid_result.is_empty() {
                             // --invalid-result is set, so use that instead
                             // otherwise, we leave cell untouched.
-                            cell = invalid_result.clone();
+                            cell.clone_from(&invalid_result);
                         }
                     }
                 }

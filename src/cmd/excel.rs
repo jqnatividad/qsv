@@ -477,7 +477,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // as we process the option case insensitively
         // safety: it's safe to use index access here because lower_sheet_names is a lowercase copy
         // of sheet_names
-        sheet = sheet_names[idx].clone();
+        sheet.clone_from(&sheet_names[idx]);
         idx
     } else {
         return fail_clierror!("Cannot get sheet index for {sheet}");

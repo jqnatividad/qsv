@@ -493,7 +493,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             // clone a copy of stats so we can binary encode it to disk later
             if write_stats_binout {
-                stats_for_encoding = stats.clone();
+                stats_for_encoding.clone_from(&stats);
             }
 
             let stats_sr_vec = args.stats_to_records(stats);
