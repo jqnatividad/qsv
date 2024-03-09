@@ -206,7 +206,7 @@ tempfile = "3"
 thousands = { version = "0.2", optional = true }
 threadpool = "1.8"
 titlecase = { version = "2", optional = true }
-tokio = "1"
+tokio = { version = "1", features = ["rt-multi-thread"] }
 uuid = { version = "1", features = ["v4"] }
 url = "2.5"
 vader_sentiment = { version = "0.1", optional = true }
