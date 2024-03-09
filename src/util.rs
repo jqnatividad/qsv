@@ -1499,6 +1499,7 @@ pub fn process_input(
                 input_file.read_to_string(&mut input_file_contents)?;
                 input_file_contents
                     .lines()
+                    .filter(|line| !line.is_empty() && !line.starts_with('#'))
                     .map(PathBuf::from)
                     .collect::<Vec<_>>()
             } else {
