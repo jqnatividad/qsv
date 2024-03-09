@@ -14,11 +14,12 @@ In celebration of [Open Data Day](https://en.wikipedia.org/wiki/International_Op
 
 We've been baking qsv pro for a while now, and it's almost ready for release. qsv pro is a cross-platform Desktop Data Wrangling tool marrying an Excel-like UI with the power of qsv, backed by cloud-based data cleaning, enrichment and enhancement service that's easy to use for casual Excel users and Data Publishers, yet powerful enough for data scientists and data engineers.
 
-It's almost ready for release, so stay tuned!
+Stay tuned!
 
 ## Highlights:
 
-* `sqlp` now has automatic `read_csv()` fast path optimization, often making optimized queries run [dramatically faster](https://github.com/jqnatividad/qsv/discussions/1620) - e.g what took 6.09 seconds for a non-trivial SQL aggregation on a 18 column, 657mb CSV with 7.43 million rows  now takes just 0.14 seconds with the optimization - 🚀 **43.5x FASTER** 🚀 !
+* `sqlp` now has automatic `read_csv()` fast path optimization, often making optimized queries run [dramatically faster](https://github.com/jqnatividad/qsv/discussions/1620) - e.g what took 6.09 seconds for a non-trivial SQL aggregation on an [18 column, 657mb CSV with 7.43 million rows](https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2019-04.csv.gz)  now takes just 0.14 seconds with the optimization - 🚀 **43.5x FASTER** 🚀 ! [^1]
+[^1]: measurements taken on an Apple Mac Mini 2023 model with an M2 Pro chip with 12 CPU cores & 32GB of RAM, running macOS Sonoma 14.4
 ```bash
 # with fast path optimization turned off
 /usr/bin/time qsv sqlp taxi.csv --no-optimizations "select VendorID,sum(total_amount) from taxi group by VendorID order by VendorID"
@@ -29,7 +30,7 @@ VendorID,total_amount
 (3, 2)
         6.09 real         6.82 user         0.16 sys
 
-# with fast path optimization!
+# with fast path optimization, fully exploiting Polars' multi-threaded, mem-mapped CSV reader!
  /usr/bin/time qsv sqlp taxi.csv "select VendorID,sum(total_amount) from taxi group by VendorID order by VendorID"
 VendorID,total_amount
 1,52377417.52985942
@@ -37,7 +38,41 @@ VendorID,total_amount
 4,600584.610000027
 (3, 2)
         0.14 real         1.09 user         0.09 sys
-``` 
+
+# in contrast, csvq takes 72.46 seconds - 517.57x slower
+/usr/bin/time csvq "select VendorID,sum(total_amount) from taxi group by VendorID order by VendorID"
++----------+---------------------+
+| VendorID |  SUM(total_amount)  |
++----------+---------------------+
+| 1        |  52377417.529256366 |
+| 2        |    89959869.1264675 |
+| 4        |   600584.6099999828 |
++----------+---------------------+
+       72.46 real        65.15 user        75.17 sys
+```
+
+### "Traditional" SQL engines
+qsv and csvq both operate on "bare" CSVs. For comparison, let's contrast qsv's performance against "traditional" SQL engines
+that require setup and import (aka ETL).   Not counting setup and import time (which alone, takes several minutes), we get:
+
+#### **sqlite3.43.2** takes 2.910 seconds - 20.79x slower
+```sql
+sqlite> .timer on
+sqlite> select VendorID,sum(total_amount) from taxi group by VendorID order by VendorID;
+1,52377417.53
+2,89959869.13
+4,600584.61
+Run Time: real 2.910 user 2.569494 sys 0.272972
+```
+#### **PostgreSQL 15.6** using PgAdmin 4 v6.12 takes 18.527 seconds - 132.34x slower
+ 
+![Screenshot 2024-03-06 at 10 14 04 AM](https://github.com/jqnatividad/qsv/assets/1980690/5f7a0eca-d035-46b7-b4df-15991f92c00f)
+
+#### even with an index, qsv sqlp is still 5.96x faster
+
+<img width="996" alt="Screenshot 2024-03-08 at 7 57 57 AM" src="https://github.com/jqnatividad/qsv/assets/1980690/e2919dc6-68fd-4ad9-a56d-9a4dc105b59f">
+
+
 * `sqlp` now supports JSONL output format and adds compression support for Avro and Arrow output formats.
 * `fetch` now has a `--disk-cache` option, so you can cache web service responses to disk, complete with cache control and expiry handling!
 * `jsonl` is now multithreaded with additional `--batch` and `--job` options.
@@ -87,6 +122,7 @@ VendorID,total_amount
 * build(deps): bump regex from 1.10.2 to 1.10.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1557
 * build(deps): bump cached from 0.47.0 to 0.48.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1558
 * build(deps): bump cached from 0.48.0 to 0.48.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1560
+* build(deps): bump cached from 0.48.1 to 0.49.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1618
 * build(deps): bump chrono from 0.4.31 to 0.4.32 by @dependabot in https://github.com/jqnatividad/qsv/pull/1559
 * build(deps): bump chrono from 0.4.32 to 0.4.33 by @dependabot in https://github.com/jqnatividad/qsv/pull/1566
 * build(deps): bump mlua from 0.9.4 to 0.9.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1565
@@ -126,7 +162,6 @@ VendorID,total_amount
 * build(deps): bump geosuggest-core from 0.6.0 to 0.6.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1607
 * build(deps): bump geosuggest-utils from 0.6.0 to 0.6.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1608
 * build(deps): bump pyo3 from 0.20.2 to 0.20.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1616
-* build(deps): bump cached from 0.48.1 to 0.49.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1618
 * build(deps): bump crossbeam-channel from 0.5.11 to 0.5.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1627
 * build(deps): bump log from 0.4.20 to 0.4.21 by @dependabot in https://github.com/jqnatividad/qsv/pull/1628
 * build(deps): bump sysinfo from 0.30.5 to 0.30.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1636
