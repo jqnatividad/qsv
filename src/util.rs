@@ -1496,12 +1496,39 @@ pub fn process_input(
             {
                 let mut input_file = std::fs::File::open(input_path)?;
                 let mut input_file_contents = String::new();
+                let mut canonical_invalid_path = PathBuf::new();
+                let mut invalid_files = 0_u32;
                 input_file.read_to_string(&mut input_file_contents)?;
-                input_file_contents
+                let infile_list_vec = input_file_contents
                     .lines()
                     .filter(|line| !line.is_empty() && !line.starts_with('#'))
                     .map(PathBuf::from)
-                    .collect::<Vec<_>>()
+                    .filter_map(|path| {
+                        if path.exists() {
+                            Some(path)
+                        } else {
+                            // note that we're warn logging if files do not exist for
+                            // each line in the infile-list file
+                            // even though we're returning an error on the FIRST file that
+                            // doesn't exist in the next section. This is because
+                            // we want to log ALL the invalid file paths in the infile-list
+                            // file, not just the first one.
+                            invalid_files += 1;
+                            canonical_invalid_path = path.canonicalize().unwrap_or_default();
+                            log::warn!(
+                                ".infile-list file '{}': '{}' does not exist",
+                                path.display(),
+                                canonical_invalid_path.display()
+                            );
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                log::info!(
+                    ".infile-list file parsed. Filecount - valid:{} invalid:{invalid_files}",
+                    infile_list_vec.len()
+                );
+                infile_list_vec
             } else {
                 // if the input is not an ".infile-list" file, add the file to the input
                 arg_input
