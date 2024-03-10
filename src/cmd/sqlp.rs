@@ -679,7 +679,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     if debuglog_flag {
-        log::debug!("SQL query/ies: {queries:?}");
+        log::debug!("SQL query/ies({}): {queries:?}", queries.len());
     }
 
     let num_queries = queries.len();
