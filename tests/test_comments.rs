@@ -161,6 +161,8 @@ fn comments_unicode_supported() {
     assert_eq!(got, expected);
 }
 
+// Polars doesn't support unicode comment char
+#[cfg(not(feature = "polars"))]
 #[test]
 fn comments_count() {
     let wrk = Workdir::new("comments");
