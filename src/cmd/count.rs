@@ -15,6 +15,16 @@ count options:
     --width                Also return the length of the longest record.
                            The count and width are separated by a semicolon.
 
+                           WHEN THE POLARS FEATURE IS ENABLED:
+    --no-polars            Use the regular single-threaded, streaming CSV reader instead of
+                           the much faster Polars multi-threaded, mem-mapped CSV reader.
+                           Use this when you encounter issues when counting with the
+                           Polars CSV reader. The regular reader is slower but can read any
+                           valid CSV file of any size.
+    --low-memory           Use the Polars CSV Reader's low-memory mode. This
+                           mode is slower but uses less memory.
+
+
 Common options:
     -h, --help             Display this message
     -f, --flexible         Do not validate if the CSV has different number of
@@ -34,6 +44,8 @@ struct Args {
     arg_input:           Option<String>,
     flag_human_readable: bool,
     flag_width:          bool,
+    flag_no_polars:      bool,
+    flag_low_memory:     bool,
     flag_flexible:       bool,
     flag_no_headers:     bool,
 }
@@ -66,7 +78,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 info!("index used");
                 (idx.count(), 0)
             },
-            None => count_input(&conf, args.flag_width)?,
+            None => {
+                #[cfg(feature = "polars")]
+                {
+                    // if --no-polars or --width is set or its a snappy compressed file, use the
+                    // regular CSV reader
+                    if args.flag_no_polars || args.flag_width || conf.is_snappy() {
+                        count_input(&conf, args.flag_width)?
+                    } else {
+                        polars_count_input(&conf, args.flag_low_memory)?
+                    }
+                }
+                #[cfg(not(feature = "polars"))]
+                {
+                    count_input(&conf, args.flag_width)?
+                }
+            },
         }
     };
 
@@ -125,4 +152,55 @@ fn count_input(
     // record_numdelimiters is a count of the delimiters
     // which we also want to count when returning width
     Ok((count, max_width + record_numdelimiters))
+}
+
+#[cfg(feature = "polars")]
+fn polars_count_input(
+    conf: &Config,
+    low_memory: bool,
+) -> Result<(u64, usize), crate::clitypes::CliError> {
+    use polars::prelude::*;
+
+    log::info!("using polars");
+    let mut comment_char = String::new();
+    let temp_char;
+
+    let comment_prefix = if let Some(c) = conf.comment {
+        comment_char.push(c as char);
+        temp_char = comment_char.to_string();
+        Some(temp_char.as_str())
+    } else {
+        None
+    };
+
+    let df = if conf.is_stdin() {
+        let mut temp_file = tempfile::Builder::new().suffix(".csv").tempfile()?;
+        let stdin = std::io::stdin();
+        let mut stdin_handle = stdin.lock();
+        std::io::copy(&mut stdin_handle, &mut temp_file)?;
+        drop(stdin_handle);
+
+        let path = temp_file
+            .into_temp_path()
+            .as_os_str()
+            .to_string_lossy()
+            .to_string();
+
+        CsvReader::from_path(path)?
+            .with_comment_prefix(comment_prefix)
+            .has_header(!conf.no_headers)
+            .truncate_ragged_lines(conf.flexible)
+            .low_memory(low_memory)
+            .finish()?
+    } else {
+        let csv_path = conf.path.as_ref().unwrap().to_str().unwrap().to_string();
+        polars::io::csv::CsvReader::from_path(csv_path)?
+            .with_comment_prefix(comment_prefix)
+            .has_header(!conf.no_headers)
+            .truncate_ragged_lines(conf.flexible)
+            .low_memory(low_memory)
+            .finish()?
+    };
+    let count = df.height() as u64;
+    Ok((count, 0))
 }
