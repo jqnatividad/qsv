@@ -133,6 +133,7 @@ fn prop_count_len(
     }
 }
 
+#[cfg(not(feature = "polars"))]
 #[test]
 fn prop_count() {
     fn p(rows: CsvData) -> bool {
@@ -141,6 +142,7 @@ fn prop_count() {
     qcheck(p as fn(CsvData) -> bool);
 }
 
+#[cfg(not(feature = "polars"))]
 #[test]
 fn prop_count_human_readable() {
     fn p(rows: CsvData) -> bool {
@@ -149,6 +151,7 @@ fn prop_count_human_readable() {
     qcheck(p as fn(CsvData) -> bool);
 }
 
+#[cfg(not(feature = "polars"))]
 #[test]
 fn prop_count_headers() {
     fn p(rows: CsvData) -> bool {
@@ -157,6 +160,7 @@ fn prop_count_headers() {
     qcheck(p as fn(CsvData) -> bool);
 }
 
+#[cfg(not(feature = "polars"))]
 #[test]
 fn prop_count_headers_human_readable() {
     fn p(rows: CsvData) -> bool {
@@ -181,6 +185,7 @@ fn prop_count_indexed_headers() {
     qcheck(p as fn(CsvData) -> bool);
 }
 
+#[cfg(not(feature = "polars"))]
 #[test]
 fn prop_count_noheaders_env() {
     fn p(rows: CsvData) -> bool {
