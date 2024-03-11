@@ -30,7 +30,7 @@ VendorID,total_amount
 (3, 2)
         6.09 real         6.82 user         0.16 sys
 
-# with fast path optimization, fully exploiting Polars' multi-threaded, mem-mapped CSV reader!
+# with fast path optimization, fully exploiting Polars' multithreaded, mem-mapped CSV reader!
  /usr/bin/time qsv sqlp taxi.csv "select VendorID,sum(total_amount) from taxi group by VendorID order by VendorID"
 VendorID,total_amount
 1,52377417.52985942
@@ -484,7 +484,7 @@ Users can manually verify the signatures by downloading the zipsign public key a
 ## Highlights:
 * `geocode`: added Federal Information Processing Standards (FIPS) codes to results for US places, so we can derive [GEOIDs](https://www.census.gov/programs-surveys/geography/guidance/geo-identifiers.html#:~:text=FIPS%20codes%20are%20assigned%20alphabetically,Native%20Hawaiian%20(AIANNH)%20areas.).  This paves the way to doing data enrichment lookups (starting with the US Census) in an upcoming release.
 * Added [Goal/Non-goals](https://github.com/jqnatividad/qsv#goals--non-goals), explicitly codifying what qsv is and isn't, and what we're trying to achieve with the toolkit.
-* `excel`: CSV output processing is now multi-threaded, making it a bit faster. The bottleneck is still the Excel/ODS library we're using ([calamine](https://github.com/tafia/calamine)), which is single-threaded. But there are [active](https://github.com/tafia/calamine/issues/346) [discussions](https://github.com/tafia/calamine/issues/362) underway to make it much faster in the future.
+* `excel`: CSV output processing is now multithreaded, making it a bit faster. The bottleneck is still the Excel/ODS library we're using ([calamine](https://github.com/tafia/calamine)), which is single-threaded. But there are [active](https://github.com/tafia/calamine/issues/346) [discussions](https://github.com/tafia/calamine/issues/362) underway to make it much faster in the future.
 * Upgrading the MSRV to 1.73.0 has allowed us to use LLVM 17, which has resulted in an overall performance boost.
 
 ---
@@ -495,7 +495,7 @@ Users can manually verify the signatures by downloading the zipsign public key a
 
 ### Changed
 * `cat` : minor optimization https://github.com/jqnatividad/qsv/commit/343bb668ae84fcf862883245382e7d8015da88c2
-* `excel`: CSV output processing is now multi-threaded https://github.com/jqnatividad/qsv/pull/1360
+* `excel`: CSV output processing is now multithreaded https://github.com/jqnatividad/qsv/pull/1360
 * `geocode`: more efficient dynfmt ptocessing https://github.com/jqnatividad/qsv/pull/1367
 * `frequency`: optimize allocations before hot loop https://github.com/jqnatividad/qsv/commit/655bebcdec6d89f0ffa33d794069ee5eee0df3e5
 * `luau`: upgraded embedded Luau from 0.596 to 0.599
@@ -663,7 +663,7 @@ Other release highlights include:
 ## [0.113.0] - 2023-09-08 🦄🏇🏽🎠
 This is the first "[Unicorn](https://7esl.com/unicorn/)" 🦄 release, adding MAJOR new features to the toolkit!
 
-* `geocode`: adds high-speed, cache-backed, multi-threaded geocoding using a local, updateable copy of the [GeoNames](https://www.geonames.org/) database.  This is a major improvement over the previous `geocode` subcommand in the `apply` command thanks to the wonderful [geosuggest](https://github.com/estin/geosuggest) crate.
+* `geocode`: adds high-speed, cache-backed, multithreaded geocoding using a local, updateable copy of the [GeoNames](https://www.geonames.org/) database.  This is a major improvement over the previous `geocode` subcommand in the `apply` command thanks to the wonderful [geosuggest](https://github.com/estin/geosuggest) crate.
 * guaranteed non-UTF8 input detection with the `validate` and `input` commands. Quicksilver [_REQUIRES_ UTF-8 encoded input](https://github.com/jqnatividad/qsv/tree/master#utf-8-encoding). You can now use these commands to ensure you have valid UTF-8 input before using the rest of the toolkit.
 * New/expanded whirlwind tour & quick-start notebooks by @a5dur and @rzmk 🎠
 * Various performance improvements all-around: 🏇🏽
@@ -1108,7 +1108,7 @@ This release features the new [Polars](https://www.pola.rs/)-powered `sqlp` comm
 
 Initial tests show that its competitive with [DuckDB](https://duckdb.org/) and faster than [DataFusion](https://arrow.apache.org/datafusion/) on identical SQL queries, and it just runs rings around [pandasql](https://github.com/yhat/pandasql/#pandasql).
 
-It converts Polars SQL (a subset of ANSI SQL) queries to multi-threaded LazyFrames expressions and then executes them. This is a very powerful feature and allows you to do things like joins, aggregations, group bys, etc. on larger than memory CSVs. The `sqlp` command is still experimental and we are looking for feedback on it. Please try it out and let us know what you think.
+It converts Polars SQL (a subset of ANSI SQL) queries to multithreaded LazyFrames expressions and then executes them. This is a very powerful feature and allows you to do things like joins, aggregations, group bys, etc. on larger than memory CSVs. The `sqlp` command is still experimental and we are looking for feedback on it. Please try it out and let us know what you think.
 
 ### Added
 * `sqlp`: new command to allow Polars SQL queries against CSVs https://github.com/jqnatividad/qsv/pull/1015
@@ -1442,7 +1442,7 @@ So "0.100.0" is less than "0.99.0", and self-update won't work.
 ### Added
 * added [Snappy](https://google.github.io/snappy/) auto-compression/decompression support. The Snappy format was chosen primarily
 because it supported streaming compression/decompression and is designed for performance. https://github.com/jqnatividad/qsv/pull/911
-* added `snappy` command. Although files ending with the ".sz" extension are automatically compressed/decompressed, the `snappy` command offers 4-5x faster multi-threaded compression. It can also be used to check if a file is Snappy-compressed or not, and can be used to compress/decompress any file. https://github.com/jqnatividad/qsv/pull/911 and https://github.com/jqnatividad/qsv/pull/916
+* added `snappy` command. Although files ending with the ".sz" extension are automatically compressed/decompressed, the `snappy` command offers 4-5x faster multithreaded compression. It can also be used to check if a file is Snappy-compressed or not, and can be used to compress/decompress any file. https://github.com/jqnatividad/qsv/pull/911 and https://github.com/jqnatividad/qsv/pull/916
 * `diff` command added to `qsvlite` and `qsvdp` binary variants https://github.com/jqnatividad/qsv/pull/910
 * `to`: added stdin support https://github.com/jqnatividad/qsv/pull/913
 
@@ -2746,7 +2746,7 @@ This means clippy, even in pedantic/nursery/perf mode will have no warnings. htt
 * pin Rust Nightly to 2022-06-29
 
 ### Fixed
-* `fetch`: is single-threaded again. It turns out it was more complicated than I hoped. Will revisit making it multi-threaded once I sort out the sync issues.
+* `fetch`: is single-threaded again. It turns out it was more complicated than I hoped. Will revisit making it multithreaded once I sort out the sync issues.
 
 ## [0.56.0] - 2022-06-20
 ### Added
@@ -3072,7 +3072,7 @@ which prevented us from building qsv's nightly build. (see https://github.com/ap
 
 ## [0.45.0] - 2022-04-30
 ### Added
-* Added `extsort` command - sort arbitrarily large text files\CSVs using a multi-threaded external sort algorithm.
+* Added `extsort` command - sort arbitrarily large text files\CSVs using a multithreaded external sort algorithm.
 
 ### Changed
 * Updated whirlwind tour with simple `stats` step

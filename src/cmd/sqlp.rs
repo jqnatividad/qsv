@@ -156,7 +156,7 @@ sqlp options:
                               Use this when you get query errors or to force CSV parsing when there
                               is only one input file, no CSV parsing options are used and its not
                               a SQL script. Otherwise, the CSV will be read directly into a LazyFrame
-                              using the fast path with the multi-threaded, mem-mapped read_csv()
+                              using the fast path with the multithreaded, mem-mapped read_csv()
                               Polars SQL function which is much faster though not as configurable than
                               the regular CSV parser.
     --truncate-ragged-lines   Truncate ragged lines when parsing CSVs. If set, rows with more

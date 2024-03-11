@@ -4,7 +4,7 @@ Does streaming compression/decompression of the input using the Snappy framing f
 https://github.com/google/snappy/blob/main/framing_format.txt
 
 It has four subcommands:
-    compress:   Compress the input (multi-threaded).
+    compress:   Compress the input (multithreaded).
     decompress: Decompress the input (single-threaded).
     check:      Quickly check if the input is a Snappy file by inspecting the 
                 first 50 bytes of the input is valid Snappy data.
@@ -17,7 +17,7 @@ Note that most qsv commands already automatically decompresses Snappy files if t
 input file has an ".sz" extension. It will also automatically compress the output
 file (though only single-threaded) if the --output file has an ".sz" extension.
 
-This command's multi-threaded compression is 5-6x faster than qsv's automatic 
+This command's multithreaded compression is 5-6x faster than qsv's automatic 
 single-threaded compression.
 
 Also, this command is not specific to CSV data, it can compress/decompress ANY file.
@@ -232,7 +232,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
-// multi-threaded streaming snappy compression
+// multithreaded streaming snappy compression
 pub fn compress<R: Read, W: Write + Send + 'static>(
     mut src: R,
     dst: W,

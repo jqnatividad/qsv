@@ -17,7 +17,7 @@ count options:
 
                            WHEN THE POLARS FEATURE IS ENABLED:
     --no-polars            Use the regular single-threaded, streaming CSV reader instead of
-                           the much faster Polars multi-threaded, mem-mapped CSV reader.
+                           the much faster Polars multithreaded, mem-mapped CSV reader.
                            Use this when you encounter issues when counting with the
                            Polars CSV reader. The regular reader is slower but can read any
                            valid CSV file of any size.
