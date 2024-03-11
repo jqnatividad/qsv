@@ -397,6 +397,7 @@ impl JoinStruct {
                 streaming:           self.streaming,
                 fast_projection:     true,
                 eager:               false,
+                row_estimate:        true,
             }
         };
         log::debug!("Optimization state: {optimization_state:?}");

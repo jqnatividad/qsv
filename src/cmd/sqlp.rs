@@ -546,6 +546,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             streaming:           args.flag_low_memory,
             fast_projection:     true,
             eager:               false,
+            row_estimate:        true,
         }
     };
     // gated by log::log_enabled!(log::Level::Debug) to avoid the
