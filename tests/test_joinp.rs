@@ -383,6 +383,30 @@ joinp_test!(
     }
 );
 
+joinp_test!(
+    joinp_outer_left_validate_onetomany,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("--left").args(["--validate", "OneToMany"]);
+        let got: String = wrk.output_stderr(&mut cmd);
+        assert_eq!(got, "(5, 3)\n");
+        wrk.assert_success(&mut cmd);
+    }
+);
+
+joinp_test!(
+    joinp_outer_left_validate_onetoone,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("--left").args(["--validate", "OneToone"]);
+        let got: String = wrk.output_stderr(&mut cmd);
+        assert_eq!(
+            got,
+            "Polars error: ComputeError(ErrString(\"the join keys did not fulfil 1:1 \
+             validation\"))\n"
+        );
+        wrk.assert_err(&mut cmd);
+    }
+);
+
 joinp_test!(joinp_full, |wrk: Workdir, mut cmd: process::Command| {
     cmd.arg("--full");
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
