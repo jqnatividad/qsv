@@ -1981,7 +1981,8 @@ dependencies = [
 [[package]]
 name = "gender_guesser"
 version = "0.2.0"
-source = "git+https://github.com/jqnatividad/gender_guesser?branch=bundle_namdict_txt#bbd8c88601607c4e66493664fd584f8e33b7d841"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b93a4238a98f7f34ff4462543eae8587175d7cf24879dd9bfb1b90c3670033e"
 
 [[package]]
 name = "generator"
