@@ -369,19 +369,19 @@ joinp_test_comments!(
     }
 );
 
-// joinp_test!(
-//     joinp_outer_left_validate_manytoone,
-//     |wrk: Workdir, mut cmd: process::Command| {
-//         cmd.arg("--left").args(["--validate", "onetomany"]).arg("--low-memory");
-//         let got: String = wrk.output_stderr(&mut cmd);
-//         assert_eq!(
-//             got,
-//             "Polars error: ComputeError(ErrString(\"the join keys did not fulfil m:1 \
-//              validation\"))\n"
-//         );
-//         wrk.assert_err(&mut cmd);
-//     }
-// );
+joinp_test!(
+    joinp_outer_left_validate_manytoone,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("--left").args(["--validate", "manytoone"]);
+        let got: String = wrk.output_stderr(&mut cmd);
+        assert_eq!(
+            got,
+            "Polars error: ComputeError(ErrString(\"the join keys did not fulfil m:1 \
+             validation\"))\n"
+        );
+        wrk.assert_err(&mut cmd);
+    }
+);
 
 joinp_test!(joinp_full, |wrk: Workdir, mut cmd: process::Command| {
     cmd.arg("--full");
