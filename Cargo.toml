@@ -158,7 +158,7 @@ polars = { version = "0.38", features = [
 pyo3 = { version = "0.20", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.11"
 qsv_docopt = "1.6"
-qsv-stats = "0.12"
+qsv-stats = "0.13"
 qsv_currency = { version = "0.6", optional = true }
 qsv-sniffer = { version = "0.10", default-features = false, features = [
     "runtime-dispatch-simd",
