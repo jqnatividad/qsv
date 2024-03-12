@@ -81,10 +81,23 @@ struct Args {
     flag_memcheck:       bool,
 }
 
+enum ComparisonMode {
+    Numeric,
+    IgnoreCase,
+    Normal,
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let ignore_case = args.flag_ignore_case;
-    let numeric = args.flag_numeric;
+
+    let compare_mode = if args.flag_numeric {
+        ComparisonMode::Numeric
+    } else if args.flag_ignore_case {
+        ComparisonMode::IgnoreCase
+    } else {
+        ComparisonMode::Normal
+    };
+
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
@@ -117,12 +130,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
             let a = sel.select(&record);
             let b = sel.select(&next_record);
-            let comparison = if numeric {
-                iter_cmp_num(a, b)
-            } else if ignore_case {
-                iter_cmp_ignore_case(a, b)
-            } else {
-                iter_cmp(a, b)
+            let comparison = match compare_mode {
+                ComparisonMode::Normal => iter_cmp(a, b),
+                ComparisonMode::Numeric => iter_cmp_num(a, b),
+                ComparisonMode::IgnoreCase => iter_cmp_ignore_case(a, b),
             };
             match comparison {
                 cmp::Ordering::Equal => {
@@ -152,46 +163,65 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::njobs(args.flag_jobs);
 
         let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
-        if numeric {
-            all.par_sort_by(|r1, r2| {
-                let a = sel.select(r1);
-                let b = sel.select(r2);
-                iter_cmp_num(a, b)
-            });
-        } else if ignore_case {
-            all.par_sort_by(|r1, r2| {
-                let a = sel.select(r1);
-                let b = sel.select(r2);
-                iter_cmp_ignore_case(a, b)
-            });
-        } else {
-            all.par_sort_by(|r1, r2| {
-                let a = sel.select(r1);
-                let b = sel.select(r2);
-                iter_cmp(a, b)
-            });
+        match compare_mode {
+            ComparisonMode::Normal => {
+                all.par_sort_by(|r1, r2| {
+                    let a = sel.select(r1);
+                    let b = sel.select(r2);
+                    iter_cmp(a, b)
+                });
+            },
+            ComparisonMode::Numeric => {
+                all.par_sort_by(|r1, r2| {
+                    let a = sel.select(r1);
+                    let b = sel.select(r2);
+                    iter_cmp_num(a, b)
+                });
+            },
+            ComparisonMode::IgnoreCase => {
+                all.par_sort_by(|r1, r2| {
+                    let a = sel.select(r1);
+                    let b = sel.select(r2);
+                    iter_cmp_ignore_case(a, b)
+                });
+            },
         }
 
         for (current, current_record) in all.iter().enumerate() {
             let a = sel.select(current_record);
             if let Some(next_record) = all.get(current + 1) {
                 let b = sel.select(next_record);
-                if ignore_case {
-                    if iter_cmp_ignore_case(a, b) == cmp::Ordering::Equal {
-                        dupe_count += 1;
-                        if dupes_output {
-                            dupewtr.write_byte_record(current_record)?;
+                match compare_mode {
+                    ComparisonMode::Normal => {
+                        if iter_cmp(a, b) == cmp::Ordering::Equal {
+                            dupe_count += 1;
+                            if dupes_output {
+                                dupewtr.write_byte_record(current_record)?;
+                            }
+                        } else {
+                            wtr.write_byte_record(current_record)?;
                         }
-                    } else {
-                        wtr.write_byte_record(current_record)?;
-                    }
-                } else if iter_cmp(a, b) == cmp::Ordering::Equal {
-                    dupe_count += 1;
-                    if dupes_output {
-                        dupewtr.write_byte_record(current_record)?;
-                    }
-                } else {
-                    wtr.write_byte_record(current_record)?;
+                    },
+                    ComparisonMode::Numeric => {
+                        if iter_cmp_num(a, b) == cmp::Ordering::Equal {
+                            dupe_count += 1;
+                            if dupes_output {
+                                dupewtr.write_byte_record(current_record)?;
+                            }
+                        } else {
+                            wtr.write_byte_record(current_record)?;
+                        }
+                    },
+                    ComparisonMode::IgnoreCase => {
+                        if iter_cmp_ignore_case(a, b) == cmp::Ordering::Equal {
+                            dupe_count += 1;
+                            if dupes_output {
+                                dupewtr.write_byte_record(current_record)?;
+                            }
+                        } else {
+                            wtr.write_byte_record(current_record)?;
+                        }
+                    },
                 }
             } else {
                 wtr.write_byte_record(current_record)?;
