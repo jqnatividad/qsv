@@ -171,7 +171,7 @@ cargo install qsv --locked --bin qsv -F feature_capable,apply,polars
 cargo install qsv --locked --bin qsvlite -F lite
 
 # or to install qsvdp
-cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau
+cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau,polars
 ```
 
 ### Option 4: Compile from Source
@@ -201,7 +201,7 @@ cargo build --release --locked --bin qsv -F feature_capable,fetch,foreach
 cargo build --release --locked --bin qsvlite -F lite
 
 # for qsvdp
-cargo build --release --locked --bin qsvdp -F datapusher_plus,luau
+cargo build --release --locked --bin qsvdp -F datapusher_plus,luau,polars
 ```
 
 NOTE: To build with Rust nightly, see [Nightly Release Builds](docs/PERFORMANCE.md#nightly-release-builds).
@@ -397,7 +397,7 @@ cargo test --features lite
 cargo test stats --features lite
 
 # to test qsvdp
-cargo test --features datapusher_plus,luau
+cargo test --features datapusher_plus,luau,polars
 
 # to test a specific command
 # here we test only stats and use the
