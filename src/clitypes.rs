@@ -225,3 +225,10 @@ impl From<reqwest::Error> for CliError {
         CliError::Network(err.to_string())
     }
 }
+
+#[cfg(feature = "polars")]
+impl From<polars::error::PolarsError> for CliError {
+    fn from(err: polars::error::PolarsError) -> CliError {
+        CliError::Other(format!("Polars error: {err:?}"))
+    }
+}

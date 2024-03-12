@@ -186,7 +186,7 @@ use polars::{
 use serde::Deserialize;
 use tempfile::tempdir;
 
-use crate::{cmd::sqlp::compress_output_if_needed, config::Delimiter, util, CliError, CliResult};
+use crate::{cmd::sqlp::compress_output_if_needed, config::Delimiter, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
@@ -223,12 +223,6 @@ struct Args {
     flag_output:           Option<String>,
     flag_delimiter:        Option<Delimiter>,
     flag_quiet:            bool,
-}
-
-impl From<polars::error::PolarsError> for CliError {
-    fn from(err: polars::error::PolarsError) -> CliError {
-        CliError::Other(format!("Polars error: {err:?}"))
-    }
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
