@@ -10,11 +10,6 @@ than memory CSV files. This will make dedup run in streaming mode with constant 
 
 Either way, the output will not only be deduplicated, it will also be sorted.
 
-Note that dedup's sorting will only be done alphabetically, not numerically. That is,
-10 will come before 2. If you need to sort numerically, use the sort command first with
-the --numeric option and pipe it to dedup with the --sorted option.
-(i.e. qsv sort --numeric in.csv | qsv dedup --sorted)
-
 A duplicate count will also be sent to <stderr>.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_dedup.rs.
@@ -28,6 +23,7 @@ dedup options:
                                Note that the outputs will remain at the full width
                                of the CSV.
                                See 'qsv select --help' for the format details.
+    -N, --numeric              Compare according to string numerical value
     -i, --ignore-case          Compare strings disregarding case.
     --sorted                   The input is already sorted. Do not load the CSV into
                                memory to sort it first. Meant to be used in tandem and
@@ -63,7 +59,7 @@ use serde::Deserialize;
 use simdutf8::basic::from_utf8;
 
 use crate::{
-    cmd::sort::iter_cmp,
+    cmd::sort::{iter_cmp, iter_cmp_num},
     config::{Config, Delimiter},
     select::SelectColumns,
     util, CliResult,
@@ -72,6 +68,7 @@ use crate::{
 struct Args {
     arg_input:           Option<String>,
     flag_select:         SelectColumns,
+    flag_numeric:        bool,
     flag_ignore_case:    bool,
     flag_sorted:         bool,
     flag_dupes_output:   Option<String>,
@@ -87,6 +84,7 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let ignore_case = args.flag_ignore_case;
+    let numeric = args.flag_numeric;
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
@@ -119,7 +117,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
             let a = sel.select(&record);
             let b = sel.select(&next_record);
-            let comparison = if ignore_case {
+            let comparison = if numeric {
+                iter_cmp_num(a, b)
+            } else if ignore_case {
                 iter_cmp_ignore_case(a, b)
             } else {
                 iter_cmp(a, b)
@@ -152,7 +152,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::njobs(args.flag_jobs);
 
         let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
-        if ignore_case {
+        if numeric {
+            all.par_sort_by(|r1, r2| {
+                let a = sel.select(r1);
+                let b = sel.select(r2);
+                iter_cmp_num(a, b)
+            });
+        } else if ignore_case {
             all.par_sort_by(|r1, r2| {
                 let a = sel.select(r1);
                 let b = sel.select(r2);
