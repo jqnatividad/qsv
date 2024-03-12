@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.19.0
+bm_version=3.19.1
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -435,8 +435,8 @@ run cat_rows_flexible "$qsv_bin" cat rows --flexible "$data" data_unsorted.csv
 run cat_rowskey "$qsv_bin" cat rowskey "$data" data_unsorted.csv
 run count "$qsv_bin" count "$data"
 run count_flexible "$qsv_bin" count --flexible "$data"
-run count_polars_lowmem "$qsv_benchmarker_bin" count --low-memory "$data"
-run count_no_polars "$qsv_benchmarker_bin" count --no-polars "$data"
+run count_polars_lowmem "$qsv_bin" count --low-memory "$data"
+run count_no_polars "$qsv_bin" count --no-polars "$data"
 run --index count_index "$qsv_bin" count "$data"
 run count_width "$qsv_bin" count --width "$data"
 run --index count_width_index "$qsv_bin" count --width "$data"
