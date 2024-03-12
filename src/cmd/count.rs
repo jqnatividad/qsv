@@ -12,7 +12,9 @@ Usage:
 
 count options:
     -H, --human-readable   Comma separate row count.
-    --width                Also return the length of the longest record.
+    --width                Also return the estimated length of the longest record.
+                           Its an estimate as it doesn't count quotes, and will be an
+                           undercount if the record has quoted fields.
                            The count and width are separated by a semicolon.
 
                            WHEN THE POLARS FEATURE IS ENABLED:
