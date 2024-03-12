@@ -17,10 +17,10 @@ count options:
 
                            WHEN THE POLARS FEATURE IS ENABLED:
     --no-polars            Use the regular single-threaded, streaming CSV reader instead of
-                           the much faster Polars multithreaded, mem-mapped CSV reader.
+                           the much faster multithreaded, mem-mapped Polars CSV reader.
                            Use this when you encounter issues when counting with the
                            Polars CSV reader. The regular reader is slower but can read any
-                           valid CSV file of any size.
+                           valid CSV files of any size.
     --low-memory           Use the Polars CSV Reader's low-memory mode. This
                            mode is slower but uses less memory.
 
@@ -79,20 +79,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 (idx.count(), 0)
             },
             None => {
+                // if --no-polars or --width is set or its a snappy compressed file, use the
+                // regular CSV reader
                 #[cfg(feature = "polars")]
-                {
-                    // if --no-polars or --width is set or its a snappy compressed file, use the
-                    // regular CSV reader
-                    if args.flag_no_polars || args.flag_width || conf.is_snappy() {
-                        count_input(&conf, args.flag_width)?
-                    } else {
-                        polars_count_input(&conf, args.flag_low_memory)?
-                    }
-                }
-                #[cfg(not(feature = "polars"))]
-                {
+                if args.flag_no_polars || args.flag_width || conf.is_snappy() {
                     count_input(&conf, args.flag_width)?
+                } else {
+                    polars_count_input(&conf, args.flag_low_memory)?
                 }
+
+                #[cfg(not(feature = "polars"))]
+                count_input(&conf, args.flag_width)?
             },
         }
     };
