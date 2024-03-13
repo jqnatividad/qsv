@@ -301,6 +301,8 @@ struct Args {
     flag_progressbar:    bool,
 }
 
+// set memcache size - the default is 2 million entries
+// and is set through the docopt usage text
 static MEM_CACHE_SIZE: OnceLock<usize> = OnceLock::new();
 
 // connect to Redis at localhost, using database 1 by default when --redis is enabled
@@ -417,7 +419,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         String::new()
     };
 
-    let cache_type = if args.flag_disk_cache {
+    let cache_type = if args.flag_no_cache {
+        CacheType::None
+    } else if args.flag_disk_cache {
         // if --flush-cache is set, flush the cache directory first if it exists
         if args.flag_flush_cache
             && !diskcache_dir.is_empty()
@@ -465,8 +469,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             info!("flushed Redis database.");
         }
         CacheType::Redis
-    } else if args.flag_no_cache {
-        CacheType::None
     } else {
         CacheType::InMemory
     };
