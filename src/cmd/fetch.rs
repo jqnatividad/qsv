@@ -306,6 +306,10 @@ struct Args {
 static MEM_CACHE_SIZE: OnceLock<usize> = OnceLock::new();
 
 // connect to Redis at localhost, using database 1 by default when --redis is enabled
+static QSV_REDIS_CONNSTR_ENV: &str = "QSV_REDIS_CONNSTR";
+static QSV_REDIS_MAX_POOL_SIZE_ENV: &str = "QSV_REDIS_MAX_POOL_SIZE";
+static QSV_REDIS_TTL_SECS_ENV: &str = "QSV_REDIS_TTL_SECS";
+static QSV_REDIS_TTL_REFRESH_ENV: &str = "QSV_REDIS_TTL_REFRESH";
 static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/1";
 static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
@@ -334,26 +338,26 @@ enum ReportKind {
 }
 
 #[derive(Debug)]
-struct RedisConfig {
-    conn_str:      String,
-    max_pool_size: u32,
-    ttl_secs:      u64,
-    ttl_refresh:   bool,
+pub struct RedisConfig {
+    pub conn_str:      String,
+    pub max_pool_size: u32,
+    pub ttl_secs:      u64,
+    pub ttl_refresh:   bool,
 }
 impl RedisConfig {
-    fn new() -> RedisConfig {
+    pub fn new() -> RedisConfig {
         Self {
-            conn_str:      std::env::var("QSV_REDIS_CONNSTR")
+            conn_str:      std::env::var(QSV_REDIS_CONNSTR_ENV)
                 .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STR.to_string()),
-            max_pool_size: std::env::var("QSV_REDIS_MAX_POOL_SIZE")
+            max_pool_size: std::env::var(QSV_REDIS_MAX_POOL_SIZE_ENV)
                 .unwrap_or_else(|_| DEFAULT_REDIS_POOL_SIZE.to_string())
                 .parse()
                 .unwrap_or(DEFAULT_REDIS_POOL_SIZE),
-            ttl_secs:      std::env::var("QSV_REDIS_TTL_SECS")
+            ttl_secs:      std::env::var(QSV_REDIS_TTL_SECS_ENV)
                 .unwrap_or_else(|_| DEFAULT_REDIS_TTL_SECS.to_string())
                 .parse()
                 .unwrap_or(DEFAULT_REDIS_TTL_SECS),
-            ttl_refresh:   util::get_envvar_flag("QSV_REDIS_TTL_REFRESH"),
+            ttl_refresh:   util::get_envvar_flag(QSV_REDIS_TTL_REFRESH_ENV),
         }
     }
 }
