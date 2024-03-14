@@ -206,7 +206,8 @@ use url::Url;
 
 use crate::{
     cmd::fetch::{
-        get_ratelimit_header_value, parse_ratelimit_header_value, process_jql, RedisConfig,
+        get_ratelimit_header_value, parse_ratelimit_header_value, process_jql, CacheType,
+        DiskCacheConfig, FetchResponse, RedisConfig, ReportKind,
     },
     config::{Config, Delimiter},
     select::SelectColumns,
@@ -256,21 +257,6 @@ static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q
 // for governor/ratelimiter
 const MINIMUM_WAIT_MS: u64 = 10;
 const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
-
-// for --report option
-#[derive(PartialEq)]
-enum ReportKind {
-    Detailed,
-    Short,
-    None,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-struct FetchResponse {
-    response:    String,
-    status_code: u16,
-    retries:     u8,
-}
 
 static REDISCONFIG: OnceLock<RedisConfig> = OnceLock::new();
 

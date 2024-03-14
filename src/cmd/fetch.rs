@@ -330,7 +330,7 @@ const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
 
 // for --report option
 #[derive(PartialEq)]
-enum ReportKind {
+pub enum ReportKind {
     Detailed,
     Short,
     None,
@@ -362,12 +362,12 @@ impl RedisConfig {
 }
 
 #[derive(Debug)]
-struct DiskCacheConfig {
-    ttl_secs:    u64,
-    ttl_refresh: bool,
+pub struct DiskCacheConfig {
+    pub ttl_secs:    u64,
+    pub ttl_refresh: bool,
 }
 impl DiskCacheConfig {
-    fn new() -> DiskCacheConfig {
+    pub fn new() -> DiskCacheConfig {
         Self {
             ttl_secs:    std::env::var("QSV_DISKCACHE_TTL_SECS")
                 .unwrap_or_else(|_| DEFAULT_DISKCACHE_TTL_SECS.to_string())
@@ -379,7 +379,7 @@ impl DiskCacheConfig {
 }
 
 #[derive(Debug, Default, PartialEq)]
-enum CacheType {
+pub enum CacheType {
     #[default]
     None,
     InMemory,
@@ -388,10 +388,10 @@ enum CacheType {
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
-struct FetchResponse {
-    response:    String,
-    status_code: u16,
-    retries:     u8,
+pub struct FetchResponse {
+    pub response:    String,
+    pub status_code: u16,
+    pub retries:     u8,
 }
 
 static DISKCACHE_DIR: OnceLock<String> = OnceLock::new();
