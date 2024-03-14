@@ -305,12 +305,11 @@ struct Args {
 // and is set through the docopt usage text
 static MEM_CACHE_SIZE: OnceLock<usize> = OnceLock::new();
 
-// connect to Redis at localhost, using database 1 by default when --redis is enabled
 static QSV_REDIS_CONNSTR_ENV: &str = "QSV_REDIS_CONNSTR";
 static QSV_REDIS_MAX_POOL_SIZE_ENV: &str = "QSV_REDIS_MAX_POOL_SIZE";
 static QSV_REDIS_TTL_SECS_ENV: &str = "QSV_REDIS_TTL_SECS";
 static QSV_REDIS_TTL_REFRESH_ENV: &str = "QSV_REDIS_TTL_REFRESH";
-static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/1";
+static DEFAULT_REDIS_CONN_STRING: OnceLock<String> = OnceLock::new();
 static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
 
@@ -348,7 +347,7 @@ impl RedisConfig {
     pub fn new() -> RedisConfig {
         Self {
             conn_str:      std::env::var(QSV_REDIS_CONNSTR_ENV)
-                .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STR.to_string()),
+                .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STRING.get().unwrap().to_string()),
             max_pool_size: std::env::var(QSV_REDIS_MAX_POOL_SIZE_ENV)
                 .unwrap_or_else(|_| DEFAULT_REDIS_POOL_SIZE.to_string())
                 .parse()
@@ -401,6 +400,12 @@ static DISKCACHECONFIG: OnceLock<DiskCacheConfig> = OnceLock::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
+    // connect to Redis at localhost, using database 1 by default when --redis-cache is enabled
+    // fetch uses database 1 by default, as opposed to the database 2 with fetchpost
+    DEFAULT_REDIS_CONN_STRING
+        .set("redis://127.0.0.1:6379/1".to_string())
+        .unwrap();
 
     // set memcache size
     MEM_CACHE_SIZE.set(args.flag_mem_cache_size).unwrap();

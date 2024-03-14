@@ -135,10 +135,6 @@ Fetchpost options:
                                Set to zero (0) to continue despite errors.
                                [default: 10 ]
     --store-error              On error, store error code/message instead of blank value.
-    --no-cache                 Do not cache responses.
-    --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
-                               the cached error is returned. Otherwise, the fetch is attempted again
-                               for --max-retries.
     --cookies                  Allow cookies.
     --user-agent <agent>       Specify custom user agent. It supports the following variables -
                                $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
@@ -152,11 +148,17 @@ Fetchpost options:
                                qsv_fetchp_retries, qsv_fetchp_elapsed_ms & qsv_fetchp_response.
                                The short report only has the seven columns without the "qsv_fetchp_" prefix.
                                [default: none]
-    --redis                    Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/2"
+
+                               CACHING OPTIONS:
+    --no-cache                 Do not cache responses.                               
+    --redis-cache              Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/2"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
                                Adjust the QSV_FP_REDIS_CONNSTR, QSV_REDIS_MAX_POOL_SIZE, QSV_REDIS_TTL_SECONDS & 
                                QSV_REDIS_TTL_REFRESH respectively to change Redis settings.
+    --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
+                               the cached error is returned. Otherwise, the fetch is attempted again
+                               for --max-retries.
     --flushdb                  Flush all the keys in the current Redis database on startup.
                                This option is ignored if the --redis option is NOT enabled.
 
@@ -203,7 +205,9 @@ use simdutf8::basic::from_utf8;
 use url::Url;
 
 use crate::{
-    cmd::fetch::{get_ratelimit_header_value, parse_ratelimit_header_value, process_jql},
+    cmd::fetch::{
+        get_ratelimit_header_value, parse_ratelimit_header_value, process_jql, RedisConfig,
+    },
     config::{Config, Delimiter},
     select::SelectColumns,
     util, CliError, CliResult,
@@ -227,7 +231,7 @@ struct Args {
     flag_cookies:     bool,
     flag_user_agent:  Option<String>,
     flag_report:      String,
-    flag_redis:       bool,
+    flag_redis_cache: bool,
     flag_flushdb:     bool,
     flag_output:      Option<String>,
     flag_no_headers:  bool,
@@ -239,9 +243,8 @@ struct Args {
 }
 
 // connect to Redis at localhost, using database 2 by default when --redis is enabled
-static DEFAULT_FP_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/2";
-static DEFAULT_FP_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
-static DEFAULT_FP_REDIS_POOL_SIZE: u32 = 20;
+static DEFAULT_REDIS_CONN_STRING: OnceLock<String> = OnceLock::new();
+
 static TIMEOUT_FP_SECS: OnceLock<u64> = OnceLock::new();
 
 const FETCHPOST_REPORT_PREFIX: &str = "qsv_fetchp_";
@@ -262,31 +265,6 @@ enum ReportKind {
     None,
 }
 
-#[derive(Debug)]
-struct RedisConfig {
-    conn_str:      String,
-    max_pool_size: u32,
-    ttl_secs:      u64,
-    ttl_refresh:   bool,
-}
-impl RedisConfig {
-    fn new() -> RedisConfig {
-        Self {
-            conn_str:      std::env::var("QSV_FP_REDIS_CONNSTR")
-                .unwrap_or_else(|_| DEFAULT_FP_REDIS_CONN_STR.to_string()),
-            max_pool_size: std::env::var("QSV_REDIS_MAX_POOL_SIZE")
-                .unwrap_or_else(|_| DEFAULT_FP_REDIS_POOL_SIZE.to_string())
-                .parse()
-                .unwrap_or(DEFAULT_FP_REDIS_POOL_SIZE),
-            ttl_secs:      std::env::var("QSV_REDIS_TTL_SECS")
-                .unwrap_or_else(|_| DEFAULT_FP_REDIS_TTL_SECS.to_string())
-                .parse()
-                .unwrap_or(DEFAULT_FP_REDIS_TTL_SECS),
-            ttl_refresh:   util::get_envvar_flag("QSV_REDIS_TTL_REFRESH"),
-        }
-    }
-}
-
 #[derive(Serialize, Deserialize, Clone)]
 struct FetchResponse {
     response:    String,
@@ -299,11 +277,17 @@ static REDISCONFIG: OnceLock<RedisConfig> = OnceLock::new();
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
+    // connect to Redis at localhost, using database 2 by default when --redis-cache is enabled
+    // fetchpost uses database 2 by default, as opposed to database 1 with fetch
+    DEFAULT_REDIS_CONN_STRING
+        .set("redis://127.0.0.1:6379/2".to_string())
+        .unwrap();
+
     TIMEOUT_FP_SECS
         .set(util::timeout_secs(args.flag_timeout)?)
         .unwrap();
 
-    if args.flag_redis {
+    if args.flag_redis_cache {
         // initialize Redis Config
         REDISCONFIG.set(RedisConfig::new()).unwrap();
 
@@ -636,7 +620,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if url.is_empty() {
             final_response.clone_from(&empty_response);
             was_cached = false;
-        } else if args.flag_redis && !args.flag_no_cache {
+        } else if args.flag_redis_cache && !args.flag_no_cache {
             intermediate_redis_value = get_redis_response(
                 &url,
                 &form_body_jsonmap,
@@ -764,7 +748,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     report_wtr.flush()?;
 
     if show_progress {
-        if args.flag_redis {
+        if args.flag_redis_cache {
             util::update_cache_info!(progress, redis_cache_hits, record_count);
         } else {
             util::update_cache_info!(progress, GET_CACHED_RESPONSE);
