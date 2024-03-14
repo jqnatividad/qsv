@@ -1052,6 +1052,146 @@ fn fetchpost_simple_test() {
 }
 
 #[test]
+// #[ignore = "Temporarily skip this as it seems httpbin.org is not currently available"]
+fn fetchpost_simple_diskcache() {
+    let wrk = Workdir::new("fetchpost_diskcache");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1", "number col", "bool_col"],
+            svec!["https://httpbin.org/post", "a", "42", "true"],
+            svec!["https://httpbin.org/post", "b", "3.14", "false"],
+            svec!["https://httpbin.org/post", "c", "666", "true"],
+            svec!["https://httpbin.org/post", "d", "33", "true"],
+            svec!["https://httpbin.org/post", "e", "0", "false"],
+        ],
+    );
+
+    // create a temporary directory for disk cache
+    use std::{env, fs};
+    let temp_dir = env::temp_dir().join("fp_dcache");
+    fs::create_dir_all(&temp_dir).unwrap();
+    let dc_dir = temp_dir.as_os_str().to_str().unwrap();
+
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("bool_col,col1,number col")
+        .arg("--jql")
+        .arg(r#""form""#)
+        .arg("--new-column")
+        .arg("response")
+        .arg("--disk-cache")
+        .args(&["--disk-cache-dir", dc_dir])
+        .args(&["--rate-limit", "2"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let mut got_parsed: Vec<Vec<String>> = Vec::new();
+    let mut record_parsed: Vec<String> = Vec::new();
+
+    for record in got {
+        record_parsed.clear();
+        record_parsed.push(record[1].to_string());
+        record_parsed.push(record[2].to_string());
+        record_parsed.push(record[3].to_string());
+        record_parsed.push(record[4].to_string());
+
+        got_parsed.push(record_parsed.clone());
+    }
+
+    let expected = vec![
+        svec!["col1", "number col", "bool_col", "response"],
+        svec![
+            "a",
+            "42",
+            "true",
+            "{\"bool_col\":\"true\",\"col1\":\"a\",\"number col\":\"42\"}"
+        ],
+        svec![
+            "b",
+            "3.14",
+            "false",
+            "{\"bool_col\":\"false\",\"col1\":\"b\",\"number col\":\"3.14\"}"
+        ],
+        svec![
+            "c",
+            "666",
+            "true",
+            "{\"bool_col\":\"true\",\"col1\":\"c\",\"number col\":\"666\"}"
+        ],
+        svec![
+            "d",
+            "33",
+            "true",
+            "{\"bool_col\":\"true\",\"col1\":\"d\",\"number col\":\"33\"}"
+        ],
+        svec![
+            "e",
+            "0",
+            "false",
+            "{\"bool_col\":\"false\",\"col1\":\"e\",\"number col\":\"0\"}"
+        ],
+    ];
+
+    assert_eq!(got_parsed, expected);
+
+    assert!(temp_dir.join("fetchpost_v1/conf").exists());
+
+    // let mut cmd2 = wrk.command("fetchpost");
+    // cmd.arg("URL")
+    //     .arg("bool_col,col1,number col")
+    //     .arg("--jql")
+    //     .arg(r#""form""#)
+    //     .arg("--new-column")
+    //     .arg("response")
+    //     .arg("--disk-cache")
+    //     .args(&["--disk-cache-dir", dc_dir])
+    //     .args(&["--rate-limit", "2"])
+
+    //     // .args(&["--report", "short"])
+    //     .arg("data.csv");
+
+    // let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+
+    // let mut got_parsed2: Vec<Vec<String>> = Vec::new();
+    // let mut record_parsed2: Vec<String> = Vec::new();
+
+    // for record in got {
+    //     record_parsed2.clear();
+    //     record_parsed2.push(record[1].to_string());
+    //     record_parsed2.push(record[2].to_string());
+    //     record_parsed2.push(record[3].to_string());
+    //     record_parsed2.push(record[4].to_string());
+
+    //     got_parsed2.push(record_parsed2.clone());
+    // }
+    // assert_eq!(got_parsed2, expected);
+
+    // // sleep for a bit to make sure the cache is written to disk
+    // std::thread::sleep(std::time::Duration::from_secs(2));
+
+    // let fetchpostreport = wrk.read_to_string("data.csv.fetchpost-report.tsv");
+    // wrk.create_from_string("no-elapsed.tsv", &fetchpostreport);
+
+    // // remove the elapsed_ms column from the report as this is not deterministic
+    // let mut cmd3 = wrk.command("select");
+    // cmd3.arg("!elapsed_ms").arg("no-elapsed.tsv");
+
+    // let fetchreport_noelapsed = wrk.stdout::<String>(&mut cmd3);
+    // // read the output file and compare it with the expected output
+    // assert_eq!(
+    //     fetchreport_noelapsed,
+    //     r#"url,status,cache_hit,retries,response
+    // https://api.zippopotam.us/us/99999,404,1,5,"{""errors"":[{""title"":""HTTP ERROR"",""detail"":""HTTP ERROR 404 - Not Found""}]}"
+    // https://api.zippopotam.us/us/90210,200,1,0,"{""post code"":""90210"",""country"":""United States"",""country abbreviation"":""US"",""places"":[{""place name"":""Beverly Hills"",""longitude"":""-118.4065"",""state"":""California"",""state abbreviation"":""CA"",""latitude"":""34.0901""}]}"
+    // https://api.zippopotam.us/us/94105,200,1,0,"{""post code"":""94105"",""country"":""United States"",""country abbreviation"":""US"",""places"":[{""place name"":""San Francisco"",""longitude"":""-122.3892"",""state"":""California"",""state abbreviation"":""CA"",""latitude"":""37.7864""}]}"
+    // https://api.zippopotam.us/us/92802,200,0,0,"{""post code"":""92802"",""country"":""United States"",""country abbreviation"":""US"",""places"":[{""place name"":""Anaheim"",""longitude"":""-117.9228"",""state"":""California"",""state abbreviation"":""CA"",""latitude"":""33.8085""}]}"
+    // thisisnotaurl,404,0,0,"{""errors"":[{""title"":""Invalid URL"",""detail"":""relative URL
+    // without a base""}]}""# );
+}
+
+#[test]
 #[ignore = "Temporarily skip this as we figure out a cross-platform way to test this"]
 fn fetchpost_compress_test() {
     let wrk = Workdir::new("fetch");
