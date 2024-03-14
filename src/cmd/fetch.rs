@@ -322,7 +322,7 @@ const FETCH_REPORT_PREFIX: &str = "qsv_fetch_";
 const FETCH_REPORT_SUFFIX: &str = ".fetch-report.tsv";
 
 // prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
-static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
+pub static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
 
 // for governor/ratelimiter
 const MINIMUM_WAIT_MS: u64 = 10;
@@ -415,7 +415,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .set(util::timeout_secs(args.flag_timeout)?)
         .unwrap();
 
-    // setup response caching
+    // setup diskcache dir response caching
     let diskcache_dir = if let Some(dir) = &args.flag_disk_cache_dir {
         if dir.starts_with('~') {
             // expand the tilde

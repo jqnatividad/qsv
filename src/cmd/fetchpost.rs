@@ -150,7 +150,11 @@ Fetchpost options:
                                [default: none]
 
                                CACHING OPTIONS:
-    --no-cache                 Do not cache responses.                               
+    --no-cache                 Do not cache responses.
+
+    --mem-cache-size <count>   Maximum number of entries in the in-memory LRU cache.
+                               [default: 2000000]
+
     --redis-cache              Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/2"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
@@ -179,7 +183,7 @@ use std::{fs, io::Write, num::NonZeroU32, sync::OnceLock, thread, time};
 
 use cached::{
     proc_macro::{cached, io_cached},
-    Cached, IOCached, RedisCache, Return,
+    Cached, IOCached, RedisCache, Return, SizedCache,
 };
 use flate2::{write::GzEncoder, Compression};
 use governor::{
@@ -207,7 +211,7 @@ use url::Url;
 use crate::{
     cmd::fetch::{
         get_ratelimit_header_value, parse_ratelimit_header_value, process_jql, CacheType,
-        DiskCacheConfig, FetchResponse, RedisConfig, ReportKind,
+        DiskCacheConfig, FetchResponse, RedisConfig, ReportKind, DEFAULT_ACCEPT_ENCODING,
     },
     config::{Config, Delimiter},
     select::SelectColumns,
@@ -216,43 +220,44 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
-    flag_new_column:  Option<String>,
-    flag_jql:         Option<String>,
-    flag_jqlfile:     Option<String>,
-    flag_pretty:      bool,
-    flag_rate_limit:  u32,
-    flag_timeout:     u16,
-    flag_http_header: Vec<String>,
-    flag_compress:    bool,
-    flag_max_retries: u8,
-    flag_max_errors:  u64,
-    flag_store_error: bool,
-    flag_no_cache:    bool,
-    flag_cache_error: bool,
-    flag_cookies:     bool,
-    flag_user_agent:  Option<String>,
-    flag_report:      String,
-    flag_redis_cache: bool,
-    flag_flushdb:     bool,
-    flag_output:      Option<String>,
-    flag_no_headers:  bool,
-    flag_delimiter:   Option<Delimiter>,
-    flag_progressbar: bool,
-    arg_url_column:   SelectColumns,
-    arg_column_list:  SelectColumns,
-    arg_input:        Option<String>,
+    flag_new_column:     Option<String>,
+    flag_jql:            Option<String>,
+    flag_jqlfile:        Option<String>,
+    flag_pretty:         bool,
+    flag_rate_limit:     u32,
+    flag_timeout:        u16,
+    flag_http_header:    Vec<String>,
+    flag_compress:       bool,
+    flag_max_retries:    u8,
+    flag_max_errors:     u64,
+    flag_store_error:    bool,
+    flag_no_cache:       bool,
+    flag_mem_cache_size: usize,
+    flag_cache_error:    bool,
+    flag_cookies:        bool,
+    flag_user_agent:     Option<String>,
+    flag_report:         String,
+    flag_redis_cache:    bool,
+    flag_flushdb:        bool,
+    flag_output:         Option<String>,
+    flag_no_headers:     bool,
+    flag_delimiter:      Option<Delimiter>,
+    flag_progressbar:    bool,
+    arg_url_column:      SelectColumns,
+    arg_column_list:     SelectColumns,
+    arg_input:           Option<String>,
 }
 
-// connect to Redis at localhost, using database 2 by default when --redis is enabled
+// set memcache size - the default is 2 million entries
+// and is set through the docopt usage text
+static MEM_CACHE_SIZE: OnceLock<usize> = OnceLock::new();
+
 static DEFAULT_REDIS_CONN_STRING: OnceLock<String> = OnceLock::new();
 
 static TIMEOUT_FP_SECS: OnceLock<u64> = OnceLock::new();
 
 const FETCHPOST_REPORT_PREFIX: &str = "qsv_fetchp_";
 const FETCHPOST_REPORT_SUFFIX: &str = ".fetchpost-report.tsv";
-
-// prioritize decompression schemes. Brotli first, then gzip, then deflate, and * last
-static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
 
 // for governor/ratelimiter
 const MINIMUM_WAIT_MS: u64 = 10;
@@ -268,6 +273,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     DEFAULT_REDIS_CONN_STRING
         .set("redis://127.0.0.1:6379/2".to_string())
         .unwrap();
+
+    // set memcache size
+    MEM_CACHE_SIZE.set(args.flag_mem_cache_size).unwrap();
 
     TIMEOUT_FP_SECS
         .set(util::timeout_secs(args.flag_timeout)?)
@@ -790,7 +798,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 // we only need url in the cache key
 // as this is an in-memory cache that is only used for one qsv session
 #[cached(
-    size = 2_000_000,
+    type = "SizedCache<String, Return<FetchResponse>>",
+    create = r##"{
+        let cache_size = MEM_CACHE_SIZE.get().unwrap();
+        let memcache = SizedCache::with_size(*cache_size);
+        log::info!("In Memory cache created - size: {cache_size}");
+        memcache
+    }"##,
     key = "String",
     convert = r#"{ format!("{:?}", form_body_jsonmap) }"#,
     with_cached_flag = true
