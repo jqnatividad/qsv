@@ -36,7 +36,7 @@ jobs:
             addl-build-args: --features=apply,luau,fetch,foreach,self_update,polars,geocode
             default-features:
             addl-qsvlite-features:
-            addl-qsvdp-features: luau
+            addl-qsvdp-features: luau,polars
             name-suffix: glibc-2.31
           - os: ubuntu-20.04
             os-name: linux
@@ -46,7 +46,7 @@ jobs:
             addl-build-args: --features=apply,fetch,foreach,self_update,polars,geocode
             default-features:
             addl-qsvlite-features:
-            addl-qsvdp-features:
+            addl-qsvdp-features: polars
             name-suffix: musl-1.2.3
 
     steps:
