@@ -21,7 +21,7 @@ set the --mem-cache-size option.
 
 Disk Cache:
 For persistent, inter-session caching, a DiskCache can be enabled with the --disk-cache flag.
-By default, it will store the cache in the directory ~/.qsv/cache, with a cache expiry
+By default, it will store the cache in the directory ~/.qsv/cache/fetch, with a cache expiry
 Time-to-Live (TTL) of 2,419,200 seconds (28 days), and cache hits NOT refreshing the TTL
 of cached values.
 
@@ -204,7 +204,7 @@ Fetch options:
                                does not exist, it will be created. If the directory exists, it will be used as is,
                                and will not be flushed. This option allows you to maintain several disk caches
                                for different fetch jobs (e.g. one for geocoding, another for weather, etc.)
-                               [default: ~/.qsv/cache]
+                               [default: ~/.qsv/cache/fetch]
 
     --redis-cache              Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
@@ -305,8 +305,11 @@ struct Args {
 // and is set through the docopt usage text
 static MEM_CACHE_SIZE: OnceLock<usize> = OnceLock::new();
 
-// connect to Redis at localhost, using database 1 by default when --redis is enabled
-static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/1";
+static QSV_REDIS_CONNSTR_ENV: &str = "QSV_REDIS_CONNSTR";
+static QSV_REDIS_MAX_POOL_SIZE_ENV: &str = "QSV_REDIS_MAX_POOL_SIZE";
+static QSV_REDIS_TTL_SECS_ENV: &str = "QSV_REDIS_TTL_SECS";
+static QSV_REDIS_TTL_REFRESH_ENV: &str = "QSV_REDIS_TTL_REFRESH";
+static DEFAULT_REDIS_CONN_STRING: OnceLock<String> = OnceLock::new();
 static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
 
@@ -319,7 +322,7 @@ const FETCH_REPORT_PREFIX: &str = "qsv_fetch_";
 const FETCH_REPORT_SUFFIX: &str = ".fetch-report.tsv";
 
 // prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
-static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
+pub static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
 
 // for governor/ratelimiter
 const MINIMUM_WAIT_MS: u64 = 10;
@@ -327,44 +330,44 @@ const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
 
 // for --report option
 #[derive(PartialEq)]
-enum ReportKind {
+pub enum ReportKind {
     Detailed,
     Short,
     None,
 }
 
 #[derive(Debug)]
-struct RedisConfig {
-    conn_str:      String,
-    max_pool_size: u32,
-    ttl_secs:      u64,
-    ttl_refresh:   bool,
+pub struct RedisConfig {
+    pub conn_str:      String,
+    pub max_pool_size: u32,
+    pub ttl_secs:      u64,
+    pub ttl_refresh:   bool,
 }
 impl RedisConfig {
-    fn new() -> RedisConfig {
+    pub fn new() -> RedisConfig {
         Self {
-            conn_str:      std::env::var("QSV_REDIS_CONNSTR")
-                .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STR.to_string()),
-            max_pool_size: std::env::var("QSV_REDIS_MAX_POOL_SIZE")
+            conn_str:      std::env::var(QSV_REDIS_CONNSTR_ENV)
+                .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STRING.get().unwrap().to_string()),
+            max_pool_size: std::env::var(QSV_REDIS_MAX_POOL_SIZE_ENV)
                 .unwrap_or_else(|_| DEFAULT_REDIS_POOL_SIZE.to_string())
                 .parse()
                 .unwrap_or(DEFAULT_REDIS_POOL_SIZE),
-            ttl_secs:      std::env::var("QSV_REDIS_TTL_SECS")
+            ttl_secs:      std::env::var(QSV_REDIS_TTL_SECS_ENV)
                 .unwrap_or_else(|_| DEFAULT_REDIS_TTL_SECS.to_string())
                 .parse()
                 .unwrap_or(DEFAULT_REDIS_TTL_SECS),
-            ttl_refresh:   util::get_envvar_flag("QSV_REDIS_TTL_REFRESH"),
+            ttl_refresh:   util::get_envvar_flag(QSV_REDIS_TTL_REFRESH_ENV),
         }
     }
 }
 
 #[derive(Debug)]
-struct DiskCacheConfig {
-    ttl_secs:    u64,
-    ttl_refresh: bool,
+pub struct DiskCacheConfig {
+    pub ttl_secs:    u64,
+    pub ttl_refresh: bool,
 }
 impl DiskCacheConfig {
-    fn new() -> DiskCacheConfig {
+    pub fn new() -> DiskCacheConfig {
         Self {
             ttl_secs:    std::env::var("QSV_DISKCACHE_TTL_SECS")
                 .unwrap_or_else(|_| DEFAULT_DISKCACHE_TTL_SECS.to_string())
@@ -376,7 +379,7 @@ impl DiskCacheConfig {
 }
 
 #[derive(Debug, Default, PartialEq)]
-enum CacheType {
+pub enum CacheType {
     #[default]
     None,
     InMemory,
@@ -385,10 +388,10 @@ enum CacheType {
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
-struct FetchResponse {
-    response:    String,
-    status_code: u16,
-    retries:     u8,
+pub struct FetchResponse {
+    pub response:    String,
+    pub status_code: u16,
+    pub retries:     u8,
 }
 
 static DISKCACHE_DIR: OnceLock<String> = OnceLock::new();
@@ -398,6 +401,12 @@ static DISKCACHECONFIG: OnceLock<DiskCacheConfig> = OnceLock::new();
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
+    // connect to Redis at localhost, using database 1 by default when --redis-cache is enabled
+    // fetch uses database 1 by default, as opposed to the database 2 with fetchpost
+    DEFAULT_REDIS_CONN_STRING
+        .set("redis://127.0.0.1:6379/1".to_string())
+        .unwrap();
+
     // set memcache size
     MEM_CACHE_SIZE.set(args.flag_mem_cache_size).unwrap();
 
@@ -406,7 +415,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .set(util::timeout_secs(args.flag_timeout)?)
         .unwrap();
 
-    // setup response caching
+    // setup diskcache dir response caching
     let diskcache_dir = if let Some(dir) = &args.flag_disk_cache_dir {
         if dir.starts_with('~') {
             // expand the tilde
