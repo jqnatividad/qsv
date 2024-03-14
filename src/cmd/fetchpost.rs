@@ -844,13 +844,19 @@ fn get_cached_response(
     convert = r#"{ format!("{}{:?}{:?}{}{}{}{}", url, form_body_jsonmap, flag_jql, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
     create = r##" {
         let redis_config = REDISCONFIG.get().unwrap();
-        RedisCache::new("fp", redis_config.ttl_secs)
+        let rediscache = RedisCache::new("fp", redis_config.ttl_secs)
             .set_namespace("q")
             .set_refresh(redis_config.ttl_refresh)
             .set_connection_string(&redis_config.conn_str)
             .set_connection_pool_max_size(redis_config.max_pool_size)
             .build()
-            .expect("error building redis cache")
+            .expect("error building redis cache");
+        log::info!("Redis cache created - conn_str: {conn_str} - refresh: {ttl_refresh} - ttl: {ttl_secs} - pool_size: {pool_size}",
+            conn_str = redis_config.conn_str,
+            ttl_refresh = redis_config.ttl_refresh,
+            ttl_secs = redis_config.ttl_secs,
+            pool_size = redis_config.max_pool_size);
+        rediscache
     } "##,
     map_error = r##"|e| CliError::Other(format!("Redis Error: {:?}", e))"##,
     with_cached_flag = true
