@@ -27,11 +27,13 @@ used to generate Excel-friendly CSVs on Windows. |
 | `QSV_LOG_DIR` | when logging is enabled, the directory where the log files will be stored. If the specified directory does not exist, qsv will attempt to create it. If not set, the log files are created in the directory where qsv was started. See [Logging](docs/Logging.md#logging) for more info. |
 | `QSV_LOG_UNBUFFERED` | if set, log messages are written directly to disk, without buffering. Otherwise, log messages are buffered before being written to the log file (8k buffer, flushing every second). See [flexi_logger](https://docs.rs/flexi_logger/latest/flexi_logger/enum.WriteMode.html) for details. |
 | `QSV_PROGRESSBAR` | if set, enable the --progressbar option on the `apply`, `fetch`, `fetchpost`, `foreach`, `luau`, `py`, `replace`, `search`, `searchset`, `sortcheck` & `validate` commands.  |
+| `QSV_DISKCACHE_TTL_SECONDS` | set time-to-live of diskcache cached values (default (seconds): 2419200 (28 days)). |
+| `QSV_DISKCACHE_TTL_REFRESH`| if set, enables cache hits to refresh TTL of diskcache cached values. |
 | `QSV_REDIS_CONNSTR` | the `fetch` command can use [Redis](https://redis.io/) to cache responses. Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/1`). For more info on valid Redis connection string formats, click [here](https://docs.rs/redis/latest/redis/#connection-parameters). |
 | `QSV_FP_REDIS_CONNSTR` | the `fetchpost` command can also use Redis to cache responses (default: `redis:127.0.0.1:6379/2`). Note that `fetchpost` connects to database 2, as opposed to `fetch` which connects to database 1. |
 | `QSV_REDIS_MAX_POOL_SIZE` | the maximum Redis connection pool size. (default: 20). |
 | `QSV_REDIS_TTL_SECONDS` | set time-to-live of Redis cached values (default (seconds): 2419200 (28 days)). |
-| `QSV_REDIS_TTL_REFRESH`| if set, enables cache hits to refresh TTL of cached values. |
+| `QSV_REDIS_TTL_REFRESH`| if set, enables cache hits to refresh TTL of Redis cached values. |
 | `QSV_TIMEOUT`| for commands with a --timeout option (`fetch`, `fetchpost`, `luau`, `sniff` and `validate`), the number of seconds before a web request times out (default: 30). |
 | `QSV_USER_AGENT`| the user-agent to use for web requests. When specifying a custom user agent. It supports the following variables - $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME and $QSV_KIND. Try to conform to the [IETF RFC 72321 standard](https://tools.ietf.org/html/rfc7231#section-5.5.3). See [here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) for examples.<br>(default: $QSV_BIN_NAME/$QSV_VERSION ($QSV_TARGET; $QSV_KIND; https://github.com/jqnatividad/qsv) - e.g.<br>`qsv/0.105.0 (x86_64-unknown-linux; prebuilt; https://github.com/jqnatividad/qsv)`).|
 
