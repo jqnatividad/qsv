@@ -139,6 +139,12 @@ QSV_LOG_UNBUFFERED = False
 # `validate` commands.
 QSV_PROGRESSBAR = False
 
+# set time-to-live of diskcache cached values (default (seconds): 2419200 (28 days)).
+QSV_DISKCACHE_TTL_SECONDS = 2419200
+
+# if true, enables cache hits to refresh TTL of diskcache cached values.
+QSV_DISKCACHE_TTL_REFRESH = False
+
 # the `fetch` command can use Redis to cache responses.
 # Set to connect to the desired Redis instance. (default: `redis:127.0.0.1:6379/1`).
 # For more info on valid Redis connection string formats, 
@@ -156,7 +162,7 @@ QSV_REDIS_MAX_POOL_SIZE = 20
 # set time-to-live of Redis cached values (default (seconds): 2419200 (28 days)).
 QSV_REDIS_TTL_SECONDS = 2419200
 
-# if true, enables cache hits to refresh TTL of cached values.
+# if true, enables cache hits to refresh TTL of Redis cached values.
 QSV_REDIS_TTL_REFRESH = False
 
 # for commands with a --timeout option (`fetch`, `fetchpost`, `luau`, `sniff` &
