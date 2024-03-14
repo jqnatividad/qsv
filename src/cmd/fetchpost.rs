@@ -5,40 +5,69 @@ As opposed to fetch, which uses HTTP Get.
 
 Fetchpost is integrated with `jql` to directly parse out values from an API JSON response.
 
-<url-column> needs to be a fully qualified URL path. It can be specified as a column name
-from which the URL value will be retrieved for each record, or as the URL literal itself.
+CACHE OPTIONS:
+Fetchpost caches responses to minimize traffic and maximize performance. It has four
+mutually-exclusive caching options:
 
-To use a proxy, please set env vars HTTP_PROXY, HTTPS_PROXY or ALL_PROXY
-(e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
+1. In memory cache (the default)
+2. Disk cache
+3. Redis cache
+4. No cache
 
-Fetchpost caches responses to minimize traffic and maximize performance. By default, it uses
-a non-persistent memoized cache for each fetchpost session.
+In memory Cache:
+In memory cache is the default and is used if no caching option is set.
+It uses a non-persistent, in-memory, 2 million entry Least Recently Used (LRU)
+cache for each fetch session. To change the maximum number of entries in the cache,
+set the --mem-cache-size option.
 
-For persistent, inter-session caching, Redis is supported with the --redis flag. 
+Disk Cache:
+For persistent, inter-session caching, a DiskCache can be enabled with the --disk-cache flag.
+By default, it will store the cache in the directory ~/.qsv/cache/fetchpost, with a cache expiry
+Time-to-Live (TTL) of 2,419,200 seconds (28 days), and cache hits NOT refreshing the TTL
+of cached values.
+
+Set the environment variables QSV_DISKCACHE_TTL_SECS and QSV_DISKCACHE_TTL_REFRESH to change
+default DiskCache settings.
+
+Redis Cache:
+Another persistent, inter-session cache option is a Redis cache enabled with the --redis flag. 
 By default, it will connect to a local Redis instance at redis://127.0.0.1:6379/2,
 with a cache expiry Time-to-Live (TTL) of 2,419,200 seconds (28 days),
 and cache hits NOT refreshing the TTL of cached values.
 
+Set the environment variables QSV_FP_REDIS_CONNSTR, QSV_REDIS_TTL_SECONDS and 
+QSV_REDIS_TTL_REFRESH to change default Redis settings.
+
 Note that the default values are the same as the fetch command, except fetchpost creates the
 cache at database 2, as opposed to database 1 with fetch.
 
-If you don't want responses to be cached, use the --no-cache flag.
+If you don't want responses to be cached at all, use the --no-cache flag.
 
-Set the environment variables QSV_FP_REDIS_CONNSTR, QSV_FP_REDIS_TTL_SECONDS and 
-QSV_FP_REDIS_TTL_REFRESH respectively to change default Redis settings.
+NETWORK OPTIONS:
+Fetch recognizes RateLimit and Retry-After headers and dynamically throttles requests
+to be as fast as allowed. The --rate-limit option sets the maximum number of queries per second
+(QPS) to be made. The default is 0, which means to go as fast as possible,
+automatically throttling as required.
 
-Supports brotli, gzip and deflate automatic decompression for improved throughput and
-performance, preferring brotli over gzip over deflate.
+To use a proxy, please set env vars HTTP_PROXY, HTTPS_PROXY or ALL_PROXY
+(e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
+
+qsv fetchpost supports brotli, gzip and deflate automatic decompression for improved throughput
+and performance, preferring brotli over gzip over deflate.
 
 Gzip compression of requests bodies is supported with the --compress flag. Note that
 public APIs typically do not support gzip compression of request bodies because of the
 "zip bomb" vulnerability. This option should only be used with private APIs where this
 is not a concern.
 
-Automatically upgrades its connection to HTTP/2 with adaptive flow control as well
-if the server supports it.
+It automatically upgrades its connection to the much faster and more efficient HTTP/2 protocol
+with adaptive flow control if the server supports it.
 See https://www.cloudflare.com/learning/performance/http2-vs-http1.1/ and
 https://medium.com/coderscorner/http-2-flow-control-77e54f7fd518 for more info.
+
+URL OPTIONS:
+<url-column> needs to be a fully qualified URL path. It can be specified as a column name
+from which the URL value will be retrieved for each record, or as the URL literal itself.
 
 EXAMPLES:
 
@@ -155,16 +184,30 @@ Fetchpost options:
     --mem-cache-size <count>   Maximum number of entries in the in-memory LRU cache.
                                [default: 2000000]
 
+    --disk-cache               Use a persistent disk cache for responses. The cache is stored in the directory
+                               specified by --disk-cache-dir. If the directory does not exist, it will be
+                               created. If the directory exists, it will be used as is.
+                               It has a default Time To Live (TTL)/lifespan of 28 days and cache hits do not
+                               refresh the TTL of cached values.
+                               Adjust the QSV_DISKCACHE_TTL_SECS & QSV_DISKCACHE_TTL_REFRESH env vars
+                               to change DiskCache settings.
+    --disk-cache-dir <dir>     The directory <dir> to store the disk cache. Note that if the directory
+                               does not exist, it will be created. If the directory exists, it will be used as is,
+                               and will not be flushed. This option allows you to maintain several disk caches
+                               for different fetchpost jobs (e.g. one for geocoding, another for weather, etc.)
+                               [default: ~/.qsv/cache/fetchpost]
+
     --redis-cache              Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/2"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
                                Adjust the QSV_FP_REDIS_CONNSTR, QSV_REDIS_MAX_POOL_SIZE, QSV_REDIS_TTL_SECONDS & 
                                QSV_REDIS_TTL_REFRESH respectively to change Redis settings.
+
     --cache-error              Cache error responses even if a request fails. If an identical URL is requested,
                                the cached error is returned. Otherwise, the fetch is attempted again
                                for --max-retries.
-    --flushdb                  Flush all the keys in the current Redis database on startup.
-                               This option is ignored if the --redis option is NOT enabled.
+    --flush-cache              Flush all the keys in the current cache on startup. This only applies to
+                               Disk and Redis caches.
 
 Common options:
     -h, --help                 Display this message
@@ -183,6 +226,7 @@ use std::{fs, io::Write, num::NonZeroU32, sync::OnceLock, thread, time};
 
 use cached::{
     proc_macro::{cached, io_cached},
+    stores::DiskCacheBuilder,
     Cached, IOCached, RedisCache, Return, SizedCache,
 };
 use flate2::{write::GzEncoder, Compression};
@@ -203,9 +247,10 @@ use reqwest::{
     blocking::Client,
     header::{HeaderMap, HeaderName, HeaderValue},
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Value};
 use simdutf8::basic::from_utf8;
+use simple_expand_tilde::expand_tilde;
 use url::Url;
 
 use crate::{
@@ -233,12 +278,14 @@ struct Args {
     flag_store_error:    bool,
     flag_no_cache:       bool,
     flag_mem_cache_size: usize,
+    flag_disk_cache:     bool,
+    flag_disk_cache_dir: Option<String>,
     flag_cache_error:    bool,
     flag_cookies:        bool,
     flag_user_agent:     Option<String>,
     flag_report:         String,
     flag_redis_cache:    bool,
-    flag_flushdb:        bool,
+    flag_flush_cache:    bool,
     flag_output:         Option<String>,
     flag_no_headers:     bool,
     flag_delimiter:      Option<Delimiter>,
@@ -263,16 +310,19 @@ const FETCHPOST_REPORT_SUFFIX: &str = ".fetchpost-report.tsv";
 const MINIMUM_WAIT_MS: u64 = 10;
 const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
 
+static DISKCACHE_DIR: OnceLock<String> = OnceLock::new();
 static REDISCONFIG: OnceLock<RedisConfig> = OnceLock::new();
+static DISKCACHECONFIG: OnceLock<DiskCacheConfig> = OnceLock::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
     // connect to Redis at localhost, using database 2 by default when --redis-cache is enabled
     // fetchpost uses database 2 by default, as opposed to database 1 with fetch
-    DEFAULT_REDIS_CONN_STRING
-        .set("redis://127.0.0.1:6379/2".to_string())
-        .unwrap();
+    let fp_redis_conn_str = std::env::var("QSV_FP_REDIS_CONNSTR")
+        .unwrap_or_else(|_| "redis://127.0.0.1:6379/2".to_string());
+
+    DEFAULT_REDIS_CONN_STRING.set(fp_redis_conn_str).unwrap();
 
     // set memcache size
     MEM_CACHE_SIZE.set(args.flag_mem_cache_size).unwrap();
@@ -281,7 +331,42 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .set(util::timeout_secs(args.flag_timeout)?)
         .unwrap();
 
-    if args.flag_redis_cache {
+    // setup diskcache dir response caching
+    let diskcache_dir = if let Some(dir) = &args.flag_disk_cache_dir {
+        if dir.starts_with('~') {
+            // expand the tilde
+            let expanded_dir = expand_tilde(dir).unwrap();
+            expanded_dir.to_string_lossy().to_string()
+        } else {
+            dir.to_string()
+        }
+    } else {
+        String::new()
+    };
+
+    let cache_type = if args.flag_no_cache {
+        CacheType::None
+    } else if args.flag_disk_cache {
+        // if --flush-cache is set, flush the cache directory first if it exists
+        if args.flag_flush_cache
+            && !diskcache_dir.is_empty()
+            && fs::metadata(&diskcache_dir).is_ok()
+        {
+            if let Err(e) = fs::remove_dir_all(&diskcache_dir) {
+                return fail_clierror!(r#"Cannot remove cache directory "{diskcache_dir}": {e:?}"#);
+            }
+        }
+        // check if the cache directory exists, if it doesn't, create it
+        if !diskcache_dir.is_empty() {
+            if let Err(e) = fs::create_dir_all(&diskcache_dir) {
+                return fail_clierror!(r#"Cannot create cache directory "{diskcache_dir}": {e:?}"#);
+            }
+        }
+        DISKCACHE_DIR.set(diskcache_dir).unwrap();
+        // initialize DiskCache Config
+        DISKCACHECONFIG.set(DiskCacheConfig::new()).unwrap();
+        CacheType::Disk
+    } else if args.flag_redis_cache {
         // initialize Redis Config
         REDISCONFIG.set(RedisConfig::new()).unwrap();
 
@@ -304,11 +389,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             Ok(x) => redis_conn = x,
         }
 
-        if args.flag_flushdb {
+        if args.flag_flush_cache {
             redis::cmd("FLUSHDB").execute(&mut redis_conn);
             info!("flushed Redis database.");
         }
-    }
+        CacheType::Redis
+    } else {
+        CacheType::InMemory
+    };
+    log::info!("Cache Type: {cache_type:?}");
 
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -551,6 +640,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut report_record = csv::ByteRecord::new();
     let mut url = String::with_capacity(100);
     let mut redis_cache_hits: u64 = 0;
+    let mut disk_cache_hits: u64 = 0;
     let mut intermediate_redis_value: Return<String> = Return {
         was_cached: false,
         value:      String::new(),
@@ -610,85 +700,112 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             url = String::new();
         }
-
         if url.is_empty() {
             final_response.clone_from(&empty_response);
             was_cached = false;
-        } else if args.flag_redis_cache && !args.flag_no_cache {
-            intermediate_redis_value = get_redis_response(
-                &url,
-                &form_body_jsonmap,
-                &client,
-                &limiter,
-                &jql_selector,
-                args.flag_store_error,
-                args.flag_pretty,
-                args.flag_compress,
-                include_existing_columns,
-                args.flag_max_retries,
-            )?;
-            was_cached = intermediate_redis_value.was_cached;
-            if was_cached {
-                redis_cache_hits += 1;
-            }
-            final_response = match serde_json::from_str(&intermediate_redis_value) {
-                Ok(r) => r,
-                Err(e) => {
-                    return fail_clierror!(
-                        "Cannot deserialize Redis cache value. Try flushing the Redis cache with \
-                         --flushdb: {e}"
-                    )
-                },
-            };
-            if !args.flag_cache_error && final_response.status_code != 200 {
-                let key = format!(
-                    "{}{:?}{:?}{}{}{}{}",
-                    url,
-                    form_body_jsonmap,
-                    args.flag_jql,
-                    args.flag_store_error,
-                    args.flag_pretty,
-                    args.flag_compress,
-                    include_existing_columns
-                );
-
-                if GET_REDIS_RESPONSE.cache_remove(&key).is_err() && log_enabled!(Warn) {
-                    // failure to remove cache keys is non-fatal. Continue, but log it.
-                    wwarn!(r#"Cannot remove Redis key "{key}""#);
-                };
-            }
-        } else if args.flag_no_cache {
-            final_response = get_response(
-                &url,
-                &form_body_jsonmap,
-                &client,
-                &limiter,
-                &jql_selector,
-                args.flag_store_error,
-                args.flag_pretty,
-                args.flag_compress,
-                include_existing_columns,
-                args.flag_max_retries,
-            );
-            was_cached = false;
         } else {
-            intermediate_value = get_cached_response(
-                &url,
-                &form_body_jsonmap,
-                &client,
-                &limiter,
-                &jql_selector,
-                args.flag_store_error,
-                args.flag_pretty,
-                args.flag_compress,
-                include_existing_columns,
-                args.flag_max_retries,
-            );
-            final_response = intermediate_value.value;
-            was_cached = intermediate_value.was_cached;
-            if !args.flag_cache_error && final_response.status_code != 200 {
-                let mut cache = GET_CACHED_RESPONSE.lock().unwrap();
-                cache.cache_remove(&url);
+            match cache_type {
+                CacheType::InMemory => {
+                    intermediate_value = get_cached_response(
+                        &url,
+                        &form_body_jsonmap,
+                        &client,
+                        &limiter,
+                        &jql_selector,
+                        args.flag_store_error,
+                        args.flag_pretty,
+                        args.flag_compress,
+                        include_existing_columns,
+                        args.flag_max_retries,
+                    );
+                    final_response = intermediate_value.value;
+                    was_cached = intermediate_value.was_cached;
+                    if !args.flag_cache_error && final_response.status_code != 200 {
+                        let mut cache = GET_CACHED_RESPONSE.lock().unwrap();
+                        cache.cache_remove(&url);
+                    }
+                },
+                CacheType::Disk => {
+                    intermediate_value = get_diskcache_response(
+                        &url,
+                        &form_body_jsonmap,
+                        &client,
+                        &limiter,
+                        &jql_selector,
+                        args.flag_store_error,
+                        args.flag_pretty,
+                        args.flag_compress,
+                        include_existing_columns,
+                        args.flag_max_retries,
+                    )?;
+                    final_response = intermediate_value.value;
+                    was_cached = intermediate_value.was_cached;
+                    if was_cached {
+                        disk_cache_hits += 1;
+                        // log::debug!("Disk cache hit for {url} hit: {disk_cache_hits}");
+                    }
+                    if !args.flag_cache_error && final_response.status_code != 200 {
+                        let _ = GET_DISKCACHE_RESPONSE.cache_remove(&url);
+                        // log::debug!("Removed Disk cache for {url}");
+                    }
+                },
+                CacheType::Redis => {
+                    intermediate_redis_value = get_redis_response(
+                        &url,
+                        &form_body_jsonmap,
+                        &client,
+                        &limiter,
+                        &jql_selector,
+                        args.flag_store_error,
+                        args.flag_pretty,
+                        args.flag_compress,
+                        include_existing_columns,
+                        args.flag_max_retries,
+                    )?;
+                    was_cached = intermediate_redis_value.was_cached;
+                    if was_cached {
+                        redis_cache_hits += 1;
+                    }
+                    final_response = match serde_json::from_str(&intermediate_redis_value) {
+                        Ok(r) => r,
+                        Err(e) => {
+                            return fail_clierror!(
+                                "Cannot deserialize Redis cache value. Try flushing the Redis \
+                                 cache with --flushdb: {e}"
+                            )
+                        },
+                    };
+                    if !args.flag_cache_error && final_response.status_code != 200 {
+                        let key = format!(
+                            "{}{:?}{}{}{}",
+                            url,
+                            jql_selector,
+                            args.flag_store_error,
+                            args.flag_pretty,
+                            include_existing_columns
+                        );
+
+                        if GET_REDIS_RESPONSE.cache_remove(&key).is_err() && log_enabled!(Warn) {
+                            // failure to remove cache keys is non-fatal. Continue, but log it.
+                            wwarn!(r#"Cannot remove Redis key "{key}""#);
+                        };
+                    }
+                },
+                CacheType::None => {
+                    final_response = get_response(
+                        &url,
+                        &form_body_jsonmap,
+                        &client,
+                        &limiter,
+                        &jql_selector,
+                        args.flag_store_error,
+                        args.flag_pretty,
+                        args.flag_compress,
+                        include_existing_columns,
+                        args.flag_max_retries,
+                    );
+                    was_cached = false;
+                },
             }
         };
 
@@ -742,10 +859,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     report_wtr.flush()?;
 
     if show_progress {
-        if args.flag_redis_cache {
-            util::update_cache_info!(progress, redis_cache_hits, record_count);
-        } else {
-            util::update_cache_info!(progress, GET_CACHED_RESPONSE);
+        match cache_type {
+            CacheType::InMemory => {
+                util::update_cache_info!(progress, GET_CACHED_RESPONSE);
+            },
+            CacheType::Disk => {
+                util::update_cache_info!(progress, disk_cache_hits, record_count);
+            },
+            CacheType::Redis => {
+                util::update_cache_info!(progress, redis_cache_hits, record_count);
+            },
+            CacheType::None => (),
         }
         util::finish_progress(&progress);
 
@@ -833,6 +957,59 @@ fn get_cached_response(
         include_existing_columns,
         flag_max_retries,
     ))
+}
+
+// this is a disk cache that can be used across qsv sessions
+// so we need to include the values of flag_jql, flag_store_error, flag_pretty and
+// include_existing_columns in the cache key
+#[io_cached(
+    disk = true,
+    type = "cached::DiskCache<String, FetchResponse>",
+    cache_prefix_block = r##"{ "dc_" }"##,
+    key = "String",
+    convert = r#"{ format!("{}{:?}{:?}{}{}{}{}", url, form_body_jsonmap, flag_jql, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
+    create = r##"{
+        let cache_dir = DISKCACHE_DIR.get().unwrap();
+        let diskcache_config = DISKCACHECONFIG.get().unwrap();
+        let diskcache = DiskCacheBuilder::new("fetchpost")
+            .set_disk_directory(cache_dir)
+            .set_lifespan(diskcache_config.ttl_secs)
+            .set_refresh(diskcache_config.ttl_refresh)
+            .build()
+            .expect("error building disk cache");
+        log::info!("Disk cache created - dir: {cache_dir} - ttl: {ttl_secs}",
+            ttl_secs = diskcache_config.ttl_secs);
+        diskcache
+    }"##,
+    map_error = r##"|e| CliError::Other(format!("Diskcache Error: {:?}", e))"##,
+    with_cached_flag = true
+)]
+fn get_diskcache_response(
+    url: &str,
+    form_body_jsonmap: &serde_json::Map<String, Value>,
+    client: &reqwest::blocking::Client,
+    limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
+    flag_jql: &Option<String>,
+    flag_store_error: bool,
+    flag_pretty: bool,
+    flag_compress: bool,
+    include_existing_columns: bool,
+    flag_max_retries: u8,
+) -> Result<cached::Return<FetchResponse>, CliError> {
+    Ok(Return::new({
+        get_response(
+            url,
+            form_body_jsonmap,
+            client,
+            limiter,
+            flag_jql,
+            flag_store_error,
+            flag_pretty,
+            flag_compress,
+            include_existing_columns,
+            flag_max_retries,
+        )
+    }))
 }
 
 // get_redis_response needs a longer key as its a persistent cache and the
