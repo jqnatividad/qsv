@@ -193,14 +193,13 @@ pub fn polars_count_input(
         None
     };
 
-    let df = polars::io::csv::CsvReader::from_path(filepath.clone())?
+    let df_result = polars::io::csv::CsvReader::from_path(filepath.clone())?
         .with_separator(conf.get_delimiter())
         .with_comment_prefix(comment_prefix)
         .has_header(!conf.no_headers)
         .truncate_ragged_lines(conf.flexible)
         .low_memory(low_memory)
-        .finish()?;
-    let count = df.height() as u64;
+        .finish();
 
     // remove the temporary file we created to read from stdin
     // we use the keep() method to prevent the file from being deleted
@@ -208,6 +207,15 @@ pub fn polars_count_input(
     if is_stdin {
         std::fs::remove_file(filepath)?;
     }
+
+    let count = match df_result {
+        Ok(df) => df.height() as u64,
+        Err(_) => {
+            // there was a Polars error, so we fall back to the regular CSV reader
+            let (count_regular, _) = count_input(conf, false)?;
+            count_regular
+        },
+    };
 
     Ok((count, 0))
 }
