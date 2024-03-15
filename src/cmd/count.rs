@@ -18,13 +18,14 @@ count options:
                            The count and width are separated by a semicolon.
 
                            WHEN THE POLARS FEATURE IS ENABLED:
-    --no-polars            Use the regular single-threaded, streaming CSV reader instead of
-                           the much faster multithreaded, mem-mapped Polars CSV reader.
-                           Use this when you encounter issues when counting with the
-                           Polars CSV reader. The regular reader is slower but can read any
-                           valid CSV files of any size.
+    --no-polars            Use the "regular", single-threaded, streaming CSV reader instead
+                           of the much faster multithreaded, mem-mapped Polars CSV reader.
+                           Use this when you encounter memory issues when counting with the
+                           Polars CSV reader. The streaming reader is slower but can read
+                           any valid CSV file of any size.
     --low-memory           Use the Polars CSV Reader's low-memory mode. This
-                           mode is slower but uses less memory.
+                           mode is slower but uses less memory. If counting still fails,
+                           use --no-polars instead to use the streaming CSV reader.
 
 
 Common options:
@@ -161,45 +162,52 @@ fn polars_count_input(
     use polars::prelude::*;
 
     log::info!("using polars");
-    let mut comment_char = String::new();
-    let temp_char;
 
-    let comment_prefix = if let Some(c) = conf.comment {
-        comment_char.push(c as char);
-        temp_char = comment_char.to_string();
-        Some(temp_char.as_str())
-    } else {
-        None
-    };
+    let is_stdin = conf.is_stdin();
 
-    let df = if conf.is_stdin() {
+    let filepath = if is_stdin {
         let mut temp_file = tempfile::Builder::new().suffix(".csv").tempfile()?;
         let stdin = std::io::stdin();
         let mut stdin_handle = stdin.lock();
         std::io::copy(&mut stdin_handle, &mut temp_file)?;
         drop(stdin_handle);
 
-        let path = temp_file
-            .into_temp_path()
-            .as_os_str()
-            .to_string_lossy()
-            .to_string();
+        let (_, tempfile_pb) = temp_file
+            .keep()
+            .or(Err("Cannot keep temporary file".to_string()))?;
 
-        CsvReader::from_path(path)?
-            .with_comment_prefix(comment_prefix)
-            .has_header(!conf.no_headers)
-            .truncate_ragged_lines(conf.flexible)
-            .low_memory(low_memory)
-            .finish()?
+        tempfile_pb
     } else {
-        let csv_path = conf.path.as_ref().unwrap().to_str().unwrap().to_string();
-        polars::io::csv::CsvReader::from_path(csv_path)?
-            .with_comment_prefix(comment_prefix)
-            .has_header(!conf.no_headers)
-            .truncate_ragged_lines(conf.flexible)
-            .low_memory(low_memory)
-            .finish()?
+        conf.path.as_ref().unwrap().clone()
     };
+
+    if !filepath.exists() {
+        return fail_clierror!("{} does not exists", filepath.display());
+    }
+
+    let mut comment_char = String::new();
+    let comment_prefix = if let Some(c) = conf.comment {
+        comment_char.push(c as char);
+        Some(comment_char.as_str())
+    } else {
+        None
+    };
+
+    let df = polars::io::csv::CsvReader::from_path(filepath.clone())?
+        .with_separator(conf.get_delimiter())
+        .with_comment_prefix(comment_prefix)
+        .has_header(!conf.no_headers)
+        .truncate_ragged_lines(conf.flexible)
+        .low_memory(low_memory)
+        .finish()?;
     let count = df.height() as u64;
+
+    // remove the temporary file we created to read from stdin
+    // we use the keep() method to prevent the file from being deleted
+    // when the tempfile went out of scope, so we need to manually delete it
+    if is_stdin {
+        std::fs::remove_file(filepath)?;
+    }
+
     Ok((count, 0))
 }
