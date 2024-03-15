@@ -155,7 +155,7 @@ fn count_input(
 }
 
 #[cfg(feature = "polars")]
-fn polars_count_input(
+pub fn polars_count_input(
     conf: &Config,
     low_memory: bool,
 ) -> Result<(u64, usize), crate::clitypes::CliError> {
