@@ -8,9 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.124.0] - 2024-03-15
 
+# [Datapusher+](https://github.com/dathere/datapusher-plushttps://github.com/dathere/datapusher-plus) "_[Speed of Insight](https://dathere.com/2024/03/the-speed-of-insight/)_" Release! 🚀🚀🚀
+
+This release is all about speed, speed, speed! We've made qsv even faster by leveraging Polars' multithreaded, mem-mapped CSV reader to get near-instant row counts of large CSV files, and near instant SQL queries and aggregations with Datapusher+ - automagically inferring metadata and giving you quick insights into your data in seconds!
+
+We're demoing our qsv-powered Datapusher+ at the [March 2024 installment of CKAN Montly Live](https://ckan.org/events/ckan-datapusher-plus-automagical-metadata) on March 20, 2024, 13:00-14:00 UTC. [Join us](https://ckan.us4.list-manage.com/subscribe?u=91e21b1d5004f15a8fb3d3276&id=0b261bc4ca)!
+
+Beyond pushing data reliably at speed into your CKAN Datastore ([it pushes real good! 😉](https://github.com/dathere/datapusher-plus/discussions/23)), DP+ does some extended analysis, processing and enrichment of the data so it can be readily Used.
+
+Both `fetch` and `fetchpost` commands now have a `--disk-cache` option and are fully synched - forming the foundation for high-speed data enrichment from Web Services - including datHere's forthcoming, fully-integrated Data Enrichment Service.
+
+## 🏇🏽 Hi-ho Quicksilver, away! 🏇🏽
+
+---
+
 ## Added
 * `count`: automatically use Polars multithreaded, mem-mapped CSV reader when `polars` feature is enabled to get near-instant row counts of large CSV files even without an index  https://github.com/jqnatividad/qsv/pull/1656
-* `qsvdp`: added polars support to Datapusher+-optimized binary variant https://github.com/jqnatividad/qsv/pull/1664
+* `qsvdp`: added polars support to Datapusher+-optimized binary variant, so we can do near instant SQL queries and aggregations during DP+ processing https://github.com/jqnatividad/qsv/pull/1664
 * `fetchpost`: added `--disk-cache` options and synced usage options with `fetch` https://github.com/jqnatividad/qsv/pull/1671
 * extended `.infile-list` to skip empty and commented lines, and to validate file paths
 https://github.com/jqnatividad/qsv/commit/20a45c80fa32ef8a8060bb32cc94b7934da23229 and 
@@ -18,7 +32,7 @@ https://github.com/jqnatividad/qsv/commit/26509303719ce29e900cb73b5000671a78db6b
 
 ## Changed
 * `sqlp`: automatically disable `read_csv()` fast path optimization when a custom delimiter is specified https://github.com/jqnatividad/qsv/pull/1648
-* refactored util::count_rows() helper https://github.com/jqnatividad/qsv/commit/1e09e17e440d3cdc11237d9d9e45cefb82da5a42
+* refactored util::count_rows() helper to also use polars if available https://github.com/jqnatividad/qsv/commit/1e09e17e440d3cdc11237d9d9e45cefb82da5a42 and https://github.com/jqnatividad/qsv/commit/8d321fe8ad4c288b72edc7e8d082fcd6ec304a32
 * publish: updated Windows MSI publish GH Action workflow to use Wix 3.14 from 3.11 https://github.com/jqnatividad/qsv/commit/75894ef4e894f521056a93b4f0a14d7469bac022
 * deps: bump polars from 0.38.1 to 0.38.2 https://github.com/jqnatividad/qsv/commit/5faf90ed830541a724768e808c7f07f0a418e2ab
 * deps: update Luau from 0.614 to 0.616 https://github.com/jqnatividad/qsv/commit/eb197fe81738b4ed15352f5f89d5d5d1b0fad604 and https://github.com/jqnatividad/qsv/commit/52331da939a3cd278c6a1f474179bef2207364a8
