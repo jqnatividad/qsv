@@ -49,15 +49,13 @@ https://github.com/jqnatividad/qsv/commit/26509303719ce29e900cb73b5000671a78db6b
 ## Fixed
 * `dedup`: fixed #1665 dedup not handling numeric values properly by adding a --numeric option  https://github.com/jqnatividad/qsv/pull/1666
 * `joinp`: reenable join validation tests now that Polars 0.38.2 join validation is working again https://github.com/jqnatividad/qsv/commit/5faf90ed830541a724768e808c7f07f0a418e2ab and https://github.com/jqnatividad/qsv/commit/fcfc75b855c615effb50f23c09a1d66ce70505e8
-* `count`: broken in unreleased 0.124.0. Polars-powered count require a "clean" CSV file
-as it infers the schema based on the first 1000 rows of a CSV. This will sometimes result in an invalid "error" (e.g. it infers a column is a number column, when its not).
-0.124.1 fixes this by adding a fallback to the "regular" CSV reader if a Polars error occurs https://github.com/jqnatividad/qsv/commit/a2c086900d1c1f1ba8ed2b2d1eaf8e547e3ef740
+* `count`: broken in unreleased 0.124.0. Polars-powered count require a "clean" CSV file as it infers the schema based on the first 1000 rows of a CSV. This will sometimes result in an invalid "error" (e.g. it infers a column is a number column, when its not). 0.124.1 fixes this by adding a fallback to the "regular" CSV reader if a Polars error occurs https://github.com/jqnatividad/qsv/commit/a2c086900d1c1f1ba8ed2b2d1eaf8e547e3ef740
 
 ## Removed
 * `gender_guesser` 0.2.0 has been released. Remove patch.crates-io entry
 https://github.com/jqnatividad/qsv/commit/97873a5c496bfd559d7a7804db4d28b94915d536
 
-**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.123.0...0.124.0
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.123.0...0.124.1
 
 ## [0.123.0] - 2024-03-05
 
