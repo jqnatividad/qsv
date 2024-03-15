@@ -26,8 +26,8 @@ By default, it will store the cache in the directory ~/.qsv/cache/fetchpost, wit
 Time-to-Live (TTL) of 2,419,200 seconds (28 days), and cache hits NOT refreshing the TTL
 of cached values.
 
-Set the environment variables QSV_DISKCACHE_TTL_SECS and QSV_DISKCACHE_TTL_REFRESH to change
-default DiskCache settings.
+Set the --disk-cache-dir option and the environment variables QSV_DISKCACHE_TTL_SECS and
+QSV_DISKCACHE_TTL_REFRESH to change default DiskCache settings.
 
 Redis Cache:
 Another persistent, inter-session cache option is a Redis cache enabled with the --redis flag. 
@@ -44,7 +44,7 @@ cache at database 2, as opposed to database 1 with fetch.
 If you don't want responses to be cached at all, use the --no-cache flag.
 
 NETWORK OPTIONS:
-Fetch recognizes RateLimit and Retry-After headers and dynamically throttles requests
+Fetchpost recognizes RateLimit and Retry-After headers and dynamically throttles requests
 to be as fast as allowed. The --rate-limit option sets the maximum number of queries per second
 (QPS) to be made. The default is 0, which means to go as fast as possible,
 automatically throttling as required.
@@ -355,6 +355,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if let Err(e) = fs::remove_dir_all(&diskcache_dir) {
                 return fail_clierror!(r#"Cannot remove cache directory "{diskcache_dir}": {e:?}"#);
             }
+            info!("flushed DiskCache directory: {diskcache_dir}");
         }
         // check if the cache directory exists, if it doesn't, create it
         if !diskcache_dir.is_empty() {
@@ -926,7 +927,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     create = r##"{
         let cache_size = MEM_CACHE_SIZE.get().unwrap();
         let memcache = SizedCache::with_size(*cache_size);
-        log::info!("In Memory cache created - size: {cache_size}");
+        log::info!("In Memory cache created - size: {cache_size} entries");
         memcache
     }"##,
     key = "String",
