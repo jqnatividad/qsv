@@ -276,15 +276,15 @@ struct Args {
     flag_max_retries:    u8,
     flag_max_errors:     u64,
     flag_store_error:    bool,
+    flag_cookies:        bool,
+    flag_user_agent:     Option<String>,
+    flag_report:         String,
     flag_no_cache:       bool,
     flag_mem_cache_size: usize,
     flag_disk_cache:     bool,
     flag_disk_cache_dir: Option<String>,
-    flag_cache_error:    bool,
-    flag_cookies:        bool,
-    flag_user_agent:     Option<String>,
-    flag_report:         String,
     flag_redis_cache:    bool,
+    flag_cache_error:    bool,
     flag_flush_cache:    bool,
     flag_output:         Option<String>,
     flag_no_headers:     bool,
@@ -671,6 +671,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut now = time::Instant::now();
     let mut form_body_jsonmap = serde_json::map::Map::with_capacity(col_list.len());
 
+    let header_key_vec: Vec<String> = headers
+        .iter()
+        .map(|x| String::from_utf8_lossy(x).to_string())
+        .collect();
+
+    let debug_flag = log_enabled!(Debug);
+
     while rdr.read_byte_record(&mut record)? {
         if show_progress {
             progress.inc(1);
@@ -683,14 +690,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // construct body per the column-list
         form_body_jsonmap.clear();
         for col_idx in &*col_list {
-            let header_key = String::from_utf8_lossy(headers.get(*col_idx).unwrap());
-            let value_string = from_utf8(&record[*col_idx]).unwrap_or_default().to_string();
             form_body_jsonmap.insert(
-                header_key.to_string(),
-                serde_json::Value::String(value_string),
+                (&header_key_vec[*col_idx]).to_string(),
+                serde_json::Value::String(
+                    from_utf8(&record[*col_idx]).unwrap_or_default().to_owned(),
+                ),
             );
         }
-        if log::log_enabled!(Debug) {
+        if debug_flag {
+            // deserializing the form_body_jsonmap to a string is expensive
+            // so we only do it when debug is enabled
             debug!("{form_body_jsonmap:?}");
         }
 
@@ -1137,7 +1146,7 @@ fn get_response(
             if limiter_total_wait > governor_timeout_ms {
                 debug!("rate limit timed out after {limiter_total_wait} ms");
                 break;
-            } else if limiter_total_wait == MINIMUM_WAIT_MS {
+            } else if debug_flag && limiter_total_wait == MINIMUM_WAIT_MS {
                 debug!("throttling...");
             }
         }
