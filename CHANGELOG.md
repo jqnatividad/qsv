@@ -6,6 +6,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.124.0] - 2024-03-15
+
+## Added
+* `count`: automatically use Polars multithreaded, mem-mapped CSV reader when `polars` feature is enabled to get near-instant row counts of large CSV files even without an index  https://github.com/jqnatividad/qsv/pull/1656
+* `qsvdp`: added polars support to Datapusher+-optimized binary variant https://github.com/jqnatividad/qsv/pull/1664
+* `fetchpost`: added `--disk-cache` options and synced usage options with `fetch` https://github.com/jqnatividad/qsv/pull/1671
+* extended `.infile-list` to skip empty and commented lines, and to validate file paths
+https://github.com/jqnatividad/qsv/commit/20a45c80fa32ef8a8060bb32cc94b7934da23229 and 
+https://github.com/jqnatividad/qsv/commit/26509303719ce29e900cb73b5000671a78db6b4a
+
+## Changed
+* `sqlp`: automatically disable `read_csv()` fast path optimization when a custom delimiter is specified https://github.com/jqnatividad/qsv/pull/1648
+* refactored util::count_rows() helper https://github.com/jqnatividad/qsv/commit/1e09e17e440d3cdc11237d9d9e45cefb82da5a42
+* publish: updated Windows MSI publish GH Action workflow to use Wix 3.14 from 3.11 https://github.com/jqnatividad/qsv/commit/75894ef4e894f521056a93b4f0a14d7469bac022
+* deps: bump polars from 0.38.1 to 0.38.2 https://github.com/jqnatividad/qsv/commit/5faf90ed830541a724768e808c7f07f0a418e2ab
+* deps: update Luau from 0.614 to 0.616 https://github.com/jqnatividad/qsv/commit/eb197fe81738b4ed15352f5f89d5d5d1b0fad604 and https://github.com/jqnatividad/qsv/commit/52331da939a3cd278c6a1f474179bef2207364a8
+* build(deps): bump sysinfo from 0.30.6 to 0.30.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1650
+* build(deps): bump chrono from 0.4.34 to 0.4.35 by @dependabot in https://github.com/jqnatividad/qsv/pull/1651
+* build(deps): bump strum from 0.26.1 to 0.26.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1658
+* build(deps): bump qsv-stats from 0.12.0 to 0.13.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1663
+* build(deps): bump anyhow from 1.0.80 to 1.0.81 by @dependabot in https://github.com/jqnatividad/qsv/pull/1662
+* build(deps): bump reqwest from 0.11.25 to 0.11.26 by @dependabot in https://github.com/jqnatividad/qsv/pull/1667
+* applied select clippy recommendations
+* updated several indirect dependencies
+* added several benchmarks for new/changed commands
+
+## Fixed
+* `dedup`: fixed #1665 dedup not handling numeric values properly by adding a --numeric option  https://github.com/jqnatividad/qsv/pull/1666
+* `joinp`: reenable join validation tests now that Polars 0.38.2 join validation is working again https://github.com/jqnatividad/qsv/commit/5faf90ed830541a724768e808c7f07f0a418e2ab and https://github.com/jqnatividad/qsv/commit/fcfc75b855c615effb50f23c09a1d66ce70505e8
+
+## Removed
+* `gender_guesser` 0.2.0 has been released. Remove patch.crates-io entry
+https://github.com/jqnatividad/qsv/commit/97873a5c496bfd559d7a7804db4d28b94915d536
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.123.0...0.124.0
+
 ## [0.123.0] - 2024-03-05
 
 # [OPEN DATA DAY 2024](https://opendataday.org) Release! 🎉🎉🎉
