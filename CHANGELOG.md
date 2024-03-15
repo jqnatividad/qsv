@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.124.0] - 2024-03-15
+## [0.124.1] - 2024-03-15
 
 # [Datapusher+](https://github.com/dathere/datapusher-plushttps://github.com/dathere/datapusher-plus) "_[Speed of Insight](https://dathere.com/2024/03/the-speed-of-insight/)_" Release! 🚀🚀🚀
 
@@ -49,6 +49,9 @@ https://github.com/jqnatividad/qsv/commit/26509303719ce29e900cb73b5000671a78db6b
 ## Fixed
 * `dedup`: fixed #1665 dedup not handling numeric values properly by adding a --numeric option  https://github.com/jqnatividad/qsv/pull/1666
 * `joinp`: reenable join validation tests now that Polars 0.38.2 join validation is working again https://github.com/jqnatividad/qsv/commit/5faf90ed830541a724768e808c7f07f0a418e2ab and https://github.com/jqnatividad/qsv/commit/fcfc75b855c615effb50f23c09a1d66ce70505e8
+* `count`: broken in unreleased 0.124.0. Polars-powered count require a "clean" CSV file
+as it infers the schema based on the first 1000 rows of a CSV. This will sometimes result in an invalid "error" (e.g. it infers a column is a number column, when its not).
+0.124.1 fixes this by adding a fallback to the "regular" CSV reader if a Polars error occurs https://github.com/jqnatividad/qsv/commit/a2c086900d1c1f1ba8ed2b2d1eaf8e547e3ef740
 
 ## Removed
 * `gender_guesser` 0.2.0 has been released. Remove patch.crates-io entry
