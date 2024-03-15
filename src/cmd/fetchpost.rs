@@ -691,7 +691,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         form_body_jsonmap.clear();
         for col_idx in &*col_list {
             form_body_jsonmap.insert(
-                (&header_key_vec[*col_idx]).to_string(),
+                (header_key_vec[*col_idx]).to_string(),
                 serde_json::Value::String(
                     from_utf8(&record[*col_idx]).unwrap_or_default().to_owned(),
                 ),
