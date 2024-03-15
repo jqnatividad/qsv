@@ -5,6 +5,7 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 concurrency:
   group: ci-qsvdp-tests-${{ github.ref }}-1
