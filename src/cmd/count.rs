@@ -208,13 +208,12 @@ pub fn polars_count_input(
         std::fs::remove_file(filepath)?;
     }
 
-    let count = match df_result {
-        Ok(df) => df.height() as u64,
-        Err(_) => {
-            // there was a Polars error, so we fall back to the regular CSV reader
-            let (count_regular, _) = count_input(conf, false)?;
-            count_regular
-        },
+    let count = if let Ok(df) = df_result {
+        df.height() as u64
+    } else {
+        // there was a Polars error, so we fall back to the regular CSV reader
+        let (count_regular, _) = count_input(conf, false)?;
+        count_regular
     };
 
     Ok((count, 0))
