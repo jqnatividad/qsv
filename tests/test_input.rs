@@ -264,11 +264,11 @@ fn test_input_both_skip_flexible() {
     let test_file = wrk.load_test_file("inputskiptest.csv");
 
     let mut cmd = wrk.command("input");
-    cmd.arg("--skip-lastlines")
-        .arg("4")
-        .arg("--skip-lines")
-        .arg("5")
+    cmd.args(["--skip-lastlines", "4"])
+        .args(["--skip-lines", "5"])
         .arg(test_file);
+
+    wrk.assert_success(&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![

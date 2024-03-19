@@ -342,6 +342,36 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
     }
 }
 
+/// Count rows using "regular" CSV reader
+/// we don't use polars mem-mapped reader here
+/// even if it's available
+#[inline]
+pub fn count_rows_regular(conf: &Config) -> Result<u64, CliError> {
+    if let Some(idx) = conf.indexed().unwrap_or(None) {
+        Ok(idx.count())
+    } else {
+        // index does not exist or is stale,
+        let count_opt = ROW_COUNT.get_or_init(|| {
+            if let Ok(mut rdr) = conf.reader() {
+                let mut count = 0_u64;
+                let mut _record = csv::ByteRecord::new();
+                #[allow(clippy::used_underscore_binding)]
+                while rdr.read_byte_record(&mut _record).unwrap_or_default() {
+                    count += 1;
+                }
+                Some(count)
+            } else {
+                None
+            }
+        });
+
+        match *count_opt {
+            Some(count) => Ok(count),
+            None => Err(CliError::Other("Unable to get row count".to_string())),
+        }
+    }
+}
+
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub fn prep_progress(progress: &ProgressBar, record_count: u64) {
     progress.set_style(
