@@ -237,7 +237,7 @@ serial_test = { version = "3.0", features = ["file_locks"] }
 # needed as dynfmt doesn't work in release mode without this
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 # needed to get latest dependencies and unreleased fixes
-grex = { git = "https://github.com/pemistahl/grex", rev = "cb70109" }
+grex = { git = "https://github.com/pemistahl/grex", rev = "8021cce" }
 
 [features]
 default = ["mimalloc"]
