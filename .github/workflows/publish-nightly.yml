@@ -1,4 +1,4 @@
-dsdsdsdsdsdsdsname: Publish Nightly
+name: Publish Nightly
 
 on:
   workflow_dispatch:
