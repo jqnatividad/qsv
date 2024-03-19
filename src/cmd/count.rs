@@ -1,5 +1,7 @@
 static USAGE: &str = r#"
-Prints a count of the number of records in the CSV data.
+Prints a count of the number of records in the CSV data. If the polars feature is
+enabled, it will use the much faster multithreaded, mem-mapped Polars CSV reader.
+Otherwise, it will use the regular, single-threaded CSV reader.
 
 Note that the count will not include the header row (unless --no-headers is
 given).
@@ -183,10 +185,6 @@ pub fn polars_count_input(
         conf.path.as_ref().unwrap().clone()
     };
 
-    if !filepath.exists() {
-        return fail_clierror!("{} does not exists", filepath.display());
-    }
-
     let mut comment_char = String::new();
     let comment_prefix = if let Some(c) = conf.comment {
         comment_char.push(c as char);
@@ -210,20 +208,24 @@ pub fn polars_count_input(
         row_estimate:        true,
     };
 
+    // read the file into a Polars LazyFrame
     let lazy_df = LazyCsvReader::new(filepath.clone())
         .with_separator(conf.get_delimiter())
         .with_comment_prefix(comment_prefix)
         .low_memory(low_memory)
         .finish()?;
 
+    // and leverage the magic of Polars SQL with its lazy evaluation, to count the records
+    // in an optimized manner with its blazing fast multithreaded, mem-mapped CSV reader!
     let mut ctx = SQLContext::new();
     ctx.register("sql_lf", lazy_df.with_optimizations(optimization_state));
-    let sqlresult_lf = ctx.execute("SELECT COUNT(*) AS row_count FROM sql_lf")?;
+    let sqlresult_lf = ctx.execute("SELECT COUNT(*) FROM sql_lf")?;
 
-    let count = if let Some(count) = sqlresult_lf.collect()?.get_column_index("rowcount") {
-        count as u64
+    let mut count = if let Ok(cnt) = sqlresult_lf.collect()?["len"].u32() {
+        cnt.get(0).unwrap_or_default() as u64
     } else {
         // there was a Polars error, so we fall back to the regular CSV reader
+        log::warn!("polars error, falling back to regular reader");
         let (count_regular, _) = count_input(conf, false)?;
         count_regular
     };
@@ -233,6 +235,12 @@ pub fn polars_count_input(
     // when the tempfile went out of scope, so we need to manually delete it
     if is_stdin {
         std::fs::remove_file(filepath)?;
+    }
+
+    // Polars SQL requires headers, so it made the first row the header row
+    // regardless of the --no-headers flag. That's why we need to add 1 to the count
+    if conf.no_headers {
+        count += 1;
     }
 
     Ok((count, 0))
