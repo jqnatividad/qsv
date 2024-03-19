@@ -161,7 +161,7 @@ pub fn polars_count_input(
     conf: &Config,
     low_memory: bool,
 ) -> Result<(u64, usize), crate::clitypes::CliError> {
-    use polars::prelude::*;
+    use polars::{prelude::*, sql::SQLContext};
 
     log::info!("using polars");
 
@@ -214,15 +214,19 @@ pub fn polars_count_input(
         .with_separator(conf.get_delimiter())
         .with_comment_prefix(comment_prefix)
         .low_memory(low_memory)
-        .finish()?
-        .with_column(lit(1).alias("constant")) // Add a constant column
-        .group_by([col("constant")]) // This is just to comply with the API; we're not really grouping by different values
-        .agg([col("constant").sum().alias("row_count")])
-        .select([col("row_count")]); // Select only the row_count column
+        .finish()?;
 
-    // Trigger computation to get the result, minimal data processed
-    // as we're only interested in the row count
-    let result = lazy_df.with_optimizations(optimization_state).collect()?;
+    let mut ctx = SQLContext::new();
+    ctx.register("sql_lf", lazy_df.with_optimizations(optimization_state));
+    let sqlresult_lf = ctx.execute("SELECT COUNT(*) AS row_count FROM sql_lf")?;
+
+    let count = if let Some(count) = sqlresult_lf.collect()?.get_column_index("rowcount") {
+        count as u64
+    } else {
+        // there was a Polars error, so we fall back to the regular CSV reader
+        let (count_regular, _) = count_input(conf, false)?;
+        count_regular
+    };
 
     // remove the temporary file we created to read from stdin
     // we use the keep() method to prevent the file from being deleted
@@ -230,15 +234,6 @@ pub fn polars_count_input(
     if is_stdin {
         std::fs::remove_file(filepath)?;
     }
-
-    // Assuming the result contains at least one row and the row_count column, we get the count
-    let count = if let Ok(value) = result.column("row_count")?.get(0) {
-        value.try_extract()?
-    } else {
-        // there was a Polars error, so we fall back to the regular CSV reader
-        let (count_regular, _) = count_input(conf, false)?;
-        count_regular
-    };
 
     Ok((count, 0))
 }
