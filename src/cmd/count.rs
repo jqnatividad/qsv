@@ -176,9 +176,10 @@ pub fn polars_count_input(
         std::io::copy(&mut stdin_handle, &mut temp_file)?;
         drop(stdin_handle);
 
-        let (_, tempfile_pb) = temp_file
-            .keep()
-            .or(Err("Cannot keep temporary file".to_string()))?;
+        let (_, tempfile_pb) =
+            temp_file.keep().or(Err(
+                "Cannot keep temporary file created for stdin".to_string()
+            ))?;
 
         tempfile_pb
     } else {
@@ -222,7 +223,7 @@ pub fn polars_count_input(
     let sqlresult_lf = ctx.execute("SELECT COUNT(*) FROM sql_lf")?;
 
     let mut count = if let Ok(cnt) = sqlresult_lf.collect()?["len"].u32() {
-        cnt.get(0).unwrap_or_default() as u64
+        cnt.get(0).ok_or("polars error: cannot get count")? as u64
     } else {
         // there was a Polars error, so we fall back to the regular CSV reader
         log::warn!("polars error, falling back to regular reader");
