@@ -38,3 +38,4 @@ tmp/*
 *.db
 *.snappy
 *.key
+*.psv
