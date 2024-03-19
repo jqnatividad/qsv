@@ -69,7 +69,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     //     &args.flag_no_headers,
     // );
 
-    let (count, width) = if args.flag_width {
+    // if --width or --flexible is set, we need to use the regular CSV reader
+    let (count, width) = if args.flag_width || args.flag_flexible {
         count_input(&conf, args.flag_width)?
     } else {
         let index_status = conf.indexed().unwrap_or_else(|_| {
@@ -77,15 +78,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             None
         });
         match index_status {
+            // there's a valid index, use it
             Some(idx) => {
                 info!("index used");
                 (idx.count(), 0)
             },
             None => {
-                // if --no-polars or --width is set or its a snappy compressed file, use the
+                // if --no-polars or its a snappy compressed file, use the
                 // regular CSV reader
                 #[cfg(feature = "polars")]
-                if args.flag_no_polars || args.flag_width || conf.is_snappy() {
+                if args.flag_no_polars || conf.is_snappy() {
                     count_input(&conf, args.flag_width)?
                 } else {
                     polars_count_input(&conf, args.flag_low_memory)?
@@ -193,13 +195,34 @@ pub fn polars_count_input(
         None
     };
 
-    let df_result = polars::io::csv::CsvReader::from_path(filepath.clone())?
+    let optimization_state = polars::lazy::frame::OptState {
+        projection_pushdown: true,
+        predicate_pushdown:  true,
+        type_coercion:       true,
+        simplify_expr:       true,
+        file_caching:        true,
+        slice_pushdown:      true,
+        comm_subplan_elim:   false,
+        comm_subexpr_elim:   true,
+        streaming:           true,
+        fast_projection:     true,
+        eager:               false,
+        row_estimate:        true,
+    };
+
+    let lazy_df = LazyCsvReader::new(filepath.clone())
         .with_separator(conf.get_delimiter())
         .with_comment_prefix(comment_prefix)
-        .has_header(!conf.no_headers)
-        .truncate_ragged_lines(conf.flexible)
         .low_memory(low_memory)
-        .finish();
+        .finish()?
+        .with_column(lit(1).alias("constant")) // Add a constant column
+        .group_by([col("constant")]) // This is just to comply with the API; we're not really grouping by different values
+        .agg([col("constant").sum().alias("row_count")])
+        .select([col("row_count")]); // Select only the row_count column
+
+    // Trigger computation to get the result, minimal data processed
+    // as we're only interested in the row count
+    let result = lazy_df.with_optimizations(optimization_state).collect()?;
 
     // remove the temporary file we created to read from stdin
     // we use the keep() method to prevent the file from being deleted
@@ -208,8 +231,9 @@ pub fn polars_count_input(
         std::fs::remove_file(filepath)?;
     }
 
-    let count = if let Ok(df) = df_result {
-        df.height() as u64
+    // Assuming the result contains at least one row and the row_count column, we get the count
+    let count = if let Ok(value) = result.column("row_count")?.get(0) {
+        value.try_extract()?
     } else {
         // there was a Polars error, so we fall back to the regular CSV reader
         let (count_regular, _) = count_input(conf, false)?;
