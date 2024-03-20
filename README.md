@@ -90,7 +90,7 @@
 📇: uses an index when available.  
 🤯: loads entire CSV into memory, though `dedup`, `stats` & `transpose` have "streaming" modes as well.  
 😣: uses additional memory proportional to the cardinality of the columns in the CSV.  
-🧠: expensive operations are memoized (cached) with available inter-session Redis caching for fetch commands.  
+🧠: expensive operations are memoized with available inter-session Redis/Disk caching for fetch commands.  
 🗄️: [Extended input support](#extended-input-support).  
 🐻‍❄️: command powered by [Pola.rs](https://pola.rs) engine.  
 🤖: command uses Natural Language Processing & General AI techniques.  
