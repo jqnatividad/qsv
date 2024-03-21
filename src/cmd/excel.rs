@@ -80,7 +80,7 @@ Excel options:
                                Also removes embedded linebreaks.
     --date-format <format>     Optional date format to use when formatting dates.
                                See https://docs.rs/chrono/latest/chrono/format/strftime/index.html
-                               for the full list of supported formats.
+                               for the full list of supported format specifiers.
                                Note that if a date format is invalid, qsv will fall back and
                                return the date as if no date-format was specified.
      --keep-zero-time          Keep the time part of a date-time field if it is 00:00:00.
@@ -266,10 +266,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         'J' => MetadataMode::PrettyJSON,
         'n' | 'N' => MetadataMode::None,
         _ => {
-            return fail_incorrectusage_clierror!("Invalid mode: {}", args.flag_metadata);
+            return fail_incorrectusage_clierror!("Invalid metadata mode: {}", args.flag_metadata);
         },
     };
 
+    // check if we're exporting workbook metadata only
     if metadata_mode != MetadataMode::None {
         let mut excelmetadata_struct = MetadataStruct {
             filename,
@@ -428,6 +429,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return Ok(());
     }
 
+    // --------------------------------------------------------------------
+    // we're not exporting metadata, we're exporting the spreadsheet to CSV
+
     // convert sheet_names to lowercase so we can do a case-insensitive compare
     let lower_sheet_names: Vec<String> = sheet_names.iter().map(|s| s.to_lowercase()).collect();
 
@@ -525,7 +529,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
     let mut col_name: String;
 
-    // get the first row as header
+    // process the first row as the header row
     info!("exporting sheet ({sheet})... processing first row as header...");
     let first_row = match rows_iter.next() {
         Some(first_row) => first_row,
@@ -573,7 +577,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut rows = Vec::with_capacity(row_count);
 
-    // process rest of the rows
+    // queue rest of the rows for processing as data rows
     for row in rows_iter {
         rows.push(row);
     }
