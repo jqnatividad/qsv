@@ -671,7 +671,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                             record.push_field(&work_date);
                         },
-                        Data::Error(ref e) => record.push_field(&format!("{e:?}")),
+                        Data::Error(ref e) => record.push_field(&format!("{e}")),
                         Data::Bool(ref b) => {
                             record.push_field(if *b { "true" } else { "false" });
                         },

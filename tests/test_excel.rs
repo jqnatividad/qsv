@@ -20,6 +20,27 @@ fn excel_open_xls() {
 }
 
 #[test]
+fn excel_cellerrors() {
+    let wrk = Workdir::new("excel_cellerrors");
+
+    let xls_file = wrk.load_test_file("excel-xlsx.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.args(["--sheet", "cellerrors"]).arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["col1", "col 2", "column-3"],
+        svec!["1", "-50", "15"],
+        svec!["2", "#DIV/0!", "#NAME?"],
+        svec!["3", "50", "20"],
+        svec!["4", "33.333333333333336", "3"],
+        svec!["5", "25", "4"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn excel_open_xls_delimiter() {
     let wrk = Workdir::new("excel_open_xls_delimiter");
 
