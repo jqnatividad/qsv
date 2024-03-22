@@ -12,11 +12,12 @@ categories = ["command-line-utilities", "parser-implementations"]
 license = "MIT OR Unlicense"
 autotests = false
 edition = "2021"
-rust-version = "1.76.0"
+rust-version = "1.77.0"
 autobins = false
 include = [
     "src/**/*",
     "LICENSE-MIT",
+    "UNLICENSE",
     "README.md",
     "CHANGELOG.md",
     "resources/luau/vendor/luadate/date.lua",
