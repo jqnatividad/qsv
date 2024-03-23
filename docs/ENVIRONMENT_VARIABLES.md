@@ -17,7 +17,7 @@
 | `QSV_OPENAI_KEY` | The OpenAI API key to use with the `describegpt` command. |
 | `QSV_OUTPUT_BOM` | if set, the output will have a Byte Order Mark (BOM) at the beginning. This is 
 used to generate Excel-friendly CSVs on Windows. |
-| `QSV_PREFER_DMY` | if set, date parsing will use DMY format. Otherwise, use MDY format (used with `apply datefmt`, `schema`, `sniff` & `stats` commands). |
+| `QSV_PREFER_DMY` | if set, date parsing will use DMY format. Otherwise, use MDY format (used with `datefmt`, `schema`, `sniff` & `stats` commands). |
 | `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` & `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware by default & will ignore unicode values when matching & will abort when unicode characters are used in the regex. Note that the `apply operations regex_replace` operation is always unicode-aware. |
 | `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default (bytes): 16384) |
 | `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |

@@ -119,8 +119,8 @@ stats options:
                               inspecting are dates, boolean or string fields.
 
                               To avoid false positives, preprocess the file first 
-                              with `apply datefmt` to convert unix epoch timestamp columns
-                              to RFC3339 format.
+                              with the `datefmt` command to convert unix epoch timestamp
+                              columns to RFC3339 format.
                               [default: date,time,due,open,close,created]
     --prefer-dmy              Parse dates in dmy format. Otherwise, use mdy format.
                               Ignored if --infer-dates is false.
