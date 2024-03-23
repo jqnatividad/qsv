@@ -566,7 +566,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     info!("header: {record:?}");
     wtr.write_record(&record)?;
 
-    let no_date_format;
+    let no_date_format: bool;
+    #[allow(clippy::manual_unwrap_or_default)]
     let date_format = if let Some(df) = args.flag_date_format {
         no_date_format = false;
         df
