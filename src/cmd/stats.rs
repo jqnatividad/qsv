@@ -829,11 +829,10 @@ impl Args {
 fn stats_path(stats_csv_path: &Path, stdin_flag: bool) -> io::Result<PathBuf> {
     let parent = stats_csv_path
         .parent()
-        .ok_or(io::Error::new(io::ErrorKind::InvalidInput, "Invalid path"))?;
-    let fstem = stats_csv_path.file_stem().ok_or(io::Error::new(
-        io::ErrorKind::InvalidInput,
-        "Invalid file name",
-    ))?;
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "Invalid path"))?;
+    let fstem = stats_csv_path
+        .file_stem()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "Invalid file name"))?;
 
     let new_fname = if stdin_flag {
         "stdin.stats.csv".to_string()
