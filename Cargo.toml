@@ -242,6 +242,11 @@ serial_test = { version = "3.0", features = ["file_locks"] }
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "8021cce" }
+# use our fork while we wait for the PR to merge reqwest 0.12
+# otherwise, our dependency tree blows up a bit with both reqwest 0.11 and 0.12
+jsonschema = { git = "https://github.com/jqnatividad/jsonschema-rs", branch = "deps-bump-reqwest-to-0.12" }
+# use our fork while we wait for the PR to merge reqwest 0.12
+self_update = { git = "https://github.com/jqnatividad/self_update/", branch = "bump-reqwest_hyper-http2" }
 
 [features]
 default = ["mimalloc"]
