@@ -169,7 +169,7 @@ rand = "0.8"
 rand_hc = "0.3"
 rand_xoshiro = "0.6"
 rayon = "1.10"
-redis = { version = "0.24", features = [
+redis = { version = "0.25", features = [
     "ahash",
     "tcp_nodelay",
 ], default-features = false, optional = true }
@@ -242,11 +242,13 @@ serial_test = { version = "3.0", features = ["file_locks"] }
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "8021cce" }
-# use our fork while we wait for the PR to merge reqwest 0.12
+# use our fork while we wait for the PR to bump reqwest to 0.12
 # otherwise, our dependency tree blows up a bit with both reqwest 0.11 and 0.12
 jsonschema = { git = "https://github.com/jqnatividad/jsonschema-rs", branch = "deps-bump-reqwest-to-0.12" }
-# use our fork while we wait for the PR to merge reqwest 0.12
-self_update = { git = "https://github.com/jqnatividad/self_update/", branch = "bump-reqwest_hyper-http2" }
+# use our fork while we wait for the PR to bump reqwest to 0.12 and hyper to 1
+self_update = { git = "https://github.com/jqnatividad/self_update", branch = "bump-reqwest_hyper-http2" }
+# use our fork while we wait for the PR to bump redis to 0.25 along with other dependencies
+cached = { git = "https://github.com/jqnatividad/cached", branch = "bump_redis-directories-serial_test" }
 
 [features]
 default = ["mimalloc"]
