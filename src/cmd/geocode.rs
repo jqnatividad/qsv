@@ -1117,7 +1117,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
             match rdr.read_record(&mut batch_record) {
                 Ok(has_data) => {
                     if has_data {
-                        batch.push(batch_record.clone());
+                        batch.push(std::mem::take(&mut batch_record));
                     } else {
                         // nothing else to add to batch
                         break;
