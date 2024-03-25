@@ -166,7 +166,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let prefer_dmy = args.flag_prefer_dmy || rconfig.get_dmy_preference();
-    let flag_keep_zero_time = args.flag_keep_zero_time;
+    let keep_zero_time = args.flag_keep_zero_time;
 
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
@@ -212,20 +212,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let mut record = record_item.clone();
 
                 let mut cell = String::new();
+                #[allow(unused_assignments)]
+                let mut formatted_date = String::new();
+                let mut parsed_date;
+                let new_column = flag_new_column.is_some();
                 for col_index in &*sel {
                     record[*col_index].clone_into(&mut cell);
                     if !cell.is_empty() {
-                        let parsed_date = parse_with_preference(&cell, prefer_dmy);
+                        parsed_date = parse_with_preference(&cell, prefer_dmy);
+                        // log::debug!("Parsed date: {:?}", parsed_date);
                         if let Ok(format_date) = parsed_date {
-                            let formatted_date = format_date.format(&flag_formatstr).to_string();
-                            if !flag_keep_zero_time && formatted_date.ends_with("T00:00:00+00:00") {
+                            formatted_date = format_date.format(&flag_formatstr).to_string();
+                            if !keep_zero_time && formatted_date.ends_with("T00:00:00+00:00") {
                                 formatted_date[..10].clone_into(&mut cell);
                             } else {
                                 formatted_date.clone_into(&mut cell);
                             }
                         }
                     }
-                    if flag_new_column.is_some() {
+                    if new_column {
                         record.push_field(&cell);
                     } else {
                         record = replace_column_value(&record, *col_index, &cell);
