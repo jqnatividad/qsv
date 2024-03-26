@@ -295,8 +295,8 @@ fn fetch_simple_diskcache() {
 https://api.zippopotam.us/us/99999,404,1,5,"{""errors"":[{""title"":""HTTP ERROR"",""detail"":""HTTP ERROR 404 - Not Found""}]}"
 https://api.zippopotam.us/us/90210,200,1,0,"{""post code"":""90210"",""country"":""United States"",""country abbreviation"":""US"",""places"":[{""place name"":""Beverly Hills"",""longitude"":""-118.4065"",""state"":""California"",""state abbreviation"":""CA"",""latitude"":""34.0901""}]}"
 https://api.zippopotam.us/us/94105,200,1,0,"{""post code"":""94105"",""country"":""United States"",""country abbreviation"":""US"",""places"":[{""place name"":""San Francisco"",""longitude"":""-122.3892"",""state"":""California"",""state abbreviation"":""CA"",""latitude"":""37.7864""}]}"
-https://api.zippopotam.us/us/92802,200,0,0,"{""post code"":""92802"",""country"":""United States"",""country abbreviation"":""US"",""places"":[{""place name"":""Anaheim"",""longitude"":""-117.9228"",""state"":""California"",""state abbreviation"":""CA"",""latitude"":""33.8085""}]}"
-thisisnotaurl,404,0,0,"{""errors"":[{""title"":""Invalid URL"",""detail"":""relative URL without a base""}]}""#
+https://api.zippopotam.us/us/92802,200,1,0,"{""post code"":""92802"",""country"":""United States"",""country abbreviation"":""US"",""places"":[{""place name"":""Anaheim"",""longitude"":""-117.9228"",""state"":""California"",""state abbreviation"":""CA"",""latitude"":""33.8085""}]}"
+thisisnotaurl,404,1,0,"{""errors"":[{""title"":""Invalid URL"",""detail"":""relative URL without a base""}]}""#
     );
 }
 
