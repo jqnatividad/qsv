@@ -291,7 +291,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let sheet_vec = sheet_names;
 
         for (i, sheet_name) in sheet_vec.iter().enumerate() {
-            let range = if let Some(result) = workbook.worksheet_range_at(i) {
+            let range = if metadata_mode == MetadataMode::ShortCsv {
+                Range::empty()
+            } else if let Some(result) = workbook.worksheet_range_at(i) {
                 match result {
                     Ok(result) => result,
                     Err(e) => {
