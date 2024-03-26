@@ -56,7 +56,7 @@ Excel options:
                                Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
-    --metadata <c|j|J>         Outputs workbook metadata in CSV or JSON format:
+    --metadata <c|j|J|s>       Outputs workbook metadata in CSV or JSON format:
                                  index, sheet_name, headers, num_columns, num_rows, safe_headers,
                                  safe_headers_count, unsafe_headers, unsafe_headers_count and
                                  duplicate_headers_count.
@@ -67,6 +67,8 @@ Excel options:
                                duplicate_headers_count is a count of duplicate header names.
 
                                In CSV(c) mode, the output is in CSV format.
+                               In short CSV(s) mode, the output is in CSV format with only the
+                               index and the sheet_name.
                                
                                In JSON(j) mode, the output is minified JSON.
                                In Pretty JSON(J) mode, the output is pretty-printed JSON.
@@ -129,6 +131,7 @@ struct Args {
 #[derive(PartialEq)]
 enum MetadataMode {
     Csv,
+    ShortCsv,
     Json,
     PrettyJSON,
     None,
@@ -262,6 +265,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let first_letter = args.flag_metadata.chars().next().unwrap_or_default();
     let metadata_mode = match first_letter {
         'c' | 'C' => MetadataMode::Csv,
+        's' | 'S' => MetadataMode::ShortCsv,
         'j' => MetadataMode::Json,
         'J' => MetadataMode::PrettyJSON,
         'n' | 'N' => MetadataMode::None,
@@ -304,7 +308,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
 
             let (header_vec, num_columns, num_rows, safenames_vec, unsafeheaders_vec, dupe_count) =
-                if range.is_empty() {
+                if metadata_mode == MetadataMode::ShortCsv || range.is_empty() {
                     (vec![], 0_usize, 0_usize, vec![], vec![], 0_usize)
                 } else {
                     let (num_rows, num_columns) = range.get_size();
@@ -403,6 +407,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         sheetmetadata.unsafe_headers_count.to_string(),
                         sheetmetadata.duplicate_headers_count.to_string(),
                     ];
+                    metadata_record = csv::StringRecord::from(metadata_values);
+
+                    wtr.write_record(&metadata_record)?;
+                }
+                wtr.flush()?;
+            },
+            MetadataMode::ShortCsv => {
+                let mut metadata_fields = Vec::with_capacity(2);
+                metadata_fields.extend_from_slice(&["index", "sheet_name"]);
+                metadata_record = csv::StringRecord::from(metadata_fields);
+
+                wtr.write_record(&metadata_record)?;
+
+                for sheetmetadata in excelmetadata_struct.sheet {
+                    let metadata_values = vec![sheetmetadata.index.to_string(), sheetmetadata.name];
                     metadata_record = csv::StringRecord::from(metadata_values);
 
                     wtr.write_record(&metadata_record)?;

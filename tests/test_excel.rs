@@ -601,6 +601,31 @@ fn excel_metadata() {
 }
 
 #[test]
+fn excel_short_metadata() {
+    let wrk = Workdir::new("excel_short_metadata");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("short").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["index", "sheet_name",],
+        svec!["0", "First",],
+        svec!["1", "Flexibility Test",],
+        svec!["2", "Middle",],
+        svec!["3", "Sheet1",],
+        svec!["4", "trim test",],
+        svec!["5", "date test",],
+        svec!["6", "NoData",],
+        svec!["7", "Last",],
+    ];
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn excel_metadata_pretty_json() {
     let wrk = Workdir::new("excel_metadata");
 
@@ -827,6 +852,22 @@ fn ods_metadata() {
             "0"
         ],
     ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn ods_short_metadata() {
+    let wrk = Workdir::new("ods_short_metadata");
+
+    let xls_file = wrk.load_test_file("excel-ods.ods");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("s").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["index", "sheet_name",], svec!["0", "Sheet1",]];
 
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
