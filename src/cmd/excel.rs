@@ -57,10 +57,12 @@ Excel options:
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
     --metadata <c|j|J|s>       Outputs workbook metadata in CSV or JSON format:
-                                 index, sheet_name, headers, num_columns, num_rows, safe_headers,
-                                 safe_headers_count, unsafe_headers, unsafe_headers_count and
-                                 duplicate_headers_count.
+                                 index, sheet_name, headers, type, visible, num_columns, num_rows,
+                                 safe_headers, safe_headers_count, unsafe_headers, unsafe_headers_count
+                                 and duplicate_headers_count.
                                headers is a list of the first row which is presumed to be the header row.
+                               type is the sheet type (WorkSheet, DialogSheet, MacroSheet, ChartSheet, Vba).
+                               visible is the sheet visibility (Visible, Hidden, VeryHidden).
                                num_rows includes all rows, including the first row.
                                safe_headers is a list of header with "safe"(database-ready) names.
                                unsafe_headers is a list of headers with "unsafe" names.
@@ -68,7 +70,7 @@ Excel options:
 
                                In CSV(c) mode, the output is in CSV format.
                                In short CSV(s) mode, the output is in CSV format with only the
-                               index and the sheet_name.
+                               index, sheet_name, type and visible fields.
                                
                                In JSON(j) mode, the output is minified JSON.
                                In Pretty JSON(J) mode, the output is pretty-printed JSON.
@@ -264,11 +266,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // set Metadata Mode
     let first_letter = args.flag_metadata.chars().next().unwrap_or_default();
     let metadata_mode = match first_letter {
+        'n' | 'N' => MetadataMode::None,
         'c' | 'C' => MetadataMode::Csv,
         's' | 'S' => MetadataMode::ShortCsv,
         'j' => MetadataMode::Json,
         'J' => MetadataMode::PrettyJSON,
-        'n' | 'N' => MetadataMode::None,
         _ => {
             return fail_incorrectusage_clierror!("Invalid metadata mode: {}", args.flag_metadata);
         },
@@ -416,14 +418,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 wtr.flush()?;
             },
             MetadataMode::ShortCsv => {
-                let mut metadata_fields = Vec::with_capacity(2);
-                metadata_fields.extend_from_slice(&["index", "sheet_name"]);
+                let mut metadata_fields = Vec::with_capacity(4);
+                metadata_fields.extend_from_slice(&["index", "sheet_name", "type", "visible"]);
                 metadata_record = csv::StringRecord::from(metadata_fields);
 
                 wtr.write_record(&metadata_record)?;
 
                 for sheetmetadata in excelmetadata_struct.sheet {
-                    let metadata_values = vec![sheetmetadata.index.to_string(), sheetmetadata.name];
+                    let metadata_values = vec![
+                        sheetmetadata.index.to_string(),
+                        sheetmetadata.name,
+                        sheetmetadata.typ,
+                        sheetmetadata.visible,
+                    ];
                     metadata_record = csv::StringRecord::from(metadata_values);
 
                     wtr.write_record(&metadata_record)?;

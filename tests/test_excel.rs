@@ -611,15 +611,15 @@ fn excel_short_metadata() {
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["index", "sheet_name",],
-        svec!["0", "First",],
-        svec!["1", "Flexibility Test",],
-        svec!["2", "Middle",],
-        svec!["3", "Sheet1",],
-        svec!["4", "trim test",],
-        svec!["5", "date test",],
-        svec!["6", "NoData",],
-        svec!["7", "Last",],
+        svec!["index", "sheet_name", "type", "visible"],
+        svec!["0", "First", "WorkSheet", "Visible"],
+        svec!["1", "Flexibility Test", "WorkSheet", "Visible"],
+        svec!["2", "Middle", "WorkSheet", "Visible"],
+        svec!["3", "Sheet1", "WorkSheet", "Visible"],
+        svec!["4", "trim test", "WorkSheet", "Visible"],
+        svec!["5", "date test", "WorkSheet", "Visible"],
+        svec!["6", "NoData", "WorkSheet", "Visible"],
+        svec!["7", "Last", "WorkSheet", "Visible"],
     ];
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
@@ -867,7 +867,10 @@ fn ods_short_metadata() {
     cmd.arg("--metadata").arg("s").arg(xls_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![svec!["index", "sheet_name",], svec!["0", "Sheet1",]];
+    let expected = vec![
+        svec!["index", "sheet_name", "type", "visible"],
+        svec!["0", "Sheet1", "WorkSheet", "Visible"],
+    ];
 
     assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
