@@ -332,7 +332,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         }
                         "Evaluation of given expression failed with the above error!"
                     })
-                    .unwrap_or_else(|_| error_result);
+                    .unwrap_or_else(|_| error_result.as_gil_ref());
 
                 if args.cmd_map {
                     let result = helpers

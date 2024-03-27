@@ -157,7 +157,10 @@ polars = { version = "0.38", features = [
     "csv",
     "dtype-full",
 ], optional = true }
-pyo3 = { version = "0.20", features = ["auto-initialize"], optional = true }
+pyo3 = { version = "0.21", features = [
+    "auto-initialize",
+    "gil-refs",
+], optional = true }
 qsv-dateparser = "0.11"
 qsv_docopt = "1.7"
 qsv-stats = "0.13"
