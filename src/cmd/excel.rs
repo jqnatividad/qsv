@@ -723,8 +723,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     trimmed_record.clear();
                 }
 
-                processed_chunk.push(record.clone());
-                record.clear();
+                // we use mem::take here to avoid a clone/allocation of the record
+                // it also has the nice side-effect of clearing the record, so we don't
+                // need to call clear() on it.
+                processed_chunk.push(std::mem::take(&mut record));
             }
             processed_chunk
         })
