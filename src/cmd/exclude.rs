@@ -53,7 +53,7 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
-use std::{collections::hash_map::Entry, fmt, fs, io, str};
+use std::{collections::hash_map::Entry, fs, io, str};
 
 use ahash::AHashMap;
 use byteorder::{BigEndian, WriteBytesExt};
@@ -243,22 +243,24 @@ impl<R: io::Read + io::Seek> ValueIndex<R> {
     }
 }
 
-impl<R> fmt::Debug for ValueIndex<R> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // Sort the values by order of first appearance.
-        let mut kvs = self.values.iter().collect::<Vec<_>>();
-        kvs.sort_by(|&(_, v1), &(_, v2)| v1[0].cmp(&v2[0]));
-        for (keys, rows) in kvs {
-            // This is just for debugging, so assume Unicode for now.
-            let keys = keys
-                .iter()
-                .map(|k| String::from_utf8(k.clone()).unwrap())
-                .collect::<Vec<_>>();
-            writeln!(f, "({}) => {rows:?}", keys.join(", "))?;
-        }
-        Ok(())
-    }
-}
+// This is just for debugging, so comment out for now.
+// use std::fmt;
+// impl<R> fmt::Debug for ValueIndex<R> {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         // Sort the values by order of first appearance.
+//         let mut kvs = self.values.iter().collect::<Vec<_>>();
+//         kvs.sort_by(|&(_, v1), &(_, v2)| v1[0].cmp(&v2[0]));
+//         for (keys, rows) in kvs {
+//             // This is just for debugging, so assume Unicode for now.
+//             let keys = keys
+//                 .iter()
+//                 .map(|k| String::from_utf8(k.clone()).unwrap())
+//                 .collect::<Vec<_>>();
+//             writeln!(f, "({}) => {rows:?}", keys.join(", "))?;
+//         }
+//         Ok(())
+//     }
+// }
 
 #[inline]
 fn get_row_key(sel: &Selection, row: &csv::ByteRecord, casei: bool) -> Vec<ByteString> {
