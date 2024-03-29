@@ -138,7 +138,7 @@ impl FromStr for TimestampResolution {
             "milli" => Ok(TimestampResolution::Millisecond),
             "micro" => Ok(TimestampResolution::Microsecond),
             "nano" => Ok(TimestampResolution::Nanosecond),
-            _ => Err(format!("Invalid timestamp resolution: {}", s)),
+            _ => Err(format!("Invalid timestamp resolution: {s}")),
         }
     }
 }
