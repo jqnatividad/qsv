@@ -1556,18 +1556,19 @@ impl fmt::Display for FieldType {
     }
 }
 
-impl fmt::Debug for FieldType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            TNull => write!(f, "NULL"),
-            TString => write!(f, "String"),
-            TFloat => write!(f, "Float"),
-            TInteger => write!(f, "Integer"),
-            TDate => write!(f, "Date"),
-            TDateTime => write!(f, "DateTime"),
-        }
-    }
-}
+// this is only used for debugging purposes, uncomment if needed
+// impl fmt::Debug for FieldType {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         match *self {
+//             TNull => write!(f, "NULL"),
+//             TString => write!(f, "String"),
+//             TFloat => write!(f, "Float"),
+//             TInteger => write!(f, "Integer"),
+//             TDate => write!(f, "Date"),
+//             TDateTime => write!(f, "DateTime"),
+//         }
+//     }
+// }
 
 /// `TypedSum` keeps a rolling sum of the data seen.
 /// It sums integers until it sees a float, at which point it sums floats.
