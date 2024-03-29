@@ -103,7 +103,7 @@ Common options:
 
 use std::{cmp, fmt::Write, path::PathBuf};
 
-use calamine::{open_workbook_auto, Data, Range, Reader, SheetType};
+use calamine::{open_workbook, Data, Error, Range, Reader, SheetType, Sheets};
 use indicatif::HumanCount;
 use log::info;
 use rayon::prelude::*;
@@ -237,9 +237,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .and_then(std::ffi::OsStr::to_str)
         .unwrap_or_default()
         .to_ascii_lowercase();
-    let ods_flag = match format.as_str() {
-        "xls" | "xlsx" | "xlsm" | "xlsb" => false,
-        "ods" => true,
+
+    let requested_range = args.flag_range.to_lowercase();
+
+    let mut ods_flag = false;
+    let mut workbook = match (format).as_str() {
+        "xls" | "xla" => Sheets::Xls(open_workbook(path).map_err(Error::Xls)?),
+        "xlsx" | "xlsm" => Sheets::Xlsx(open_workbook(path).map_err(Error::Xlsx)?),
+        "xlsb" => Sheets::Xlsb(open_workbook(path).map_err(Error::Xlsb)?),
+        "ods" => {
+            ods_flag = true;
+            Sheets::Ods(open_workbook(path).map_err(Error::Ods)?)
+        },
         _ => {
             return fail_incorrectusage_clierror!(
                 "\"{format}\" not supported. The excel command only supports the following file \
@@ -247,10 +256,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             );
         },
     };
-
-    let requested_range = args.flag_range.to_lowercase();
-
-    let mut workbook = open_workbook_auto(path)?;
 
     let sheet_names = workbook.sheet_names();
     if sheet_names.is_empty() {
@@ -595,6 +600,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     wtr.write_record(&record)?;
 
     let no_date_format: bool;
+    // TODO: Clippy lint is broken, remove allow once fixed.
+    // https://github.com/rust-lang/rust-clippy/issues/12580
     #[allow(clippy::manual_unwrap_or_default)]
     let date_format = if let Some(df) = args.flag_date_format {
         no_date_format = false;
