@@ -63,7 +63,10 @@ datefmt options:
     -r, --rename <name>         New name for the transformed column.
     --prefer-dmy                Prefer to parse dates in dmy format. Otherwise, use mdy format.
     --keep-zero-time            If a formatted date ends with "T00:00:00+00:00", keep the time
-                                instead of removing it. Only used with the DATEFMT subcommand.
+                                instead of removing it.
+    -R, --ts-resolution <res>   The resolution to use when parsing Unix timestamps.
+                                Valid values are "sec", "milli", "micro", "nano".
+                                [default: sec]
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number of CPUs detected.
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
@@ -79,6 +82,9 @@ Common options:
     -p, --progressbar           Show progress bars. Not valid for stdin.
 "#;
 
+use std::str::FromStr;
+
+use chrono::{DateTime, TimeZone, Utc};
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use qsv_dateparser::parse_with_preference;
@@ -103,6 +109,7 @@ struct Args {
     flag_rename:         Option<String>,
     flag_prefer_dmy:     bool,
     flag_keep_zero_time: bool,
+    flag_ts_resolution:  String,
     flag_formatstr:      String,
     flag_batch:          u32,
     flag_jobs:           Option<usize>,
@@ -111,6 +118,55 @@ struct Args {
     flag_no_headers:     bool,
     flag_delimiter:      Option<Delimiter>,
     flag_progressbar:    bool,
+}
+
+#[derive(Default, Clone, Copy)]
+enum TimestampResolution {
+    #[default]
+    Second,
+    Millisecond,
+    Microsecond,
+    Nanosecond,
+}
+
+impl FromStr for TimestampResolution {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "sec" => Ok(TimestampResolution::Second),
+            "milli" => Ok(TimestampResolution::Millisecond),
+            "micro" => Ok(TimestampResolution::Microsecond),
+            "nano" => Ok(TimestampResolution::Nanosecond),
+            _ => Err(format!("Invalid timestamp resolution: {}", s)),
+        }
+    }
+}
+
+#[inline]
+fn unix_timestamp(input: &str, resolution: TimestampResolution) -> Option<DateTime<Utc>> {
+    let Ok(ts_input_val) = input.parse::<i64>() else {
+        return None;
+    };
+
+    match resolution {
+        TimestampResolution::Second => Utc
+            .timestamp_opt(ts_input_val, 0)
+            .single()
+            .map(|result| result.with_timezone(&Utc)),
+        TimestampResolution::Millisecond => Utc
+            .timestamp_millis_opt(ts_input_val)
+            .single()
+            .map(|result| result.with_timezone(&Utc)),
+        TimestampResolution::Microsecond => Utc
+            .timestamp_micros(ts_input_val)
+            .single()
+            .map(|result| result.with_timezone(&Utc)),
+        TimestampResolution::Nanosecond => {
+            let result = Utc.timestamp_nanos(ts_input_val).with_timezone(&Utc);
+            Some(result)
+        },
+    }
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -125,6 +181,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
+
+    let tsres = args.flag_ts_resolution.parse::<TimestampResolution>()?;
 
     let mut headers = rdr.headers()?.clone();
 
@@ -219,8 +277,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 for col_index in &*sel {
                     record[*col_index].clone_into(&mut cell);
                     if !cell.is_empty() {
-                        parsed_date = parse_with_preference(&cell, prefer_dmy);
-                        // log::debug!("Parsed date: {:?}", parsed_date);
+                        parsed_date = if let Some(ts) = unix_timestamp(&cell, tsres) {
+                            Ok(ts)
+                        } else {
+                            parse_with_preference(&cell, prefer_dmy)
+                        };
                         if let Ok(format_date) = parsed_date {
                             formatted_date = format_date.format(&flag_formatstr).to_string();
                             if !keep_zero_time && formatted_date.ends_with("T00:00:00+00:00") {
