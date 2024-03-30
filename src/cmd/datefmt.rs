@@ -64,6 +64,20 @@ datefmt options:
     --prefer-dmy                Prefer to parse dates in dmy format. Otherwise, use mdy format.
     --keep-zero-time            If a formatted date ends with "T00:00:00+00:00", keep the time
                                 instead of removing it.
+    --input-tz=<string>         The timezone to use for the input date if the date does not have
+                                timezone specified. The timezone must be a valid IANA timezone name or
+                                the string "local" for the local timezone.
+                                See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+                                for a list of valid timezone names.
+                                [default: UTC]
+    --output-tz=<string>        The timezone to use for the output date.
+                                The timezone must be a valid IANA timezone name or the string "local".
+                                [default: UTC]
+    --default-tz=<string>       The timezone to use for BOTH input and output dates when they do have timezone.
+                                Shortcut for --input-tz and --output-tz set to the same timezone.
+                                The timezone must be a valid IANA timezone name or the string "local".
+    --utc                       Shortcut for --input-tz and --output-tz set to UTC.
+    --zulu                      Shortcut for --output-tz set to UTC and --formatstr set to "%Y-%m-%dT%H:%M:%SZ".
     -R, --ts-resolution <res>   The resolution to use when parsing Unix timestamps.
                                 Valid values are "sec", "milli", "micro", "nano".
                                 [default: sec]
@@ -111,6 +125,11 @@ struct Args {
     flag_keep_zero_time: bool,
     flag_ts_resolution:  String,
     flag_formatstr:      String,
+    flag_input_tz:       Option<String>,
+    flag_output_tz:      Option<String>,
+    flag_default_tz:     Option<String>,
+    flag_utc:            bool,
+    flag_zulu:           bool,
     flag_batch:          u32,
     flag_jobs:           Option<usize>,
     flag_new_column:     Option<String>,
@@ -205,7 +224,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         wtr.write_record(&headers)?;
     }
 
-    let flag_formatstr = args.flag_formatstr;
+    let mut flag_formatstr = args.flag_formatstr;
     let flag_new_column = args.flag_new_column;
 
     // prep progress bar
@@ -234,6 +253,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let batchsize: usize = args.flag_batch as usize;
     let mut batch = Vec::with_capacity(batchsize);
     let mut batch_results = Vec::with_capacity(batchsize);
+
+    // set timezone variables
+    let mut input_tz = args.flag_input_tz;
+    let mut output_tz = args.flag_output_tz;
+    let default_tz = args.flag_default_tz;
+    if args.flag_utc {
+        input_tz = Some("UTC".to_string());
+        output_tz = Some("UTC".to_string());
+    }
+    if args.flag_zulu {
+        output_tz = Some("UTC".to_string());
+        flag_formatstr = "%Y-%m-%dT%H:%M:%SZ".to_string();
+    }
 
     // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
