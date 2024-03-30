@@ -28,7 +28,7 @@ jobs:
       - name: Install Wix Toolset
         run: |
           # Download the latest stable release of Wix Toolset
-          $url = 'https://github.com/wixtoolset/wix3/releases/latest/download/wix311-binaries.zip'
+          $url = 'https://github.com/wixtoolset/wix3/releases/latest/download/wix314-binaries.zip'
           Invoke-WebRequest -Uri $url -OutFile 'wix.zip'
 
           # Extract the downloaded zip file

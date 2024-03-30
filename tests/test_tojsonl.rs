@@ -122,6 +122,51 @@ fn tojsonl_boolean_1or0() {
 {"col1":false,"col2":"Bob"}"#;
     assert_eq!(got, expected);
 }
+#[test]
+#[serial]
+fn tojsonl_noboolean_1or0() {
+    let wrk = Workdir::new("tojsonl_noboolean_1or0");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["1", "Mark"],
+            svec!["0", "John"],
+            svec!["0", "Bob"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("--no-boolean").arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"col1":1,"col2":"Mark"}
+{"col1":0,"col2":"John"}
+{"col1":0,"col2":"Bob"}"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+#[serial]
+fn tojsonl_noboolean_tworecords() {
+    let wrk = Workdir::new("tojsonl_noboolean_tworecords");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["col1", "col2"],
+            svec!["1", "Mark"],
+            svec!["0", "John"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"col1":1,"col2":"Mark"}
+{"col1":0,"col2":"John"}"#;
+    assert_eq!(got, expected);
+}
 
 #[test]
 #[serial]
@@ -134,6 +179,7 @@ fn tojsonl_boolean_1or0_false_positive_handling() {
             svec!["15", "Mark"],
             svec!["02", "John"],
             svec!["02", "Bob"],
+            svec!["15", "Mary"],
         ],
     );
 
@@ -143,7 +189,8 @@ fn tojsonl_boolean_1or0_false_positive_handling() {
     let got: String = wrk.stdout(&mut cmd);
     let expected = r#"{"col1":"15","col2":"Mark"}
 {"col1":"02","col2":"John"}
-{"col1":"02","col2":"Bob"}"#;
+{"col1":"02","col2":"Bob"}
+{"col1":"15","col2":"Mary"}"#;
     assert_eq!(got, expected);
 }
 
@@ -158,6 +205,7 @@ fn tojsonl_not_boolean_case_sensitive() {
             svec!["True", "Mark"],
             svec!["False", "John"],
             svec!["false", "Bob"],
+            svec!["TRUE", "Mary"],
         ],
     );
 
@@ -166,11 +214,12 @@ fn tojsonl_not_boolean_case_sensitive() {
 
     // properly treated as boolean since col1's domain has two values
     // case-insensitive, even though the enum for col1 is
-    // True, False and false
+    // True, False, false and TRUE
     let got: String = wrk.stdout(&mut cmd);
     let expected = r#"{"col1":true,"col2":"Mark"}
 {"col1":false,"col2":"John"}
-{"col1":false,"col2":"Bob"}"#;
+{"col1":false,"col2":"Bob"}
+{"col1":true,"col2":"Mary"}"#;
     assert_eq!(got, expected);
 }
 
@@ -250,7 +299,7 @@ fn tojsonl_boolean_null() {
 
 #[test]
 #[serial]
-fn tojsonl_boolean_yes_null() {
+fn tojsonl_boolean_y_null() {
     let wrk = Workdir::new("tojsonl");
     wrk.create(
         "in.csv",
@@ -259,6 +308,7 @@ fn tojsonl_boolean_yes_null() {
             svec!["y", "Mark"],
             svec!["", "John"],
             svec!["", "Bob"],
+            svec!["y", "Mary"],
         ],
     );
 
@@ -268,7 +318,8 @@ fn tojsonl_boolean_yes_null() {
     let got: String = wrk.stdout(&mut cmd);
     let expected = r#"{"col1":true,"col2":"Mark"}
 {"col1":false,"col2":"John"}
-{"col1":false,"col2":"Bob"}"#;
+{"col1":false,"col2":"Bob"}
+{"col1":true,"col2":"Mary"}"#;
     assert_eq!(got, expected);
 }
 
@@ -370,6 +421,30 @@ fn tojsonl_issue_1649_false_positive_tf() {
     let got: String = wrk.stdout(&mut cmd);
     let expected = r#"{"id":1,"name":"François Hollande"}
 {"id":2,"name":"Tarja Halonen"}"#;
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn tojsonl_issue_1649_false_positive_tf_3recs() {
+    let wrk = Workdir::new("tojsonl_issue_1649_false_positive_tf_3_recs");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["id", "name"],
+            svec!["1", "Fanuel"],
+            svec!["2", "Travis"],
+            svec!["3", "Travis"],
+        ],
+    );
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"id":1,"name":"Fanuel"}
+{"id":2,"name":"Travis"}
+{"id":3,"name":"Travis"}"#;
 
     assert_eq!(got, expected);
 }

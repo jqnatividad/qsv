@@ -75,6 +75,35 @@ fn dedup_issue_1381() {
 }
 
 #[test]
+fn dedup_issue_1665_numeric() {
+    let wrk = Workdir::new("dedup_issue_1665_numeric");
+    wrk.create(
+        "in.csv",
+        vec![
+            svec!["data"],
+            svec!["1"],
+            svec!["3"],
+            svec!["3"],
+            svec!["5"],
+            svec!["10"],
+        ],
+    );
+
+    let mut cmd = wrk.command("dedup");
+    cmd.arg("-N").arg("in.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["data"],
+        svec!["1"],
+        svec!["3"],
+        svec!["5"],
+        svec!["10"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn dedup_select() {
     let wrk = Workdir::new("dedup_select");
     wrk.create(

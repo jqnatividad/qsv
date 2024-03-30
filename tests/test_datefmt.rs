@@ -74,9 +74,52 @@ fn datefmt_to_unixtime() {
         svec!["This is not a date and it will not be reformatted"],
         // %s formatstr can only do unixtime in seconds, that's why there's rounding here
         svec!["1511648546"],
-        svec!["9223372036"],
+        svec!["1620021848429"],
         svec!["9223372036"],
         svec!["-770144728"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn datefmt_unixtime_ms_to_date() {
+    let wrk = Workdir::new("datefmt_unixtime_ms_to_date");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date"],
+            svec!["September 17, 2012 10:09am EST"],
+            svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
+            svec!["2009-01-20 05:00 EST"],
+            svec!["July 4, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z"],
+            svec!["This is not a date and it will not be reformatted"],
+            svec!["1511648546"],
+            svec!["1620021848429"],
+            svec!["1620024872717915000"],
+            svec!["1945-08-06T06:54:32.717915+00:00"],
+            svec!["1707369660000"],
+        ],
+    );
+    let mut cmd = wrk.command("datefmt");
+    cmd.arg("Created Date")
+        .args(["--ts-resolution", "milli"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date"],
+        svec!["2012-09-17T15:09:00+00:00"],
+        svec!["2021-06-02T06:31:39+00:00"],
+        svec!["2009-01-20T10:00:00+00:00"],
+        svec!["2005-07-04"],
+        svec!["2021-05-01T01:17:02.604456+00:00"],
+        svec!["This is not a date and it will not be reformatted"],
+        svec!["1970-01-18T11:54:08.546+00:00"],
+        svec!["2021-05-03T06:04:08.429+00:00"],
+        svec!["2262-04-11T23:47:16.854775807+00:00"],
+        svec!["1945-08-06T06:54:32.717915+00:00"],
+        svec!["2024-02-08T05:21:00+00:00"],
     ];
     assert_eq!(got, expected);
 }

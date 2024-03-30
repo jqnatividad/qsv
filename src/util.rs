@@ -21,6 +21,8 @@ use serde::de::DeserializeOwned;
 use serde::de::{Deserialize, Deserializer, Error};
 use sysinfo::System;
 
+#[cfg(feature = "polars")]
+use crate::cmd::count::polars_count_input;
 use crate::{
     config,
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
@@ -38,7 +40,7 @@ macro_rules! regex_oncelock {
 // leave at least 20% of the available memory free
 const DEFAULT_FREEMEMORY_HEADROOM_PCT: u8 = 20;
 
-static ROW_COUNT: OnceLock<u64> = OnceLock::new();
+static ROW_COUNT: OnceLock<Option<u64>> = OnceLock::new();
 
 pub type ByteString = Vec<u8>;
 
@@ -293,11 +295,33 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
         Ok(idx.count())
     } else {
         // index does not exist or is stale,
-        // count records by iterating through records
-        // Do this only once per invocation and cache the result, so we don't
-        // have to re-count rows every time we need to know the row count for CSVs
-        // that don't have an index.
-        let rc = ROW_COUNT.get_or_init(|| {
+        // count records by using polars mem-mapped reader if available
+        // otherwise, count records by iterating through records
+        // Do this only once per invocation and cache the result in ROW_COUNT,
+        // so we don't have to re-count rows every time we need to know the
+        // rowcount for CSVs that don't have an index.
+        #[cfg(feature = "polars")]
+        let count_opt = ROW_COUNT.get_or_init(|| {
+            if let Ok((count, _)) = polars_count_input(conf, false) {
+                Some(count)
+            } else {
+                // if polars_count_input fails, fall back to regular CSV reader
+                if let Ok(mut rdr) = conf.reader() {
+                    let mut count = 0_u64;
+                    let mut _record = csv::ByteRecord::new();
+                    #[allow(clippy::used_underscore_binding)]
+                    while rdr.read_byte_record(&mut _record).unwrap_or_default() {
+                        count += 1;
+                    }
+                    Some(count)
+                } else {
+                    None
+                }
+            }
+        });
+
+        #[cfg(not(feature = "polars"))]
+        let count_opt = ROW_COUNT.get_or_init(|| {
             if let Ok(mut rdr) = conf.reader() {
                 let mut count = 0_u64;
                 let mut _record = csv::ByteRecord::new();
@@ -305,17 +329,45 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
                 while rdr.read_byte_record(&mut _record).unwrap_or_default() {
                     count += 1;
                 }
-                count
+                Some(count)
             } else {
-                // sentinel value to indicate that we were unable to count rows
-                u64::MAX
+                None
             }
         });
 
-        if *rc < u64::MAX {
-            Ok(*rc)
-        } else {
-            Err(CliError::Other("Unable to get row count".to_string()))
+        match *count_opt {
+            Some(count) => Ok(count),
+            None => Err(CliError::Other("Unable to get row count".to_string())),
+        }
+    }
+}
+
+/// Count rows using "regular" CSV reader
+/// we don't use polars mem-mapped reader here
+/// even if it's available
+#[inline]
+pub fn count_rows_regular(conf: &Config) -> Result<u64, CliError> {
+    if let Some(idx) = conf.indexed().unwrap_or(None) {
+        Ok(idx.count())
+    } else {
+        // index does not exist or is stale,
+        let count_opt = ROW_COUNT.get_or_init(|| {
+            if let Ok(mut rdr) = conf.reader() {
+                let mut count = 0_u64;
+                let mut _record = csv::ByteRecord::new();
+                #[allow(clippy::used_underscore_binding)]
+                while rdr.read_byte_record(&mut _record).unwrap_or_default() {
+                    count += 1;
+                }
+                Some(count)
+            } else {
+                None
+            }
+        });
+
+        match *count_opt {
+            Some(count) => Ok(count),
+            None => Err(CliError::Other("Unable to get row count".to_string())),
         }
     }
 }
@@ -976,7 +1028,7 @@ pub fn safe_header_names(
     for header_name in headers {
         let reserved_found = if let Some(reserved_names_vec) = reserved_names.clone() {
             if keep_case {
-                buf_wrk = header_name.to_owned();
+                header_name.clone_into(&mut buf_wrk);
             } else {
                 to_lowercase_into(header_name, &mut buf_wrk);
             };
@@ -1078,10 +1130,7 @@ pub fn utf8_truncate(input: &mut String, maxsize: usize) {
         {
             let mut char_iter = input.char_indices();
             while utf8_maxsize >= maxsize {
-                utf8_maxsize = match char_iter.next_back() {
-                    Some((index, _)) => index,
-                    _ => 0,
-                };
+                (utf8_maxsize, _) = char_iter.next_back().unwrap_or_default();
             }
         } // Extra {} wrap to limit the immutable borrow of char_indices()
         input.truncate(utf8_maxsize);
@@ -1498,11 +1547,39 @@ pub fn process_input(
             {
                 let mut input_file = std::fs::File::open(input_path)?;
                 let mut input_file_contents = String::new();
+                let mut canonical_invalid_path = PathBuf::new();
+                let mut invalid_files = 0_u32;
                 input_file.read_to_string(&mut input_file_contents)?;
-                input_file_contents
+                let infile_list_vec = input_file_contents
                     .lines()
+                    .filter(|line| !line.trim().is_empty() && !line.starts_with('#'))
                     .map(PathBuf::from)
-                    .collect::<Vec<_>>()
+                    .filter_map(|path| {
+                        if path.exists() {
+                            Some(path)
+                        } else {
+                            // note that we're warn logging if files do not exist for
+                            // each line in the infile-list file
+                            // even though we're returning an error on the FIRST file that
+                            // doesn't exist in the next section. This is because
+                            // we want to log ALL the invalid file paths in the infile-list
+                            // file, not just the first one.
+                            invalid_files += 1;
+                            canonical_invalid_path = path.canonicalize().unwrap_or_default();
+                            log::warn!(
+                                ".infile-list file '{}': '{}' does not exist",
+                                path.display(),
+                                canonical_invalid_path.display()
+                            );
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                log::info!(
+                    ".infile-list file parsed. Filecount - valid:{} invalid:{invalid_files}",
+                    infile_list_vec.len()
+                );
+                infile_list_vec
             } else {
                 // if the input is not an ".infile-list" file, add the file to the input
                 arg_input
@@ -1567,12 +1644,19 @@ pub fn replace_column_value(
         .collect()
 }
 
+/// format a SystemTime from a file's metadata to a string using the format specifier
+#[inline]
 pub fn format_systemtime(time: SystemTime, format_specifier: &str) -> String {
+    // safety: we know the duration since UNIX EPOCH is always positive
+    // as we're using this helper to format file metadata SystemTime
+    // So if the duration is negative, then a file was created before UNIX EPOCH
+    // which is impossible as the UNIX EPOCH is the start of time for file systems
+    // we use expect here as we want it to panic if the file was created before UNIX EPOCH
     let timestamp = time
         .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap()
+        .expect("SystemTime before UNIX EPOCH")
         .as_secs();
-    let naive = chrono::NaiveDateTime::from_timestamp_opt(timestamp as i64, 0).unwrap_or_default();
-    let datetime = chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(naive, chrono::Utc);
+
+    let datetime = chrono::DateTime::from_timestamp(timestamp as i64, 0).unwrap_or_default();
     format!("{datetime}", datetime = datetime.format(format_specifier))
 }

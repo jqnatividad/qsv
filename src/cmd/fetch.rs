@@ -4,32 +4,61 @@ Fetches data from web services for every row using HTTP Get.
 
 Fetch is integrated with `jql` to directly parse out values from an API JSON response.
 
-<url-column> needs to be a fully qualified URL path. Alternatively, you can dynamically
-construct URLs for each CSV record with the --url-template option (see Examples below).
+CACHE OPTIONS:
+Fetch caches responses to minimize traffic and maximize performance. It has four
+mutually-exclusive caching options:
 
-To use a proxy, please set env vars HTTP_PROXY, HTTPS_PROXY or ALL_PROXY
-(e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
+1. In memory cache (the default)
+2. Disk cache
+3. Redis cache
+4. No cache
 
-Fetch caches responses to minimize traffic and maximize performance. By default, it uses
-a non-persistent memoized cache for each fetch session.
+In memory Cache:
+In memory cache is the default and is used if no caching option is set.
+It uses a non-persistent, in-memory, 2 million entry Least Recently Used (LRU)
+cache for each fetch session. To change the maximum number of entries in the cache,
+set the --mem-cache-size option.
 
-For persistent, inter-session caching, Redis is supported with the --redis flag. 
+Disk Cache:
+For persistent, inter-session caching, a DiskCache can be enabled with the --disk-cache flag.
+By default, it will store the cache in the directory ~/.qsv/cache/fetch, with a cache expiry
+Time-to-Live (TTL) of 2,419,200 seconds (28 days), and cache hits NOT refreshing the TTL
+of cached values.
+
+Set the --disk-cache-dir option and the environment variables QSV_DISKCACHE_TTL_SECS and
+QSV_DISKCACHE_TTL_REFRESH to change default DiskCache settings.
+
+Redis Cache:
+Another persistent, inter-session cache option is a Redis cache enabled with the --redis flag. 
 By default, it will connect to a local Redis instance at redis://127.0.0.1:6379/1,
 with a cache expiry Time-to-Live (TTL) of 2,419,200 seconds (28 days),
 and cache hits NOT refreshing the TTL of cached values.
 
-If you don't want responses to be cached, use the --no-cache flag.
-
 Set the environment variables QSV_REDIS_CONNSTR, QSV_REDIS_TTL_SECONDS and 
 QSV_REDIS_TTL_REFRESH to change default Redis settings.
 
-Supports brotli, gzip and deflate automatic decompression for improved throughput and
-performance, preferring brotli over gzip over deflate.
+If you don't want responses to be cached at all, use the --no-cache flag.
 
-Automatically upgrades its connection to HTTP/2 with adaptive flow control as well
-if the server supports it.
+NETWORK OPTIONS:
+Fetch recognizes RateLimit and Retry-After headers and dynamically throttles requests
+to be as fast as allowed. The --rate-limit option sets the maximum number of queries per second
+(QPS) to be made. The default is 0, which means to go as fast as possible,
+automatically throttling as required.
+
+To use a proxy, set the environment variables HTTP_PROXY, HTTPS_PROXY or ALL_PROXY
+(e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
+
+qsv fetch supports brotli, gzip and deflate automatic decompression for improved throughput
+and performance, preferring brotli over gzip over deflate.
+
+It automatically upgrades its connection to the much faster and more efficient HTTP/2 protocol
+with adaptive flow control if the server supports it.
 See https://www.cloudflare.com/learning/performance/http2-vs-http1.1/ and
 https://medium.com/coderscorner/http-2-flow-control-77e54f7fd518 for more info.
+
+URL OPTIONS:
+<url-column> needs to be a fully qualified URL path. Alternatively, you can dynamically
+construct URLs for each CSV record with the --url-template option (see Examples below).
 
 EXAMPLES USING THE URL-COLUMN ARGUMENT:
 
@@ -159,9 +188,11 @@ Fetch options:
                                [default: none]
 
                                CACHING OPTIONS:
-    --no-mem-cache             Do not use in-memory cache. If this option is not set and --redis-cache
-                               or --disk-cache are also not set, the default in-memory cache is used and only
-                               caches responses for the current fetch session.
+    --no-cache                 Do not cache responses.
+    
+    --mem-cache-size <count>   Maximum number of entries in the in-memory LRU cache.
+                               [default: 2000000]
+    
     --disk-cache               Use a persistent disk cache for responses. The cache is stored in the directory
                                specified by --disk-cache-dir. If the directory does not exist, it will be
                                created. If the directory exists, it will be used as is.
@@ -173,7 +204,8 @@ Fetch options:
                                does not exist, it will be created. If the directory exists, it will be used as is,
                                and will not be flushed. This option allows you to maintain several disk caches
                                for different fetch jobs (e.g. one for geocoding, another for weather, etc.)
-                               [default: ~/.qsv/cache]
+                               [default: ~/.qsv/cache/fetch]
+
     --redis-cache              Use Redis to cache responses. It connects to "redis://127.0.0.1:6379/1"
                                with a connection pool size of 20, with a TTL of 28 days, and a cache hit 
                                NOT renewing an entry's TTL.
@@ -205,7 +237,7 @@ use std::{fs, num::NonZeroU32, sync::OnceLock, thread, time};
 use cached::{
     proc_macro::{cached, io_cached},
     stores::DiskCacheBuilder,
-    Cached, IOCached, RedisCache, Return,
+    Cached, IOCached, RedisCache, Return, SizedCache,
 };
 use dynfmt::Format;
 use governor::{
@@ -256,7 +288,8 @@ struct Args {
     flag_cookies:        bool,
     flag_user_agent:     Option<String>,
     flag_report:         String,
-    flag_no_mem_cache:   bool,
+    flag_no_cache:       bool,
+    flag_mem_cache_size: usize,
     flag_disk_cache:     bool,
     flag_disk_cache_dir: Option<String>,
     flag_redis_cache:    bool,
@@ -268,8 +301,15 @@ struct Args {
     flag_progressbar:    bool,
 }
 
-// connect to Redis at localhost, using database 1 by default when --redis is enabled
-static DEFAULT_REDIS_CONN_STR: &str = "redis://127.0.0.1:6379/1";
+// set memcache size - the default is 2 million entries
+// and is set through the docopt usage text
+static MEM_CACHE_SIZE: OnceLock<usize> = OnceLock::new();
+
+static QSV_REDIS_CONNSTR_ENV: &str = "QSV_REDIS_CONNSTR";
+static QSV_REDIS_MAX_POOL_SIZE_ENV: &str = "QSV_REDIS_MAX_POOL_SIZE";
+static QSV_REDIS_TTL_SECS_ENV: &str = "QSV_REDIS_TTL_SECS";
+static QSV_REDIS_TTL_REFRESH_ENV: &str = "QSV_REDIS_TTL_REFRESH";
+static DEFAULT_REDIS_CONN_STRING: OnceLock<String> = OnceLock::new();
 static DEFAULT_REDIS_TTL_SECS: u64 = 60 * 60 * 24 * 28; // 28 days in seconds
 static DEFAULT_REDIS_POOL_SIZE: u32 = 20;
 
@@ -282,7 +322,7 @@ const FETCH_REPORT_PREFIX: &str = "qsv_fetch_";
 const FETCH_REPORT_SUFFIX: &str = ".fetch-report.tsv";
 
 // prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
-static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
+pub static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
 
 // for governor/ratelimiter
 const MINIMUM_WAIT_MS: u64 = 10;
@@ -290,44 +330,44 @@ const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
 
 // for --report option
 #[derive(PartialEq)]
-enum ReportKind {
+pub enum ReportKind {
     Detailed,
     Short,
     None,
 }
 
 #[derive(Debug)]
-struct RedisConfig {
-    conn_str:      String,
-    max_pool_size: u32,
-    ttl_secs:      u64,
-    ttl_refresh:   bool,
+pub struct RedisConfig {
+    pub conn_str:      String,
+    pub max_pool_size: u32,
+    pub ttl_secs:      u64,
+    pub ttl_refresh:   bool,
 }
 impl RedisConfig {
-    fn new() -> RedisConfig {
+    pub fn new() -> RedisConfig {
         Self {
-            conn_str:      std::env::var("QSV_REDIS_CONNSTR")
-                .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STR.to_string()),
-            max_pool_size: std::env::var("QSV_REDIS_MAX_POOL_SIZE")
+            conn_str:      std::env::var(QSV_REDIS_CONNSTR_ENV)
+                .unwrap_or_else(|_| DEFAULT_REDIS_CONN_STRING.get().unwrap().to_string()),
+            max_pool_size: std::env::var(QSV_REDIS_MAX_POOL_SIZE_ENV)
                 .unwrap_or_else(|_| DEFAULT_REDIS_POOL_SIZE.to_string())
                 .parse()
                 .unwrap_or(DEFAULT_REDIS_POOL_SIZE),
-            ttl_secs:      std::env::var("QSV_REDIS_TTL_SECS")
+            ttl_secs:      std::env::var(QSV_REDIS_TTL_SECS_ENV)
                 .unwrap_or_else(|_| DEFAULT_REDIS_TTL_SECS.to_string())
                 .parse()
                 .unwrap_or(DEFAULT_REDIS_TTL_SECS),
-            ttl_refresh:   util::get_envvar_flag("QSV_REDIS_TTL_REFRESH"),
+            ttl_refresh:   util::get_envvar_flag(QSV_REDIS_TTL_REFRESH_ENV),
         }
     }
 }
 
 #[derive(Debug)]
-struct DiskCacheConfig {
-    ttl_secs:    u64,
-    ttl_refresh: bool,
+pub struct DiskCacheConfig {
+    pub ttl_secs:    u64,
+    pub ttl_refresh: bool,
 }
 impl DiskCacheConfig {
-    fn new() -> DiskCacheConfig {
+    pub fn new() -> DiskCacheConfig {
         Self {
             ttl_secs:    std::env::var("QSV_DISKCACHE_TTL_SECS")
                 .unwrap_or_else(|_| DEFAULT_DISKCACHE_TTL_SECS.to_string())
@@ -338,8 +378,8 @@ impl DiskCacheConfig {
     }
 }
 
-#[derive(Default, PartialEq)]
-enum CacheType {
+#[derive(Debug, Default, PartialEq)]
+pub enum CacheType {
     #[default]
     None,
     InMemory,
@@ -348,10 +388,10 @@ enum CacheType {
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
-struct FetchResponse {
-    response:    String,
-    status_code: u16,
-    retries:     u8,
+pub struct FetchResponse {
+    pub response:    String,
+    pub status_code: u16,
+    pub retries:     u8,
 }
 
 static DISKCACHE_DIR: OnceLock<String> = OnceLock::new();
@@ -361,11 +401,21 @@ static DISKCACHECONFIG: OnceLock<DiskCacheConfig> = OnceLock::new();
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
+    // connect to Redis at localhost, using database 1 by default when --redis-cache is enabled
+    // fetch uses database 1 by default, as opposed to the database 2 with fetchpost
+    DEFAULT_REDIS_CONN_STRING
+        .set("redis://127.0.0.1:6379/1".to_string())
+        .unwrap();
+
+    // set memcache size
+    MEM_CACHE_SIZE.set(args.flag_mem_cache_size).unwrap();
+
+    // set timeout
     TIMEOUT_SECS
         .set(util::timeout_secs(args.flag_timeout)?)
         .unwrap();
 
-    // setup response caching
+    // setup diskcache dir response caching
     let diskcache_dir = if let Some(dir) = &args.flag_disk_cache_dir {
         if dir.starts_with('~') {
             // expand the tilde
@@ -378,7 +428,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         String::new()
     };
 
-    let cache_type = if args.flag_disk_cache {
+    let cache_type = if args.flag_no_cache {
+        CacheType::None
+    } else if args.flag_disk_cache {
         // if --flush-cache is set, flush the cache directory first if it exists
         if args.flag_flush_cache
             && !diskcache_dir.is_empty()
@@ -387,6 +439,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if let Err(e) = fs::remove_dir_all(&diskcache_dir) {
                 return fail_clierror!(r#"Cannot remove cache directory "{diskcache_dir}": {e:?}"#);
             }
+            info!("flushed DiskCache directory: {diskcache_dir}");
         }
         // check if the cache directory exists, if it doesn't, create it
         if !diskcache_dir.is_empty() {
@@ -426,11 +479,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             info!("flushed Redis database.");
         }
         CacheType::Redis
-    } else if args.flag_no_mem_cache {
-        CacheType::None
     } else {
         CacheType::InMemory
     };
+    log::info!("Cache Type: {cache_type:?}");
 
     let mut rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -945,7 +997,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 // we only need url in the cache key
 // as this is an in-memory cache that is only used for one qsv session
 #[cached(
-    size = 2_000_000,
+    type = "SizedCache<String, Return<FetchResponse>>",
+    create = r##"{
+        let cache_size = MEM_CACHE_SIZE.get().unwrap();
+        let memcache = SizedCache::with_size(*cache_size);
+        log::info!("In Memory cache created - size: {cache_size} entries");
+        memcache
+    }"##,
     key = "String",
     convert = r#"{ format!("{}", url) }"#,
     with_cached_flag = true
@@ -984,12 +1042,15 @@ fn get_cached_response(
     create = r##"{
         let cache_dir = DISKCACHE_DIR.get().unwrap();
         let diskcache_config = DISKCACHECONFIG.get().unwrap();
-        DiskCacheBuilder::new("fetch")
+        let diskcache = DiskCacheBuilder::new("fetch")
             .set_disk_directory(cache_dir)
             .set_lifespan(diskcache_config.ttl_secs)
             .set_refresh(diskcache_config.ttl_refresh)
             .build()
-            .expect("error building disk cache")
+            .expect("error building disk cache");
+        log::info!("Disk cache created - dir: {cache_dir} - ttl: {ttl_secs}",
+            ttl_secs = diskcache_config.ttl_secs);
+        diskcache
     }"##,
     map_error = r##"|e| CliError::Other(format!("Diskcache Error: {:?}", e))"##,
     with_cached_flag = true
@@ -1027,13 +1088,19 @@ fn get_diskcache_response(
     convert = r##"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"##,
     create = r##" {
         let redis_config = REDISCONFIG.get().unwrap();
-        RedisCache::new("f", redis_config.ttl_secs)
+        let rediscache = RedisCache::new("f", redis_config.ttl_secs)
             .set_namespace("q")
             .set_refresh(redis_config.ttl_refresh)
             .set_connection_string(&redis_config.conn_str)
             .set_connection_pool_max_size(redis_config.max_pool_size)
             .build()
-            .expect("error building redis cache")
+            .expect("error building redis cache");
+        log::info!("Redis cache created - conn_str: {conn_str} - refresh: {ttl_refresh} - ttl: {ttl_secs} - pool_size: {pool_size}",
+            conn_str = redis_config.conn_str,
+            ttl_refresh = redis_config.ttl_refresh,
+            ttl_secs = redis_config.ttl_secs,
+            pool_size = redis_config.max_pool_size);
+        rediscache
     } "##,
     map_error = r##"|e| CliError::Other(format!("Redis Error: {:?}", e))"##,
     with_cached_flag = true

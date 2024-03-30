@@ -6,6 +6,237 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.124.1] - 2024-03-15
+
+# [Datapusher+](https://github.com/dathere/datapusher-plushttps://github.com/dathere/datapusher-plus) "_[Speed of Insight](https://dathere.com/2024/03/the-speed-of-insight/)_" Release! 🚀🚀🚀
+
+This release is all about speed, speed, speed! We've made qsv even faster by leveraging Polars' multithreaded, mem-mapped CSV reader to get near-instant row counts of large CSV files, and near instant SQL queries and aggregations with Datapusher+ - automagically inferring metadata and giving you quick insights into your data in seconds!
+
+We're demoing our qsv-powered Datapusher+ at the [March 2024 installment of CKAN Montly Live](https://ckan.org/events/ckan-datapusher-plus-automagical-metadata) on March 20, 2024, 13:00-14:00 UTC. [Join us](https://ckan.us4.list-manage.com/subscribe?u=91e21b1d5004f15a8fb3d3276&id=0b261bc4ca)!
+
+Beyond pushing data reliably at speed into your CKAN Datastore ([it pushes real good! 😉](https://github.com/dathere/datapusher-plus/discussions/23)), DP+ does some extended analysis, processing and enrichment of the data so it can be readily Used.
+
+Both `fetch` and `fetchpost` commands now have a `--disk-cache` option and are fully synched - forming the foundation for high-speed data enrichment from Web Services - including datHere's forthcoming, fully-integrated Data Enrichment Service.
+
+## 🏇🏽 Hi-ho Quicksilver, away! 🏇🏽
+
+---
+
+## Added
+* `count`: automatically use Polars multithreaded, mem-mapped CSV reader when `polars` feature is enabled to get near-instant row counts of large CSV files even without an index  https://github.com/jqnatividad/qsv/pull/1656
+* `qsvdp`: added polars support to Datapusher+-optimized binary variant, so we can do near instant SQL queries and aggregations during DP+ processing https://github.com/jqnatividad/qsv/pull/1664
+* `fetchpost`: added `--disk-cache` options and synced usage options with `fetch` https://github.com/jqnatividad/qsv/pull/1671
+* extended `.infile-list` to skip empty and commented lines, and to validate file paths
+https://github.com/jqnatividad/qsv/commit/20a45c80fa32ef8a8060bb32cc94b7934da23229 and 
+https://github.com/jqnatividad/qsv/commit/26509303719ce29e900cb73b5000671a78db6b4a
+
+## Changed
+* `sqlp`: automatically disable `read_csv()` fast path optimization when a custom delimiter is specified https://github.com/jqnatividad/qsv/pull/1648
+* refactored util::count_rows() helper to also use polars if available https://github.com/jqnatividad/qsv/commit/1e09e17e440d3cdc11237d9d9e45cefb82da5a42 and https://github.com/jqnatividad/qsv/commit/8d321fe8ad4c288b72edc7e8d082fcd6ec304a32
+* publish: updated Windows MSI publish GH Action workflow to use Wix 3.14 from 3.11 https://github.com/jqnatividad/qsv/commit/75894ef4e894f521056a93b4f0a14d7469bac022
+* deps: bump polars from 0.38.1 to 0.38.2 https://github.com/jqnatividad/qsv/commit/5faf90ed830541a724768e808c7f07f0a418e2ab
+* deps: update Luau from 0.614 to 0.616 https://github.com/jqnatividad/qsv/commit/eb197fe81738b4ed15352f5f89d5d5d1b0fad604 and https://github.com/jqnatividad/qsv/commit/52331da939a3cd278c6a1f474179bef2207364a8
+* build(deps): bump sysinfo from 0.30.6 to 0.30.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1650
+* build(deps): bump chrono from 0.4.34 to 0.4.35 by @dependabot in https://github.com/jqnatividad/qsv/pull/1651
+* build(deps): bump strum from 0.26.1 to 0.26.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1658
+* build(deps): bump qsv-stats from 0.12.0 to 0.13.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1663
+* build(deps): bump anyhow from 1.0.80 to 1.0.81 by @dependabot in https://github.com/jqnatividad/qsv/pull/1662
+* build(deps): bump reqwest from 0.11.25 to 0.11.26 by @dependabot in https://github.com/jqnatividad/qsv/pull/1667
+* applied select clippy recommendations
+* updated several indirect dependencies
+* added several benchmarks for new/changed commands
+
+## Fixed
+* `dedup`: fixed #1665 dedup not handling numeric values properly by adding a --numeric option  https://github.com/jqnatividad/qsv/pull/1666
+* `joinp`: reenable join validation tests now that Polars 0.38.2 join validation is working again https://github.com/jqnatividad/qsv/commit/5faf90ed830541a724768e808c7f07f0a418e2ab and https://github.com/jqnatividad/qsv/commit/fcfc75b855c615effb50f23c09a1d66ce70505e8
+* `count`: broken in unreleased 0.124.0. Polars-powered count require a "clean" CSV file as it infers the schema based on the first 1000 rows of a CSV. This will sometimes result in an invalid "error" (e.g. it infers a column is a number column, when its not). 0.124.1 fixes this by adding a fallback to the "regular" CSV reader if a Polars error occurs https://github.com/jqnatividad/qsv/commit/a2c086900d1c1f1ba8ed2b2d1eaf8e547e3ef740
+
+## Removed
+* `gender_guesser` 0.2.0 has been released. Remove patch.crates-io entry
+https://github.com/jqnatividad/qsv/commit/97873a5c496bfd559d7a7804db4d28b94915d536
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.123.0...0.124.1
+
+## [0.123.0] - 2024-03-05
+
+# [OPEN DATA DAY 2024](https://opendataday.org) Release! 🎉🎉🎉
+
+In celebration of [Open Data Day](https://en.wikipedia.org/wiki/International_Open_Data_Day), we're releasing qsv 0.123.0 - the biggest release ever with [330+ commits](https://github.com/jqnatividad/qsv/compare/0.122.0...0.123.0)! qsv 0.123.0 continues to focus on performance, stability and reliability as we continue setting the stage for qsv's big brother - qsv pro.
+
+We've been baking qsv pro for a while now, and it's almost ready for release. qsv pro is a cross-platform Desktop Data Wrangling tool marrying an Excel-like UI with the power of qsv, backed by cloud-based data cleaning, enrichment and enhancement service that's easy to use for casual Excel users and Data Publishers, yet powerful enough for data scientists and data engineers.
+
+Stay tuned!
+
+## Highlights:
+
+* `sqlp` now has automatic `read_csv()` fast path optimization, often making optimized queries run [dramatically faster](https://github.com/jqnatividad/qsv/discussions/1620) - e.g what took 6.09 seconds for a non-trivial SQL aggregation on an [18 column, 657mb CSV with 7.43 million rows](https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2019-04.csv.gz)  now takes just 0.14 seconds with the optimization - 🚀 **43.5x FASTER** 🚀 ! [^1]
+[^1]: measurements taken on an Apple Mac Mini 2023 model with an M2 Pro chip with 12 CPU cores & 32GB of RAM, running macOS Sonoma 14.4
+```bash
+# with fast path optimization turned off
+/usr/bin/time qsv sqlp taxi.csv --no-optimizations "select VendorID,sum(total_amount) from taxi group by VendorID order by VendorID"
+VendorID,total_amount
+1,52377417.52985942
+2,89959869.13054822
+4,600584.610000027
+(3, 2)
+        6.09 real         6.82 user         0.16 sys
+
+# with fast path optimization, fully exploiting Polars' multithreaded, mem-mapped CSV reader!
+ /usr/bin/time qsv sqlp taxi.csv "select VendorID,sum(total_amount) from taxi group by VendorID order by VendorID"
+VendorID,total_amount
+1,52377417.52985942
+2,89959869.13054822
+4,600584.610000027
+(3, 2)
+        0.14 real         1.09 user         0.09 sys
+
+# in contrast, csvq takes 72.46 seconds - 517.57x slower
+/usr/bin/time csvq "select VendorID,sum(total_amount) from taxi group by VendorID order by VendorID"
++----------+---------------------+
+| VendorID |  SUM(total_amount)  |
++----------+---------------------+
+| 1        |  52377417.529256366 |
+| 2        |    89959869.1264675 |
+| 4        |   600584.6099999828 |
++----------+---------------------+
+       72.46 real        65.15 user        75.17 sys
+```
+
+### "Traditional" SQL engines
+qsv and csvq both operate on "bare" CSVs. For comparison, let's contrast qsv's performance against "traditional" SQL engines
+that require setup and import (aka ETL).   Not counting setup and import time (which alone, takes several minutes), we get:
+
+#### **sqlite3.43.2** takes 2.910 seconds - 20.79x slower
+```sql
+sqlite> .timer on
+sqlite> select VendorID,sum(total_amount) from taxi group by VendorID order by VendorID;
+1,52377417.53
+2,89959869.13
+4,600584.61
+Run Time: real 2.910 user 2.569494 sys 0.272972
+```
+#### **PostgreSQL 15.6** using PgAdmin 4 v6.12 takes 18.527 seconds - 132.34x slower
+ 
+![Screenshot 2024-03-06 at 10 14 04 AM](https://github.com/jqnatividad/qsv/assets/1980690/5f7a0eca-d035-46b7-b4df-15991f92c00f)
+
+#### even with an index, qsv sqlp is still 5.96x faster
+
+<img width="996" alt="Screenshot 2024-03-08 at 7 57 57 AM" src="https://github.com/jqnatividad/qsv/assets/1980690/e2919dc6-68fd-4ad9-a56d-9a4dc105b59f">
+
+
+* `sqlp` now supports JSONL output format and adds compression support for Avro and Arrow output formats.
+* `fetch` now has a `--disk-cache` option, so you can cache web service responses to disk, complete with cache control and expiry handling!
+* `jsonl` is now multithreaded with additional `--batch` and `--job` options.
+* `split` now has three modes: split by record count, split by number of chunks and split by file size.
+* `datefmt` is a new top-level command for date formatting. We extracted it from `apply` to make it easier to use, and to set the stage for expanded date and timezone handling.
+* `enum` now has a `--start` option.
+* `excel` now has a `--keep-zero-time` option and now has improved datetime/duration parsing/handling with upgrade of calamine from 0.23 to 0.24.
+* `tojsonl` now has `--trim` and `--no-boolean` options and eliminated false positive boolean inferences. 
+
+---
+
+### Added
+* `apply`: add `gender_guess` operation https://github.com/jqnatividad/qsv/pull/1569
+* `datefmt`: new top-level command for date formatting.  https://github.com/jqnatividad/qsv/pull/1638
+* `enum`: add `--start` option https://github.com/jqnatividad/qsv/pull/1631
+* `excel`: added `--keep-zero-time` option; improved datetime/duration parsing/handling with upgrade of calamine from 0.23 to 0.24 https://github.com/jqnatividad/qsv/pull/1595
+* `fetch`: add `--disk-cache` option https://github.com/jqnatividad/qsv/pull/1621
+* `jsonl`: major performance refactor! Now multithreaded with addl `--batch` and `--job` options https://github.com/jqnatividad/qsv/pull/1553
+* `sniff`: added addl mimetype/file formats detected by bumping `file-format` from 0.23 to 0.24 https://github.com/jqnatividad/qsv/pull/1589
+* `split`: add `<outdir>` error handling and add usage text examples https://github.com/jqnatividad/qsv/pull/1585
+* `split`: added `--chunks` option https://github.com/jqnatividad/qsv/pull/1587
+* `split`: add `--kb-size` option https://github.com/jqnatividad/qsv/pull/1613
+* `sqlp`: added JSONL output format and compression support for AVRO and Arrow output formats in https://github.com/jqnatividad/qsv/pull/1635
+* `tojsonl`: add  `--trim` option https://github.com/jqnatividad/qsv/pull/1554
+* Add QSV_DOTENV_PATH env var https://github.com/jqnatividad/qsv/pull/1562
+* Add license scan report and status by @fossabot in https://github.com/jqnatividad/qsv/pull/1550
+* Added several benchmarks for new/changed commands
+
+### Changed
+* `luau`: bumped Luau from 0.606 to 0.614
+* `freq`: major performance refactor - https://github.com/jqnatividad/qsv/commit/1a3a4b4f54f7459ce120c2bc907385ad72d34d8e
+* `split`: migrate to rayon from threadpool https://github.com/jqnatividad/qsv/pull/1555
+* `split`: refactored to actually create chunks <= desired `--kb-size`, obviating need for hacky `--sep-factor` option https://github.com/jqnatividad/qsv/pull/1615
+* `tojsonl`: improved true/false boolean inferencing  false positive handling https://github.com/jqnatividad/qsv/pull/1641
+* `tojsonl`: fine-tune boolean inferencing https://github.com/jqnatividad/qsv/pull/1643
+* `schema`: use parallel sort when sorting enums for fields https://github.com/jqnatividad/qsv/commit/523c60a36bf45b4df5e66f3951a91948c22d5261
+* Use array for rustflags to avoid conflicts with user flags by @clarfonthey in https://github.com/jqnatividad/qsv/pull/1548
+* Make it easier and more consistent to package for distros by @alerque in https://github.com/jqnatividad/qsv/pull/1549
+* Replace `simple_home_dir` with `simple_expand_tilde` crate https://github.com/jqnatividad/qsv/pull/1578
+* build(deps): bump rayon from 1.8.0 to 1.8.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1547
+* build(deps): bump rayon from 1.8.1 to 1.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1623
+* build(deps): bump uuid from 1.6.1 to 1.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1551
+* build(deps): bump jql-runner from 7.1.2 to 7.1.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1552
+* build(deps): bump jql-runner from 7.1.3 to 7.1.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1602
+* build(deps): bump jql-runner from 7.1.5 to 7.1.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1637
+* build(deps): bump flexi_logger from 0.27.3 to 0.27.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1556
+* build(deps): bump regex from 1.10.2 to 1.10.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1557
+* build(deps): bump cached from 0.47.0 to 0.48.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1558
+* build(deps): bump cached from 0.48.0 to 0.48.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1560
+* build(deps): bump cached from 0.48.1 to 0.49.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1618
+* build(deps): bump chrono from 0.4.31 to 0.4.32 by @dependabot in https://github.com/jqnatividad/qsv/pull/1559
+* build(deps): bump chrono from 0.4.32 to 0.4.33 by @dependabot in https://github.com/jqnatividad/qsv/pull/1566
+* build(deps): bump mlua from 0.9.4 to 0.9.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1565
+* build(deps): bump mlua from 0.9.5 to 0.9.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1632
+* build(deps): bump serde from 1.0.195 to 1.0.196 by @dependabot in https://github.com/jqnatividad/qsv/pull/1568
+* build(deps): bump serde from 1.0.196 to 1.0.197 by @dependabot in https://github.com/jqnatividad/qsv/pull/1612
+* build(deps): bump serde_json from 1.0.111 to 1.0.112 by @dependabot in https://github.com/jqnatividad/qsv/pull/1567
+* build(deps): bump serde_json from 1.0.112 to 1.0.113 by @dependabot in https://github.com/jqnatividad/qsv/pull/1576
+* build(deps): bump serde_json from 1.0.113 to 1.0.114 by @dependabot in https://github.com/jqnatividad/qsv/pull/1610
+* bump Polars from 0.36 to 0.37 https://github.com/jqnatividad/qsv/pull/1570
+* build(deps): bump polars from 0.37.0 to 0.38.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1629
+* build(deps): bump polars from 0.38.0 to 0.38.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1634
+* build(deps): bump strum from 0.25.0 to 0.26.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1572
+* build(deps): bump indexmap from 2.1.0 to 2.2.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1575
+* build(deps): bump indexmap from 2.2.1 to 2.2.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1579
+* build(deps): bump indexmap from 2.2.2 to 2.2.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1601
+* build(deps): bump indexmap from 2.2.4 to 2.2.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1633
+* build(deps): bump robinraju/release-downloader from 1.8 to 1.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1574
+* build(deps): bump itertools from 0.12.0 to 0.12.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1577
+* build(deps): bump rust_decimal from 1.33.1 to 1.34.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1580
+* build(deps): bump rust_decimal from 1.34.0 to 1.34.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1582
+* build(deps): bump rust_decimal from 1.34.2 to 1.34.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1597
+* build(deps): bump reqwest from 0.11.23 to 0.11.24 by @dependabot in https://github.com/jqnatividad/qsv/pull/1581
+* build(deps): bump tokio from 1.35.1 to 1.36.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1583
+* build(deps): bump tempfile from 3.9.0 to 3.10.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1590
+* build(deps): bump tempfile from 3.10.0 to 3.10.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1622
+* build(deps): bump indicatif from 0.17.7 to 0.17.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1598
+* build(deps): bump csvs_convert from 0.8.8 to 0.8.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1596
+* build(deps): bump ahash from 0.8.7 to 0.8.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1599
+* build(deps): bump ahash from 0.8.8 to 0.8.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1611
+* build(deps): bump ahash from 0.8.9 to 0.8.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1624
+* build(deps): bump ahash from 0.8.10 to 0.8.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1640
+* build(deps): bump governor from 0.6.0 to 0.6.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1603
+* build(deps): bump semver from 1.0.21 to 1.0.22 by @dependabot in https://github.com/jqnatividad/qsv/pull/1606
+* build(deps): bump ryu from 1.0.16 to 1.0.17 by @dependabot in https://github.com/jqnatividad/qsv/pull/1605
+* build(deps): bump anyhow from 1.0.79 to 1.0.80 by @dependabot in https://github.com/jqnatividad/qsv/pull/1604
+* build(deps): bump geosuggest-core from 0.6.0 to 0.6.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1607
+* build(deps): bump geosuggest-utils from 0.6.0 to 0.6.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1608
+* build(deps): bump pyo3 from 0.20.2 to 0.20.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1616
+* build(deps): bump crossbeam-channel from 0.5.11 to 0.5.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1627
+* build(deps): bump log from 0.4.20 to 0.4.21 by @dependabot in https://github.com/jqnatividad/qsv/pull/1628
+* build(deps): bump sysinfo from 0.30.5 to 0.30.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1636
+* build(deps): bump qsv-sniffer from 0.10.1 to 0.10.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1644
+* deps: bump halfbrown from 0.24 to 0.25 https://github.com/jqnatividad/qsv/commit/b32fc7161715fc0d3cc96b1566f89354bea36abf
+* apply select clippy suggestions
+* update several indirect dependencies
+* pin Rust nightly to 2024-02-23 - the nightly that Polars 0.38 can be built with
+
+### Fixed
+* fix: fix feature = "cargo-clippy" deprecation by @rex4539 in https://github.com/jqnatividad/qsv/pull/1626
+* `stats`: fixed cache.json file not being updated properly https://github.com/jqnatividad/qsv/commit/b9c43713b0943baf2d70eb7089e1d8f05b848b9d
+
+### Removed
+* Removed `datefmt` subcommand from `apply` https://github.com/jqnatividad/qsv/pull/1638
+
+## New Contributors
+* @clarfonthey made their first contribution in https://github.com/jqnatividad/qsv/pull/1548
+* @alerque made their first contribution in https://github.com/jqnatividad/qsv/pull/1549
+* @fossabot made their first contribution in https://github.com/jqnatividad/qsv/pull/1550
+* @rex4539 made their first contribution in https://github.com/jqnatividad/qsv/pull/1626
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.122.0...0.123.0
+
 ## [0.122.0] - 2024-01-17
 
 ## 👉  **REQUEST FOR USE CASES**: 👈 
@@ -304,7 +535,7 @@ Users can manually verify the signatures by downloading the zipsign public key a
 ## Highlights:
 * `geocode`: added Federal Information Processing Standards (FIPS) codes to results for US places, so we can derive [GEOIDs](https://www.census.gov/programs-surveys/geography/guidance/geo-identifiers.html#:~:text=FIPS%20codes%20are%20assigned%20alphabetically,Native%20Hawaiian%20(AIANNH)%20areas.).  This paves the way to doing data enrichment lookups (starting with the US Census) in an upcoming release.
 * Added [Goal/Non-goals](https://github.com/jqnatividad/qsv#goals--non-goals), explicitly codifying what qsv is and isn't, and what we're trying to achieve with the toolkit.
-* `excel`: CSV output processing is now multi-threaded, making it a bit faster. The bottleneck is still the Excel/ODS library we're using ([calamine](https://github.com/tafia/calamine)), which is single-threaded. But there are [active](https://github.com/tafia/calamine/issues/346) [discussions](https://github.com/tafia/calamine/issues/362) underway to make it much faster in the future.
+* `excel`: CSV output processing is now multithreaded, making it a bit faster. The bottleneck is still the Excel/ODS library we're using ([calamine](https://github.com/tafia/calamine)), which is single-threaded. But there are [active](https://github.com/tafia/calamine/issues/346) [discussions](https://github.com/tafia/calamine/issues/362) underway to make it much faster in the future.
 * Upgrading the MSRV to 1.73.0 has allowed us to use LLVM 17, which has resulted in an overall performance boost.
 
 ---
@@ -315,7 +546,7 @@ Users can manually verify the signatures by downloading the zipsign public key a
 
 ### Changed
 * `cat` : minor optimization https://github.com/jqnatividad/qsv/commit/343bb668ae84fcf862883245382e7d8015da88c2
-* `excel`: CSV output processing is now multi-threaded https://github.com/jqnatividad/qsv/pull/1360
+* `excel`: CSV output processing is now multithreaded https://github.com/jqnatividad/qsv/pull/1360
 * `geocode`: more efficient dynfmt ptocessing https://github.com/jqnatividad/qsv/pull/1367
 * `frequency`: optimize allocations before hot loop https://github.com/jqnatividad/qsv/commit/655bebcdec6d89f0ffa33d794069ee5eee0df3e5
 * `luau`: upgraded embedded Luau from 0.596 to 0.599
@@ -483,7 +714,7 @@ Other release highlights include:
 ## [0.113.0] - 2023-09-08 🦄🏇🏽🎠
 This is the first "[Unicorn](https://7esl.com/unicorn/)" 🦄 release, adding MAJOR new features to the toolkit!
 
-* `geocode`: adds high-speed, cache-backed, multi-threaded geocoding using a local, updateable copy of the [GeoNames](https://www.geonames.org/) database.  This is a major improvement over the previous `geocode` subcommand in the `apply` command thanks to the wonderful [geosuggest](https://github.com/estin/geosuggest) crate.
+* `geocode`: adds high-speed, cache-backed, multithreaded geocoding using a local, updateable copy of the [GeoNames](https://www.geonames.org/) database.  This is a major improvement over the previous `geocode` subcommand in the `apply` command thanks to the wonderful [geosuggest](https://github.com/estin/geosuggest) crate.
 * guaranteed non-UTF8 input detection with the `validate` and `input` commands. Quicksilver [_REQUIRES_ UTF-8 encoded input](https://github.com/jqnatividad/qsv/tree/master#utf-8-encoding). You can now use these commands to ensure you have valid UTF-8 input before using the rest of the toolkit.
 * New/expanded whirlwind tour & quick-start notebooks by @a5dur and @rzmk 🎠
 * Various performance improvements all-around: 🏇🏽
@@ -928,7 +1159,7 @@ This release features the new [Polars](https://www.pola.rs/)-powered `sqlp` comm
 
 Initial tests show that its competitive with [DuckDB](https://duckdb.org/) and faster than [DataFusion](https://arrow.apache.org/datafusion/) on identical SQL queries, and it just runs rings around [pandasql](https://github.com/yhat/pandasql/#pandasql).
 
-It converts Polars SQL (a subset of ANSI SQL) queries to multi-threaded LazyFrames expressions and then executes them. This is a very powerful feature and allows you to do things like joins, aggregations, group bys, etc. on larger than memory CSVs. The `sqlp` command is still experimental and we are looking for feedback on it. Please try it out and let us know what you think.
+It converts Polars SQL (a subset of ANSI SQL) queries to multithreaded LazyFrames expressions and then executes them. This is a very powerful feature and allows you to do things like joins, aggregations, group bys, etc. on larger than memory CSVs. The `sqlp` command is still experimental and we are looking for feedback on it. Please try it out and let us know what you think.
 
 ### Added
 * `sqlp`: new command to allow Polars SQL queries against CSVs https://github.com/jqnatividad/qsv/pull/1015
@@ -1262,7 +1493,7 @@ So "0.100.0" is less than "0.99.0", and self-update won't work.
 ### Added
 * added [Snappy](https://google.github.io/snappy/) auto-compression/decompression support. The Snappy format was chosen primarily
 because it supported streaming compression/decompression and is designed for performance. https://github.com/jqnatividad/qsv/pull/911
-* added `snappy` command. Although files ending with the ".sz" extension are automatically compressed/decompressed, the `snappy` command offers 4-5x faster multi-threaded compression. It can also be used to check if a file is Snappy-compressed or not, and can be used to compress/decompress any file. https://github.com/jqnatividad/qsv/pull/911 and https://github.com/jqnatividad/qsv/pull/916
+* added `snappy` command. Although files ending with the ".sz" extension are automatically compressed/decompressed, the `snappy` command offers 4-5x faster multithreaded compression. It can also be used to check if a file is Snappy-compressed or not, and can be used to compress/decompress any file. https://github.com/jqnatividad/qsv/pull/911 and https://github.com/jqnatividad/qsv/pull/916
 * `diff` command added to `qsvlite` and `qsvdp` binary variants https://github.com/jqnatividad/qsv/pull/910
 * `to`: added stdin support https://github.com/jqnatividad/qsv/pull/913
 
@@ -2566,7 +2797,7 @@ This means clippy, even in pedantic/nursery/perf mode will have no warnings. htt
 * pin Rust Nightly to 2022-06-29
 
 ### Fixed
-* `fetch`: is single-threaded again. It turns out it was more complicated than I hoped. Will revisit making it multi-threaded once I sort out the sync issues.
+* `fetch`: is single-threaded again. It turns out it was more complicated than I hoped. Will revisit making it multithreaded once I sort out the sync issues.
 
 ## [0.56.0] - 2022-06-20
 ### Added
@@ -2892,7 +3123,7 @@ which prevented us from building qsv's nightly build. (see https://github.com/ap
 
 ## [0.45.0] - 2022-04-30
 ### Added
-* Added `extsort` command - sort arbitrarily large text files\CSVs using a multi-threaded external sort algorithm.
+* Added `extsort` command - sort arbitrarily large text files\CSVs using a multithreaded external sort algorithm.
 
 ### Changed
 * Updated whirlwind tour with simple `stats` step

@@ -1,12 +1,12 @@
 static USAGE: &str = r#"
 Run blazing-fast Polars SQL queries against several CSVs - replete with joins, aggregations,
-grouping, sorting, and more - working on larger than memory CSV files.
+grouping, table functions, sorting, and more - working on larger than memory CSV files.
 
 Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame expressions.
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/rs-0.38.1/crates/polars-sql/src/functions.rs
-https://github.com/pola-rs/polars/blob/rs-0.38.1/crates/polars-sql/src/keywords.rs and
+https://github.com/pola-rs/polars/blob/rs-0.38.3/crates/polars-sql/src/functions.rs
+https://github.com/pola-rs/polars/blob/rs-0.38.3/crates/polars-sql/src/keywords.rs and
 https://github.com/pola-rs/polars/issues/7227
 
 Returns the shape of the query result (number of rows, number of columns) to stderr.
@@ -87,9 +87,10 @@ Example queries:
    qsv sqlp data.csv "select * from data join read_ndjson('data2.jsonl') as t2 on data.c1 = t2.c1"
    qsv sqlp data.csv "select * from data join read_ipc('data2.arrow') as t2 ON data.c1 = t2.c1"
 
-  # you can also directly load CSVs using the Polars SQL read_csv function. This is useful when you
-  # want to bypass the CSV parser and use the Polars LazyFrame directly for well-formed CSVs,
-  # making for even exponentially faster queries.
+  # you can also directly load CSVs using the Polars read_csv() SQL function. This is useful when
+  # you want to bypass the regular CSV parser and use Polars' multithreaded, mem-mapped CSV parser
+  # instead - making for dramatically faster queries at the cost of CSV parser configurability.
+  # (i.e. limited to comma delimiter, no CSV comments, etc.)
    qsv sqlp small_dummy.csv "select * from read_csv('data.csv') order by col1 desc limit 100"
 
   Note that sqlp will automatically use this "fast path" optimization when there is only 
@@ -155,13 +156,15 @@ sqlp options:
                               Use this when you get query errors or to force CSV parsing when there
                               is only one input file, no CSV parsing options are used and its not
                               a SQL script. Otherwise, the CSV will be read directly into a LazyFrame
-                              using the fast path with the read_csv SQL function.
+                              using the fast path with the multithreaded, mem-mapped read_csv()
+                              Polars SQL function which is much faster though not as configurable than
+                              the regular CSV parser.
     --truncate-ragged-lines   Truncate ragged lines when parsing CSVs. If set, rows with more
                               columns than the header will be truncated. If not set, the query
                               will fail. Use this only when you get an error about ragged lines.
     --ignore-errors           Ignore errors when parsing CSVs. If set, rows with errors
                               will be skipped. If not set, the query will fail.
-                              Only use this when debugging queries, as polars does batched
+                              Only use this when debugging queries, as Polars does batched
                               parsing and will skip the entire batch where the error occurred.
     --rnull-values <arg>      The comma-delimited list of case-sensitive strings to consider as
                               null values when READING CSV files (e.g. NULL, NONE, <empty string>).
@@ -546,6 +549,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             streaming:           args.flag_low_memory,
             fast_projection:     true,
             eager:               false,
+            row_estimate:        true,
         }
     };
     // gated by log::log_enabled!(log::Level::Debug) to avoid the
@@ -579,6 +583,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // parse and register it as a table in the SQL context using Polars SQL's read_csv function
     if args.arg_input.len() == 1
         && !is_sql_script
+        && delim == b','
         && !args.flag_no_optimizations
         && !args.flag_try_parsedates
         && args.flag_infer_len != Some(250)
@@ -678,7 +683,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     if debuglog_flag {
-        log::debug!("SQL query/ies: {queries:?}");
+        log::debug!("SQL query/ies({}): {queries:?}", queries.len());
     }
 
     let num_queries = queries.len();

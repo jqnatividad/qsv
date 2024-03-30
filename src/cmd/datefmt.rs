@@ -20,7 +20,7 @@ Format multiple date columns in file.csv to ISO 8601/RFC 3339 format:
 
 Format all columns that end with "_date" case-insensitive in file.csv to ISO 8601/RFC 3339 format:
 
-  $ qsv datefmt '\(?i)_date$\' file.csv
+  $ qsv datefmt '/(?i) date$/' file.csv
 
 Format dates in OpenDate column using '%Y-%m-%d' format:
 
@@ -64,7 +64,6 @@ datefmt options:
     --prefer-dmy                Prefer to parse dates in dmy format. Otherwise, use mdy format.
     --keep-zero-time            If a formatted date ends with "T00:00:00+00:00", keep the time
                                 instead of removing it.
-
     --input-tz=<string>         The timezone to use for the input date if the date does not have
                                 timezone specified. The timezone must be a valid IANA timezone name or
                                 the string "local" for the local timezone.
@@ -78,8 +77,10 @@ datefmt options:
                                 Shortcut for --input-tz and --output-tz set to the same timezone.
                                 The timezone must be a valid IANA timezone name or the string "local".
     --utc                       Shortcut for --input-tz and --output-tz set to UTC.
-    --zulu                      Shortcut for --output-tz set to UTC and --formatstr set to "%Y-%m-%dT%H:%M:%SZ".                                
-
+    --zulu                      Shortcut for --output-tz set to UTC and --formatstr set to "%Y-%m-%dT%H:%M:%SZ".
+    -R, --ts-resolution <res>   The resolution to use when parsing Unix timestamps.
+                                Valid values are "sec", "milli", "micro", "nano".
+                                [default: sec]
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number of CPUs detected.
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
@@ -95,6 +96,9 @@ Common options:
     -p, --progressbar           Show progress bars. Not valid for stdin.
 "#;
 
+use std::str::FromStr;
+
+use chrono::{DateTime, TimeZone, Utc};
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use qsv_dateparser::parse_with_preference;
@@ -119,6 +123,7 @@ struct Args {
     flag_rename:         Option<String>,
     flag_prefer_dmy:     bool,
     flag_keep_zero_time: bool,
+    flag_ts_resolution:  String,
     flag_formatstr:      String,
     flag_input_tz:       Option<String>,
     flag_output_tz:      Option<String>,
@@ -134,6 +139,55 @@ struct Args {
     flag_progressbar:    bool,
 }
 
+#[derive(Default, Clone, Copy)]
+enum TimestampResolution {
+    #[default]
+    Second,
+    Millisecond,
+    Microsecond,
+    Nanosecond,
+}
+
+impl FromStr for TimestampResolution {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "sec" => Ok(TimestampResolution::Second),
+            "milli" => Ok(TimestampResolution::Millisecond),
+            "micro" => Ok(TimestampResolution::Microsecond),
+            "nano" => Ok(TimestampResolution::Nanosecond),
+            _ => Err(format!("Invalid timestamp resolution: {s}")),
+        }
+    }
+}
+
+#[inline]
+fn unix_timestamp(input: &str, resolution: TimestampResolution) -> Option<DateTime<Utc>> {
+    let Ok(ts_input_val) = input.parse::<i64>() else {
+        return None;
+    };
+
+    match resolution {
+        TimestampResolution::Second => Utc
+            .timestamp_opt(ts_input_val, 0)
+            .single()
+            .map(|result| result.with_timezone(&Utc)),
+        TimestampResolution::Millisecond => Utc
+            .timestamp_millis_opt(ts_input_val)
+            .single()
+            .map(|result| result.with_timezone(&Utc)),
+        TimestampResolution::Microsecond => Utc
+            .timestamp_micros(ts_input_val)
+            .single()
+            .map(|result| result.with_timezone(&Utc)),
+        TimestampResolution::Nanosecond => {
+            let result = Utc.timestamp_nanos(ts_input_val).with_timezone(&Utc);
+            Some(result)
+        },
+    }
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let rconfig = Config::new(&args.arg_input)
@@ -146,6 +200,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
+
+    let tsres = args.flag_ts_resolution.parse::<TimestampResolution>()?;
 
     let mut headers = rdr.headers()?.clone();
 
@@ -187,7 +243,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let prefer_dmy = args.flag_prefer_dmy || rconfig.get_dmy_preference();
-    let flag_keep_zero_time = args.flag_keep_zero_time;
+    let keep_zero_time = args.flag_keep_zero_time;
 
     // amortize memory allocation by reusing record
     #[allow(unused_assignments)]
@@ -222,7 +278,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match rdr.read_record(&mut batch_record) {
                 Ok(has_data) => {
                     if has_data {
-                        batch.push(batch_record.clone());
+                        batch.push(std::mem::take(&mut batch_record));
                     } else {
                         // nothing else to add to batch
                         break;
@@ -246,20 +302,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let mut record = record_item.clone();
 
                 let mut cell = String::new();
+                #[allow(unused_assignments)]
+                let mut formatted_date = String::new();
+                let mut parsed_date;
+                let new_column = flag_new_column.is_some();
                 for col_index in &*sel {
                     record[*col_index].clone_into(&mut cell);
                     if !cell.is_empty() {
-                        let parsed_date = parse_with_preference(&cell, prefer_dmy);
+                        parsed_date = if let Some(ts) = unix_timestamp(&cell, tsres) {
+                            Ok(ts)
+                        } else {
+                            parse_with_preference(&cell, prefer_dmy)
+                        };
                         if let Ok(format_date) = parsed_date {
-                            let formatted_date = format_date.format(&flag_formatstr).to_string();
-                            if !flag_keep_zero_time && formatted_date.ends_with("T00:00:00+00:00") {
+                            formatted_date = format_date.format(&flag_formatstr).to_string();
+                            if !keep_zero_time && formatted_date.ends_with("T00:00:00+00:00") {
                                 formatted_date[..10].clone_into(&mut cell);
                             } else {
                                 formatted_date.clone_into(&mut cell);
                             }
                         }
                     }
-                    if flag_new_column.is_some() {
+                    if new_column {
                         record.push_field(&cell);
                     } else {
                         record = replace_column_value(&record, *col_index, &cell);

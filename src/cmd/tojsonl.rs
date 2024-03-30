@@ -22,6 +22,7 @@ Usage:
 Tojsonl options:
     --trim                 Trim leading and trailing whitespace from fields
                            before converting to JSON.
+    --no-boolean           Do not infer boolean fields.
     -j, --jobs <arg>       The number of jobs to run in parallel.
                            When not set, the number of jobs is set to the
                            number of CPUs detected.
@@ -55,13 +56,14 @@ use crate::{
 
 #[derive(Deserialize, Clone)]
 struct Args {
-    arg_input:      Option<String>,
-    flag_trim:      bool,
-    flag_jobs:      Option<usize>,
-    flag_batch:     u32,
-    flag_delimiter: Option<Delimiter>,
-    flag_output:    Option<String>,
-    flag_memcheck:  bool,
+    arg_input:       Option<String>,
+    flag_trim:       bool,
+    flag_no_boolean: bool,
+    flag_jobs:       Option<usize>,
+    flag_batch:      u32,
+    flag_delimiter:  Option<Delimiter>,
+    flag_output:     Option<String>,
+    flag_memcheck:   bool,
 }
 
 impl From<std::fmt::Error> for CliError {
@@ -107,6 +109,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         false,
         args.flag_memcheck,
     )?;
+
+    let record_count = util::count_rows(&conf)?;
 
     // we're calling the schema command to infer data types and enums
     let schema_args = crate::cmd::schema::Args {
@@ -154,6 +158,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.headers()?.clone();
 
+    // if there are less than 3 records, we can't infer boolean fields
+    let no_boolean = if record_count < 3 {
+        true
+    } else {
+        args.flag_no_boolean
+    };
+
     // create a vec lookup about inferred field data types
     let mut field_type_vec: Vec<JsonlType> = Vec::with_capacity(headers.len());
     for (_field_name, field_def) in &properties_map {
@@ -165,59 +176,61 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // log::debug!("prelim_type: {prelim_type} field_values_enum: {field_values_enum:?}");
 
-        // check if a field has a boolean data type
-        // by checking its enum constraint
-        if let Some(domain) = field_values_enum {
-            if let Some(vals) = domain.as_array() {
-                // if this field only has a domain of two values
-                if vals.len() == 2 {
-                    let val1 = if vals[0].is_null() {
-                        '_'
-                    } else {
-                        // check the first domain value, if its an integer
-                        // see if its 1 or 0
-                        if let Some(int_val) = vals[0].as_u64() {
+        if !no_boolean {
+            // check if a field has a boolean data type
+            // by checking its enum constraint
+            if let Some(domain) = field_values_enum {
+                if let Some(vals) = domain.as_array() {
+                    // if this field only has a domain of two values
+                    if vals.len() == 2 {
+                        let val1 = if vals[0].is_null() {
+                            '_'
+                        } else {
+                            // check the first domain value, if its an integer
+                            // see if its 1 or 0
+                            if let Some(int_val) = vals[0].as_u64() {
+                                match int_val {
+                                    1 => '1',
+                                    0 => '0',
+                                    _ => '*', // its something else
+                                }
+                            } else if let Some(str_val) = vals[0].as_str() {
+                                // else, if its a string, get the first character of val1 lowercase
+                                boolcheck(str_val)
+                            } else {
+                                '*'
+                            }
+                        };
+                        // same as above, but for the 2nd domain value
+                        let val2 = if vals[1].is_null() {
+                            '_'
+                        } else if let Some(int_val) = vals[1].as_u64() {
                             match int_val {
                                 1 => '1',
                                 0 => '0',
-                                _ => '*', // its something else
+                                _ => '*',
                             }
-                        } else if let Some(str_val) = vals[0].as_str() {
-                            // else, if its a string, get the first character of val1 lowercase
-                            boolcheck_first_lower_char(str_val)
+                        } else if let Some(str_val) = vals[1].as_str() {
+                            boolcheck(str_val)
                         } else {
                             '*'
-                        }
-                    };
-                    // same as above, but for the 2nd domain value
-                    let val2 = if vals[1].is_null() {
-                        '_'
-                    } else if let Some(int_val) = vals[1].as_u64() {
-                        match int_val {
-                            1 => '1',
-                            0 => '0',
-                            _ => '*',
-                        }
-                    } else if let Some(str_val) = vals[1].as_str() {
-                        boolcheck_first_lower_char(str_val)
-                    } else {
-                        '*'
-                    };
-                    // log::debug!("val1: {val1} val2: {val2}");
+                        };
+                        // log::debug!("val1: {val1} val2: {val2}");
 
-                    // check if the domain of two values is truthy or falsy
-                    // i.e. if first character, case-insensitive is "t", "1" or "y" - truthy
-                    // "f", "0", "n" or null - falsy
-                    // if it is, infer a boolean field
-                    if let ('t', 'f' | '_')
-                    | ('f' | '_', 't')
-                    | ('1', '0' | '_')
-                    | ('0' | '_', '1')
-                    | ('y', 'n' | '_')
-                    | ('n' | '_', 'y') = (val1, val2)
-                    {
-                        field_type_vec.push(JsonlType::Boolean);
-                        continue;
+                        // check if the domain of two values is truthy or falsy
+                        // i.e. if first character, case-insensitive is "t", "1" or "y" - truthy
+                        // "f", "0", "n" or null - falsy
+                        // if it is, infer a boolean field
+                        if let ('t', 'f' | '_')
+                        | ('f' | '_', 't')
+                        | ('1', '0' | '_')
+                        | ('0' | '_', '1')
+                        | ('y', 'n' | '_')
+                        | ('n' | '_', 'y') = (val1, val2)
+                        {
+                            field_type_vec.push(JsonlType::Boolean);
+                            continue;
+                        }
                     }
                 }
             }
@@ -304,7 +317,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             JsonlType::Null => "null",
                             JsonlType::Integer | JsonlType::Number => field,
                             JsonlType::Boolean => {
-                                if let 't' | 'y' | '1' = boolcheck_first_lower_char(field) {
+                                if let 't' | 'y' | '1' = boolcheck(field) {
                                     "true"
                                 } else {
                                     "false"
@@ -341,31 +354,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 #[inline]
-fn boolcheck_first_lower_char(field_str: &str) -> char {
+fn boolcheck(field_str: &str) -> char {
     let mut chars = field_str.chars();
-    let first_char = chars.next().unwrap_or('_').to_ascii_lowercase();
+    let mut first_char = chars.next().unwrap_or('_');
+    first_char.make_ascii_lowercase();
 
-    if first_char == '1' || first_char == '0' {
-        let second_char = chars.next().unwrap_or('_').to_ascii_lowercase();
-        if second_char == '_' {
-            first_char
-        } else {
-            'f'
-        }
+    if field_str.len() < 2 {
+        return first_char;
+    }
+    if field_str.eq_ignore_ascii_case("true")
+        || field_str.eq_ignore_ascii_case("false")
+        || field_str.eq_ignore_ascii_case("yes")
+        || field_str.eq_ignore_ascii_case("no")
+    {
+        first_char
     } else {
-        let field_str_len = field_str.len();
-        if field_str_len < 2 {
-            return first_char;
-        }
-        let lower_str = field_str[..field_str_len].to_ascii_lowercase();
-        if lower_str == "yes"
-            || lower_str == "no"
-            || lower_str.starts_with("tr")
-            || lower_str.starts_with("fa")
-        {
-            first_char
-        } else {
-            '_'
-        }
+        '_'
     }
 }

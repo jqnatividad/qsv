@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.17.0
+bm_version=3.19.1
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -50,6 +50,7 @@ bm_version=3.17.0
 # the path to the qsv binary, change this if you're not using the prebuilt binaries
 # e.g. you compiled a tuned version of qsv with different features and/or CPU optimizations enabled
 # qsv_bin=../target/release/qsv
+# qsv_bin=../target/debug/qsv
 qsv_bin=qsv
 # the path to the qsv binary that we dogfood to run the benchmarks
 # we use several optional features when dogfooding qsv (apply, luau & to)
@@ -421,8 +422,6 @@ function run {
 # appropriate column names.
 
 run apply_calcconv "$qsv_bin apply calcconv --formatstr \"{Unique Key} meters in miles\" --new-column new_col $data"
-run apply_datefmt "$qsv_bin apply datefmt \"Created Date\" $data"
-run apply_datefmt_multi "$qsv_bin apply datefmt \"Created Date,Closed Date,Due Date\" $data"
 run apply_dynfmt "$qsv_bin apply dynfmt --formatstr \"{Created Date} {Complaint Type} - {BBL} {City}\" --new-column new_col $data"
 run apply_emptyreplace "$qsv_bin" apply emptyreplace \"Bridge Highway Name\" --replacement Unspecified "$data"
 run apply_op_eudex "$qsv_bin apply operations lower,eudex Agency --comparand Queens --new-column Agency_queens_soundex $data"
@@ -436,9 +435,15 @@ run cat_rows_flexible "$qsv_bin" cat rows --flexible "$data" data_unsorted.csv
 run cat_rowskey "$qsv_bin" cat rowskey "$data" data_unsorted.csv
 run count "$qsv_bin" count "$data"
 run count_flexible "$qsv_bin" count --flexible "$data"
+run count_polars_lowmem "$qsv_bin" count --low-memory "$data"
+run count_no_polars "$qsv_bin" count --no-polars "$data"
 run --index count_index "$qsv_bin" count "$data"
 run count_width "$qsv_bin" count --width "$data"
 run --index count_width_index "$qsv_bin" count --width "$data"
+run datefmt "$qsv_bin datefmt \"Created Date\" $data"
+run datefmt_multi "$qsv_bin datefmt \"Created Date,Closed Date,Due Date\" $data"
+run datefmt_multi_select "$qsv_bin datefmt '/(?i) date$/' $data"
+run datefmt_formatstr_newcol "$qsv_bin datefmt --formatstr '%V' \"Created Date\" --new-column week_number $data"
 run dedup "$qsv_bin" dedup "$data"
 run dedup_sorted "$qsv_bin" dedup data_sorted.csv
 run diff "$qsv_bin" diff "$data" data_unsorted.csv

@@ -573,7 +573,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match rdr.read_record(&mut batch_record) {
                 Ok(has_data) => {
                     if has_data {
-                        batch.push(batch_record.clone());
+                        batch.push(std::mem::take(&mut batch_record));
                     } else {
                         // nothing else to add to batch
                         break;
@@ -619,7 +619,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         for col_index in &*sel {
                             record[*col_index].clone_into(&mut cell);
                             if cell.trim().is_empty() {
-                                cell = flag_replacement.clone();
+                                cell.clone_from(&flag_replacement);
                             }
                             if flag_new_column.is_some() {
                                 record.push_field(&cell);

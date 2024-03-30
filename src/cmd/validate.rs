@@ -487,7 +487,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         if flag_trim {
                             record.trim();
                         }
-                        batch.push(record.clone());
+                        batch.push(std::mem::take(&mut record));
                     } else {
                         // nothing else to add to batch
                         break;

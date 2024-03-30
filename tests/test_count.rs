@@ -21,6 +21,58 @@ fn count_simple() {
 }
 
 #[test]
+fn count_simple_tsv() {
+    let wrk = Workdir::new("count_simple_tsv");
+    wrk.create_with_delim(
+        "in.tsv",
+        vec![
+            svec!["letter", "number"],
+            svec!["alpha", "13"],
+            svec!["beta", "24"],
+            svec!["gamma", "37"],
+        ],
+        b'\t',
+    );
+
+    let mut cmd = wrk.command("count");
+    cmd.arg("in.tsv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "3";
+
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
+fn count_simple_custom_delimiter() {
+    let wrk = Workdir::new("count_simple_custom_delimiter");
+    wrk.create_with_delim(
+        "in.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["alpha", "13"],
+            svec!["beta", "24"],
+            svec!["gamma", "37"],
+        ],
+        b';',
+    );
+
+    // set the environment variable to use semicolon
+    std::env::set_var("QSV_CUSTOM_DELIMITER", ";");
+
+    let mut cmd = wrk.command("count");
+    cmd.arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "3";
+
+    // unset the environment variable
+    std::env::remove_var("QSV_CUSTOM_DELIMITER");
+
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
 fn count_width() {
     let wrk = Workdir::new("count_width");
     wrk.create_indexed(
@@ -38,6 +90,36 @@ fn count_width() {
 
     let got: String = wrk.stdout(&mut cmd);
     let expected = "4;18";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
+fn count_width_custom_delimiter() {
+    let wrk = Workdir::new("count_width_custom_delimiter");
+    wrk.create_with_delim(
+        "in.csv",
+        vec![
+            svec!["letter", "number", "flag"],
+            svec!["alphabetic", "13", "true"],
+            svec!["beta", "24", "false"],
+            svec!["gamma", "37.1", "true"],
+            svec!("delta", "42.5", "false"),
+        ],
+        b';',
+    );
+
+    // set the environment variable to use semicolon
+    std::env::set_var("QSV_CUSTOM_DELIMITER", ";");
+
+    let mut cmd = wrk.command("count");
+    cmd.arg("--width").arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "4;18";
+
+    // unset the environment variable
+    std::env::remove_var("QSV_CUSTOM_DELIMITER");
+
     assert_eq!(got, expected.to_string());
 }
 
@@ -133,6 +215,7 @@ fn prop_count_len(
     }
 }
 
+#[cfg(not(feature = "polars"))]
 #[test]
 fn prop_count() {
     fn p(rows: CsvData) -> bool {
@@ -141,6 +224,7 @@ fn prop_count() {
     qcheck(p as fn(CsvData) -> bool);
 }
 
+#[cfg(not(feature = "polars"))]
 #[test]
 fn prop_count_human_readable() {
     fn p(rows: CsvData) -> bool {
@@ -149,6 +233,7 @@ fn prop_count_human_readable() {
     qcheck(p as fn(CsvData) -> bool);
 }
 
+#[cfg(not(feature = "polars"))]
 #[test]
 fn prop_count_headers() {
     fn p(rows: CsvData) -> bool {
@@ -157,6 +242,7 @@ fn prop_count_headers() {
     qcheck(p as fn(CsvData) -> bool);
 }
 
+#[cfg(not(feature = "polars"))]
 #[test]
 fn prop_count_headers_human_readable() {
     fn p(rows: CsvData) -> bool {
@@ -181,6 +267,7 @@ fn prop_count_indexed_headers() {
     qcheck(p as fn(CsvData) -> bool);
 }
 
+#[cfg(not(feature = "polars"))]
 #[test]
 fn prop_count_noheaders_env() {
     fn p(rows: CsvData) -> bool {

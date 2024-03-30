@@ -56,17 +56,21 @@ Excel options:
                                Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
-    --metadata <c|j|J>         Outputs workbook metadata in CSV or JSON format:
-                                 index, sheet_name, headers, num_columns, num_rows, safe_headers,
-                                 safe_headers_count, unsafe_headers, unsafe_headers_count and
-                                 duplicate_headers_count.
+    --metadata <c|j|J|s>       Outputs workbook metadata in CSV or JSON format:
+                                 index, sheet_name, headers, type, visible, num_columns, num_rows,
+                                 safe_headers, safe_headers_count, unsafe_headers, unsafe_headers_count
+                                 and duplicate_headers_count.
                                headers is a list of the first row which is presumed to be the header row.
+                               type is the sheet type (WorkSheet, DialogSheet, MacroSheet, ChartSheet, Vba).
+                               visible is the sheet visibility (Visible, Hidden, VeryHidden).
                                num_rows includes all rows, including the first row.
                                safe_headers is a list of header with "safe"(database-ready) names.
                                unsafe_headers is a list of headers with "unsafe" names.
                                duplicate_headers_count is a count of duplicate header names.
 
                                In CSV(c) mode, the output is in CSV format.
+                               In short CSV(s) mode, the output is in CSV format with only the
+                               index, sheet_name, type and visible fields.
                                
                                In JSON(j) mode, the output is minified JSON.
                                In Pretty JSON(J) mode, the output is pretty-printed JSON.
@@ -80,7 +84,7 @@ Excel options:
                                Also removes embedded linebreaks.
     --date-format <format>     Optional date format to use when formatting dates.
                                See https://docs.rs/chrono/latest/chrono/format/strftime/index.html
-                               for the full list of supported formats.
+                               for the full list of supported format specifiers.
                                Note that if a date format is invalid, qsv will fall back and
                                return the date as if no date-format was specified.
      --keep-zero-time          Keep the time part of a date-time field if it is 00:00:00.
@@ -99,7 +103,7 @@ Common options:
 
 use std::{cmp, fmt::Write, path::PathBuf};
 
-use calamine::{open_workbook_auto, Data, Range, Reader, SheetType};
+use calamine::{open_workbook, Data, Error, Range, Reader, SheetType, Sheets};
 use indicatif::HumanCount;
 use log::info;
 use rayon::prelude::*;
@@ -129,6 +133,7 @@ struct Args {
 #[derive(PartialEq)]
 enum MetadataMode {
     Csv,
+    ShortCsv,
     Json,
     PrettyJSON,
     None,
@@ -232,9 +237,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .and_then(std::ffi::OsStr::to_str)
         .unwrap_or_default()
         .to_ascii_lowercase();
-    let ods_flag = match format.as_str() {
-        "xls" | "xlsx" | "xlsm" | "xlsb" => false,
-        "ods" => true,
+
+    let requested_range = args.flag_range.to_lowercase();
+
+    let mut ods_flag = false;
+    let mut workbook = match (format).as_str() {
+        "xls" | "xla" => Sheets::Xls(open_workbook(path).map_err(Error::Xls)?),
+        "xlsx" | "xlsm" => Sheets::Xlsx(open_workbook(path).map_err(Error::Xlsx)?),
+        "xlsb" => Sheets::Xlsb(open_workbook(path).map_err(Error::Xlsb)?),
+        "ods" => {
+            ods_flag = true;
+            Sheets::Ods(open_workbook(path).map_err(Error::Ods)?)
+        },
         _ => {
             return fail_incorrectusage_clierror!(
                 "\"{format}\" not supported. The excel command only supports the following file \
@@ -242,10 +256,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             );
         },
     };
-
-    let requested_range = args.flag_range.to_lowercase();
-
-    let mut workbook = open_workbook_auto(path)?;
 
     let sheet_names = workbook.sheet_names();
     if sheet_names.is_empty() {
@@ -261,15 +271,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // set Metadata Mode
     let first_letter = args.flag_metadata.chars().next().unwrap_or_default();
     let metadata_mode = match first_letter {
+        'n' | 'N' => MetadataMode::None,
         'c' | 'C' => MetadataMode::Csv,
+        's' | 'S' => MetadataMode::ShortCsv,
         'j' => MetadataMode::Json,
         'J' => MetadataMode::PrettyJSON,
-        'n' | 'N' => MetadataMode::None,
         _ => {
-            return fail_incorrectusage_clierror!("Invalid mode: {}", args.flag_metadata);
+            return fail_incorrectusage_clierror!("Invalid metadata mode: {}", args.flag_metadata);
         },
     };
 
+    // check if we're exporting workbook metadata only
     if metadata_mode != MetadataMode::None {
         let mut excelmetadata_struct = MetadataStruct {
             filename,
@@ -286,7 +298,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let sheet_vec = sheet_names;
 
         for (i, sheet_name) in sheet_vec.iter().enumerate() {
-            let range = if let Some(result) = workbook.worksheet_range_at(i) {
+            let range = if metadata_mode == MetadataMode::ShortCsv {
+                Range::empty()
+            } else if let Some(result) = workbook.worksheet_range_at(i) {
                 match result {
                     Ok(result) => result,
                     Err(e) => {
@@ -303,7 +317,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
 
             let (header_vec, num_columns, num_rows, safenames_vec, unsafeheaders_vec, dupe_count) =
-                if range.is_empty() {
+                if metadata_mode == MetadataMode::ShortCsv || range.is_empty() {
                     (vec![], 0_usize, 0_usize, vec![], vec![], 0_usize)
                 } else {
                     let (num_rows, num_columns) = range.get_size();
@@ -408,6 +422,26 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
                 wtr.flush()?;
             },
+            MetadataMode::ShortCsv => {
+                let mut metadata_fields = Vec::with_capacity(4);
+                metadata_fields.extend_from_slice(&["index", "sheet_name", "type", "visible"]);
+                metadata_record = csv::StringRecord::from(metadata_fields);
+
+                wtr.write_record(&metadata_record)?;
+
+                for sheetmetadata in excelmetadata_struct.sheet {
+                    let metadata_values = vec![
+                        sheetmetadata.index.to_string(),
+                        sheetmetadata.name,
+                        sheetmetadata.typ,
+                        sheetmetadata.visible,
+                    ];
+                    metadata_record = csv::StringRecord::from(metadata_values);
+
+                    wtr.write_record(&metadata_record)?;
+                }
+                wtr.flush()?;
+            },
             MetadataMode::Json => {
                 let Ok(json_result) = serde_json::to_string(&excelmetadata_struct) else {
                     return fail!("Cannot create JSON");
@@ -427,6 +461,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // we're not exporting the spreadsheet to CSV
         return Ok(());
     }
+
+    // --------------------------------------------------------------------
+    // we're not exporting metadata, we're exporting the spreadsheet to CSV
 
     // convert sheet_names to lowercase so we can do a case-insensitive compare
     let lower_sheet_names: Vec<String> = sheet_names.iter().map(|s| s.to_lowercase()).collect();
@@ -477,7 +514,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // as we process the option case insensitively
         // safety: it's safe to use index access here because lower_sheet_names is a lowercase copy
         // of sheet_names
-        sheet = sheet_names[idx].clone();
+        sheet.clone_from(&sheet_names[idx]);
         idx
     } else {
         return fail_clierror!("Cannot get sheet index for {sheet}");
@@ -525,7 +562,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
     let mut col_name: String;
 
-    // get the first row as header
+    // process the first row as the header row
     info!("exporting sheet ({sheet})... processing first row as header...");
     let first_row = match rows_iter.next() {
         Some(first_row) => first_row,
@@ -562,7 +599,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     info!("header: {record:?}");
     wtr.write_record(&record)?;
 
-    let no_date_format;
+    let no_date_format: bool;
+    // TODO: Clippy lint is broken, remove allow once fixed.
+    // https://github.com/rust-lang/rust-clippy/issues/12580
+    #[allow(clippy::manual_unwrap_or_default)]
     let date_format = if let Some(df) = args.flag_date_format {
         no_date_format = false;
         df
@@ -573,7 +613,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut rows = Vec::with_capacity(row_count);
 
-    // process rest of the rows
+    // queue rest of the rows for processing as data rows
     for row in rows_iter {
         rows.push(row);
     }
@@ -667,7 +707,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                             record.push_field(&work_date);
                         },
-                        Data::Error(ref e) => record.push_field(&format!("{e:?}")),
+                        Data::Error(ref e) => record.push_field(&format!("{e}")),
                         Data::Bool(ref b) => {
                             record.push_field(if *b { "true" } else { "false" });
                         },
@@ -690,8 +730,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     trimmed_record.clear();
                 }
 
-                processed_chunk.push(record.clone());
-                record.clear();
+                // we use mem::take here to avoid a clone/allocation of the record
+                // it also has the nice side-effect of clearing the record, so we don't
+                // need to call clear() on it.
+                processed_chunk.push(std::mem::take(&mut record));
             }
             processed_chunk
         })

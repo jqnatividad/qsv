@@ -4,7 +4,7 @@ Joins two sets of CSV data on the specified columns using the Pola.rs engine.
 The default join operation is an 'inner' join. This corresponds to the
 intersection of rows on the keys specified.
 
-Unlike the join command, joinp can process files larger than RAM, is multi-threaded,
+Unlike the join command, joinp can process files larger than RAM, is multithreaded,
 has join key validation, pre-join filtering, supports asof joins & its output doesn't
 have duplicate columns.
 
@@ -186,7 +186,7 @@ use polars::{
 use serde::Deserialize;
 use tempfile::tempdir;
 
-use crate::{cmd::sqlp::compress_output_if_needed, config::Delimiter, util, CliError, CliResult};
+use crate::{cmd::sqlp::compress_output_if_needed, config::Delimiter, util, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
@@ -223,12 +223,6 @@ struct Args {
     flag_output:           Option<String>,
     flag_delimiter:        Option<Delimiter>,
     flag_quiet:            bool,
-}
-
-impl From<polars::error::PolarsError> for CliError {
-    fn from(err: polars::error::PolarsError) -> CliError {
-        CliError::Other(format!("Polars error: {err:?}"))
-    }
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -397,6 +391,7 @@ impl JoinStruct {
                 streaming:           self.streaming,
                 fast_projection:     true,
                 eager:               false,
+                row_estimate:        true,
             }
         };
         log::debug!("Optimization state: {optimization_state:?}");

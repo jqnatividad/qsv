@@ -256,7 +256,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match rdr.read_record(&mut batch_record) {
                 Ok(has_data) => {
                     if has_data {
-                        batch.push(batch_record.clone());
+                        batch.push(std::mem::take(&mut batch_record));
                     } else {
                         // nothing else to add to batch
                         break;
@@ -332,7 +332,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         }
                         "Evaluation of given expression failed with the above error!"
                     })
-                    .unwrap_or_else(|_| error_result);
+                    .unwrap_or_else(|_| error_result.as_gil_ref());
 
                 if args.cmd_map {
                     let result = helpers

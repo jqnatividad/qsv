@@ -613,7 +613,7 @@ fn stats_prefer_dmy() {
     cmd.arg("--infer-dates")
         .arg("--prefer-dmy")
         .arg("--dates-whitelist")
-        .arg("_dt")
+        .arg("_dT")
         .arg(test_file);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -761,7 +761,7 @@ fn stats_with_date_inference_variance_stddev() {
         .arg(test_file)
         .arg("--infer-dates")
         .arg("--dates-whitelist")
-        .arg("all");
+        .arg("aLL");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
 

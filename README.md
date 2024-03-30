@@ -10,7 +10,7 @@
 [![Crates.io](https://img.shields.io/crates/v/qsv.svg?logo=crates.io)](https://crates.io/crates/qsv)
 [![Crates.io downloads](https://img.shields.io/crates/d/qsv?color=orange&label=crates.io%20downloads)](https://crates.io/crates/qsv)
 [![Prebuilt Downloads](https://img.shields.io/github/downloads/jqnatividad/qsv/total?logo=github&label=prebuilt%20downloads)](https://github.com/jqnatividad/qsv/releases/latest)
-[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.76.0-red?logo=rust)](#minimum-supported-rust-version)
+[![Minimum supported Rust version](https://img.shields.io/badge/Rust-1.77.1-red?logo=rust)](#minimum-supported-rust-version)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjqnatividad%2Fqsv.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjqnatividad%2Fqsv?ref=badge_shield)
 
 <div align="center">
@@ -31,7 +31,7 @@
 | <a name="applydp_deeplink"></a>[applydp](/src/cmd/applydp.rs#L2)<br>🚀🔣 ![CKAN](docs/images/ckan.png)| applydp is a slimmed-down version of `apply` with only [Datapusher+](https://github.com/dathere/datapusher-plus) relevant subcommands/operations (`qsvdp` binary variant only). |
 | [behead](/src/cmd/behead.rs#L2) | Drop headers from a CSV.  |
 | [cat](/src/cmd/cat.rs#L2)<br>🗄️ | Concatenate CSV files by row or by column. |
-| [count](/src/cmd/count.rs#L2)<br>📇🏎️ | Count the rows in a CSV file. (13.98 seconds for a 15gb, 27m row NYC 311 dataset without an index. Instantaneous with an index.) |
+| [count](/src/cmd/count.rs#L2)<br>📇🏎️🐻‍❄️ | Count the rows in a CSV file. (11.87 seconds for a 15gb, 27m row NYC 311 dataset without an index. Instantaneous with an index.) If the `polars` feature is enabled, uses Polars' multithreaded, mem-mapped CSV reader for fast counts even without an index |
 | [datefmt](/src/cmd/datefmt.rs#L2)<br>🚀 | Formats recognized date fields ([19 formats recognized](https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats)) to a specified date format using [strftime date format specifiers](https://docs.rs/chrono/latest/chrono/format/strftime/). |
 | [dedup](/src/cmd/dedup.rs#L2)<br>🤯🚀 | Remove duplicate rows (See also `extdedup`, `extsort`, `sort` & `sortcheck` commands). |
 | [describegpt](/src/cmd/describegpt.rs#L2)<br>🌐🤖 | Infer extended metadata about a CSV using a GPT model from [OpenAI's API](https://platform.openai.com/docs/introduction). |
@@ -55,9 +55,9 @@
 | [index](/src/cmd/index.rs#L2) | Create an index (📇) for a CSV. This is very quick (even the 15gb, 28m row NYC 311 dataset takes all of 14 seconds to index) & provides constant time indexing/random access into the CSV. With an index, `count`, `sample` & `slice` work instantaneously; random access mode is enabled in `luau`; and multithreading (🏎️) is enabled for the `frequency`, `split`, `stats`, `schema` & `tojsonl` commands. |
 | [input](/src/cmd/input.rs#L2) | Read CSV data with special commenting, quoting, trimming, line-skipping & non-UTF8 encoding handling rules. Typically used to "normalize" a CSV for further processing with other qsv commands. |
 | [join](/src/cmd/join.rs#L2) | Inner, outer, right, cross, anti & semi joins. Automatically creates a simple, in-memory hash index to make it fast.  |
-| [joinp](/src/cmd/joinp.rs#L2)<br>✨🚀🐻‍❄️ | Inner, outer, cross, anti, semi & asof joins using the [Pola.rs](https://www.pola.rs) engine. Unlike the `join` command, `joinp` can process files larger than RAM, is multi-threaded, has join key validation, pre-join filtering, supports [asof joins](https://pola-rs.github.io/polars/py-polars/html/reference/dataframe/api/polars.DataFrame.join_asof.html) (which is [particularly useful for time series data](https://github.com/jqnatividad/qsv/blob/30cc920d0812a854fcbfedc5db81788a0600c92b/tests/test_joinp.rs#L509-L983)) & its output doesn't have duplicate columns. However, `joinp` doesn't have an --ignore-case option & it doesn't support right outer joins. |
+| [joinp](/src/cmd/joinp.rs#L2)<br>✨🚀🐻‍❄️ | Inner, outer, cross, anti, semi & asof joins using the [Pola.rs](https://www.pola.rs) engine. Unlike the `join` command, `joinp` can process files larger than RAM, is multithreaded, has join key validation, pre-join filtering, supports [asof joins](https://pola-rs.github.io/polars/py-polars/html/reference/dataframe/api/polars.DataFrame.join_asof.html) (which is [particularly useful for time series data](https://github.com/jqnatividad/qsv/blob/30cc920d0812a854fcbfedc5db81788a0600c92b/tests/test_joinp.rs#L509-L983)) & its output doesn't have duplicate columns. However, `joinp` doesn't have an --ignore-case option & it doesn't support right outer joins. |
 | [jsonl](/src/cmd/jsonl.rs#L2)<br>🚀🔣 | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| <a name="luau_deeplink"></a><br>[luau](/src/cmd/luau.rs#L2) 👑<br>✨📇🌐🔣 ![CKAN](docs/images/ckan.png) | Create multiple new computed columns, filter rows, compute aggregations and build complex data pipelines by executing a [Luau](https://luau-lang.org) [0.614](https://github.com/Roblox/luau/releases/tag/0.614) expression/script for every row of a CSV file ([sequential mode](https://github.com/jqnatividad/qsv/blob/bb72c4ef369d192d85d8b7cc6e972c1b7df77635/tests/test_luau.rs#L254-L298)), or using [random access](https://www.webopedia.com/definitions/random-access/) with an index ([random access mode](https://github.com/jqnatividad/qsv/blob/bb72c4ef369d192d85d8b7cc6e972c1b7df77635/tests/test_luau.rs#L367-L415)).<br>Can process a single Luau expression or [full-fledged data-wrangling scripts using lookup tables](https://github.com/dathere/qsv-lookup-tables#example) with discrete BEGIN, MAIN and END sections.<br> It is not just another qsv command, it is qsv's [Domain-specific Language](https://en.wikipedia.org/wiki/Domain-specific_language) (DSL) with [numerous qsv-specific helper functions](https://github.com/jqnatividad/qsv/blob/113eee17b97882dc368b2e65fec52b86df09f78b/src/cmd/luau.rs#L1356-L2290) to build production data pipelines. |
+| <a name="luau_deeplink"></a><br>[luau](/src/cmd/luau.rs#L2) 👑<br>✨📇🌐🔣 ![CKAN](docs/images/ckan.png) | Create multiple new computed columns, filter rows, compute aggregations and build complex data pipelines by executing a [Luau](https://luau-lang.org) [0.616](https://github.com/Roblox/luau/releases/tag/0.616) expression/script for every row of a CSV file ([sequential mode](https://github.com/jqnatividad/qsv/blob/bb72c4ef369d192d85d8b7cc6e972c1b7df77635/tests/test_luau.rs#L254-L298)), or using [random access](https://www.webopedia.com/definitions/random-access/) with an index ([random access mode](https://github.com/jqnatividad/qsv/blob/bb72c4ef369d192d85d8b7cc6e972c1b7df77635/tests/test_luau.rs#L367-L415)).<br>Can process a single Luau expression or [full-fledged data-wrangling scripts using lookup tables](https://github.com/dathere/qsv-lookup-tables#example) with discrete BEGIN, MAIN and END sections.<br> It is not just another qsv command, it is qsv's [Domain-specific Language](https://en.wikipedia.org/wiki/Domain-specific_language) (DSL) with [numerous qsv-specific helper functions](https://github.com/jqnatividad/qsv/blob/113eee17b97882dc368b2e65fec52b86df09f78b/src/cmd/luau.rs#L1356-L2290) to build production data pipelines. |
 | [partition](/src/cmd/partition.rs#L2) | Partition a CSV based on a column value. |
 | [pseudo](/src/cmd/pseudo.rs#L2)<br>🔣 | [Pseudonymise](https://en.wikipedia.org/wiki/Pseudonymization) the value of the given column by replacing them with an incremental identifier.  |
 | [py](/src/cmd/python.rs#L2)<br>✨🔣 | Create a new computed column or filter rows by evaluating a python expression on every row of a CSV file. Python's [f-strings](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/) is particularly useful for extended formatting, [with the ability to evaluate Python expressions as well](https://github.com/jqnatividad/qsv/blob/4cd00dca88addf0d287247fa27d40563b6d46985/src/cmd/python.rs#L23-L31). |
@@ -90,7 +90,7 @@
 📇: uses an index when available.  
 🤯: loads entire CSV into memory, though `dedup`, `stats` & `transpose` have "streaming" modes as well.  
 😣: uses additional memory proportional to the cardinality of the columns in the CSV.  
-🧠: expensive operations are memoized (cached) with available inter-session Redis caching for fetch commands.  
+🧠: expensive operations are memoized with available inter-session Redis/Disk caching for fetch commands.  
 🗄️: [Extended input support](#extended-input-support).  
 🐻‍❄️: command powered by [Pola.rs](https://pola.rs) engine.  
 🤖: command uses Natural Language Processing & General AI techniques.  
@@ -171,7 +171,7 @@ cargo install qsv --locked --bin qsv -F feature_capable,apply,polars
 cargo install qsv --locked --bin qsvlite -F lite
 
 # or to install qsvdp
-cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau
+cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau,polars
 ```
 
 ### Option 4: Compile from Source
@@ -201,7 +201,7 @@ cargo build --release --locked --bin qsv -F feature_capable,fetch,foreach
 cargo build --release --locked --bin qsvlite -F lite
 
 # for qsvdp
-cargo build --release --locked --bin qsvdp -F datapusher_plus,luau
+cargo build --release --locked --bin qsvdp -F datapusher_plus,luau,polars
 ```
 
 NOTE: To build with Rust nightly, see [Nightly Release Builds](docs/PERFORMANCE.md#nightly-release-builds).
@@ -219,7 +219,7 @@ There are four binary variants of qsv:
 
 ## Regular Expression Syntax
 
-The `--select` option and several commands (`apply`, `applydp`, `replace`, `schema`, `search`, `searchset`, `select` & `sqlp`) allow the user to specify regular expressions. We use the [`regex`](https://docs.rs/regex) crate to parse, compile and execute these expressions. [^3]
+The `--select` option and several commands (`apply`, `applydp`, `datefmt`, `exclude`, `fetchpost`, `replace`, `schema`, `search`, `searchset`, `select`, `sqlp` & `stats`) allow the user to specify regular expressions. We use the [`regex`](https://docs.rs/regex) crate to parse, compile and execute these expressions. [^3]
 
 [^3]: This is the same regex engine used by [`ripgrep`](https://github.com/BurntSushi/ripgrep#ripgrep-rg) - the [blazingly fast grep replacement](https://blog.burntsushi.net/ripgrep/) that powers Visual Studio's [magical](https://lab.cccb.org/en/arthur-c-clarke-any-sufficiently-advanced-technology-is-indistinguishable-from-magic/) ["Find in Files"](https://github.com/microsoft/vscode-ripgrep) feature.
 
@@ -259,7 +259,7 @@ Click [here](https://docs.rs/file-format/latest/file_format/#reader-features) fo
 
 The `cat`, `headers`, `sqlp` & `to` commands have extended input support (🗄️). If the input is `-` or empty, the command will try to use stdin as input. If it's not, it will check if its a directory, and if so, add all the files in the directory as input files.
 
-If its a file, it will first check if it has an `.infile-list` extension. If it does, it will load the text file and parse each line as an input file path. This is a much faster and convenient way to process a large number of input files, without having to pass them all as separate command-line arguments. Further, the file paths can be anywhere in the file system, even on separate volumes. If an input file path is not fully qualified, it will be treated as relative to the current working directory.
+If its a file, it will first check if it has an `.infile-list` extension. If it does, it will load the text file and parse each line as an input file path. This is a much faster and convenient way to process a large number of input files, without having to pass them all as separate command-line arguments. Further, the file paths can be anywhere in the file system, even on separate volumes. If an input file path is not fully qualified, it will be treated as relative to the current working directory. Empty lines and lines starting with `#` are ignored. Invalid file paths will be logged as warnings and skipped.
 
 For both directory and `.infile-list` input, snappy compressed files with a `.sz` extension will be automatically decompressed.
 
@@ -274,7 +274,7 @@ For all commands except the `index`, `extdedup` & `extsort` commands, if the inp
 Similarly, if the `--output` file has an ".sz" extension, qsv will _automatically_ do streaming compression as it writes it.
 If the output file has an extended CSV/TSV ".sz" extension, qsv will also use the file extension to determine the delimiter to use.  
 
-Note however that compressed files cannot be indexed, so index-accelerated commands (`frequency`, `schema`, `split`, `stats`, `tojsonl`) will not be multi-threaded. Random access is also disabled without an index, so `slice` will not be instantaneous and `luau`'s random-access mode will not be available.
+Note however that compressed files cannot be indexed, so index-accelerated commands (`frequency`, `schema`, `split`, `stats`, `tojsonl`) will not be multithreaded. Random access is also disabled without an index, so `slice` will not be instantaneous and `luau`'s random-access mode will not be available.
 
 There is also a dedicated [`snappy`](/src/cmd/snappy.rs#L2) command with four subcommands for direct snappy file operations — a multithreaded `compress` subcommand (4-5x faster than the built-in, single-threaded auto-compression); a `decompress` subcommand with detailed compression metadata; a `check` subcommand to quickly inspect if a file has a Snappy header; and a `validate` subcommand to confirm if a Snappy file is valid.
 
@@ -359,7 +359,7 @@ However, if the latest Rust stable has been released for more than a week and Ho
 ## Goals / Non-Goals
 
 QuickSilver's goals, in priority order, are to be:
-* **As Fast as Possible** - To do so, it has frequent releases, an aggressive MSRV policy, takes advantage of CPU features, employs [various caching strategies](docs/PERFORMANCE.md#caching), uses [HTTP/2](https://www.cloudflare.com/learning/performance/http2-vs-http1.1/#:~:text=Multiplexing%3A%20HTTP%2F1.1%20loads%20resources,resource%20blocks%20any%20other%20resource.), and is multi-threaded when possible and it makes sense. See [Performance](docs/PERFORMANCE.md) for more info.
+* **As Fast as Possible** - To do so, it has frequent releases, an aggressive MSRV policy, takes advantage of CPU features, employs [various caching strategies](docs/PERFORMANCE.md#caching), uses [HTTP/2](https://www.cloudflare.com/learning/performance/http2-vs-http1.1/#:~:text=Multiplexing%3A%20HTTP%2F1.1%20loads%20resources,resource%20blocks%20any%20other%20resource.), and is multithreaded when possible and it makes sense. See [Performance](docs/PERFORMANCE.md) for more info.
 * **Able to Process Very Large Files** - Most qsv commands are streaming, using constant memory, and can process arbitrarily large CSV files. For those commands that require loading the entire CSV into memory (denoted by 🤯), qsv has Out-of-Memory prevention, batch processing strategies and "ext"ernal commands that use the disk to process larger than memory files. See [Memory Management](docs/PERFORMANCE.md#memory-management) for more info.
 * **A Complete Data-Wrangling Toolkit** - qsv aims to be a comprehensive data-wrangling toolkit that you can use for quick analysis and investigations, but is also robust enough for production data pipelines. Its many commands are targeted towards common data-wrangling tasks and can be combined/composed into complex data-wrangling scripts with its Luau-based DSL.  
 Luau will also serve as the backbone of a whole library of **qsv recipes** - reusable scripts for common tasks (e.g. street-level geocoding, removing PII, data enrichment, etc.) that prompt for easily modifiable parameters.   
@@ -381,7 +381,7 @@ It can process well-formed CSVs in _any_ language so long as its UTF-8 encoded. 
 Finally, though the default Geonames index of the `geocode` command is English-only, the index can be rebuilt with the `geocode index-update` subcommand with the `--languages` option to return place names in multiple languages ([with support for 253 languages](http://download.geonames.org/export/dump/alternatenames/)).
 
 ## Testing
-qsv has ~1,300 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
+qsv has ~1,340 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
 Each command has its own test suite in a separate file with the convention `test_<COMMAND>.rs`.
 Apart from preventing regressions, the tests also serve as good illustrative examples, and are often linked from the usage text of each corresponding command.
 
@@ -397,7 +397,7 @@ cargo test --features lite
 cargo test stats --features lite
 
 # to test qsvdp
-cargo test --features datapusher_plus,luau
+cargo test --features datapusher_plus,luau,polars
 
 # to test a specific command
 # here we test only stats and use the

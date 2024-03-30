@@ -74,7 +74,7 @@ mod test_index;
 mod test_input;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_join;
-#[cfg(all(feature = "feature_capable", feature = "polars"))]
+#[cfg(feature = "polars")]
 mod test_joinp;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_jsonl;
@@ -102,7 +102,7 @@ mod test_sort;
 mod test_sortcheck;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_split;
-#[cfg(all(feature = "feature_capable", feature = "polars"))]
+#[cfg(feature = "polars")]
 mod test_sqlp;
 mod test_stats;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
@@ -170,6 +170,7 @@ impl ops::DerefMut for CsvRecord {
     }
 }
 
+#[cfg(debug_assertions)]
 impl fmt::Debug for CsvRecord {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let bytes: Vec<_> = self.iter().map(std::string::String::as_bytes).collect();

@@ -20,6 +20,27 @@ fn excel_open_xls() {
 }
 
 #[test]
+fn excel_cellerrors() {
+    let wrk = Workdir::new("excel_cellerrors");
+
+    let xls_file = wrk.load_test_file("excel-xlsx.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.args(["--sheet", "cellerrors"]).arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["col1", "col 2", "column-3"],
+        svec!["1", "-50", "15"],
+        svec!["2", "#DIV/0!", "#NAME?"],
+        svec!["3", "50", "20"],
+        svec!["4", "33.333333333333336", "3"],
+        svec!["5", "25", "4"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn excel_open_xls_delimiter() {
     let wrk = Workdir::new("excel_open_xls_delimiter");
 
@@ -580,6 +601,31 @@ fn excel_metadata() {
 }
 
 #[test]
+fn excel_short_metadata() {
+    let wrk = Workdir::new("excel_short_metadata");
+
+    let xls_file = wrk.load_test_file("excel-xls.xls");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("short").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["index", "sheet_name", "type", "visible"],
+        svec!["0", "First", "WorkSheet", "Visible"],
+        svec!["1", "Flexibility Test", "WorkSheet", "Visible"],
+        svec!["2", "Middle", "WorkSheet", "Visible"],
+        svec!["3", "Sheet1", "WorkSheet", "Visible"],
+        svec!["4", "trim test", "WorkSheet", "Visible"],
+        svec!["5", "date test", "WorkSheet", "Visible"],
+        svec!["6", "NoData", "WorkSheet", "Visible"],
+        svec!["7", "Last", "WorkSheet", "Visible"],
+    ];
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn excel_metadata_pretty_json() {
     let wrk = Workdir::new("excel_metadata");
 
@@ -805,6 +851,25 @@ fn ods_metadata() {
             "0",
             "0"
         ],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn ods_short_metadata() {
+    let wrk = Workdir::new("ods_short_metadata");
+
+    let xls_file = wrk.load_test_file("excel-ods.ods");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("s").arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["index", "sheet_name", "type", "visible"],
+        svec!["0", "Sheet1", "WorkSheet", "Visible"],
     ];
 
     assert_eq!(got, expected);

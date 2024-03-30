@@ -119,8 +119,8 @@ stats options:
                               inspecting are dates, boolean or string fields.
 
                               To avoid false positives, preprocess the file first 
-                              with `apply datefmt` to convert unix epoch timestamp columns
-                              to RFC3339 format.
+                              with the `datefmt` command to convert unix epoch timestamp
+                              columns to RFC3339 format.
                               [default: date,time,due,open,close,created]
     --prefer-dmy              Parse dates in dmy format. Otherwise, use mdy format.
                               Ignored if --infer-dates is false.
@@ -373,7 +373,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if let Some(path) = fconfig.path.clone() {
         let path_file_stem = path.file_stem().unwrap().to_str().unwrap();
-        let stats_file = stats_path(&path, false);
+        let stats_file = stats_path(&path, false)?;
         // check if <FILESTEM>.stats.csv file already exists.
         // If it does, check if it was compiled using the same args.
         // However, if the --force flag is set,
@@ -493,7 +493,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             // clone a copy of stats so we can binary encode it to disk later
             if write_stats_binout {
-                stats_for_encoding = stats.clone();
+                stats_for_encoding.clone_from(&stats);
             }
 
             let stats_sr_vec = args.stats_to_records(stats);
@@ -531,7 +531,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         stats_csv_tempfile_fname
     } else {
         // we didn't compute the stats, re-use the existing stats file
-        stats_path(fconfig.path.as_ref().unwrap(), false)
+        stats_path(fconfig.path.as_ref().unwrap(), false)?
             .to_str()
             .unwrap()
             .to_owned()
@@ -539,7 +539,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if fconfig.is_stdin() {
         // if we read from stdin, copy the temp stats file to "stdin.stats.csv"
-        let mut stats_pathbuf = stats_path(fconfig.path.as_ref().unwrap(), true);
+        let mut stats_pathbuf = stats_path(fconfig.path.as_ref().unwrap(), true)?;
         fs::copy(currstats_filename.clone(), stats_pathbuf.clone())?;
 
         // save the stats args to "stdin.stats.csv.json"
@@ -825,40 +825,22 @@ impl Args {
     }
 }
 
-// returns the path to the stats file
-// safety: unwraps are safe because we know stats_csv_path is a valid path
-fn stats_path(stats_csv_path: &Path, stdin_flag: bool) -> PathBuf {
-    let mut p = stats_csv_path
-        .to_path_buf()
-        .into_os_string()
-        .into_string()
-        .unwrap();
-
-    let fname = stats_csv_path
-        .file_name()
-        .unwrap()
-        .to_os_string()
-        .into_string()
-        .unwrap();
+/// returns the path to the stats file
+fn stats_path(stats_csv_path: &Path, stdin_flag: bool) -> io::Result<PathBuf> {
+    let parent = stats_csv_path
+        .parent()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "Invalid path"))?;
     let fstem = stats_csv_path
         .file_stem()
-        .unwrap()
-        .to_os_string()
-        .into_string()
-        .unwrap();
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "Invalid file name"))?;
 
-    if let Some(nofn) = p.strip_suffix(&fname) {
-        p = nofn.to_string();
+    let new_fname = if stdin_flag {
+        "stdin.stats.csv".to_string()
     } else {
-        p = String::new();
-    }
-    if stdin_flag {
-        p.push_str("stdin.stats.csv");
-    } else {
-        p.push_str(&format!("{fstem}.stats.csv"));
-    }
+        format!("{}.stats.csv", fstem.to_string_lossy())
+    };
 
-    PathBuf::from(&p)
+    Ok(parent.join(new_fname))
 }
 
 #[inline]
@@ -875,15 +857,15 @@ fn init_date_inference(
         return Ok(());
     }
 
-    let whitelist_lower = flag_whitelist.to_ascii_lowercase();
-    log::info!("inferring dates with date-whitelist: {whitelist_lower}");
-
-    let infer_date_flags = if whitelist_lower == "all" {
+    let infer_date_flags = if flag_whitelist.eq_ignore_ascii_case("all") {
         log::info!("inferring dates for ALL fields");
         vec![true; headers.len()]
     } else {
         let mut header_str = String::new();
         let mut date_found = false;
+        let whitelist_lower = flag_whitelist.to_lowercase();
+        log::info!("inferring dates with date-whitelist: {whitelist_lower}");
+
         let whitelist = whitelist_lower
             .split(',')
             .map(str::trim)
@@ -946,13 +928,9 @@ pub struct Stats {
 
 #[inline]
 fn timestamp_ms_to_rfc3339(timestamp: i64, typ: FieldType) -> String {
-    use chrono::{DateTime, NaiveDateTime, Utc};
-
-    let date_val = DateTime::<Utc>::from_naive_utc_and_offset(
-        NaiveDateTime::from_timestamp_millis(timestamp).unwrap_or_default(),
-        Utc,
-    )
-    .to_rfc3339();
+    let date_val = chrono::DateTime::from_timestamp_millis(timestamp)
+        .unwrap_or_default()
+        .to_rfc3339();
 
     // if type = Date, only return the date component
     // do not return the time component
@@ -1578,6 +1556,7 @@ impl fmt::Display for FieldType {
     }
 }
 
+#[cfg(debug_assertions)]
 impl fmt::Debug for FieldType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {

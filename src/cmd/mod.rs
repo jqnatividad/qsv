@@ -42,7 +42,7 @@ pub mod index;
 pub mod input;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod join;
-#[cfg(all(feature = "polars", feature = "feature_capable"))]
+#[cfg(feature = "polars")]
 pub mod joinp;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod jsonl;
@@ -70,7 +70,7 @@ pub mod sort;
 pub mod sortcheck;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod split;
-#[cfg(all(feature = "polars", feature = "feature_capable"))]
+#[cfg(feature = "polars")]
 pub mod sqlp;
 pub mod stats;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]

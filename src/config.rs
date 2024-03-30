@@ -77,7 +77,7 @@ pub struct Config {
     select_columns:    Option<SelectColumns>,
     delimiter:         u8,
     pub no_headers:    bool,
-    flexible:          bool,
+    pub flexible:      bool,
     terminator:        csv::Terminator,
     pub quote:         u8,
     quote_style:       csv::QuoteStyle,
@@ -88,7 +88,7 @@ pub struct Config {
     trim:              csv::Trim,
     autoindex_size:    u64,
     prefer_dmy:        bool,
-    comment:           Option<u8>,
+    pub comment:       Option<u8>,
     snappy:            bool, // flag to enable snappy compression/decompression
     pub read_buffer:   u32,
     pub write_buffer:  u32,
@@ -153,6 +153,11 @@ impl Config {
         };
         let sniff = util::get_envvar_flag("QSV_SNIFF_DELIMITER")
             || util::get_envvar_flag("QSV_SNIFF_PREAMBLE");
+        let comment: Option<u8> = match env::var("QSV_COMMENT_CHAR") {
+            Ok(comment_char) => Some(comment_char.as_bytes().first().unwrap().to_owned()),
+            Err(_) => None,
+        };
+        let no_headers = util::get_envvar_flag("QSV_NO_HEADERS");
         let mut preamble = 0_u64;
         if sniff && path.is_some() {
             let sniff_path = path.as_ref().unwrap().to_str().unwrap();
@@ -182,7 +187,7 @@ impl Config {
             idx_path: None,
             select_columns: None,
             delimiter: delim,
-            no_headers: false,
+            no_headers,
             flexible: false,
             terminator: csv::Terminator::Any(b'\n'),
             quote: b'"',
@@ -197,7 +202,7 @@ impl Config {
                 .parse()
                 .unwrap_or(0),
             prefer_dmy: util::get_envvar_flag("QSV_PREFER_DMY"),
-            comment: None,
+            comment,
             snappy,
             read_buffer: std::env::var("QSV_RDR_BUFFER_CAPACITY")
                 .unwrap_or_else(|_| DEFAULT_RDR_BUFFER_CAPACITY.to_string())
@@ -234,11 +239,7 @@ impl Config {
         if env::var("QSV_TOGGLE_HEADERS").unwrap_or_else(|_| "0".to_owned()) == "1" {
             yes = !yes;
         }
-        if util::get_envvar_flag("QSV_NO_HEADERS") {
-            self.no_headers = true;
-        } else {
-            self.no_headers = yes;
-        }
+        self.no_headers = yes;
         self
     }
 
@@ -313,10 +314,9 @@ impl Config {
         self.path.is_none()
     }
 
-    // comment out for now until we have a use case for this
-    // pub const fn is_snappy(&self) -> bool {
-    //     self.snappy
-    // }
+    pub const fn is_snappy(&self) -> bool {
+        self.snappy
+    }
 
     #[inline]
     pub fn selection(&self, first_record: &csv::ByteRecord) -> Result<Selection, String> {
@@ -362,7 +362,7 @@ impl Config {
     pub fn reader_file_stdin(&self) -> io::Result<csv::Reader<Box<dyn SeekRead + 'static>>> {
         Ok(match self.path {
             None => {
-                // Create a buffer in memory when stdin needs to be indexed
+                // Create a buffer in memory for stdin
                 let mut buffer: Vec<u8> = Vec::new();
                 let stdin = io::stdin();
                 stdin.lock().read_to_end(&mut buffer)?;
@@ -521,12 +521,6 @@ impl Config {
 
     #[allow(clippy::wrong_self_convention)]
     pub fn from_reader<R: Read>(&self, rdr: R) -> csv::Reader<R> {
-        let rdr_comment: Option<u8> = if let Ok(comment_char) = env::var("QSV_COMMENT_CHAR") {
-            Some(comment_char.as_bytes().first().unwrap().to_owned())
-        } else {
-            self.comment
-        };
-
         csv::ReaderBuilder::new()
             .flexible(self.flexible)
             .delimiter(self.delimiter)
@@ -535,7 +529,7 @@ impl Config {
             .quoting(self.quoting)
             .escape(self.escape)
             .buffer_capacity(self.read_buffer as usize)
-            .comment(rdr_comment)
+            .comment(self.comment)
             .trim(self.trim)
             .from_reader(rdr)
     }

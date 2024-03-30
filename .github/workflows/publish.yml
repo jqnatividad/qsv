@@ -42,7 +42,7 @@ jobs:
             addl-build-args: --features=apply,luau,fetch,foreach,self_update,geocode,polars,to
             default-features:
             addl-qsvlite-features:
-            addl-qsvdp-features: luau
+            addl-qsvdp-features: luau,polars
             addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
           - os: ubuntu-22.04
             os-name: linux

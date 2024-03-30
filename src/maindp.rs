@@ -67,6 +67,7 @@ macro_rules! command_list {
     help        Show this usage message
     index       Create CSV index for faster access
     input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
+    joinp       Join CSV files using the Pola.rs engine
     luau        Execute Luau script on CSV data
     pseudo      Pseudonymise the values of a column
     rename      Rename the columns of CSV data efficiently
@@ -82,6 +83,7 @@ macro_rules! command_list {
     sniff       Quickly sniff CSV metadata
     sort        Sort CSV data in alphabetical, numerical, reverse or random order
     sortcheck   Check if a CSV is sorted
+    sqlp        Run a SQL query against several CSVs using the Pola.rs engine
     stats       Infer data types and compute summary statistics
     validate    Validate CSV data for RFC4180-compliance or with JSON Schema
 
@@ -245,6 +247,8 @@ enum Command {
     Help,
     Index,
     Input,
+    #[cfg(feature = "polars")]
+    JoinP,
     #[cfg(feature = "luau")]
     Luau,
     Pseudo,
@@ -261,6 +265,8 @@ enum Command {
     Sniff,
     Sort,
     SortCheck,
+    #[cfg(feature = "polars")]
+    SqlP,
     Stats,
     Validate,
 }
@@ -298,6 +304,8 @@ impl Command {
             },
             Command::Index => cmd::index::run(argv),
             Command::Input => cmd::input::run(argv),
+            #[cfg(feature = "polars")]
+            Command::JoinP => cmd::joinp::run(argv),
             #[cfg(feature = "luau")]
             Command::Luau => cmd::luau::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
@@ -314,6 +322,8 @@ impl Command {
             Command::Sniff => cmd::sniff::run(argv),
             Command::Sort => cmd::sort::run(argv),
             Command::SortCheck => cmd::sortcheck::run(argv),
+            #[cfg(feature = "polars")]
+            Command::SqlP => cmd::sqlp::run(argv),
             Command::Stats => cmd::stats::run(argv),
             Command::Validate => cmd::validate::run(argv),
         }

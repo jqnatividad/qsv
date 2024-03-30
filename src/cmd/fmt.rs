@@ -19,8 +19,8 @@ fmt options:
                                If set to "T", uses tab as the delimiter.
                                [default: ,]
     --crlf                     Use '\r\n' line endings in the output.
-    --ascii                    Use ASCII field and record separators. Use Substitute (U+00A1) as the
-                               quote character.
+    --ascii                    Use ASCII field and record separators.
+                               Use Substitute (U+00A1) as the quote character.
     --quote <arg>              The quote character to use. [default: "]
     --quote-always             Put quotes around every value.
     --quote-never              Never put quotes around any value.
