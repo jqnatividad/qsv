@@ -20,7 +20,7 @@ Format multiple date columns in file.csv to ISO 8601/RFC 3339 format:
 
 Format all columns that end with "_date" case-insensitive in file.csv to ISO 8601/RFC 3339 format:
 
-  $ qsv datefmt '/(?i) date$/' file.csv
+  $ qsv datefmt '/(?i)_date$/' file.csv
 
 Format dates in OpenDate column using '%Y-%m-%d' format:
 
@@ -165,7 +165,7 @@ impl FromStr for TimestampResolution {
 
 #[inline]
 fn unix_timestamp(input: &str, resolution: TimestampResolution) -> Option<DateTime<Utc>> {
-    let Ok(ts_input_val) = input.parse::<i64>() else {
+    let Ok(ts_input_val) = atoi_simd::parse::<i64>(input.as_bytes()) else {
         return None;
     };
 
