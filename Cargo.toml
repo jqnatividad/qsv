@@ -83,6 +83,7 @@ cached = { version = "0.49", default-features = false, features = [
 calamine = { version = "0.24", features = ["dates"] }
 censor = { version = "0.3", optional = true }
 chrono = { version = "0.4", default-features = false }
+chrono-tz = "0.8"
 console = { version = "0.15", optional = true }
 cpc = { version = "1.9", optional = true }
 crossbeam-channel = "0.5"
@@ -128,6 +129,7 @@ jsonschema = { version = "0.17", features = [
 ], default-features = false }
 jsonxf = { version = "1", optional = true }
 jql-runner = { version = "7.1", default-features = false, optional = true }
+localzone = { version = "0.2", features = ["auto_validation"] }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.9", features = [
@@ -161,7 +163,7 @@ pyo3 = { version = "0.21", features = [
     "auto-initialize",
     "gil-refs",
 ], optional = true }
-qsv-dateparser = "0.11"
+qsv-dateparser = "0.12"
 qsv_docopt = "1.7"
 qsv-stats = "0.13"
 qsv_currency = { version = "0.6", optional = true }

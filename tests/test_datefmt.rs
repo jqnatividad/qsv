@@ -39,6 +39,237 @@ fn datefmt() {
 }
 
 #[test]
+fn datefmt_to_est() {
+    let wrk = Workdir::new("datefmt_to_est");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date"],
+            svec!["September 17, 2012 10:09am EST"],
+            svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
+            svec!["2009-01-20 05:00 EST"],
+            svec!["July 4, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z"],
+            svec!["This is not a date and it will not be reformatted"],
+            svec!["1511648546"],
+            svec!["-770172300"],
+            svec!["1671673426.123456789"],
+        ],
+    );
+    let mut cmd = wrk.command("datefmt");
+    cmd.arg("Created Date")
+        .args(["--output-tz", "EST"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date"],
+        svec!["2012-09-17T10:09:00-05:00"],
+        svec!["2021-06-02T01:31:39-05:00"],
+        svec!["2009-01-20T05:00:00-05:00"],
+        svec!["2005-07-03T19:00:00-05:00"],
+        svec!["2021-04-30T20:17:02.604456-05:00"],
+        svec!["This is not a date and it will not be reformatted"],
+        svec!["2017-11-25T17:22:26-05:00"],
+        svec!["1945-08-05T18:15:00-05:00"],
+        svec!["2022-12-21T20:43:46.123456768-05:00"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn datefmt_to_hawaii() {
+    let wrk = Workdir::new("datefmt_to_hawaii");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date"],
+            svec!["September 17, 2012 10:09am EST"],
+            svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
+            svec!["2009-01-20 05:00 EST"],
+            svec!["July 4, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z"],
+            svec!["This is not a date and it will not be reformatted"],
+            svec!["1511648546"],
+            svec!["-770172300"],
+            svec!["1671673426.123456789"],
+        ],
+    );
+    let mut cmd = wrk.command("datefmt");
+    cmd.arg("Created Date")
+        .args(["--output-tz", "US/Hawaii"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date"],
+        svec!["2012-09-17T05:09:00-10:00"],
+        svec!["2021-06-01T20:31:39-10:00"],
+        svec!["2009-01-20T00:00:00-10:00"],
+        svec!["2005-07-03T14:00:00-10:00"],
+        svec!["2021-04-30T15:17:02.604456-10:00"],
+        svec!["This is not a date and it will not be reformatted"],
+        svec!["2017-11-25T12:22:26-10:00"],
+        svec!["1945-08-05T13:45:00-09:30"],
+        svec!["2022-12-21T15:43:46.123456768-10:00"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn datefmt_tz_inout() {
+    let wrk = Workdir::new("datefmt_tz_inout");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date"],
+            svec!["September 17, 2012 10:09am EST"],
+            svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
+            svec!["2009-01-20 05:00 EST"],
+            svec!["July 4, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z"],
+            svec!["This is not a date and it will not be reformatted"],
+            svec!["1511648546"],
+            svec!["-770172300"],
+            svec!["1671673426.123456789"],
+        ],
+    );
+    let mut cmd = wrk.command("datefmt");
+    cmd.arg("Created Date")
+        .args(["--input-tz", "US/Hawaii"])
+        .args(["--output-tz", "PRC"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date"],
+        svec!["2012-09-17T23:09:00+08:00"],
+        svec!["2021-06-02T14:31:39+08:00"],
+        svec!["2009-01-20T18:00:00+08:00"],
+        svec!["2005-07-05T08:00:00+08:00"],
+        svec!["2021-05-01T09:17:02.604456+08:00"],
+        svec!["This is not a date and it will not be reformatted"],
+        svec!["2017-11-26T06:22:26+08:00"],
+        svec!["1945-08-06T08:15:00+09:00"],
+        svec!["2022-12-22T09:43:46.123456768+08:00"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn datefmt_input_tz() {
+    let wrk = Workdir::new("datefmt_input_tz");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date"],
+            svec!["September 17, 2012 10:09am EST"],
+            svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
+            svec!["2009-01-20 05:00 EST"],
+            svec!["July 4, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z"],
+            svec!["This is not a date and it will not be reformatted"],
+            svec!["1511648546"],
+            svec!["-770172300"],
+            svec!["1671673426.123456789"],
+        ],
+    );
+    let mut cmd = wrk.command("datefmt");
+    cmd.arg("Created Date")
+        .args(["--input-tz", "Europe/Athens"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date"],
+        svec!["2012-09-17T15:09:00+00:00"],
+        svec!["2021-06-02T06:31:39+00:00"],
+        svec!["2009-01-20T10:00:00+00:00"],
+        svec!["2005-07-03T23:00:00+00:00"],
+        svec!["2021-05-01T01:17:02.604456+00:00"],
+        svec!["This is not a date and it will not be reformatted"],
+        svec!["2017-11-25T22:22:26+00:00"],
+        svec!["1945-08-05T23:15:00+00:00"],
+        svec!["2022-12-22T01:43:46.123456768+00:00"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn datefmt_zulu() {
+    let wrk = Workdir::new("datefmt_zulu");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date"],
+            svec!["September 17, 2012 10:09am EST"],
+            svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
+            svec!["2009-01-20 05:00 EST"],
+            svec!["July 4, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z"],
+            svec!["This is not a date and it will not be reformatted"],
+            svec!["1511648546"],
+            svec!["-770172300"],
+            svec!["1671673426.123456789"],
+        ],
+    );
+    let mut cmd = wrk.command("datefmt");
+    cmd.arg("Created Date").arg("--zulu").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date"],
+        svec!["2012-09-17T15:09:00Z"],
+        svec!["2021-06-02T06:31:39Z"],
+        svec!["2009-01-20T10:00:00Z"],
+        svec!["2005-07-04T00:00:00Z"],
+        svec!["2021-05-01T01:17:02Z"],
+        svec!["This is not a date and it will not be reformatted"],
+        svec!["2017-11-25T22:22:26Z"],
+        svec!["1945-08-05T23:15:00Z"],
+        svec!["2022-12-22T01:43:46Z"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn datefmt_utc() {
+    let wrk = Workdir::new("datefmt_utc");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date"],
+            svec!["September 17, 2012 10:09am EST"],
+            svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
+            svec!["2009-01-20 05:00 EST"],
+            svec!["July 4, 2005"],
+            svec!["2021-05-01T01:17:02.604456Z"],
+            svec!["This is not a date and it will not be reformatted"],
+            svec!["1511648546"],
+            svec!["-770172300"],
+            svec!["1671673426.123456789"],
+        ],
+    );
+    let mut cmd = wrk.command("datefmt");
+    cmd.arg("Created Date").arg("--utc").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Created Date"],
+        svec!["2012-09-17T15:09:00+00:00"],
+        svec!["2021-06-02T06:31:39+00:00"],
+        svec!["2009-01-20T10:00:00+00:00"],
+        svec!["2005-07-04"],
+        svec!["2021-05-01T01:17:02.604456+00:00"],
+        svec!["This is not a date and it will not be reformatted"],
+        svec!["2017-11-25T22:22:26+00:00"],
+        svec!["1945-08-05T23:15:00+00:00"],
+        svec!["2022-12-22T01:43:46.123456768+00:00"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn datefmt_to_unixtime() {
     let wrk = Workdir::new("datefmt_to_unixtime");
     wrk.create(
