@@ -254,6 +254,8 @@ jsonschema = { git = "https://github.com/jqnatividad/jsonschema-rs", branch = "d
 self_update = { git = "https://github.com/jqnatividad/self_update", branch = "bump-reqwest_hyper-http2" }
 # use our fork while we wait for the PR to bump redis to 0.25 along with other dependencies
 cached = { git = "https://github.com/jqnatividad/cached", branch = "bump_redis-directories-serial_test" }
+# use our fork while we wait for our PR to bump dependencies to be merged
+localzone = { git = "https://github.com/jqnatividad/localzone", branch = "bump_dependencies" }
 
 [features]
 default = ["mimalloc"]
