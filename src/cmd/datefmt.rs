@@ -99,9 +99,10 @@ Common options:
 use std::str::FromStr;
 
 use chrono::{DateTime, TimeZone, Utc};
+use chrono_tz::Tz;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use qsv_dateparser::parse_with_preference;
+use qsv_dateparser::parse_with_preference_and_timezone;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::IntoParallelRefIterator,
@@ -125,8 +126,8 @@ struct Args {
     flag_keep_zero_time: bool,
     flag_ts_resolution:  String,
     flag_formatstr:      String,
-    flag_input_tz:       Option<String>,
-    flag_output_tz:      Option<String>,
+    flag_input_tz:       String,
+    flag_output_tz:      String,
     flag_default_tz:     Option<String>,
     flag_utc:            bool,
     flag_zulu:           bool,
@@ -255,15 +256,59 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut batch_results = Vec::with_capacity(batchsize);
 
     // set timezone variables
-    let mut input_tz = args.flag_input_tz;
-    let mut output_tz = args.flag_output_tz;
-    let default_tz = args.flag_default_tz;
+    let default_tz = match args.flag_default_tz.as_deref() {
+        Some(tz) => {
+            if tz.to_ascii_lowercase() == "local" {
+                if let Some(tz) = localzone::get_local_zone() {
+                    log::info!("default-tz local timezone: {tz}");
+                    tz.parse::<Tz>()?
+                } else {
+                    chrono_tz::UTC
+                }
+            } else {
+                tz.parse::<Tz>()?
+            }
+        },
+        None => chrono_tz::UTC,
+    };
+
+    let mut input_tz = match args.flag_input_tz.parse::<Tz>() {
+        Ok(tz) => tz,
+        Err(_) => {
+            if args.flag_input_tz.to_ascii_lowercase() == "local" {
+                if let Some(tz) = localzone::get_local_zone() {
+                    log::info!("input-tz local timezone: {tz}");
+                    tz.parse::<Tz>().unwrap_or(default_tz)
+                } else {
+                    default_tz
+                }
+            } else {
+                default_tz
+            }
+        },
+    };
+    let mut output_tz = match args.flag_output_tz.parse::<Tz>() {
+        Ok(tz) => tz,
+        Err(_) => {
+            if args.flag_output_tz.to_ascii_lowercase() == "local" {
+                if let Some(tz) = localzone::get_local_zone() {
+                    log::info!("output-tz local timezone: {tz}");
+                    tz.parse::<Tz>().unwrap_or(default_tz)
+                } else {
+                    default_tz
+                }
+            } else {
+                default_tz
+            }
+        },
+    };
+
     if args.flag_utc {
-        input_tz = Some("UTC".to_string());
-        output_tz = Some("UTC".to_string());
+        input_tz = chrono_tz::UTC;
+        output_tz = chrono_tz::UTC;
     }
     if args.flag_zulu {
-        output_tz = Some("UTC".to_string());
+        output_tz = chrono_tz::UTC;
         flag_formatstr = "%Y-%m-%dT%H:%M:%SZ".to_string();
     }
 
@@ -304,6 +349,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let mut cell = String::new();
                 #[allow(unused_assignments)]
                 let mut formatted_date = String::new();
+                let mut format_date_with_tz: DateTime<Tz>;
                 let mut parsed_date;
                 let new_column = flag_new_column.is_some();
                 for col_index in &*sel {
@@ -312,10 +358,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         parsed_date = if let Some(ts) = unix_timestamp(&cell, tsres) {
                             Ok(ts)
                         } else {
-                            parse_with_preference(&cell, prefer_dmy)
+                            parse_with_preference_and_timezone(&cell, prefer_dmy, &input_tz)
                         };
                         if let Ok(format_date) = parsed_date {
-                            formatted_date = format_date.format(&flag_formatstr).to_string();
+                            format_date_with_tz = format_date.with_timezone(&output_tz);
+                            formatted_date =
+                                format_date_with_tz.format(&flag_formatstr).to_string();
                             if !keep_zero_time && formatted_date.ends_with("T00:00:00+00:00") {
                                 formatted_date[..10].clone_into(&mut cell);
                             } else {
