@@ -4,11 +4,11 @@ external drive running macOS Sonoma 14.0.
 
 
 It uses the prebuilt, CPU optimized qsv binary variant in aarch64-apple-darwin.zip
-found at https://github.com/jqnatividad/qsv/releases/latest.
+found at `https://github.com/jqnatividad/qsv/releases/latest`.
 
 
 The benchmarks were performed on a million row, 41 column, 520 MB sample of NYC's 311 data.
-https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z
+`https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z`
 
 Each benchmark is executed five times using hyperfine. Two warmup runs followed by three benchmark runs.
 
