@@ -263,6 +263,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     log::info!("default-tz local timezone: {tz}");
                     tz.parse::<Tz>()?
                 } else {
+                    log::warn!("default-tz local timezone {tz} not found. Defaulting to UTC.");
                     chrono_tz::UTC
                 }
             } else {
