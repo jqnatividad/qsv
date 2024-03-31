@@ -270,6 +270,25 @@ fn datefmt_utc() {
 }
 
 #[test]
+fn datefmt_invalid_tz() {
+    let wrk = Workdir::new("datefmt_invalid_tz");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["Created Date"],
+            svec!["September 17, 2012 10:09am EST"],
+            svec!["Wed, 02 Jun 2021 06:31:39 GMT"],
+        ],
+    );
+    let mut cmd = wrk.command("datefmt");
+    cmd.arg("Created Date")
+        .args(["--default-tz", "Swatch Time"])
+        .arg("data.csv");
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
 fn datefmt_to_unixtime() {
     let wrk = Workdir::new("datefmt_to_unixtime");
     wrk.create(

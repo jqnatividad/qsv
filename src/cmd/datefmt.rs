@@ -278,7 +278,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if args.flag_input_tz.to_ascii_lowercase() == "local" {
                 if let Some(tz) = localzone::get_local_zone() {
                     log::info!("input-tz local timezone: {tz}");
-                    tz.parse::<Tz>().unwrap_or(default_tz)
+                    tz.parse::<Tz>()?
                 } else {
                     default_tz
                 }
@@ -293,7 +293,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if args.flag_output_tz.to_ascii_lowercase() == "local" {
                 if let Some(tz) = localzone::get_local_zone() {
                     log::info!("output-tz local timezone: {tz}");
-                    tz.parse::<Tz>().unwrap_or(default_tz)
+                    tz.parse::<Tz>()?
                 } else {
                     default_tz
                 }
