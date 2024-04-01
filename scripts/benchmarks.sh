@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.19.1
+bm_version=3.20.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -452,6 +452,8 @@ run enum_uuid "$qsv_bin" enum --uuid "$data"
 run enum_constant "$qsv_bin" enum --constant "NYC" "$data"
 run enum_copy "$qsv_bin" enum --copy Agency "$data"
 run excel "$qsv_bin" excel benchmark_data.xlsx
+run excel_metadata "$qsv_bin" excel --metadata c benchmark_data.xlsx
+run excel_metadata_short "$qsv_bin" excel --metadata s benchmark_data.xlsx
 run exclude "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
 run --index exclude_index "$qsv_bin" exclude \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
 run exclude_casei "$qsv_bin" exclude --ignore-case \'Incident Zip\' "$data" \'Incident Zip\' data_to_exclude.csv
