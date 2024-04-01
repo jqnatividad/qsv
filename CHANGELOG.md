@@ -8,13 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.125.0] - 2024-04-01
 
-We squeeze even more speed with this release! We've refactored `count` to use Polars' [SQLContext](https://www.confessionsofadataguy.com/polars-laziness-and-sql-context/) so it will use its magical LazyFrames evalution to automagically count even very large files in a few seconds. In the last release, `count` was already using Polars, but it was mistakenly falling back to "slow" counting mode. Now, it's fast all the time, even without an index!
+In this release, we focused on the need for even more speed. 
 
-Several supporting qsv crates were also tweaked for performance. `qsv-docopt` is now a tad faster parsing command-line arguements. `qsv-stats` - the crate behind the `stats`, `schema`, `tojsonl` and the `frequency` commands, has been further optimized for speed. `qsv-dateparser` has been updated to support the new `datefmt` timezone handling options. And `qsv-sniffer` also got a speed boost.
+This was done primarily by tweaking several supporting qsv crates. `qsv-docopt` now parses command-line arguments slightly faster. `qsv-stats`, the crate behind commands like `stats`, `schema`, `tojsonl`, and `frequency`, has been further optimized for speed. `qsv-dateparser` has been updated to support new timezone handling options in `datefmt`. `qsv-sniffer` also got a speed boost.
 
-`datefmt` gets beefed up with new timezone handling options and a new `ts-resolution` option to specify resolution to use when parsing unix timestamps.
+The `count` command has been refactored to utilize Polars' SQLContext, which leverages LazyFrames evaluation to automagically count even very large files in just a few seconds. Previously, `count` was already using Polars, but it mistakenly fell back to a slower counting mode. Now, it consistently delivers fast performance, even without an index.
 
-And qsv is going to [CSV,Conf,V8](https://csvconf.com) in Puebla, Mexico! We're presenting a talk entitled "qsv: A Blazing Fast CSV Data-Wrangling Toolkit". [Hope to see you there](https://www.eventbrite.com/e/csvconfv8-tickets-808081201627?aff=oddtdtcreator)!
+The `datefmt` command also got a tad faster while also being enhanced with new timezone and timestamp options.
+
+Lastly, we are excited to announce that qsv will be attending the [CSV,Conf,V8](https://csvconf.com) conference in Puebla, Mexico on May 28-29. I'll be presenting a talk titled "qsv: A Blazing Fast CSV Data-Wrangling Toolkit". [Hope to see you there!](https://www.eventbrite.com/e/csvconfv8-tickets-808081201627?aff=oddtdtcreator).
 
 ---
 
