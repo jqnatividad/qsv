@@ -122,6 +122,7 @@ jobs:
     - name: re-zipsign zip archive
       run: |
         zipsign sign zip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip qsvpriv.key
+        cp -v qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip /tmp
     - name: Upload zipped binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
