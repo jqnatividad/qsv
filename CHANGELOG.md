@@ -6,6 +6,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.125.0] - 2024-04-01
+
+We squeeze even more speed with this release! We've refactored `count` to use Polars' [SQLContext](https://www.confessionsofadataguy.com/polars-laziness-and-sql-context/) so it will use its magical LazyFrames evalution to automagically count even very large files in a few seconds. In the last release, `count` was already using Polars, but it was mistakenly falling back to "slow" counting mode. Now, it's fast all the time, even without an index!
+
+Several supporting qsv crates were also tweaked for performance. `qsv-docopt` is now a tad faster parsing command-line arguements. `qsv-stats` - the crate behind the `stats`, `schema`, `tojsonl` and the `frequency` commands, has been further optimized for speed. `qsv-dateparser` has been updated to support the new `datefmt` timezone handling options. And `qsv-sniffer` also got a speed boost.
+
+`datefmt` gets beefed up with new timezone handling options and a new `ts-resolution` option to specify resolution to use when parsing unix timestamps.
+
+And qsv is going to [CSV,Conf,V8](https://csvconf.com) in Puebla, Mexico! We're presenting a talk entitled "qsv: A Blazing Fast CSV Data-Wrangling Toolkit". [Hope to see you there](https://www.eventbrite.com/e/csvconfv8-tickets-808081201627?aff=oddtdtcreator)!
+
+---
+
+## Added
+* `excel`: added short mode to `--metadata` option https://github.com/jqnatividad/qsv/pull/1699
+* `datefmt`: added `ts-resolution` option to specify resolution to use when parsing unix timestamps https://github.com/jqnatividad/qsv/pull/1704
+* `datefmt`: added timezone handling options  https://github.com/jqnatividad/qsv/pull/1706 https://github.com/jqnatividad/qsv/pull/1707 https://github.com/jqnatividad/qsv/pull/1642
+
+## Changed
+* `count`: refactored to use Polars SQLContext https://github.com/jqnatividad/qsv/commit/43a236f6a45c890d2bb6b4c43eb469bd627f82e1
+* `stats`: refactored stats_path helper function https://github.com/jqnatividad/qsv/commit/174c30e3b87470613ff34a98617d44e477a4296a
+* `apply`, `applydp`, `datefmt`, `excel`, `geocode`, `py`, `validate`: use std::mem::take to avoid clone https://github.com/jqnatividad/qsv/commit/1fd187f23262b51e0f431664895d49fd930d011a https://github.com/jqnatividad/qsv/commit/8402d3a8063ef161fc9ec68dd7f0f0601802d21d https://github.com/jqnatividad/qsv/commit/849615775505a25888a50b255ba0d544e878aeaf
+* `excel`: optimized workbook opening operation https://github.com/jqnatividad/qsv/commit/67f662eba501e543ec44e5daf5eb175f8a8ae7b1
+* build(deps): bump flexi_logger from 0.27.4 to 0.28.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1673
+* build(deps): bump polars from 0.38.2 to 0.38.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1674
+* build(deps): bump uuid from 1.7.0 to 1.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1675
+* build(deps): bump hashbrown from 0.14.3 to 0.14.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1680
+* build(deps): bump reqwest from 0.11.26 to 0.11.27 by @dependabot in https://github.com/jqnatividad/qsv/pull/1679
+* build(deps): bump bytes from 1.5.0 to 1.6.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1685
+* build(deps): bump regex from 1.10.3 to 1.10.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1686
+* build(deps): bump indexmap from 2.2.5 to 2.2.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1687
+* build(deps): bump rayon from 1.9.0 to 1.10.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1688
+* build(deps): bump qsv_docopt from 1.6.0 to 1.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1691
+* build(deps): bump reqwest from 0.12.1 to 0.12.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1693
+* build(deps): bump serde_json from 1.0.114 to 1.0.115 by @dependabot in https://github.com/jqnatividad/qsv/pull/1694
+* build(deps): bump itoa from 1.0.10 to 1.0.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1695
+* build(deps): bump actions/setup-python from 5.0.0 to 5.1.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1700
+* build(deps): bump rust_decimal from 1.34.3 to 1.35.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1701
+* build(deps): bump chrono from 0.4.35 to 0.4.37 by @dependabot in https://github.com/jqnatividad/qsv/pull/1702
+* build(deps): bump tokio from 1.36.0 to 1.37.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1703
+* build(deps): bump qsv-sniffer from 0.10.2 to 0.10.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1708
+* build(deps): bump titlecase from 2.2.1 to 3.0.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1709
+* build(deps): bump qsv-stats from 0.13.0 to 0.14.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1710
+* applied select clippy recommendations
+* updated several indirect dependencies
+* added several benchmarks for new/changed commands
+* bumped MSRV to 1.77.1
+* use `#[cfg(debug_assertions)]` conditional compilation to avoid compiling debug code in release mode
+* use patched forks of `jsonschema`, `cached`, `self_update` and `localzone` crates to avoid old dependencies
+which was causing dependency bloat
+
+## Fixed
+* `count`: fixed polars_count_input helper, as it was always falling back to "slow" counting mode https://github.com/jqnatividad/qsv/commit/3484c89080d41d2e39457c918a893189aee64753
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.124.1...0.125.0
+
 ## [0.124.1] - 2024-03-15
 
 # [Datapusher+](https://github.com/dathere/datapusher-plushttps://github.com/dathere/datapusher-plus) "_[Speed of Insight](https://dathere.com/2024/03/the-speed-of-insight/)_" Release! 🚀🚀🚀
