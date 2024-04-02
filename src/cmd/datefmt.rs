@@ -117,6 +117,7 @@ use crate::{
     CliResult,
 };
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
     arg_column:          SelectColumns,

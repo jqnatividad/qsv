@@ -44,6 +44,7 @@ use serde::Deserialize;
 
 use crate::{config::Config, util, CliResult};
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
     arg_input:           Option<String>,

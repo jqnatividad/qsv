@@ -1367,7 +1367,7 @@ pub fn decompress_snappy_file(
 pub async fn download_file(
     url: &str,
     path: PathBuf,
-    show_progress: bool,
+    #[allow(unused_variables)] show_progress: bool,
     custom_user_agent: Option<String>,
     download_timeout: Option<u16>,
     sample_size: Option<u64>,

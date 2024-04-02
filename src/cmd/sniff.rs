@@ -129,7 +129,7 @@ use crate::{
     util::format_systemtime,
     CliResult,
 };
-
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
     arg_input:           Option<String>,

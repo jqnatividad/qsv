@@ -254,6 +254,7 @@ use crate::{
     util, CliError, CliResult,
 };
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
     cmd_map:          bool,
