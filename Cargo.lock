@@ -2014,7 +2014,7 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
- "strsim 0.11.0",
+ "strsim 0.11.1",
 ]
 
 [[package]]
@@ -4278,7 +4278,7 @@ dependencies = [
  "simple-expand-tilde",
  "smartstring",
  "snap",
- "strsim 0.11.0",
+ "strsim 0.11.1",
  "strum 0.26.2",
  "strum_macros 0.26.2",
  "sysinfo",
@@ -4354,7 +4354,7 @@ dependencies = [
  "ahash 0.8.11",
  "regex",
  "serde",
- "strsim 0.11.0",
+ "strsim 0.11.1",
 ]
 
 [[package]]
@@ -5333,9 +5333,9 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "strsim"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ee073c9e4cd00e28217186dbe12796d692868f432bf2e97ee73bed0c56dfa01"
+checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "strum"
