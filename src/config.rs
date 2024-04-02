@@ -314,6 +314,7 @@ impl Config {
         self.path.is_none()
     }
 
+    #[cfg(feature = "polars")]
     pub const fn is_snappy(&self) -> bool {
         self.snappy
     }
