@@ -1,3 +1,4 @@
+#![cfg(not(feature = "datapusher_plus"))]
 use std::process;
 
 use crate::{qcheck, quickcheck::TestResult, workdir::Workdir, Csv, CsvData};
