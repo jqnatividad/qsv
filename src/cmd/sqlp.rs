@@ -148,7 +148,7 @@ sqlp options:
                               the CSV parsing of dates.
     --infer-len <arg>         The number of rows to scan when inferring the schema of the CSV.
                               Set to 0 to do a full table scan (warning: very slow).
-                              (default: 250)
+                              (default: 1000)
     --low-memory              Use low memory mode when parsing CSVs. This will use less memory
                               but will be slower. It will also process LazyFrames in streaming mode.
                               Only use this when you get out of memory errors.
@@ -586,7 +586,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         && delim == b','
         && !args.flag_no_optimizations
         && !args.flag_try_parsedates
-        && args.flag_infer_len != Some(250)
+        && args.flag_infer_len != Some(1000)
         && !args.flag_low_memory
         && !args.flag_truncate_ragged_lines
         && !args.flag_ignore_errors
