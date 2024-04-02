@@ -370,7 +370,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_replacement
     };
     let flag_comparand = args.flag_comparand;
-    let flag_formatstr = args.flag_formatstr;
     let flag_new_column = args.flag_new_column;
 
     // amortize memory allocation by reusing record
