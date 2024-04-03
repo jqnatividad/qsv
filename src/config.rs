@@ -294,15 +294,16 @@ impl Config {
         self
     }
 
-    pub const fn read_buffer(mut self, buffer: u32) -> Config {
-        self.read_buffer = buffer;
-        self
-    }
+    // comment read_buffer() and write_buffer() out for now, as they're not used
+    // pub const fn read_buffer(mut self, buffer: u32) -> Config {
+    //     self.read_buffer = buffer;
+    //     self
+    // }
 
-    pub const fn write_buffer(mut self, buffer: u32) -> Config {
-        self.write_buffer = buffer;
-        self
-    }
+    // pub const fn write_buffer(mut self, buffer: u32) -> Config {
+    //     self.write_buffer = buffer;
+    //     self
+    // }
 
     #[allow(clippy::missing_const_for_fn)]
     pub fn select(mut self, sel_cols: SelectColumns) -> Config {
