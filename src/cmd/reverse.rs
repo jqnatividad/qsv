@@ -46,16 +46,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
 
-    // quadruple the buffer sizes as this is IO intensive
-    // this is our brute force way of speeding up the process
-    // as we can't really parallelize reversing a file
-    let mut rdr = rconfig
-        .clone()
-        .read_buffer(rconfig.read_buffer * 4)
-        .reader()?;
-    let mut wtr = Config::new(&args.flag_output)
-        .write_buffer(rconfig.write_buffer * 4)
-        .writer()?;
+    let mut rdr = rconfig.reader()?;
+    let mut wtr = Config::new(&args.flag_output).writer()?;
 
     let Some(mut idx_file) = rconfig.indexed()? else {
         // we don't have an index, we need to read the entire file into memory
