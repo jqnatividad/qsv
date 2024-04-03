@@ -709,46 +709,54 @@ fn to_json_instance(
 ) -> CliResult<Value> {
     let mut json_object_map: Map<String, Value> = Map::with_capacity(header_len);
 
-    for ((key, json_type), value) in header_types.iter().zip(record.iter()) {
+    let mut key_string: String;
+    let mut value_string: String;
+    for ((key_iter, json_type), value) in header_types.iter().zip(record.iter()) {
+        key_string = key_iter.to_owned();
+
         if value.is_empty() {
-            json_object_map.insert(key.to_string(), Value::Null);
+            json_object_map.insert(key_string, Value::Null);
             continue;
         }
 
-        let Ok(value_str) = from_utf8(value) else {
-            let s = String::from_utf8_lossy(value);
-            return fail_encoding_clierror!("CSV value is not valid UTF-8: {s}");
+        let value_str = match from_utf8(value) {
+            Ok(v) => v,
+            Err(e) => {
+                let s = String::from_utf8_lossy(value);
+                return fail_encoding_clierror!("CSV value \"{s}\" is not valid UTF-8: {e}");
+            },
         };
 
         match *json_type {
             JSONtypes::String => {
-                json_object_map.insert(key.clone(), Value::String(value_str.to_owned()));
+                value_string = value_str.to_owned();
+                json_object_map.insert(key_string, Value::String(value_string));
             },
             JSONtypes::Number => {
                 if let Ok(float) = value_str.parse::<f64>() {
                     json_object_map
-                        .insert(key.clone(), Value::Number(Number::from_f64(float).unwrap()));
+                        .insert(key_string, Value::Number(Number::from_f64(float).unwrap()));
                 } else {
                     return fail_clierror!(
-                        "Can't cast into Number. key: {key}, value: {value_str}"
+                        "Can't cast into Number. key: {key_string}, value: {value_str}"
                     );
                 }
             },
             JSONtypes::Integer => {
                 if let Ok(int) = atoi_simd::parse::<i64>(value_str.as_bytes()) {
-                    json_object_map.insert(key.clone(), Value::Number(Number::from(int)));
+                    json_object_map.insert(key_string, Value::Number(Number::from(int)));
                 } else {
                     return fail_clierror!(
-                        "Can't cast into Integer. key: {key}, value: {value_str}"
+                        "Can't cast into Integer. key: {key_string}, value: {value_str}"
                     );
                 }
             },
             JSONtypes::Boolean => {
                 if let Ok(boolean) = value_str.parse::<bool>() {
-                    json_object_map.insert(key.clone(), Value::Bool(boolean));
+                    json_object_map.insert(key_string, Value::Bool(boolean));
                 } else {
                     return fail_clierror!(
-                        "Can't cast into Boolean. key: {key}, value: {value_str}"
+                        "Can't cast into Boolean. key: {key_string}, value: {value_str}"
                     );
                 }
             },
