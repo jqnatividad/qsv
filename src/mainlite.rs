@@ -107,7 +107,13 @@ struct Args {
 
 fn main() -> QsvExitCode {
     let now = Instant::now();
-    let (qsv_args, _logger_handle) = util::init_logger();
+    let (qsv_args, _logger_handle) = match util::init_logger() {
+        Ok((qsv_args, _logger_handle)) => (qsv_args, _logger_handle),
+        Err(e) => {
+            eprintln!("{e}");
+            return QsvExitCode::Bad;
+        },
+    };
 
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| {
