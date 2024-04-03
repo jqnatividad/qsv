@@ -309,6 +309,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         flag_formatstr = "%Y-%m-%dT%H:%M:%SZ".to_string();
     }
 
+    let is_output_utc = output_tz == chrono_tz::UTC;
+
     // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
 
@@ -358,9 +360,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             parse_with_preference_and_timezone(&cell, prefer_dmy, &input_tz)
                         };
                         if let Ok(format_date) = parsed_date {
-                            format_date_with_tz = format_date.with_timezone(&output_tz);
-                            formatted_date =
-                                format_date_with_tz.format(&flag_formatstr).to_string();
+                            // don't need to call with_timezone() if output_tz is UTC
+                            // as format_date is already in UTC
+                            formatted_date = if is_output_utc {
+                                format_date.format(&flag_formatstr).to_string()
+                            } else {
+                                format_date_with_tz = format_date.with_timezone(&output_tz);
+                                format_date_with_tz.format(&flag_formatstr).to_string()
+                            };
                             if !keep_zero_time && formatted_date.ends_with("T00:00:00+00:00") {
                                 formatted_date[..10].clone_into(&mut cell);
                             } else {
