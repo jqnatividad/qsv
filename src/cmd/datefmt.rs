@@ -286,6 +286,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         default_tz
     };
+    #[allow(clippy::useless_let_if_seq)] // more readable this way
     let mut output_tz = if let Ok(tz) = args.flag_output_tz.parse::<Tz>() {
         tz
     } else if args.flag_output_tz.to_ascii_lowercase() == "local" {
