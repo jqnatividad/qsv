@@ -740,7 +740,7 @@ impl<'de> Deserialize<'de> for FilenameTemplate {
     }
 }
 
-pub fn init_logger() -> (String, flexi_logger::LoggerHandle) {
+pub fn init_logger() -> CliResult<(String, flexi_logger::LoggerHandle)> {
     use flexi_logger::{Cleanup, Criterion, FileSpec, Logger, Naming};
 
     let qsv_log_env = env::var("QSV_LOG_LEVEL").unwrap_or_else(|_| "off".to_string());
@@ -751,32 +751,36 @@ pub fn init_logger() -> (String, flexi_logger::LoggerHandle) {
         flexi_logger::WriteMode::BufferAndFlush
     };
 
-    let logger = Logger::try_with_env_or_str(qsv_log_env)
-        .unwrap()
-        .use_utc()
-        .log_to_file(
-            FileSpec::default()
-                .directory(qsv_log_dir)
-                .suppress_timestamp(),
-        )
-        .write_mode(write_mode)
-        .format_for_files(flexi_logger::detailed_format)
-        .o_append(true)
-        .rotate(
-            Criterion::Size(20_000_000), // 20 mb
-            Naming::Numbers,
-            Cleanup::KeepLogAndCompressedFiles(10, 100),
-        )
-        .start()
-        .unwrap();
+    let logger_handle = Logger::try_with_env_or_str(qsv_log_env);
 
-    let qsv_args: String = if log::log_enabled!(log::Level::Info) {
-        env::args().skip(1).collect::<Vec<_>>().join(" ")
-    } else {
-        String::new()
-    };
-    log::info!("START: {qsv_args}");
-    (qsv_args, logger)
+    match logger_handle {
+        Ok(logger) => {
+            let logger = logger
+                .use_utc()
+                .log_to_file(
+                    FileSpec::default()
+                        .directory(qsv_log_dir)
+                        .suppress_timestamp(),
+                )
+                .write_mode(write_mode)
+                .format_for_files(flexi_logger::detailed_format)
+                .o_append(true)
+                .rotate(
+                    Criterion::Size(20_000_000), // 20 mb
+                    Naming::Numbers,
+                    Cleanup::KeepLogAndCompressedFiles(10, 100),
+                )
+                .start()?;
+            let qsv_args: String = if log_enabled!(log::Level::Info) {
+                env::args().skip(1).collect::<Vec<_>>().join(" ")
+            } else {
+                String::new()
+            };
+            log::info!("START: {qsv_args}");
+            Ok((qsv_args, logger))
+        },
+        Err(e) => Err(CliError::Other(format!("Failed to initialize logger: {e}"))),
+    }
 }
 
 #[cfg(feature = "self_update")]

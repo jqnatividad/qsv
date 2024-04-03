@@ -232,3 +232,9 @@ impl From<polars::error::PolarsError> for CliError {
         CliError::Other(format!("Polars error: {err:?}"))
     }
 }
+
+impl From<flexi_logger::FlexiLoggerError> for CliError {
+    fn from(err: flexi_logger::FlexiLoggerError) -> CliError {
+        CliError::Other(format!("FlexiLogger error: {err:?}"))
+    }
+}
