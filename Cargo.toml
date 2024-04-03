@@ -106,6 +106,7 @@ filetime = "0.2"
 flexi_logger = { version = "0.28", features = [
     "async",
     "compress",
+    "dont_minimize_extra_stacks",
 ], default-features = false }
 futures = "0.3"
 futures-util = "0.3"
