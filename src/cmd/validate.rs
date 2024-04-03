@@ -667,6 +667,7 @@ fn write_error_report(input_path: &str, validation_error_messages: Vec<String>) 
 }
 
 /// if given record is valid, return None, otherwise, error file entry string
+#[inline]
 fn do_json_validation(
     header_types: &[(String, JSONtypes)],
     header_len: usize,
