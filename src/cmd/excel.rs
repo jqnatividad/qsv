@@ -672,7 +672,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let mut processed_chunk: Vec<csv::StringRecord> = Vec::with_capacity(chunk_size);
             let mut col_idx = 0_u32;
 
-            let empty_string = "cannot get cell value".to_string();
+            let formula_get_value_error = "cannot get formula".to_string();
             let mut cell_value: &String;
 
             for (row_idx, row) in chunk {
@@ -749,13 +749,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 ErrorFormat::Formula => {
                                     cell_value = sheet_formulas
                                         .get_value((*row_idx, col_idx))
-                                        .unwrap_or(&empty_string);
+                                        .unwrap_or(&formula_get_value_error);
                                     record.push_field(&format!("#={cell_value}"));
                                 },
                                 ErrorFormat::Both => {
                                     cell_value = sheet_formulas
                                         .get_value((*row_idx, col_idx))
-                                        .unwrap_or(&empty_string);
+                                        .unwrap_or(&formula_get_value_error);
                                     record.push_field(&format!("{e}: ={cell_value}"));
                                 },
                             };
