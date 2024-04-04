@@ -79,6 +79,15 @@ Excel options:
                                
                                All other Excel options are ignored.
                                [default: none]
+    --error-format <format>    The format to use when formatting error cells.
+                               There are 3 formats:
+                                 - "code": return the error code.
+                                    (e.g. #DIV/0!)
+                                 - "formula": return the formula.
+                                    (e.g. #=A1/B1 where B1 is 0; #=100/0)
+                                 - "both": return both error code and the formula.
+                                    (e.g. #DIV/0!: =A1/B1)
+                               [default: code]
     --flexible                 Continue even if the number of columns is different from row to row.
     --trim                     Trim all fields so that leading & trailing whitespaces are removed.
                                Also removes embedded linebreaks.
@@ -119,6 +128,7 @@ struct Args {
     arg_input:           String,
     flag_sheet:          String,
     flag_metadata:       String,
+    flag_error_format:   String,
     flag_flexible:       bool,
     flag_trim:           bool,
     flag_output:         Option<String>,
@@ -137,6 +147,13 @@ enum MetadataMode {
     Json,
     PrettyJSON,
     None,
+}
+
+#[derive(PartialEq)]
+enum ErrorFormat {
+    Code,
+    Formula,
+    Both,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -551,11 +568,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let (row_count, col_count) = range.get_size();
 
+    let error_format = match args.flag_error_format.to_lowercase().as_str() {
+        "formula" => ErrorFormat::Formula,
+        "both" => ErrorFormat::Both,
+        _ => ErrorFormat::Code,
+    };
+
     if row_count == 0 {
+        if !requested_range.is_empty() {
+            return fail_clierror!("\"{requested_range}\" range in sheet \"{sheet}\" is empty.");
+        }
         return fail_clierror!("\"{sheet}\" sheet is empty.");
     }
     // there are rows to export
     let mut rows_iter = range.rows();
+
+    let range_start = range.start().unwrap_or((0, 0));
+    let sheet_formulas = workbook.worksheet_formula(&sheet)?;
 
     // amortize allocations
     let mut record = csv::StringRecord::with_capacity(500, col_count);
@@ -611,11 +640,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         String::new()
     };
 
-    let mut rows = Vec::with_capacity(row_count);
+    let mut rows: Vec<(u32, &[Data])> = Vec::with_capacity(row_count);
 
+    // we add 1 as we already processed the header row
+    let mut row_idx = range_start.0 + 1;
     // queue rest of the rows for processing as data rows
     for row in rows_iter {
-        rows.push(row);
+        rows.push((row_idx, row));
+        row_idx += 1;
     }
 
     // set RAYON_NUM_THREADS
@@ -638,8 +670,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let mut formatted_date = String::new();
 
             let mut processed_chunk: Vec<csv::StringRecord> = Vec::with_capacity(chunk_size);
+            let mut col_idx = 0_u32;
 
-            for row in chunk {
+            let empty_string = String::new();
+
+            for (row_idx, row) in chunk {
                 for cell in *row {
                     match *cell {
                         Data::Empty => record.push_field(""),
@@ -707,13 +742,30 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                             record.push_field(&work_date);
                         },
-                        Data::Error(ref e) => record.push_field(&format!("{e}")),
+                        Data::Error(ref e) => {
+                            match error_format {
+                                ErrorFormat::Code => record.push_field(&format!("{e}")),
+                                ErrorFormat::Formula => {
+                                    let cell_value = sheet_formulas
+                                        .get_value((*row_idx, col_idx))
+                                        .unwrap_or(&empty_string);
+                                    record.push_field(&format!("#={cell_value}"));
+                                },
+                                ErrorFormat::Both => {
+                                    let cell_value = sheet_formulas
+                                        .get_value((*row_idx, col_idx))
+                                        .unwrap_or(&empty_string);
+                                    record.push_field(&format!("{e}: ={cell_value}"));
+                                },
+                            };
+                        },
                         Data::Bool(ref b) => {
                             record.push_field(if *b { "true" } else { "false" });
                         },
                         Data::DateTimeIso(ref dt) => record.push_field(dt),
                         Data::DurationIso(ref d) => record.push_field(d),
                     };
+                    col_idx += 1;
                 }
 
                 if trim {
