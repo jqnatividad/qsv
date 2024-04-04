@@ -36,6 +36,7 @@ fn excel_cellerrors() {
         svec!["3", "50", "20"],
         svec!["4", "33.333333333333336", "3"],
         svec!["5", "25", "4"],
+        svec!["#VALUE!", "#VALUE!", "#VALUE!"],
     ];
     assert_eq!(got, expected);
 }
@@ -59,6 +60,11 @@ fn excel_cellerrors_formula() {
         svec!["3", "50", "20"],
         svec!["4", "33.333333333333336", "3"],
         svec!["5", "25", "4"],
+        svec![
+            "#=B7+12",
+            "#=C7+20",
+            "#=_xlfn._xlws.SORT(_xlfn.CHOOSECOLS(A3:B20, 3))"
+        ],
     ];
     assert_eq!(got, expected);
 }
@@ -82,6 +88,11 @@ fn excel_cellerrors_both() {
         svec!["3", "50", "20"],
         svec!["4", "33.333333333333336", "3"],
         svec!["5", "25", "4"],
+        svec![
+            "#VALUE!: =B7+12",
+            "#VALUE!: =C7+20",
+            "#VALUE!: =_xlfn._xlws.SORT(_xlfn.CHOOSECOLS(A3:B20, 3))"
+        ],
     ];
     assert_eq!(got, expected);
 }
