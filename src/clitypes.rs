@@ -238,3 +238,9 @@ impl From<flexi_logger::FlexiLoggerError> for CliError {
         CliError::Other(format!("FlexiLogger error: {err:?}"))
     }
 }
+
+impl From<chrono_tz::ParseError> for CliError {
+    fn from(err: chrono_tz::ParseError) -> CliError {
+        CliError::Other(format!("ChronoTZ error: {err:?}"))
+    }
+}
