@@ -24,6 +24,7 @@ slice options:
     -l, --len <arg>        The length of the slice (can be used instead
                            of --end).
     -i, --index <arg>      Slice a single record (shortcut for -s N -l 1).
+                           If negative, starts from the last record.
 
 Common options:
     -h, --help             Display this message
@@ -51,7 +52,7 @@ struct Args {
     flag_start:      Option<isize>,
     flag_end:        Option<usize>,
     flag_len:        Option<usize>,
-    flag_index:      Option<usize>,
+    flag_index:      Option<isize>,
     flag_output:     Option<String>,
     flag_no_headers: bool,
     flag_delimiter:  Option<Delimiter>,
@@ -105,7 +106,18 @@ impl Args {
                 start = Some(start_arg as usize);
             }
         }
-        util::range(start, self.flag_end, self.flag_len, self.flag_index)
+        let index = if let Some(flag_index) = self.flag_index {
+            if flag_index < 0 {
+                let index = (util::count_rows(&self.rconfig()).unwrap() as usize)
+                    .abs_diff(flag_index.unsigned_abs());
+                Some(index)
+            } else {
+                Some(flag_index as usize)
+            }
+        } else {
+            None
+        };
+        util::range(start, self.flag_end, self.flag_len, index)
     }
 
     fn rconfig(&self) -> Config {
