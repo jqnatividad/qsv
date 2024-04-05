@@ -2836,9 +2836,9 @@ checksum = "4d873d7c67ce09b42110d801813efbc9364414e356be9935700d368351657487"
 [[package]]
 name = "localzone"
 version = "0.2.0"
-source = "git+https://github.com/jqnatividad/localzone?branch=bump_dependencies#5d627bd00ecc48b112767947b53d05b4d146f8ef"
+source = "git+https://github.com/jqnatividad/localzone?branch=bump_dependencies#0f47ce1a345db35ca9e416c0eb6303728c5f19a7"
 dependencies = [
- "chrono-tz 0.8.6",
+ "chrono-tz 0.9.0",
  "js-sys",
  "windows 0.54.0",
 ]
@@ -3014,9 +3014,9 @@ dependencies = [
 
 [[package]]
 name = "mlua-sys"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2847b42764435201d8cbee1f517edb79c4cca4181877b90047587c89e1b7bce4"
+checksum = "d16a9ba1dd2c6ac971b204262d434c24d65067038598f0638b64e5dca28d52b8"
 dependencies = [
  "cc",
  "cfg-if",
