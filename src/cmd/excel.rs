@@ -655,7 +655,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let ncpus = util::njobs(args.flag_jobs);
 
     // set chunk_size to number of rows per core/thread
-    let chunk_size = row_count.div_ceil(ncpus);
+    // parallel processing is done in chunks
+    // if the number of rows is less than 10 times the number of cores, we process the entire sheet
+    // in one chunk as the overhead of splitting the sheet into chunks is not worth it
+    let chunk_size = if (ncpus * 10) > row_count {
+        row_count.div_ceil(ncpus)
+    } else {
+        // we already processed the header row, so we subtract 1 from row_count
+        row_count - 1
+    };
 
     let keep_zero_time = args.flag_keep_zero_time;
 
