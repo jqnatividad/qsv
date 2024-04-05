@@ -117,7 +117,7 @@ fn test_slice(
     assert_eq!(got, expected);
 }
 
-fn test_index(name: &str, idx: usize, expected: &str, headers: bool, use_index: bool) {
+fn test_index(name: &str, idx: isize, expected: &str, headers: bool, use_index: bool) {
     let (wrk, mut cmd) = setup(name, headers, use_index);
     cmd.arg("--index").arg(&idx.to_string());
     if !headers {
@@ -185,4 +185,21 @@ fn slice_index_withindex() {
 #[test]
 fn slice_index_no_headers_withindex() {
     test_index("slice_index_no_headers_withindex", 1, "b", false, true);
+}
+
+#[test]
+fn slice_neg_index() {
+    test_index("slice_neg_index", -1, "e", true, false);
+}
+#[test]
+fn slice_neg_index_no_headers() {
+    test_index("slice_neg_index_no_headers", -1, "e", false, false);
+}
+#[test]
+fn slice_neg_index_withindex() {
+    test_index("slice_neg_index_withindex", -2, "d", true, true);
+}
+#[test]
+fn slice_neg_index_no_headers_withindex() {
+    test_index("slice_neg_index_no_headers_withindex", -2, "d", false, true);
 }
