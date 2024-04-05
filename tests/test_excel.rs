@@ -36,6 +36,78 @@ fn excel_cellerrors() {
         svec!["3", "50", "20"],
         svec!["4", "33.333333333333336", "3"],
         svec!["5", "25", "4"],
+        svec!["#VALUE!", "#VALUE!", "#VALUE!"],
+        svec!["7", "20", "#NAME?"],
+        svec!["8", "Hello", "hello"],
+        svec!["9", "abcd", "wxyz"],
+    ];
+    assert_eq!(got, expected);
+}
+
+// for now, only run this test on macos
+// as it cannot get the formula text on linux or windows
+#[cfg(target_os = "macos")]
+#[test]
+fn excel_cellerrors_formula() {
+    let wrk = Workdir::new("excel_cellerrors_formula");
+
+    let xls_file = wrk.load_test_file("excel-xlsx.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.args(["--sheet", "cellerrors"])
+        .args(["--error-format", "formula"])
+        .arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["col1", "col 2", "column-3"],
+        svec!["1", "-50", "15"],
+        svec!["2", "#=100/0", "#=4*te"],
+        svec!["3", "50", "20"],
+        svec!["4", "33.333333333333336", "3"],
+        svec!["5", "25", "4"],
+        svec![
+            "#=B7+12",
+            "#=C7+20",
+            "#=_xlfn._xlws.SORT(_xlfn.CHOOSECOLS(A3:B20, 3))"
+        ],
+        svec!["7", "20", "#=SUM(C2:C7)"],
+        svec!["8", "Hello", "hello"],
+        svec!["9", "abcd", "wxyz"],
+    ];
+    assert_eq!(got, expected);
+}
+
+// same as above, only run this test on macos
+// as it cannot get the formula text on linux or windows
+#[cfg(target_os = "macos")]
+#[test]
+fn excel_cellerrors_both() {
+    let wrk = Workdir::new("excel_cellerrors_both");
+
+    let xls_file = wrk.load_test_file("excel-xlsx.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.args(["--sheet", "cellerrors"])
+        .args(["--error-format", "both"])
+        .arg(xls_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["col1", "col 2", "column-3"],
+        svec!["1", "-50", "15"],
+        svec!["2", "#DIV/0!: =100/0", "#NAME?: =4*te"],
+        svec!["3", "50", "20"],
+        svec!["4", "33.333333333333336", "3"],
+        svec!["5", "25", "4"],
+        svec![
+            "#VALUE!: =B7+12",
+            "#VALUE!: =C7+20",
+            "#VALUE!: =_xlfn._xlws.SORT(_xlfn.CHOOSECOLS(A3:B20, 3))"
+        ],
+        svec!["7", "20", "#NAME?: =SUM(C2:C7)"],
+        svec!["8", "Hello", "hello"],
+        svec!["9", "abcd", "wxyz"],
     ];
     assert_eq!(got, expected);
 }
