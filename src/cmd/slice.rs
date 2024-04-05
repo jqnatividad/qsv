@@ -109,7 +109,7 @@ impl Args {
         let index = if let Some(flag_index) = self.flag_index {
             if flag_index < 0 {
                 let index = (util::count_rows(&self.rconfig()).unwrap() as usize)
-                    .abs_diff(flag_index.unsigned_abs() as usize);
+                    .abs_diff(flag_index.unsigned_abs());
                 Some(index)
             } else {
                 Some(flag_index as usize)
