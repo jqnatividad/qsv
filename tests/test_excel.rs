@@ -46,7 +46,7 @@ fn excel_cellerrors() {
 
 // for now, only run this test on macos
 // as it cannot get the formula text on linux or windows
-#[cfg(target_os = "macos")]
+// #[cfg(target_os = "macos")]
 #[test]
 fn excel_cellerrors_formula() {
     let wrk = Workdir::new("excel_cellerrors_formula");
@@ -80,7 +80,7 @@ fn excel_cellerrors_formula() {
 
 // same as above, only run this test on macos
 // as it cannot get the formula text on linux or windows
-#[cfg(target_os = "macos")]
+// #[cfg(target_os = "macos")]
 #[test]
 fn excel_cellerrors_both() {
     let wrk = Workdir::new("excel_cellerrors_both");

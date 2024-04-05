@@ -659,140 +659,47 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let keep_zero_time = args.flag_keep_zero_time;
 
-    let processed_rows: Vec<Vec<csv::StringRecord>> = rows
-        .par_chunks(chunk_size)
-        .map(|chunk| {
-            let mut record = csv::StringRecord::with_capacity(500, col_count);
-            let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
-            let mut float_val;
-            let mut work_date;
-            let mut ryu_buffer = ryu::Buffer::new();
-            let mut itoa_buffer = itoa::Buffer::new();
-            let mut formatted_date = String::new();
+    // get target_os to determine if we're on macOS
+    let target_os = std::env::consts::OS;
 
-            let mut processed_chunk: Vec<csv::StringRecord> = Vec::with_capacity(chunk_size);
-            let mut col_idx = 0_u32;
+    let processed_rows: Vec<Vec<csv::StringRecord>> =
+        if error_format == ErrorFormat::Code || target_os == "macos" {
+            // use Rayon par_chunks if we're not extracting the formula text or if we're on macOS
+            rows.par_chunks(chunk_size)
+                .map(|chunk| {
+                    process_sheet_chunks(
+                        col_count,
+                        chunk_size,
+                        chunk,
+                        no_date_format,
+                        &date_format,
+                        keep_zero_time,
+                        &error_format,
+                        sheet_formulas.clone(),
+                        trim,
+                    )
+                })
+                .collect()
+        } else {
+            // if we're extracting the formula text, Rayon par_chunks seems to work reliably only on
+            // macOS so we'll use chunks and process the sheet sequentially instead
+            rows.chunks(chunk_size)
+                .map(|chunk| {
+                    process_sheet_chunks(
+                        col_count,
+                        chunk_size,
+                        chunk,
+                        no_date_format,
+                        &date_format,
+                        keep_zero_time,
+                        &error_format,
+                        sheet_formulas.clone(),
+                        trim,
+                    )
+                })
+                .collect()
+        };
 
-            let formula_get_value_error = "cannot get formula".to_string();
-            let mut cell_value: &String;
-
-            for (row_idx, row) in chunk {
-                for cell in *row {
-                    match *cell {
-                        Data::Empty => record.push_field(""),
-                        Data::String(ref s) => record.push_field(s),
-                        Data::Int(ref i) => record.push_field(itoa_buffer.format(*i)),
-                        Data::Float(ref f) => {
-                            float_val = *f;
-                            // push the ryu-formatted float value if its
-                            // not an integer or the candidate
-                            // integer is too big or too small to be an i64
-                            #[allow(clippy::cast_precision_loss)]
-                            if float_val.fract().abs() > f64::EPSILON
-                                || float_val > i64::MAX as f64
-                                || float_val < i64::MIN as f64
-                            {
-                                record.push_field(ryu_buffer.format_finite(float_val));
-                            } else {
-                                // its an i64 integer. We can't use ryu to format it, because it
-                                // will be formatted as a
-                                // float (have a ".0"). So we use itoa.
-                                record.push_field(itoa_buffer.format(float_val as i64));
-                            }
-                        },
-                        Data::DateTime(ref edt) => {
-                            if edt.is_datetime() {
-                                if let Some(dt) = edt.as_datetime() {
-                                    if no_date_format {
-                                        // no date format specified, so we'll just use the
-                                        // default format for the datetime
-                                        work_date = dt.to_string();
-                                    } else {
-                                        // a date format was specified, so we'll use it
-                                        formatted_date.clear();
-                                        if write!(formatted_date, "{}", dt.format(&date_format))
-                                            .is_ok()
-                                        {
-                                            // the format string was ok, so use to_string()
-                                            // to actually apply the DelayedFormat
-                                            work_date = formatted_date.to_string();
-                                        } else {
-                                            // if there was a format error, revert to the
-                                            // default format
-                                            work_date = dt.to_string();
-                                        }
-                                    }
-                                    if !keep_zero_time && work_date.ends_with(" 00:00:00") {
-                                        work_date.truncate(work_date.len() - 9);
-                                    }
-                                } else {
-                                    // if the datetime is invalid, just return the datetime as a
-                                    // string this should never
-                                    // happen as we did a is_datetime check
-                                    // before we got here. We're just doing it so that work_date
-                                    // is initialized properly without wasting an allocation
-                                    work_date = edt.to_string();
-                                }
-                            } else {
-                                // its not a datetime, its a duration
-                                // return the duration as a string in ISO 8601 format
-                                // https://www.digi.com/resources/documentation/digidocs/90001488-13/reference/r_iso_8601_duration_format.htm
-                                // safety: we know this is a duration coz we did a is_datetime check
-                                // above & ExcelDataTime only has 2 variants, DateTime & Duration
-                                work_date = edt.as_duration().unwrap().to_string();
-                            };
-
-                            record.push_field(&work_date);
-                        },
-                        Data::Bool(ref b) => {
-                            record.push_field(if *b { "true" } else { "false" });
-                        },
-                        Data::DateTimeIso(ref dt) => record.push_field(dt),
-                        Data::DurationIso(ref d) => record.push_field(d),
-                        Data::Error(ref e) => {
-                            match error_format {
-                                ErrorFormat::Code => record.push_field(&format!("{e}")),
-                                ErrorFormat::Formula | ErrorFormat::Both => {
-                                    cell_value = sheet_formulas
-                                        .get_value((*row_idx, col_idx))
-                                        .unwrap_or(&formula_get_value_error);
-                                    if error_format == ErrorFormat::Formula {
-                                        record.push_field(&format!("#={cell_value}"));
-                                    } else {
-                                        record.push_field(&format!("{e}: ={cell_value}"));
-                                    }
-                                },
-                            };
-                        },
-                    };
-                    col_idx += 1;
-                }
-
-                if trim {
-                    // record.trim() is faster than trimming each field piecemeal
-                    record.trim();
-                    record.iter().for_each(|field| {
-                        if field.contains('\n') {
-                            trimmed_record.push_field(&field.replace('\n', " "));
-                        } else {
-                            trimmed_record.push_field(field);
-                        }
-                    });
-                    record.clone_from(&trimmed_record);
-                    trimmed_record.clear();
-                }
-
-                // we use mem::take here to avoid a clone/allocation of the record
-                // it also has the nice side-effect of clearing the record, so we don't
-                // need to call clear() on it.
-                processed_chunk.push(std::mem::take(&mut record));
-            }
-            processed_chunk
-        })
-        .collect();
-
-    // rayon collect() guarantees original order,
-    // so we can just write results for each chunk in order
     for processed_chunk in processed_rows {
         for processed_row in processed_chunk {
             wtr.write_record(&processed_row)?;
@@ -813,4 +720,142 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     Ok(())
+}
+
+#[inline]
+fn process_sheet_chunks(
+    col_count: usize,
+    chunk_size: usize,
+    chunk: &[(u32, &[Data])],
+    no_date_format: bool,
+    date_format: &String,
+    keep_zero_time: bool,
+    error_format: &ErrorFormat,
+    sheet_formulas: Range<String>,
+    trim: bool,
+) -> Vec<csv::StringRecord> {
+    let mut record = csv::StringRecord::with_capacity(500, col_count);
+    let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
+    let mut float_val;
+    let mut work_date;
+    let mut ryu_buffer = ryu::Buffer::new();
+    let mut itoa_buffer = itoa::Buffer::new();
+    let mut formatted_date = String::new();
+
+    let mut processed_chunk: Vec<csv::StringRecord> = Vec::with_capacity(chunk_size);
+    let mut col_idx = 0_u32;
+
+    let formula_get_value_error = "cannot get formula".to_string();
+    let mut cell_value: &String;
+
+    for (row_idx, row) in chunk {
+        for cell in *row {
+            match *cell {
+                Data::Empty => record.push_field(""),
+                Data::String(ref s) => record.push_field(s),
+                Data::Int(ref i) => record.push_field(itoa_buffer.format(*i)),
+                Data::Float(ref f) => {
+                    float_val = *f;
+                    // push the ryu-formatted float value if its
+                    // not an integer or the candidate
+                    // integer is too big or too small to be an i64
+                    #[allow(clippy::cast_precision_loss)]
+                    if float_val.fract().abs() > f64::EPSILON
+                        || float_val > i64::MAX as f64
+                        || float_val < i64::MIN as f64
+                    {
+                        record.push_field(ryu_buffer.format_finite(float_val));
+                    } else {
+                        // its an i64 integer. We can't use ryu to format it, because it
+                        // will be formatted as a
+                        // float (have a ".0"). So we use itoa.
+                        record.push_field(itoa_buffer.format(float_val as i64));
+                    }
+                },
+                Data::DateTime(ref edt) => {
+                    if edt.is_datetime() {
+                        if let Some(dt) = edt.as_datetime() {
+                            if no_date_format {
+                                // no date format specified, so we'll just use the
+                                // default format for the datetime
+                                work_date = dt.to_string();
+                            } else {
+                                // a date format was specified, so we'll use it
+                                formatted_date.clear();
+                                if write!(formatted_date, "{}", dt.format(&date_format)).is_ok() {
+                                    // the format string was ok, so use to_string()
+                                    // to actually apply the DelayedFormat
+                                    work_date = formatted_date.to_string();
+                                } else {
+                                    // if there was a format error, revert to the
+                                    // default format
+                                    work_date = dt.to_string();
+                                }
+                            }
+                            if !keep_zero_time && work_date.ends_with(" 00:00:00") {
+                                work_date.truncate(work_date.len() - 9);
+                            }
+                        } else {
+                            // if the datetime is invalid, just return the datetime as a
+                            // string this should never
+                            // happen as we did a is_datetime check
+                            // before we got here. We're just doing it so that work_date
+                            // is initialized properly without wasting an allocation
+                            work_date = edt.to_string();
+                        }
+                    } else {
+                        // its not a datetime, its a duration
+                        // return the duration as a string in ISO 8601 format
+                        // https://www.digi.com/resources/documentation/digidocs/90001488-13/reference/r_iso_8601_duration_format.htm
+                        // safety: we know this is a duration coz we did a is_datetime check
+                        // above & ExcelDataTime only has 2 variants, DateTime & Duration
+                        work_date = edt.as_duration().unwrap().to_string();
+                    };
+
+                    record.push_field(&work_date);
+                },
+                Data::Bool(ref b) => {
+                    record.push_field(if *b { "true" } else { "false" });
+                },
+                Data::DateTimeIso(ref dt) => record.push_field(dt),
+                Data::DurationIso(ref d) => record.push_field(d),
+                Data::Error(ref e) => {
+                    match error_format {
+                        ErrorFormat::Code => record.push_field(&format!("{e}")),
+                        ErrorFormat::Formula | ErrorFormat::Both => {
+                            cell_value = sheet_formulas
+                                .get_value((*row_idx, col_idx))
+                                .unwrap_or(&formula_get_value_error);
+                            if *error_format == ErrorFormat::Formula {
+                                record.push_field(&format!("#={cell_value}"));
+                            } else {
+                                record.push_field(&format!("{e}: ={cell_value}"));
+                            }
+                        },
+                    };
+                },
+            };
+            col_idx += 1;
+        }
+
+        if trim {
+            // record.trim() is faster than trimming each field piecemeal
+            record.trim();
+            record.iter().for_each(|field| {
+                if field.contains('\n') {
+                    trimmed_record.push_field(&field.replace('\n', " "));
+                } else {
+                    trimmed_record.push_field(field);
+                }
+            });
+            record.clone_from(&trimmed_record);
+            trimmed_record.clear();
+        }
+
+        // we use mem::take here to avoid a clone/allocation of the record
+        // it also has the nice side-effect of clearing the record, so we don't
+        // need to call clear() on it.
+        processed_chunk.push(std::mem::take(&mut record));
+    }
+    processed_chunk
 }
