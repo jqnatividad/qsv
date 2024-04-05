@@ -37,6 +37,9 @@ fn excel_cellerrors() {
         svec!["4", "33.333333333333336", "3"],
         svec!["5", "25", "4"],
         svec!["#VALUE!", "#VALUE!", "#VALUE!"],
+        svec!["7", "20", "#NAME?"],
+        svec!["8", "Hello", "hello"],
+        svec!["9", "abcd", "wxyz"],
     ];
     assert_eq!(got, expected);
 }
@@ -65,6 +68,9 @@ fn excel_cellerrors_formula() {
             "#=C7+20",
             "#=_xlfn._xlws.SORT(_xlfn.CHOOSECOLS(A3:B20, 3))"
         ],
+        svec!["7", "20", "#=SUM(C2:C7)"],
+        svec!["8", "Hello", "hello"],
+        svec!["9", "abcd", "wxyz"],
     ];
     assert_eq!(got, expected);
 }
@@ -93,6 +99,9 @@ fn excel_cellerrors_both() {
             "#VALUE!: =C7+20",
             "#VALUE!: =_xlfn._xlws.SORT(_xlfn.CHOOSECOLS(A3:B20, 3))"
         ],
+        svec!["7", "20", "#NAME?: =SUM(C2:C7)"],
+        svec!["8", "Hello", "hello"],
+        svec!["9", "abcd", "wxyz"],
     ];
     assert_eq!(got, expected);
 }
