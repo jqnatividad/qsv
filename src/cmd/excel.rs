@@ -743,28 +743,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                             record.push_field(&work_date);
                         },
-                        Data::Error(ref e) => {
-                            match error_format {
-                                ErrorFormat::Code => record.push_field(&format!("{e}")),
-                                ErrorFormat::Formula => {
-                                    cell_value = sheet_formulas
-                                        .get_value((*row_idx, col_idx))
-                                        .unwrap_or(&formula_get_value_error);
-                                    record.push_field(&format!("#={cell_value}"));
-                                },
-                                ErrorFormat::Both => {
-                                    cell_value = sheet_formulas
-                                        .get_value((*row_idx, col_idx))
-                                        .unwrap_or(&formula_get_value_error);
-                                    record.push_field(&format!("{e}: ={cell_value}"));
-                                },
-                            };
-                        },
                         Data::Bool(ref b) => {
                             record.push_field(if *b { "true" } else { "false" });
                         },
                         Data::DateTimeIso(ref dt) => record.push_field(dt),
                         Data::DurationIso(ref d) => record.push_field(d),
+                        Data::Error(ref e) => {
+                            match error_format {
+                                ErrorFormat::Code => record.push_field(&format!("{e}")),
+                                ErrorFormat::Formula | ErrorFormat::Both => {
+                                    // first, try to get the formula using the absolute position
+                                    cell_value = sheet_formulas
+                                        .get_value((*row_idx, col_idx))
+                                        .unwrap_or(&formula_get_value_error);
+                                    // failing that, try to get the formula getting the relative
+                                    // position
+                                    if cell_value == &formula_get_value_error {
+                                        sheet_formulas
+                                            .get((*row_idx as usize, col_idx as usize))
+                                            .unwrap_or(&formula_get_value_error);
+                                    }
+                                    if error_format == ErrorFormat::Formula {
+                                        record.push_field(&format!("#={cell_value}"));
+                                    } else {
+                                        record.push_field(&format!("{e}: ={cell_value}"));
+                                    }
+                                },
+                            };
+                        },
                     };
                     col_idx += 1;
                 }
