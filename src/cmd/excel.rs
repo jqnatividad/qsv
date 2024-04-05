@@ -87,6 +87,7 @@ Excel options:
                                     (e.g. #=A1/B1 where B1 is 0; #=100/0)
                                  - "both": return both error code and the formula.
                                     (e.g. #DIV/0!: =A1/B1)
+                               For now, extracting the formula text only works reliably on macOS.
                                [default: code]
     --flexible                 Continue even if the number of columns is different from row to row.
     --trim                     Trim all fields so that leading & trailing whitespaces are removed.
@@ -752,17 +753,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             match error_format {
                                 ErrorFormat::Code => record.push_field(&format!("{e}")),
                                 ErrorFormat::Formula | ErrorFormat::Both => {
-                                    // first, try to get the formula using the absolute position
                                     cell_value = sheet_formulas
                                         .get_value((*row_idx, col_idx))
                                         .unwrap_or(&formula_get_value_error);
-                                    // failing that, try to get the formula getting the relative
-                                    // position
-                                    if cell_value == &formula_get_value_error {
-                                        sheet_formulas
-                                            .get((*row_idx as usize, col_idx as usize))
-                                            .unwrap_or(&formula_get_value_error);
-                                    }
                                     if error_format == ErrorFormat::Formula {
                                         record.push_field(&format!("#={cell_value}"));
                                     } else {
