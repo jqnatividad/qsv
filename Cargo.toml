@@ -128,7 +128,6 @@ jsonschema = { version = "0.17", features = [
     "resolve-file",
     "resolve-http",
 ], default-features = false }
-jsonxf = { version = "1", optional = true }
 jql-runner = { version = "7.1", default-features = false, optional = true }
 localzone = { version = "0.2", features = ["auto_validation"] }
 log = "0.4"
@@ -294,7 +293,6 @@ fetch = [
     "governor",
     "hashbrown",
     "jql-runner",
-    "jsonxf",
     "redis",
     "serde_stacker",
     "serde_urlencoded",
