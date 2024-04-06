@@ -36,6 +36,79 @@ fn fetch_simple() {
 
 #[test]
 // #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
+fn fetch_simple_pretty_json() {
+    let wrk = Workdir::new("fetch_simple_pretty_json");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL"],
+            svec!["https://api.zippopotam.us/us/99999"],
+            svec!["  http://api.zippopotam.us/us/90210      "],
+            svec!["https://api.zippopotam.us/us/94105"],
+            svec!["http://api.zippopotam.us/us/92802      "],
+            // svec!["https://query.wikidata.org/sparql?query=SELECT%20?dob%20WHERE%20{wd:Q42%20wdt:P569%20?dob.}&format=json"],
+        ],
+    );
+    let mut cmd = wrk.command("fetch");
+    cmd.arg("URL")
+        .arg("data.csv")
+        .arg("--store-error")
+        .arg("--rate-limit")
+        .arg("2")
+        .arg("--pretty")
+        .args(["--new-column", "pretty_response"]);
+
+    let got = wrk.stdout::<String>(&mut cmd);
+
+    let expected = r#"URL,pretty_response
+https://api.zippopotam.us/us/99999,
+http://api.zippopotam.us/us/90210,"{
+  ""post code"": ""90210"",
+  ""country"": ""United States"",
+  ""country abbreviation"": ""US"",
+  ""places"": [
+    {
+      ""place name"": ""Beverly Hills"",
+      ""longitude"": ""-118.4065"",
+      ""state"": ""California"",
+      ""state abbreviation"": ""CA"",
+      ""latitude"": ""34.0901""
+    }
+  ]
+}"
+https://api.zippopotam.us/us/94105,"{
+  ""post code"": ""94105"",
+  ""country"": ""United States"",
+  ""country abbreviation"": ""US"",
+  ""places"": [
+    {
+      ""place name"": ""San Francisco"",
+      ""longitude"": ""-122.3892"",
+      ""state"": ""California"",
+      ""state abbreviation"": ""CA"",
+      ""latitude"": ""37.7864""
+    }
+  ]
+}"
+http://api.zippopotam.us/us/92802,"{
+  ""post code"": ""92802"",
+  ""country"": ""United States"",
+  ""country abbreviation"": ""US"",
+  ""places"": [
+    {
+      ""place name"": ""Anaheim"",
+      ""longitude"": ""-117.9228"",
+      ""state"": ""California"",
+      ""state abbreviation"": ""CA"",
+      ""latitude"": ""33.8085""
+    }
+  ]
+}""#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+// #[ignore = "Temporarily skip this as it seems https://zippopotam.us is not currently available"]
 fn fetch_simple_new_col() {
     let wrk = Workdir::new("fetch_simple_new_col");
     wrk.create(

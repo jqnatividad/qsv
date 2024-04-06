@@ -1133,6 +1133,8 @@ fn get_response(
     let mut final_value = String::new();
     let mut api_status;
     let mut api_respheader = HeaderMap::new();
+    let mut api_value = String::new();
+    let mut api_value_json_result: Result<serde_json::Value, serde_json::Error>;
 
     let debug_flag = log_enabled!(Debug);
 
@@ -1173,7 +1175,7 @@ fn get_response(
             // debug!("{resp:?}");
             api_respheader.clone_from(resp.headers());
             api_status = resp.status();
-            let api_value: String = resp.text().unwrap_or_default();
+            api_value = resp.text().unwrap_or_default();
 
             if api_status.is_client_error() || api_status.is_server_error() {
                 error_flag = true;
@@ -1213,16 +1215,29 @@ fn get_response(
                             error_flag = true;
                         },
                     }
-                } else if flag_pretty {
-                    if let Ok(pretty_json) = jsonxf::pretty_print(&api_value) {
-                        final_value = pretty_json;
-                    } else {
-                        final_value = api_value;
-                    }
-                } else if let Ok(minimized_json) = jsonxf::minimize(&api_value) {
-                    final_value = minimized_json;
                 } else {
-                    final_value = api_value;
+                    // validate the JSON response
+                    api_value_json_result = serde_json::from_str::<serde_json::Value>(&api_value);
+                    match api_value_json_result {
+                        Ok(api_value_json) => {
+                            if flag_pretty {
+                                final_value = format!("{api_value_json:#}");
+                            } else {
+                                // use serde_json CompactFormatter to minify the JSON
+                                final_value = format!("{api_value_json}");
+                            }
+                        },
+                        Err(e) => {
+                            error!("json error. json: {api_value:?}, error: {e:?}");
+
+                            if flag_store_error {
+                                final_value = e.to_string();
+                            } else {
+                                final_value = String::new();
+                            }
+                            error_flag = true;
+                        },
+                    }
                 }
             }
         } else {
