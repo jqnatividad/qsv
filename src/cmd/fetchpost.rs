@@ -1214,7 +1214,8 @@ fn get_response(
                         },
                     }
                 } else if flag_pretty {
-                    let api_value_json: serde_json::Value = serde_json::from_str(&api_value).unwrap();
+                    let api_value_json: serde_json::Value =
+                        serde_json::from_str(&api_value).unwrap();
                     if let Ok(pretty_json) = serde_json::to_string_pretty(&api_value_json) {
                         final_value = pretty_json;
                     } else {
