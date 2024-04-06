@@ -1271,13 +1271,12 @@ fn get_response(
                         },
                     }
                 } else if flag_pretty {
-                    if let Ok(pretty_json) = jsonxf::pretty_print(&api_value) {
+                    let api_value_json: serde_json::Value = serde_json::from_str(&api_value).unwrap();
+                    if let Ok(pretty_json) = serde_json::to_string_pretty(&api_value_json) {
                         final_value = pretty_json;
                     } else {
                         final_value = api_value;
                     }
-                } else if let Ok(minimized_json) = jsonxf::minimize(&api_value) {
-                    final_value = minimized_json;
                 } else {
                     final_value = api_value;
                 }
