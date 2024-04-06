@@ -1278,7 +1278,7 @@ fn get_response(
                     match api_value_json_result {
                         Ok(api_value_json) => {
                             if flag_pretty {
-                                final_value = format!("{api_value_json:#?}");
+                                final_value = format!("{api_value_json:#}");
                             } else {
                                 // use serde_json CompactFormatter to minify the JSON
                                 final_value = format!("{api_value_json}");
