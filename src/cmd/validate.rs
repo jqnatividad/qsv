@@ -364,7 +364,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 break 'rfc4180_check;
             }
             record_idx += 1;
-        }
+        } // end rfc4180_check loop
 
         // if we're here, we know the CSV is valid
         let msg = if flag_json {
