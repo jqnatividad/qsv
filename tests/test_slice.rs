@@ -158,7 +158,6 @@ fn test_slice(
         let gots = wrk.read_to_string(&output_file);
         let gotj: serde_json::Value = serde_json::from_str(&gots).unwrap();
         let got = gotj.to_string();
-        // let expected = "".to_string();
 
         let expected_vec = expected
             .iter()
