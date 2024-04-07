@@ -25,7 +25,11 @@ slice options:
                            of --end).
     -i, --index <arg>      Slice a single record (shortcut for -s N -l 1).
                            If negative, starts from the last record.
-    --json                 Output the result as JSON.
+    --json                 Output the result as JSON. Fields are written
+                           as key-value pairs. The key is the column name.
+                           The value is the field value. The output is a
+                           JSON array. If --no-headers is set, then
+                           the keys are the column indices (zero-based).
 
 Common options:
     -h, --help             Display this message
@@ -99,9 +103,17 @@ impl Args {
         records: impl Iterator<Item = csv::ByteRecord>,
     ) -> CliResult<()> {
         let mut json_wtr = self.create_json_writer()?;
+
         let header_vec: Vec<String> = headers
             .iter()
-            .map(|b| String::from_utf8_lossy(b).to_string())
+            .enumerate()
+            .map(|(col_idx, b)| {
+                if self.flag_no_headers {
+                    col_idx.to_string()
+                } else {
+                    String::from_utf8_lossy(b).to_string()
+                }
+            })
             .collect();
 
         // Write the opening bracket for the JSON array
