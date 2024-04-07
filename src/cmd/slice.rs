@@ -105,7 +105,7 @@ impl Args {
             .collect();
 
         // Write the opening bracket for the JSON array
-        json_wtr.write(b"[")?;
+        write!(json_wtr, "[")?;
         let mut is_first = true;
 
         let rec_len = header_vec.len().saturating_sub(1);
@@ -114,7 +114,7 @@ impl Args {
         for record in records {
             if !is_first {
                 // Write a comma before each record except the first one
-                json_wtr.write(b",")?;
+                write!(json_wtr, ",")?;
             }
             write!(json_wtr, "{{")?;
             for (idx, b) in record.iter().enumerate() {
