@@ -69,8 +69,8 @@ Usage:
 Validate arguments:
     <input>                    Input CSV file to validate. If not provided, will read from stdin.
     <json-schema>              JSON Schema file to validate against. If not provided, `validate`
-                               will run in RFC 4180 validation mode.
-                               The file can be a local file or a URL.
+                               will run in RFC 4180 validation mode. The file can be a local file
+                               or a URL (http and https schemes supported).
 
 Validate options:
     --trim                     Trim leading and trailing whitespace from fields before validating.
@@ -86,7 +86,7 @@ Validate options:
     -b, --batch <size>         The number of rows per batch to load into memory,
                                before running in parallel.
                                [default: 50000]
-    --timeout <seconds>        Timeout for downloading json-schemas.
+    --timeout <seconds>        Timeout for downloading json-schemas on URLs.
                                [default: 30]
 
 Common options:
@@ -135,7 +135,7 @@ use crate::{
 // to save on repeated init/allocs
 static NULL_TYPE: OnceLock<Value> = OnceLock::new();
 
-static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(15);
+static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(30);
 
 #[derive(Deserialize)]
 #[allow(dead_code)]
