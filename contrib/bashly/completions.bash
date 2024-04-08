@@ -37,7 +37,7 @@ _qsv_completions() {
       ;;
 
     'slice'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--delimiter --end --help --index --json --len --no-headers --output --start -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--delimiter --end --help --index --len --no-headers --output --start -h")" -- "$cur" )
       ;;
 
     'stats'*)
