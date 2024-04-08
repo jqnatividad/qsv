@@ -80,6 +80,11 @@ Validate options:
     --json                     When validating without a schema, return the RFC 4180 check
                                as a JSON file instead of a message.
     --pretty-json              Same as --json, but pretty printed.
+    --valid-output <file>      Change validation mode behavior so if ALL rows are valid, to pass it to
+                               output, return exit code 1, and set stderr to the number of valid rows.
+                               Setting this will override the default behavior of creating
+                               a valid file only when there are invalid records.
+                               To send valid records to stdout, use `-` as the filename.
     -j, --jobs <arg>           The number of jobs to run in parallel.
                                When not set, the number of jobs is set to the
                                number of CPUs detected.
@@ -140,21 +145,22 @@ static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(30);
 #[derive(Deserialize)]
 #[allow(dead_code)]
 struct Args {
-    flag_trim:        bool,
-    flag_fail_fast:   bool,
-    flag_valid:       Option<String>,
-    flag_invalid:     Option<String>,
-    flag_json:        bool,
-    flag_pretty_json: bool,
-    flag_jobs:        Option<usize>,
-    flag_batch:       u32,
-    flag_no_headers:  bool,
-    flag_delimiter:   Option<Delimiter>,
-    flag_progressbar: bool,
-    flag_quiet:       bool,
-    arg_input:        Option<String>,
-    arg_json_schema:  Option<String>,
-    flag_timeout:     u16,
+    flag_trim:         bool,
+    flag_fail_fast:    bool,
+    flag_valid:        Option<String>,
+    flag_invalid:      Option<String>,
+    flag_json:         bool,
+    flag_pretty_json:  bool,
+    flag_valid_output: Option<String>,
+    flag_jobs:         Option<usize>,
+    flag_batch:        u32,
+    flag_no_headers:   bool,
+    flag_delimiter:    Option<Delimiter>,
+    flag_progressbar:  bool,
+    flag_quiet:        bool,
+    arg_input:         Option<String>,
+    arg_json_schema:   Option<String>,
+    flag_timeout:      u16,
 }
 
 enum JSONtypes {
@@ -546,11 +552,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::finish_progress(&progress);
     }
 
-    // only write out invalid/valid/errors output files if there are actually invalid records.
-    // if 100% invalid, valid file is not needed, but this is rare so OK with creating empty file.
-    if invalid_count > 0 {
-        let msg = "Writing invalid/valid/error files...";
-        woutinfo!("{msg}");
+    if invalid_count == 0 {
+        // no invalid records found
+        // see if we need to pass all valid records to output
+        if let Some(valid_output) = args.flag_valid_output {
+            // pass all valid records to output and return exit code 1
+            let valid_path = if valid_output == "-" {
+                // write to stdout
+                None
+            } else {
+                Some(valid_output)
+            };
+
+            let mut valid_wtr = Config::new(&valid_path).writer()?;
+            valid_wtr.write_byte_record(&headers)?;
+
+            let mut rdr = rconfig.reader()?;
+            let mut record = csv::ByteRecord::new();
+            while rdr.read_byte_record(&mut record)? {
+                valid_wtr.write_byte_record(&record)?;
+            }
+            valid_wtr.flush()?;
+            // return 1 as an exitcode and the number of valid rows to stderr
+            return fail_clierror!("{row_number}");
+        }
+    } else {
+        // there are invalid records. write out invalid/valid/errors output files.
+        // if 100% invalid, valid file isn't needed, but this is rare so OK creating empty file.
+        woutinfo!("Writing invalid/valid/error files...");
 
         let input_path = args
             .arg_input
