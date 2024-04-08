@@ -97,6 +97,7 @@ impl Args {
         Ok(writer)
     }
 
+    #[inline]
     fn write_json(
         &self,
         headers: &csv::ByteRecord,
