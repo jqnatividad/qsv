@@ -36,6 +36,10 @@ _qsv_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--flexible --help --human-readable --low-memory --no-headers --no-polars --width -h")" -- "$cur" )
       ;;
 
+    'slice'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--delimiter --end --help --index --json --len --no-headers --output --start -h")" -- "$cur" )
+      ;;
+
     'stats'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--cardinality --dates-whitelist --delimiter --everything --force --help --infer-boolean --infer-dates --jobs --mad --median --memcheck --mode --no-headers --nulls --output --prefer-dmy --quartiles --round --select --stats-binout --typesonly -h")" -- "$cur" )
       ;;
@@ -45,7 +49,7 @@ _qsv_completions() {
       ;;
 
     *)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_qsv_completions_filter "--help --version -h -v count frequency sqlp stats")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_qsv_completions_filter "--help --version -h -v count frequency slice sqlp stats")" -- "$cur" )
       ;;
 
   esac
