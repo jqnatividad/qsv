@@ -5,11 +5,7 @@ version: 0.125.0
 commands:
     - name: count
       completions:
-      - <file>
-      args:
-          - name: input
-            required: true
-            default: "-"
+          - <file>
       flags:
           - long: --human-readable
           - long: --width
@@ -20,11 +16,7 @@ commands:
 
     - name: frequency
       completions:
-      - <file>
-      args:
-          - name: input
-            required: true
-            default: "-"
+          - <file>
       flags:
           - long: --select
             arg: arg
@@ -46,13 +38,24 @@ commands:
           - &memcheck
             long: --memcheck
 
+    - name: slice
+      completions:
+          - <file>
+      flags:
+          - long: --start
+          - long: --end
+          - long: --len
+            arg: arg
+          - long: --index
+            arg: arg
+          - long: --json
+          - *output
+          - *no-headers
+          - *delimiter
+
     - name: stats
       completions:
           - <file>
-      args:
-          - name: input
-            required: true
-            default: "-"
       flags:
           - long: --select
             arg: arg
@@ -83,20 +86,6 @@ commands:
     - name: sqlp
       completions:
           - <file>
-      args:
-          - name: input
-            required: true
-            repeatable: true
-            default: "-"
-          - name: sql
-            required: true
-      flags:
-          - long: --human-readable
-          - long: --width
-          - long: --no-polars
-          - long: --low-memory
-          - long: --flexible
-          - long: --no-headers
       flags:
           - long: --format
             arg: <arg>
