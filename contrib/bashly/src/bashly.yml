@@ -1,0 +1,131 @@
+name: qsv
+# name: qsv.exe # Windows
+version: 0.125.0
+
+commands:
+    - name: count
+      completions:
+      - <file>
+      args:
+          - name: input
+            required: true
+            default: "-"
+      flags:
+          - long: --human-readable
+          - long: --width
+          - long: --no-polars
+          - long: --low-memory
+          - long: --flexible
+          - long: --no-headers
+
+    - name: frequency
+      completions:
+      - <file>
+      args:
+          - name: input
+            required: true
+            default: "-"
+      flags:
+          - long: --select
+            arg: arg
+          - long: --limit
+            arg: arg
+          - long: --asc
+          - long: --no-nulls
+          - long: --ignore-case
+          - long: --jobs
+            args: arg
+          - &output
+            long: --output
+            arg: <file>
+          - &no-headers
+            long: --no-headers
+          - &delimiter
+            long: --delimiter
+            arg: <arg>
+          - &memcheck
+            long: --memcheck
+
+    - name: stats
+      completions:
+          - <file>
+      args:
+          - name: input
+            required: true
+            default: "-"
+      flags:
+          - long: --select
+            arg: arg
+          - long: --everything
+          - long: --typesonly
+          - long: --infer-boolean
+          - long: --mode
+          - long: --cardinality
+          - long: --median
+          - long: --mad
+          - long: --quartiles
+          - long: --round
+            arg: decimal_places
+          - long: --nulls
+          - long: --infer-dates
+          - long: --dates-whitelist
+            arg: list
+          - long: --prefer-dmy
+          - long: --force
+          - long: --jobs
+            arg: arg
+          - long: --stats-binout
+          - *output
+          - *no-headers
+          - *delimiter
+          - *memcheck
+
+    - name: sqlp
+      completions:
+          - <file>
+      args:
+          - name: input
+            required: true
+            repeatable: true
+            default: "-"
+          - name: sql
+            required: true
+      flags:
+          - long: --human-readable
+          - long: --width
+          - long: --no-polars
+          - long: --low-memory
+          - long: --flexible
+          - long: --no-headers
+      flags:
+          - long: --format
+            arg: <arg>
+          - long: --try-parsedates
+          - long: --infer-len
+            arg: <arg>
+          - long: --low-memory
+          - long: --no-optimizations
+          - long: --truncate-ragged-lines
+          - long: --ignore-errors
+          - long: --rnull-values
+            arg: <arg>
+          - long: --datetime-format
+            arg: <fmt>
+          - long: --date-format
+            arg: <fmt>
+          - long: --time-format
+            arg: <fmt>
+          - long: --float-precision
+            arg: <arg>
+          - long: --wnull-value
+            arg: <arg>
+          - long: --compression
+            arg: <arg>
+          - long: --compress-level
+            arg: <arg>
+          - long: --statistics
+          - *output
+          - *no-headers
+          - *delimiter
+          - *memcheck
+          - long: --quiet
