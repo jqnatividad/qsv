@@ -1,5 +1,7 @@
 # qsv completions with Bashly
 
+![qsv-completions-bashly-demo](https://github.com/jqnatividad/qsv/assets/30333942/d1e4f78a-e9d3-4761-9ddb-2343857d3545)
+
 > These completions may be outdated by the time you're using them (see the version value in `src/bashly.yml` for the expected version to use it for). Update `src/bashly.yml` to ensure they're in sync with qsv's latest commands.
 
 This is a foundation for CLI completions for [qsv](https://github.com/jqnatividad/qsv) using [Bashly](https://bashly.dannyb.co/).
