@@ -48,7 +48,6 @@ commands:
             arg: arg
           - long: --index
             arg: arg
-          - long: --json
           - *output
           - *no-headers
           - *delimiter
