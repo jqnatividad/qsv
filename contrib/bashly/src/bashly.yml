@@ -2,6 +2,11 @@ name: qsv
 # name: qsv.exe # Windows
 version: 0.125.0
 
+flags:
+    - long: --list
+    - long: --envlist
+    - long: --update
+    - long: --updatenow
 commands:
     - name: apply
       commands:
