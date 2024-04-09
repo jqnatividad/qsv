@@ -68,6 +68,54 @@ commands:
           - &progressbar
             long: --progressbar
 
+    - name: applydp
+      commands:
+          - name: operations
+            args:
+                - name: operations
+                  required: true
+                - name: column
+                  required: true
+            completions:
+                - <file>
+          - name: emptyreplace
+            args:
+                - name: column
+                  required: true
+            flags:
+                - long: --replacement
+                  arg: string
+            completions:
+                - <file>
+          - name: dynfmt
+            flags:
+                - long: --formatstr
+                  arg: string
+                - long: --new-column
+                  arg: name
+            completions:
+                - <file>
+      args:
+          - name: input
+            required: true
+      flags:
+          - long: --new-column
+            arg: name
+          - long: --rename
+            arg: name
+          - long: --comparand
+            arg: string
+          - long: --replacement
+            arg: string
+          - long: --formatstr
+            arg: string
+          - *jobs
+          - long: --batch
+            arg: size
+          - *output
+          - *no-headers
+          - *delimiter
+
     - name: behead
       completions:
           - <file>
@@ -792,6 +840,26 @@ commands:
           - *output
           - *no-headers
           - *delimiter
+
+    - name: py
+      commands:
+          - name: map
+            completions:
+                - <file>
+          - name: filter
+            completions:
+                - <file>
+      flags:
+          - long: --helper
+            arg: file
+            completions:
+                - <file>
+          - long: --batch
+            arg: size
+          - *output
+          - *no-headers
+          - *delimiter
+          - *progressbar
 
     - name: rename
       completions:
