@@ -1,0 +1,1287 @@
+name: qsv
+# name: qsv.exe # Windows
+version: 0.125.0
+
+flags:
+    - long: --list
+    - long: --envlist
+    - long: --update
+    - long: --updatenow
+commands:
+    - name: apply
+      commands:
+          - name: operations
+            args:
+                - name: operations
+                  required: true
+                - name: column
+                  required: true
+            completions:
+                - <file>
+          - name: emptyreplace
+            args:
+                - name: column
+                  required: true
+            flags:
+                - long: --replacement
+                  arg: string
+            completions:
+                - <file>
+          - name: dynfmt
+            flags:
+                - long: --formatstr
+                  arg: string
+                - long: --new-column
+                  arg: name
+            completions:
+                - <file>
+          - name: calconv
+            flags:
+                - long: --formatstr
+                  arg: string
+                - long: --new-column
+                  arg: name
+            completions:
+                - <file>
+      args:
+          - name: input
+            required: true
+      flags:
+          - long: --new-column
+            arg: name
+          - long: --rename
+            arg: name
+          - long: --comparand
+            arg: string
+          - long: --replacement
+            arg: string
+          - long: --formatstr
+            arg: string
+          - &jobs
+            long: --jobs
+            arg: arg
+          - long: --batch
+            arg: size
+          - &output
+            long: --output
+            arg: <file>
+          - &no-headers
+            long: --no-headers
+          - &delimiter
+            long: --delimiter
+            arg: <arg>
+          - &progressbar
+            long: --progressbar
+
+    - name: applydp
+      commands:
+          - name: operations
+            args:
+                - name: operations
+                  required: true
+                - name: column
+                  required: true
+            completions:
+                - <file>
+          - name: emptyreplace
+            args:
+                - name: column
+                  required: true
+            flags:
+                - long: --replacement
+                  arg: string
+            completions:
+                - <file>
+          - name: dynfmt
+            flags:
+                - long: --formatstr
+                  arg: string
+                - long: --new-column
+                  arg: name
+            completions:
+                - <file>
+      args:
+          - name: input
+            required: true
+      flags:
+          - long: --new-column
+            arg: name
+          - long: --rename
+            arg: name
+          - long: --comparand
+            arg: string
+          - long: --replacement
+            arg: string
+          - long: --formatstr
+            arg: string
+          - *jobs
+          - long: --batch
+            arg: size
+          - *output
+          - *no-headers
+          - *delimiter
+
+    - name: behead
+      completions:
+          - <file>
+      flags:
+          - long: --flexible
+          - *output
+
+    - name: cat
+      commands:
+          - name: rows
+            flags:
+                - long: --flexible
+            completions:
+                - <file>
+                - <directory>
+          - name: rowskey
+            flags:
+                - long: --group
+                  arg: grpkind
+            completions:
+                - <file>
+                - <directory>
+          - name: columns
+            flags:
+                - long: --pad
+            completions:
+                - <file>
+                - <directory>
+      flags:
+          - long: --group-name
+            arg: arg
+          - *output
+          - *no-headers
+          - *delimiter
+
+    - name: count
+      completions:
+          - <file>
+      flags:
+          - long: --human-readable
+          - long: --width
+          - long: --no-polars
+          - long: --low-memory
+          - long: --flexible
+          - long: --no-headers
+
+    - name: datefmt
+      completions:
+          - <file>
+      args:
+          - name: column
+            required: true
+          - name: input
+            required: true
+      flags:
+          - long: --formatstr
+            arg: string
+          - long: --new-column
+            arg: name
+          - long: --rename
+            arg: name
+          - long: --prefer-dmy
+          - long: --keep-zero-time
+          - long: --input-tz
+            arg: string
+          - long: --output-tz
+            arg: string
+          - long: --default-tz
+            arg: string
+          - long: --utc
+          - long: --zulu
+          - long: --ts-resolution
+            arg: res
+          - *jobs
+          - long: --batch
+            arg: size
+          - *output
+          - *no-headers
+          - *delimiter
+          - *progressbar
+
+    - name: dedup
+      completions:
+          - <file>
+      args:
+          - name: input
+            required: true
+      flags:
+          - long: --select
+            arg: arg
+          - long: --numeric
+          - long: --ignore-case
+          - long: --sorted
+          - long: --dupes-output
+            arg: file
+          - long: --human-readable
+          - *jobs
+          - *output
+          - *no-headers
+          - *delimiter
+          - &quiet
+            long: --quiet
+          - &memcheck
+            long: --memcheck
+
+    - name: describegpt
+      completions:
+          - <file>
+      args:
+          - name: input
+            required: true
+      flags:
+          - long: --all
+          - long: --description
+          - long: --dictionary
+          - long: --tags
+          - long: --openai-key
+            arg: key
+          - long: --max-tokens
+            arg: value
+          - long: --json
+          - long: --jsonl
+          - long: --prompt-file
+            arg: file
+            completions:
+                - <file>
+          - long: --model
+            arg: model
+          - long: --timeout
+            arg: secs
+          - long: --user-agent
+            arg: agent
+          - *output
+          - *quiet
+
+    - name: diff
+      completions:
+          - <file>
+      args:
+          - name: input-left
+            required: true
+          - name: input-right
+            required: true
+      flags:
+          - long: --no-headers-left
+          - long: --no-headers-right
+          - long: --no-headers-output
+          - long: --delimiter-left
+            arg: arg
+          - long: --delimiter right
+            arg: arg
+          - long: --delimiter-output
+            arg: arg
+          - long: --key
+            arg: arg
+          - long: --sort-columns
+            arg: arg
+          - *jobs
+          - *output
+
+    - name: enum
+      completions:
+          - <file>
+      flags:
+          - long: --new-column
+            arg: name
+          - long: --start
+            arg: value
+          - long: --increment
+            arg: value
+          - long: --constant
+            arg: value
+          - long: --copy
+            arg: column
+          - long: --uuid
+          - *output
+          - *no-headers
+          - *delimiter
+
+    - name: excel
+      completions:
+          - <file>
+      flags:
+          - long: --sheet
+            arg: name/index
+          - long: --metadata
+            arg: c|j|J|s
+          - long: --error-format
+            arg: format
+          - long: --flexible
+          - long: --trim
+          - long: --date-format
+            arg: format
+          - long: --keep-zero-time
+          - long: --range
+            arg: range
+          - *jobs
+          - *output
+          - *delimiter
+          - *quiet
+
+    - name: exclude
+      completions:
+          - <file>
+      args:
+          - name: columns1
+            required: true
+          - name: input1
+            required: true
+          - name: columns2
+            required: true
+          - name: input2
+            required: true
+      flags:
+          - long: --ignore-case
+          - short: -v
+          - *output
+          - *no-headers
+          - *delimiter
+
+    - name: explode
+      completions:
+          - <file>
+      args:
+          - name: column
+            required: true
+          - name: separator
+            required: true
+      flags:
+          - long: --rename
+            arg: name
+          - *output
+          - *no-headers
+          - *delimiter
+
+    - name: extdudup
+      completions:
+          - <file>
+      args:
+          - name: input
+            required: true
+          - name: output
+            required: true
+      flags:
+          - long: --no-output
+          - long: --dupes-output
+            arg: file
+          - long: --human-readable
+          - long: --memory-limit
+            arg: arg
+          - *quiet
+
+    - name: extsort
+      completions:
+          - <file>
+      args:
+          - name: input
+            required: true
+          - name: output
+            required: true
+      flags:
+          - long: --memory-limit
+            arg: arg
+          - long: --tmp-dir
+            arg: arg
+          - *jobs
+          - *no-headers
+
+    - name: fetch
+      completions:
+          - <file>
+      flags:
+          - long: --url-template
+            arg: template
+          - long: --new-column
+            arg: name
+          - long: --jql
+            arg: selector
+          - long: --jqlfile
+            arg: file
+            completions:
+                - <file>
+          - long: --pretty
+          - long: --rate-limit
+            arg: qps
+          - long: --timeout
+            arg: seconds
+          - long: --http-header
+            arg: k:v
+          - long: --max-retries
+            arg: count
+          - long: --max-errors
+            arg: count
+          - long: --store-error
+          - long: --cookies
+          - long: --user-agent
+            arg: agent
+          - long: --report
+            arg: d|s
+          - long: --no-cache
+          - long: --mem-cache-size
+            arg: count
+          - long: --disk-cache
+          - long: --disk-cache-dir
+            arg: dir
+            completions:
+                - <directory>
+          - long: --redis-cache
+          - long: --cache-error
+          - long: --flush-cache
+          - *output
+          - *no-headers
+          - *delimiter
+          - *progressbar
+
+    - name: fetchpost
+      completions:
+          - <file>
+      flags:
+          - long: --new-column
+            arg: name
+          - long: --jql
+            arg: selector
+          - long: --jqlfile
+            arg: file
+            completions:
+                - <file>
+          - long: --pretty
+          - long: --rate-limit
+            arg: qps
+          - long: --timeout
+            arg: seconds
+          - long: --http-header
+            arg: k:v
+          - long: --compress
+          - long: --max-retries
+            arg: count
+          - long: --max-errors
+            arg: count
+          - long: --store-error
+          - long: --cookies
+          - long: --user-agent
+            arg: agent
+          - long: --report
+            arg: d|s
+          - long: --no-cache
+          - long: --mem-cache-size
+            arg: count
+          - long: --disk-cache
+          - long: --disk-cache-dir
+            arg: dir
+            completions:
+                - <directory>
+          - long: --redis-cache
+          - long: --cache-error
+          - long: --flush-cache
+          - *output
+          - *no-headers
+          - *delimiter
+          - *progressbar
+
+    - name: fill
+      completions:
+          - <file>
+      args:
+          - name: selection
+            required: true
+          - name: input
+            required: true
+      flags:
+          - long: --groupby
+            arg: keys
+          - long: --first
+          - long: --backfill
+          - long: --default
+            arg: value
+          - *output
+          - *no-headers
+          - *delimiter
+
+    - name: fixlengths
+      completions:
+          - <file>
+      flags:
+          - long: --length
+            arg: arg
+          - long: --insert
+            arg: pos
+          - *output
+          - *delimiter
+
+    - name: flatten
+      completions:
+          - <file>
+      flags:
+          - long: --condense
+            arg: arg
+          - long: --field-separator
+            arg: arg
+          - long: --separator
+            arg: arg
+          - *no-headers
+          - *delimiter
+
+    - name: fmt
+      completions:
+          - <file>
+      flags:
+          - long: --out-delimiter
+            arg: arg
+          - long: --crlf
+          - long: --ascii
+          - long: --quote
+            arg: arg
+          - long: --quote-always
+          - long: --quote-never
+          - long: --escape
+            arg: arg
+          - long: --no-final-newline
+          - *output
+          - *delimiter
+
+    - name: foreach
+      completions:
+          - <file>
+      args:
+          - name: column
+            required: true
+          - name: command
+            required: true
+          - name: input
+            required: true
+      flags:
+          - long: --unify
+          - long: --new-column
+            arg: name
+          - *no-headers
+          - *delimiter
+          - *progressbar
+
+    - name: frequency
+      completions:
+          - <file>
+      flags:
+          - long: --select
+            arg: arg
+          - long: --limit
+            arg: arg
+          - long: --asc
+          - long: --no-nulls
+          - long: --ignore-case
+          - *jobs
+          - *output
+          - *no-headers
+          - *delimiter
+          - *memcheck
+
+    - name: generate
+      completions:
+          - <file>
+      flags:
+          - long: --rows
+            arg: count
+          - long: --outdsp
+            arg: file
+          - long: --indsp
+            arg: file
+          - *output
+          - *delimiter
+
+    - name: geocode
+      commands:
+          - name: suggest
+            args:
+                - name: column
+                  required: true
+            flags:
+                - long: --min-score
+                  arg: score
+                - long: --admin1
+                  arg: admin1_list
+          - name: suggestnow
+            args:
+                - name: location
+                  required: true
+          - name: reverse
+            args:
+                - name: column
+                  required: true
+            flags:
+                - long: --k_weight
+                  arg: weight
+          - name: reversenow
+            args:
+                - name: location
+                  required: true
+          - name: countryinfo
+            args:
+                - name: column
+                  required: true
+          - name: countryinfonow
+            args:
+                - name: location
+                  required: true
+          - name: index-load
+            args:
+                - name: index-file
+                  required: true
+          - name: index-check
+          - name: index-update
+          - name: index-reset
+      args:
+          - name: input
+            required: true
+      flags:
+          - long: --new-column
+            arg: name
+          - long: --rename
+            arg: name
+          - long: --country
+            arg: country_list
+          - long: --formatstr
+            arg: string
+          - long: --language
+            arg: lang
+          - long: --invalid-result
+            arg: string
+          - *jobs
+          - long: --batch
+            arg: size
+          - long: --timeout
+            arg: seconds
+          - long: --cache-dir
+            arg: dir
+          - long: --languages
+            arg: lang-list
+          - long: --cities-url
+            arg: url
+          - long: --force
+          - *output
+          - *delimiter
+          - *progressbar
+
+    - name: headers
+      completions:
+          - <file>
+          - <directory>
+      flags:
+          - long: --just-names
+          - long: --intersect
+          - long: --trim
+          - *delimiter
+
+    - name: index
+      completions:
+          - <file>
+      flags:
+          - *output
+
+    - name: input
+      completions:
+          - <file>
+      flags:
+          - long: --quote
+            arg: arg
+          - long: --escape
+            arg: arg
+          - long: --no-quoting
+          - long: --skip-lines
+            arg: arg
+          - long: --auto-skip
+          - long: --skip-lastlines
+            arg: arg
+          - long: --trim-headers
+          - long: --trim-fields
+          - long: --comment
+            arg: char
+          - long: --encoding-errors
+            arg: arg
+          - *output
+          - *delimiter
+
+    - name: join
+      completions:
+          - <file>
+      args:
+          - name: columns1
+            required: true
+          - name: input1
+            required: true
+          - name: columns2
+            required: true
+          - name: input2
+            required: true
+      flags:
+          - long: --ignore-case
+          - long: --left
+          - long: --left-anti
+          - long: --left-semi
+          - long: --right
+          - long: --full
+          - long: --cross
+          - long: --nulls
+          - *output
+          - *no-headers
+          - *delimiter
+
+    - name: join
+      completions:
+          - <file>
+      flags:
+          - long: --left
+          - long: --left-anti
+          - long: --left-semi
+          - long: --full
+          - long: --cross
+          - long: --filter-left
+            arg: arg
+          - long: --filter-right
+            arg: arg
+          - long: --validate
+            arg: arg
+          - long: --nulls
+          - long: --streaming
+          - long: --try-parsedates
+          - long: --infer-len
+            arg: arg
+          - long: --low-memory
+          - long: --no-optimizations
+          - long: --ignore-errors
+          - long: --asof
+          - long: --left_by
+            arg: arg
+          - long: --right_by
+            arg: arg
+          - long: --strategy
+            arg: arg
+          - long: --tolerance
+            arg: arg
+          - long: --sql-filter
+            arg: SQL
+          - long: --datetime-format
+            arg: fmt
+          - long: --date-format
+            arg: fmt
+          - long: --time-format
+            arg: fmt
+          - long: --float-precision
+            arg: arg
+          - long: --null-value
+            arg: value
+          - *output
+          - *delimiter
+          - *quiet
+
+    - name: jsonl
+      completions:
+          - <file>
+      flags:
+          - long: --ignore-errors
+          - *jobs
+          - long: --batch
+            arg: size
+          - *output
+          - *delimiter
+
+    - name: luau
+      commands:
+          - name: map
+            completions:
+                - <file>
+          - name: filter
+            completions:
+                - <file>
+      flags:
+          - long: --no-globals
+          - long: --colindex
+          - long: --remap
+          - long: --begin
+            arg: script
+          - long: --end
+            arg: script
+          - long: --luau-path
+            arg: pattern
+          - long: --max-errors
+            arg: count
+          - long: --timeout
+            arg: seconds
+          - long: --ckan-api
+            arg: url
+          - long: --ckan-token
+            arg: token
+          - long: --cache-dir
+            arg: dir
+          - *output
+          - *no-headers
+          - *delimiter
+          - *progressbar
+
+    - name: partition
+      completions:
+          - <file>
+      flags:
+          - long: --filename
+            arg: filename
+          - long: --prefix-length
+            arg: n
+          - long: --drop
+          - *no-headers
+          - *delimiter
+
+    - name: pseudo
+      completions:
+          - <file>
+      flags:
+          - long: --start
+            arg: number
+          - long: --increment
+            arg: number
+          - long: --formatstr
+            arg: template
+          - *output
+          - *no-headers
+          - *delimiter
+
+    - name: py
+      commands:
+          - name: map
+            completions:
+                - <file>
+          - name: filter
+            completions:
+                - <file>
+      flags:
+          - long: --helper
+            arg: file
+            completions:
+                - <file>
+          - long: --batch
+            arg: size
+          - *output
+          - *no-headers
+          - *delimiter
+          - *progressbar
+
+    - name: rename
+      completions:
+          - <file>
+      flags:
+          - *output
+          - *no-headers
+          - *delimiter
+
+    - name: rename
+      completions:
+          - <file>
+      flags:
+          - long: --ignore-case
+          - long: --select
+            arg: arg
+          - long: --unicode
+          - long: --size-limit
+            arg: mb
+          - long: --dfa-size-limit
+            arg: mb
+          - *output
+          - *no-headers
+          - *delimiter
+          - *progressbar
+          - *quiet
+
+    - name: reverse
+      completions:
+          - <file>
+      flags:
+          - *output
+          - *no-headers
+          - *delimiter
+          - *memcheck
+
+    - name: safenames
+      completions:
+          - <file>
+      flags:
+          - long: --mode
+            arg: c|a|v|V|j|J
+          - long: --reserved
+            arg: list
+          - long: --prefix
+            arg: string
+          - *output
+          - *delimiter
+
+    - name: sample
+      completions:
+          - <file>
+      flags:
+          - long: --seed
+            arg: number
+          - long: --rng
+            arg: kind
+          - long: --user-agent
+            arg: agent
+          - long: --timeout
+            arg: secs
+          - *output
+          - *no-headers
+          - *delimiter
+
+    - name: schema
+      completions:
+          - <file>
+      flags:
+          - long: --enum-threshold
+            arg: num
+          - long: --ignore-case
+          - long: --strict-dates
+          - long: --pattern-columns
+            arg: args
+          - long: --dates-whitelist
+            arg: list
+          - long: --prefer-dmy
+          - long: --force
+          - long: --stdout
+          - *jobs
+          - *no-headers
+          - *delimiter
+          - *memcheck
+
+    - name: search
+      completions:
+          - <file>
+      flags:
+          - long: --ignore-case
+          - long: --select
+            arg: arg
+          - long: --invert-match
+          - long: --unicode
+          - long: --flag
+            arg: column
+          - long: --quick
+          - long: --count
+          - long: --size-limit
+            arg: mb
+          - long: --dfa-size-limit
+            arg: mb
+          - *output
+          - *no-headers
+          - *delimiter
+          - *progressbar
+          - *quiet
+
+    - name: searchset
+      completions:
+          - <file>
+      flags:
+          - long: --ignore-case
+          - long: --select
+            arg: arg
+          - long: --invert-match
+          - long: --unicode
+          - long: --flag
+            arg: column
+          - long: --flag-matches-only
+          - long: --unmatched-output
+            arg: file
+          - long: --quick
+          - long: --count
+          - long: --json
+          - long: --size-limit
+            arg: mb
+          - long: --dfa-size-limit
+            arg: mb
+          - *output
+          - *no-headers
+          - *delimiter
+          - *progressbar
+          - *quiet
+
+    - name: select
+      completions:
+          - <file>
+      flags:
+          - *output
+          - *no-headers
+          - *delimiter
+
+    - name: slice
+      completions:
+          - <file>
+      flags:
+          - long: --start
+          - long: --end
+          - long: --len
+            arg: arg
+          - long: --index
+            arg: arg
+          - *output
+          - *no-headers
+          - *delimiter
+
+    - name: snappy
+      commands:
+          - name: compress
+            completions:
+                - <file>
+          - name: decompress
+            completions:
+                - <file>
+          - name: check
+            completions:
+                - <file>
+          - name: validate
+            completions:
+                - <file>
+      flags:
+          - long: --user-agent
+            arg: agent
+          - long: --timeout
+            arg: secs
+          - *output
+          - *jobs
+          - *quiet
+          - *progressbar
+
+    - name: sniff
+      completions:
+          - <file>
+      flags:
+          - long: --sample
+            arg: size
+          - long: --prefer-dmy
+          - *delimiter
+          - long: --quote
+            arg: arg
+          - long: --json
+          - long: --pretty-json
+          - long: --save-urlsample
+            arg: file
+          - long: --timeout
+            arg: secs
+          - long: --user-agent
+            arg: agent
+          - long: --stats-types
+          - long: --no-infer
+          - long: --just-mime
+          - long: --quick
+          - long: --harvest-mode
+          - *progressbar
+
+    - name: sort
+      completions:
+          - <file>
+      flags:
+          - long: --select
+            arg: arg
+          - long: --numeric
+          - long: --reverse
+          - long: --ignore-case
+          - long: --unique
+          - long: --random
+          - long: --seed
+            arg: number
+          - long: --rng
+            arg: kind
+          - *jobs
+          - long: --faster
+          - *output
+          - *no-headers
+          - *delimiter
+          - *memcheck
+
+    - name: sortcheck
+      completions:
+          - <file>
+      flags:
+          - long: --select
+            arg: arg
+          - long: --ignore-case
+          - long: --all
+          - long: --json
+          - long: --pretty-json
+          - *no-headers
+          - *delimiter
+          - *progressbar
+
+    - name: split
+      completions:
+          - <file>
+      flags:
+          - long: --size
+            arg: arg
+          - long: --chunks
+            arg: arg
+          - long: --kb-size
+            arg: arg
+          - *jobs
+          - long: --filename
+            arg: arg
+          - long: --pad
+            arg: arg
+          - *no-headers
+          - *delimiter
+          - *quiet
+
+    - name: sqlp
+      completions:
+          - <file>
+      flags:
+          - long: --format
+            arg: <arg>
+          - long: --try-parsedates
+          - long: --infer-len
+            arg: <arg>
+          - long: --low-memory
+          - long: --no-optimizations
+          - long: --truncate-ragged-lines
+          - long: --ignore-errors
+          - long: --rnull-values
+            arg: <arg>
+          - long: --datetime-format
+            arg: <fmt>
+          - long: --date-format
+            arg: <fmt>
+          - long: --time-format
+            arg: <fmt>
+          - long: --float-precision
+            arg: <arg>
+          - long: --wnull-value
+            arg: <arg>
+          - long: --compression
+            arg: <arg>
+          - long: --compress-level
+            arg: <arg>
+          - long: --statistics
+          - *output
+          - *no-headers
+          - *delimiter
+          - *memcheck
+          - long: --quiet
+
+    - name: stats
+      completions:
+          - <file>
+      flags:
+          - long: --select
+            arg: arg
+          - long: --everything
+          - long: --typesonly
+          - long: --infer-boolean
+          - long: --mode
+          - long: --cardinality
+          - long: --median
+          - long: --mad
+          - long: --quartiles
+          - long: --round
+            arg: decimal_places
+          - long: --nulls
+          - long: --infer-dates
+          - long: --dates-whitelist
+            arg: list
+          - long: --prefer-dmy
+          - long: --force
+          - *jobs
+          - long: --stats-binout
+          - *output
+          - *no-headers
+          - *delimiter
+          - *memcheck
+
+    - name: table
+      completions:
+          - <file>
+      flags:
+          - long: --width
+            arg: arg
+          - long: --pad
+            arg: arg
+          - long: --align
+            arg: arg
+          - long: --condense
+            arg: arg
+          - *output
+          - *delimiter
+          - *memcheck
+
+    - name: to
+      commands:
+          - name: postgres
+            completions:
+                - <file>
+          - name: sqlite
+            completions:
+                - <file>
+          - name: xlsx
+            completions:
+                - <file>
+          - name: parquet
+            completions:
+                - <file>
+          - name: datapackage
+            completions:
+                - <file>
+      flags:
+          - long: --print-package
+          - long: --dump
+          - long: --stats
+          - long: --stats-csv
+            arg: path
+          - *quiet
+          - long: --schema
+            arg: arg
+          - long: --drop
+          - long: --evolve
+          - long: --pipe
+          - long: --separator
+            arg: arg
+          - *jobs
+          - *delimiter
+
+    - name: tojsonl
+      completions:
+          - <file>
+      flags:
+          - long: --trim
+          - long: --no-boolean
+          - *jobs
+          - long: --batch
+            arg: size
+          - *delimiter
+          - *output
+          - *memcheck
+
+    - name: transpose
+      completions:
+          - <file>
+      flags:
+          - long: --multipass
+          - *output
+          - *delimiter
+          - *memcheck
+
+    - name: validate
+      completions:
+          - <file>
+      flags:
+          - long: --trim
+          - long: --fail-fast
+          - long: --valid
+            arg: suffix
+          - long: --invalid
+            arg: suffix
+          - long: --pretty-json
+          - long: --valid-output
+            arg: file
+          - *jobs
+          - long: --batch
+            arg: size
+          - long: --timeout
+            arg: seconds
+          - *no-headers
+          - *delimiter
+          - *progressbar
+          - *quiet
