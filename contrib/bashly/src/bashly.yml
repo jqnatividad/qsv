@@ -79,20 +79,20 @@ commands:
       commands:
           - name: rows
             flags:
-                - name: --flexible
+                - long: --flexible
             completions:
                 - <file>
                 - <directory>
           - name: rowskey
             flags:
-                - name: --group
+                - long: --group
                   arg: grpkind
             completions:
                 - <file>
                 - <directory>
           - name: columns
             flags:
-                - name: --pad
+                - long: --pad
             completions:
                 - <file>
                 - <directory>
@@ -438,9 +438,9 @@ commands:
       flags:
           - long: --rows
             arg: count
-          - long: outdsp
+          - long: --outdsp
             arg: file
-          - long: indsp
+          - long: --indsp
             arg: file
           - *output
           - *delimiter
