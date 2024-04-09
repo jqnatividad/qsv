@@ -89,11 +89,11 @@ _qsv_completions() {
       ;;
 
     'cat'*'rowskey'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A directory -A file -W "$(_qsv_completions_filter "--help -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A directory -A file -W "$(_qsv_completions_filter "--group --help -h")" -- "$cur" )
       ;;
 
     'cat'*'columns'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A directory -A file -W "$(_qsv_completions_filter "--help -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A directory -A file -W "$(_qsv_completions_filter "--help --pad -h")" -- "$cur" )
       ;;
 
     'describegpt'*)
@@ -109,7 +109,7 @@ _qsv_completions() {
       ;;
 
     'cat'*'rows'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A directory -A file -W "$(_qsv_completions_filter "--help -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A directory -A file -W "$(_qsv_completions_filter "--flexible --help -h")" -- "$cur" )
       ;;
 
     'transpose'*)
@@ -141,7 +141,7 @@ _qsv_completions() {
       ;;
 
     'generate'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--delimiter --help --output --rows -h indsp outdsp")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--delimiter --help --indsp --outdsp --output --rows -h")" -- "$cur" )
       ;;
 
     'foreach'*)
