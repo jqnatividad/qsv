@@ -336,16 +336,98 @@ commands:
           - *jobs
           - *no-headers
 
-    - name: fixlengths
+    - name: fetch
       completions:
           - <file>
       flags:
-          - long: --length
-            arg: arg
-          - long: --insert
-            arg: pos
+          - long: --url-template
+            arg: template
+          - long: --new-column
+            arg: name
+          - long: --jql
+            arg: selector
+          - long: --jqlfile
+            arg: file
+            completions:
+                - <file>
+          - long: --pretty
+          - long: --rate-limit
+            arg: qps
+          - long: --timeout
+            arg: seconds
+          - long: --http-header
+            arg: k:v
+          - long: --max-retries
+            arg: count
+          - long: --max-errors
+            arg: count
+          - long: --store-error
+          - long: --cookies
+          - long: --user-agent
+            arg: agent
+          - long: --report
+            arg: d|s
+          - long: --no-cache
+          - long: --mem-cache-size
+            arg: count
+          - long: --disk-cache
+          - long: --disk-cache-dir
+            arg: dir
+            completions:
+                - <directory>
+          - long: --redis-cache
+          - long: --cache-error
+          - long: --flush-cache
           - *output
+          - *no-headers
           - *delimiter
+          - *progressbar
+
+    - name: fetchpost
+      completions:
+          - <file>
+      flags:
+          - long: --new-column
+            arg: name
+          - long: --jql
+            arg: selector
+          - long: --jqlfile
+            arg: file
+            completions:
+                - <file>
+          - long: --pretty
+          - long: --rate-limit
+            arg: qps
+          - long: --timeout
+            arg: seconds
+          - long: --http-header
+            arg: k:v
+          - long: --compress
+          - long: --max-retries
+            arg: count
+          - long: --max-errors
+            arg: count
+          - long: --store-error
+          - long: --cookies
+          - long: --user-agent
+            arg: agent
+          - long: --report
+            arg: d|s
+          - long: --no-cache
+          - long: --mem-cache-size
+            arg: count
+          - long: --disk-cache
+          - long: --disk-cache-dir
+            arg: dir
+            completions:
+                - <directory>
+          - long: --redis-cache
+          - long: --cache-error
+          - long: --flush-cache
+          - *output
+          - *no-headers
+          - *delimiter
+          - *progressbar
 
     - name: fill
       completions:
@@ -366,22 +448,16 @@ commands:
           - *no-headers
           - *delimiter
 
-    - name: frequency
+    - name: fixlengths
       completions:
           - <file>
       flags:
-          - long: --select
+          - long: --length
             arg: arg
-          - long: --limit
-            arg: arg
-          - long: --asc
-          - long: --no-nulls
-          - long: --ignore-case
-          - *jobs
+          - long: --insert
+            arg: pos
           - *output
-          - *no-headers
           - *delimiter
-          - *memcheck
 
     - name: flatten
       completions:
@@ -431,6 +507,23 @@ commands:
           - *no-headers
           - *delimiter
           - *progressbar
+
+    - name: frequency
+      completions:
+          - <file>
+      flags:
+          - long: --select
+            arg: arg
+          - long: --limit
+            arg: arg
+          - long: --asc
+          - long: --no-nulls
+          - long: --ignore-case
+          - *jobs
+          - *output
+          - *no-headers
+          - *delimiter
+          - *memcheck
 
     - name: generate
       completions:
@@ -641,16 +734,38 @@ commands:
           - *output
           - *delimiter
 
-    - name: jsonl
-      completions:
-          - <file>
+    - name: luau
+      commands:
+          - name: map
+            completions:
+                - <file>
+          - name: filter
+            completions:
+                - <file>
       flags:
-          - long: --ignore-errors
-          - *jobs
-          - long: --batch
-            arg: size
+          - long: --no-globals
+          - long: --colindex
+          - long: --remap
+          - long: --begin
+            arg: script
+          - long: --end
+            arg: script
+          - long: --luau-path
+            arg: pattern
+          - long: --max-errors
+            arg: count
+          - long: --timeout
+            arg: seconds
+          - long: --ckan-api
+            arg: url
+          - long: --ckan-token
+            arg: token
+          - long: --cache-dir
+            arg: dir
           - *output
+          - *no-headers
           - *delimiter
+          - *progressbar
 
     - name: partition
       completions:
@@ -834,6 +949,30 @@ commands:
           - *no-headers
           - *delimiter
 
+    - name: snappy
+      commands:
+          - name: compress
+            completions:
+                - <file>
+          - name: decompress
+            completions:
+                - <file>
+          - name: check
+            completions:
+                - <file>
+          - name: validate
+            completions:
+                - <file>
+      flags:
+          - long: --user-agent
+            arg: agent
+          - long: --timeout
+            arg: secs
+          - *output
+          - *jobs
+          - *quiet
+          - *progressbar
+
     - name: sniff
       completions:
           - <file>
@@ -994,6 +1133,40 @@ commands:
           - *output
           - *delimiter
           - *memcheck
+
+    - name: to
+      commands:
+          - name: postgres
+            completions:
+                - <file>
+          - name: sqlite
+            completions:
+                - <file>
+          - name: xlsx
+            completions:
+                - <file>
+          - name: parquet
+            completions:
+                - <file>
+          - name: datapackage
+            completions:
+                - <file>
+      flags:
+          - long: --print-package
+          - long: --dump
+          - long: --stats
+          - long: --stats-csv
+            arg: path
+          - *quiet
+          - long: --schema
+            arg: arg
+          - long: --drop
+          - long: --evolve
+          - long: --pipe
+          - long: --separator
+            arg: arg
+          - *jobs
+          - *delimiter
 
     - name: tojsonl
       completions:
