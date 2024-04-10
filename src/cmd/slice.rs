@@ -54,6 +54,7 @@ use crate::{
 
 static NULL_VAL: OnceLock<String> = OnceLock::new();
 
+#[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Deserialize)]
 struct Args {
     arg_input:       Option<String>,
