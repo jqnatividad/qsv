@@ -1397,7 +1397,7 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
 /// search_index_no_cache() is automatically derived from search_index() by the cached macro.
 /// search_index_no_cache() is used in dyncols mode, and as the name implies, does not use a cache.
 #[cached(
-    type = "SizedCache<String, String>",
+    ty = "SizedCache<String, String>",
     create = "{ SizedCache::try_with_size(CACHE_SIZE).unwrap_or_else(|_| \
               SizedCache::with_size(FALLBACK_CACHE_SIZE)) }",
     key = "String",

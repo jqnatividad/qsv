@@ -932,7 +932,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 // we only need url in the cache key
 // as this is an in-memory cache that is only used for one qsv session
 #[cached(
-    type = "SizedCache<String, Return<FetchResponse>>",
+    ty = "SizedCache<String, Return<FetchResponse>>",
     create = r##"{
         let cache_size = MEM_CACHE_SIZE.get().unwrap();
         let memcache = SizedCache::with_size(*cache_size);
@@ -974,7 +974,7 @@ fn get_cached_response(
 // include_existing_columns in the cache key
 #[io_cached(
     disk = true,
-    type = "cached::DiskCache<String, FetchResponse>",
+    ty = "cached::DiskCache<String, FetchResponse>",
     cache_prefix_block = r##"{ "dc_" }"##,
     key = "String",
     convert = r#"{ format!("{}{:?}{:?}{}{}{}{}", url, form_body_jsonmap, flag_jql, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
@@ -1026,7 +1026,7 @@ fn get_diskcache_response(
 // values of flag_jql, flag_store_error, flag_pretty and include_existing_columns
 // may change between sessions
 #[io_cached(
-    type = "cached::RedisCache<String, String>",
+    ty = "cached::RedisCache<String, String>",
     key = "String",
     convert = r#"{ format!("{}{:?}{:?}{}{}{}{}", url, form_body_jsonmap, flag_jql, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
     create = r##" {
