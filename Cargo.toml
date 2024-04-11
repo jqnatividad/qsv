@@ -74,7 +74,7 @@ atoi_simd = "0.15"
 bincode = "1.3"
 byteorder = "1.5"
 bytes = "1"
-cached = { version = "=0.49.2", default-features = false, features = [
+cached = { version = "0.49", default-features = false, features = [
     "ahash",
     "disk_store",
     "proc_macro",
@@ -252,8 +252,8 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "fdc8e25" }
 jsonschema = { git = "https://github.com/jqnatividad/jsonschema-rs", branch = "deps-bump-reqwest-to-0.12" }
 # use our fork while we wait for the PR to bump reqwest to 0.12 and hyper to 1
 self_update = { git = "https://github.com/jqnatividad/self_update", branch = "bump-reqwest_hyper-http2" }
-# use our fork while we wait for the latest release with our merged PR bumping dependencies
-cached = { git = "https://github.com/jqnatividad/cached", branch = "bump_redis-directories-serial_test" }
+# use upstream rev with unreleased fixes and dependencies. We'll switch back to crates.io once released
+cached = { git = "https://github.com/jaemk/cached", rev = "7662b49" }
 # use our fork while we wait for our PR to bump dependencies to be merged
 localzone = { git = "https://github.com/jqnatividad/localzone", branch = "bump_dependencies" }
 
