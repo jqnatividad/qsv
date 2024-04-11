@@ -74,10 +74,8 @@ atoi_simd = "0.15"
 bincode = "1.3"
 byteorder = "1.5"
 bytes = "1"
-cached = { version = "0.49", default-features = false, features = [
-    "ahash",
+cached = { version = "0.49", features = [
     "disk_store",
-    "proc_macro",
     "redis_ahash",
 ], optional = true }
 calamine = { version = "0.24", features = ["dates"] }
