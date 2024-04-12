@@ -56,7 +56,7 @@ Excel options:
                                Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
-    --metadata <c|j|J|s>       Outputs workbook metadata in CSV or JSON format:
+    --metadata <c|s|j|J|S>     Outputs workbook metadata in CSV or JSON format:
                                  index, sheet_name, headers, type, visible, num_columns, num_rows,
                                  safe_headers, safe_headers_count, unsafe_headers, unsafe_headers_count
                                  and duplicate_headers_count.
@@ -69,12 +69,14 @@ Excel options:
                                duplicate_headers_count is a count of duplicate header names.
 
                                In CSV(c) mode, the output is in CSV format.
-                               In short CSV(s) mode, the output is in CSV format with only the
+                               In short(s) CSV mode, the output is in CSV format with only the
                                index, sheet_name, type and visible fields.
                                
                                In JSON(j) mode, the output is minified JSON.
                                In Pretty JSON(J) mode, the output is pretty-printed JSON.
-                               For both JSON modes, the filename, the full file path, the workbook format
+                               In Short(S) JSON mode, the output is minified JSON with only the
+                                 index, sheet_name, type and visible fields.
+                               For all JSON modes, the filename, the full file path, the workbook format
                                and the number of sheets are also included.
                                
                                All other Excel options are ignored.
@@ -116,7 +118,7 @@ use std::{cmp, fmt::Write, path::PathBuf};
 use calamine::{open_workbook, Data, Error, Range, Reader, SheetType, Sheets};
 use indicatif::HumanCount;
 use log::info;
-use rayon::prelude::*;
+use rayon::prelude::{ParallelIterator, ParallelSlice};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -147,6 +149,7 @@ enum MetadataMode {
     ShortCsv,
     Json,
     PrettyJSON,
+    ShortJSON,
     None,
 }
 
@@ -173,6 +176,14 @@ struct SheetMetadata {
     duplicate_headers_count: usize,
 }
 
+#[derive(Serialize, Deserialize)]
+struct ShortSheetMetadata {
+    index:   usize,
+    name:    String,
+    typ:     String,
+    visible: String,
+}
+
 impl From<calamine::Error> for CliError {
     fn from(e: calamine::Error) -> Self {
         CliError::Other(format!("{e}"))
@@ -186,6 +197,15 @@ struct MetadataStruct {
     format:             String,
     num_sheets:         usize,
     sheet:              Vec<SheetMetadata>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct ShortMetadataStruct {
+    filename:           String,
+    canonical_filename: String,
+    format:             String,
+    num_sheets:         usize,
+    sheet:              Vec<ShortSheetMetadata>,
 }
 
 struct RequestedRange {
@@ -291,9 +311,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let metadata_mode = match first_letter {
         'n' | 'N' => MetadataMode::None,
         'c' | 'C' => MetadataMode::Csv,
-        's' | 'S' => MetadataMode::ShortCsv,
+        's' => MetadataMode::ShortCsv,
         'j' => MetadataMode::Json,
         'J' => MetadataMode::PrettyJSON,
+        'S' => MetadataMode::ShortJSON,
         _ => {
             return fail_incorrectusage_clierror!("Invalid metadata mode: {}", args.flag_metadata);
         },
@@ -302,8 +323,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // check if we're exporting workbook metadata only
     if metadata_mode != MetadataMode::None {
         let mut excelmetadata_struct = MetadataStruct {
-            filename,
-            canonical_filename,
+            filename: filename.clone(),
+            canonical_filename: canonical_filename.clone(),
             format: if ods_flag {
                 "ODS".to_string()
             } else {
@@ -316,7 +337,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let sheet_vec = sheet_names;
 
         for (i, sheet_name) in sheet_vec.iter().enumerate() {
-            let range = if metadata_mode == MetadataMode::ShortCsv {
+            let range = if metadata_mode == MetadataMode::ShortCsv
+                || metadata_mode == MetadataMode::ShortJSON
+            {
                 Range::empty()
             } else if let Some(result) = workbook.worksheet_range_at(i) {
                 match result {
@@ -335,7 +358,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
 
             let (header_vec, num_columns, num_rows, safenames_vec, unsafeheaders_vec, dupe_count) =
-                if metadata_mode == MetadataMode::ShortCsv || range.is_empty() {
+                if range.is_empty() {
                     (vec![], 0_usize, 0_usize, vec![], vec![], 0_usize)
                 } else {
                     let (num_rows, num_columns) = range.get_size();
@@ -469,6 +492,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             MetadataMode::PrettyJSON => {
                 let Ok(json_result) = serde_json::to_string_pretty(&excelmetadata_struct) else {
                     return fail!("Cannot create pretty JSON");
+                };
+                println!("{json_result}");
+            },
+            MetadataMode::ShortJSON => {
+                let mut short_excelmetadata_struct = ShortMetadataStruct {
+                    filename,
+                    canonical_filename,
+                    format,
+                    num_sheets,
+                    sheet: vec![],
+                };
+                for sheetmetadata in excelmetadata_struct.sheet {
+                    let short_sheetmetadata = ShortSheetMetadata {
+                        index:   sheetmetadata.index,
+                        name:    sheetmetadata.name,
+                        typ:     sheetmetadata.typ,
+                        visible: sheetmetadata.visible,
+                    };
+                    short_excelmetadata_struct.sheet.push(short_sheetmetadata);
+                }
+                let Ok(json_result) = serde_json::to_string(&short_excelmetadata_struct) else {
+                    return fail!("Cannot create short JSON");
                 };
                 println!("{json_result}");
             },
