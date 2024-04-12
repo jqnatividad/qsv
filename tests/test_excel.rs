@@ -1162,6 +1162,21 @@ fn excel_metadata_sheet_types_xlsx() {
 }
 
 #[test]
+fn excel_metadata_sheet_types_xlsx_short_json() {
+    let wrk = Workdir::new("excel_metadata_sheet_types_xlsx_short_json");
+
+    let xlsx_file = wrk.load_test_file("any_sheets.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("S").arg(xlsx_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"any_sheets.xlsx","format":"xlsx","num_sheets":4,"sheet":[{"index":0,"name":"Visible","typ":"WorkSheet","visible":"Visible"},{"index":1,"name":"Hidden","typ":"WorkSheet","visible":"Hidden"},{"index":2,"name":"VeryHidden","typ":"WorkSheet","visible":"VeryHidden"},{"index":3,"name":"Chart","typ":"ChartSheet","visible":"Visible"}]}"#;
+    assert!(got.ends_with(expected));
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn excel_metadata_sheet_types_xlsb() {
     let wrk = Workdir::new("excel_metadata_sheet_types_xlsb");
 
