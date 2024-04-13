@@ -3,17 +3,29 @@ static USAGE: &str = r#"
 Execute a shell command once per line in given CSV file. Only works in
 Linux, macOS and other Unix-like environments (i.e. not Windows).
 
-Deleting all files whose filenames are listed in a column:
+WARNING: This command can be dangerous. Be careful when using it with
+untrusted input.
+
+Or per @thadguidry:
+Please ensure when using foreach to use trusted arguments, variables, scripts, etc.
+If you don't do due diligence and blindly use untrusted parts... foreach can indeed
+become a footgun and possibly fry your computer, eat your lunch, and expose an entire
+datacenter to a cancerous virus in your unvetted batch file you grabbed from some
+stranger on the internet that runs...FOR EACH LINE in your CSV file. GASP!"
+
+Examples:
+
+Delete all files whose filenames are listed in a column:
 
   $ qsv foreach filename 'rm {}' assets.csv
 
-Executing a command that outputs CSV once per line without repeating headers:
+Execute a command that outputs CSV once per record without repeating headers:
 
-  $ qsv foreach query 'search --year 2020 {}' queries.csv > results.csv
+  $ qsv foreach query --unify 'search --year 2020 {}' queries.csv > results.csv
 
 Same as above but with an additional column containing the current value:
 
-  $ qsv foreach query -c from_query 'search {}' queries.csv > results.csv
+  $ qsv foreach query -u -c from_query 'search {}' queries.csv > results.csv
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_foreach.rs.
 
@@ -22,20 +34,26 @@ Usage:
     qsv foreach --help
 
 foreach arguments:
-    column                The column to use as input for the command.
-    command               The command to execute. Use "{}" to substitute the value
-                          of the current input file line.
-                          If you need to execute multiple commands, use a shell
-                          script. See foreach_multiple_commands_with_shell_script()
-                          in tests/test_foreach.rs for an example.
-    input                 The CSV file to read. If not provided, will read from stdin.
+    column      The column to use as input for the command.
+    command     The command to execute. Use "{}" to substitute the value
+                of the current input file line.
+                If you need to execute multiple commands, use a shell
+                script. See foreach_multiple_commands_with_shell_script()
+                in tests/test_foreach.rs for an example.
+    input       The CSV file to read. If not provided, will read from stdin.
 
 foreach options:
-    -u, --unify              If the output of execute command is CSV, will
-                             unify the result by skipping headers on each
-                             subsequent command.
-    -c, --new-column <name>  If unifying, add a new column with given name
-                             and copying the value of the current input file line.
+    -u, --unify                If the output of the executed command is a CSV,
+                               unify the result by skipping headers on each
+                               subsequent command. Does not work when --dry-run is true.
+    -c, --new-column <name>    If unifying, add a new column with given name
+                               and copying the value of the current input file line.
+    --dry-run <file|boolean>   If set to true (the default for safety reasons), the commands are
+                               sent to stdout instead of executing them.
+                               If set to a file, the commands will be written to the specified
+                               text file instead of executing them. 
+                               Only if set to false will the commands be actually executed.
+                               [default: true]
 
 Common options:
     -h, --help             Display this message
@@ -48,7 +66,7 @@ Common options:
 
 use std::{
     ffi::OsStr,
-    io::BufReader,
+    io::{self, BufReader, BufWriter, Write},
     os::unix::ffi::OsStrExt,
     process::{Command, Stdio},
 };
@@ -70,6 +88,7 @@ struct Args {
     arg_input:        Option<String>,
     flag_unify:       bool,
     flag_new_column:  Option<String>,
+    flag_dry_run:     String,
     flag_no_headers:  bool,
     flag_delimiter:   Option<Delimiter>,
     flag_progressbar: bool,
@@ -77,6 +96,7 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
@@ -104,8 +124,51 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sel = rconfig.selection(&headers)?;
     let column_index = *sel.iter().next().unwrap();
 
+    let mut dry_run_fname = String::new();
+    let dry_run = match args.flag_dry_run.as_str() {
+        "true" => true,
+        "false" => false,
+        file_str => {
+            // if the value is not "true" or "false", then it's a file name
+            // check if we can create the file
+            let file = std::fs::File::create(file_str);
+            match file {
+                Ok(_) => {
+                    dry_run_fname = file_str.to_string();
+                    true
+                },
+                Err(e) => {
+                    return fail_incorrectusage_clierror!("Error creating dry-run file: {e}");
+                },
+            }
+        },
+    };
+
+    if dry_run && args.flag_unify {
+        return fail_incorrectusage_clierror!("Cannot use --unify with --dry-run");
+    }
+
+    if args.flag_new_column.is_some() && !args.flag_unify {
+        return fail_incorrectusage_clierror!("Cannot use --new-column without --unify");
+    }
+
+    // create a dry-run text file to write the commands to
+    let mut dry_run_file: Box<dyn Write> = Box::new(BufWriter::new(if dry_run {
+        if dry_run_fname.is_empty() {
+            // if dry_run_fname is empty, then we are writing to stdout
+            Box::new(std::io::stdout()) as Box<dyn Write>
+        } else {
+            Box::new(std::fs::File::create(&dry_run_fname)?) as Box<dyn Write>
+        }
+    } else {
+        // we're not doing a dry-run, so we don't need to write to a file
+        // to satisfy the compiler, we'll just write to /dev/null
+        Box::new(io::sink()) as Box<dyn Write>
+    }));
+
     let mut record = csv::ByteRecord::new();
     let mut output_headers_written = false;
+    let mut cmd_args_string;
 
     // prep progress bar
     let show_progress =
@@ -142,6 +205,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             })
             .collect();
 
+        if dry_run {
+            let prog_str = simdutf8::basic::from_utf8(prog.as_bytes()).unwrap_or_default();
+            cmd_args_string = cmd_args.join(" ");
+            dry_run_file.write_all(format!("{prog_str} {cmd_args_string}\n").as_bytes())?;
+            continue;
+        }
         if args.flag_unify {
             let mut cmd = Command::new(prog)
                 .args(cmd_args)
@@ -197,5 +266,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if show_progress {
         util::finish_progress(&progress);
     }
+    dry_run_file.flush()?;
     Ok(wtr.flush()?)
 }
