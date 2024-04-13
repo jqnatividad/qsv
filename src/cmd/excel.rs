@@ -675,9 +675,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     wtr.write_record(&record)?;
 
     let no_date_format: bool;
-    // TODO: Clippy lint is broken, remove allow once fixed.
-    // https://github.com/rust-lang/rust-clippy/issues/12580
-    #[allow(clippy::manual_unwrap_or_default)]
     let date_format = if let Some(df) = args.flag_date_format {
         no_date_format = false;
         df
