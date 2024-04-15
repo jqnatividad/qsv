@@ -179,11 +179,12 @@ use polars::{
     datatypes::AnyValue,
     prelude::{
         AsOfOptions, AsofStrategy, CsvWriter, IntoLazy, JoinType, JoinValidation, LazyCsvReader,
-        LazyFileListReader, LazyFrame, SerWriter, SortOptions,
+        LazyFileListReader, LazyFrame, SerWriter, SortMultipleOptions,
     },
     sql::SQLContext,
 };
 use serde::Deserialize;
+use smartstring::SmartString;
 use tempfile::tempdir;
 
 use crate::{cmd::sqlp::compress_output_if_needed, config::Delimiter, util, CliResult};
@@ -409,8 +410,19 @@ impl JoinStruct {
         } else {
             if asof_join {
                 // sort by the asof columns, as asof joins require sorted join column data
-                self.left_lf = self.left_lf.sort(&self.left_sel, SortOptions::default());
-                self.right_lf = self.right_lf.sort(&self.right_sel, SortOptions::default());
+                let left_selcols_smartsvec: Vec<SmartString<smartstring::LazyCompact>> =
+                    self.left_sel.split(',').map(SmartString::from).collect();
+
+                self.left_lf = self
+                    .left_lf
+                    .sort(&left_selcols_smartsvec, SortMultipleOptions::default());
+
+                let right_selcols_smartsvec: Vec<SmartString<smartstring::LazyCompact>> =
+                    self.right_sel.split(',').map(SmartString::from).collect();
+
+                self.right_lf = self
+                    .right_lf
+                    .sort(&right_selcols_smartsvec, SortMultipleOptions::default());
             }
 
             self.left_lf
