@@ -2583,7 +2583,7 @@ dependencies = [
 [[package]]
 name = "jsonschema"
 version = "0.17.1"
-source = "git+https://github.com/jqnatividad/jsonschema-rs?branch=deps-bump-reqwest-to-0.12#e791b5f8f1e10986957d2b24caf27f4f6dcef24b"
+source = "git+https://github.com/Stranger6667/jsonschema-rs?rev=6cf8232#6cf82328e3f9e703692f244d461f20241afe3c8e"
 dependencies = [
  "ahash 0.8.11",
  "anyhow",
