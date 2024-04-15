@@ -21,6 +21,18 @@ fn count_simple() {
 }
 
 #[test]
+fn count_empty() {
+    let wrk = Workdir::new("count_empty");
+    wrk.create_from_string("empty.csv", "");
+    let mut cmd = wrk.command("count");
+    cmd.arg("empty.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "0";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
 fn count_simple_tsv() {
     let wrk = Workdir::new("count_simple_tsv");
     wrk.create_with_delim(
