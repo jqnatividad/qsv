@@ -5,8 +5,8 @@ grouping, table functions, sorting, and more - working on larger than memory CSV
 Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame expressions.
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/rs-0.38.3/crates/polars-sql/src/functions.rs
-https://github.com/pola-rs/polars/blob/rs-0.38.3/crates/polars-sql/src/keywords.rs and
+https://github.com/pola-rs/polars/blob/rs-0.39.0/crates/polars-sql/src/functions.rs
+https://github.com/pola-rs/polars/blob/rs-0.39.0/crates/polars-sql/src/keywords.rs and
 https://github.com/pola-rs/polars/issues/7227
 
 Returns the shape of the query result (number of rows, number of columns) to stderr.
