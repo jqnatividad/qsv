@@ -127,7 +127,7 @@ jsonschema = { version = "0.17", features = [
     "resolve-http",
 ], default-features = false }
 jql-runner = { version = "7.1", default-features = false, optional = true }
-localzone = { version = "0.2", features = ["auto_validation"] }
+localzone = { version = "0.3", features = ["auto_validation"] }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
 mlua = { version = "0.9", features = [
@@ -252,8 +252,6 @@ jsonschema = { git = "https://github.com/jqnatividad/jsonschema-rs", branch = "d
 self_update = { git = "https://github.com/jqnatividad/self_update", branch = "bump-reqwest_hyper-http2" }
 # use upstream rev with unreleased fixes and dependencies. We'll switch back to crates.io once released
 cached = { git = "https://github.com/jaemk/cached", rev = "7662b49" }
-# use our fork while we wait for our PR to bump dependencies to be merged
-localzone = { git = "https://github.com/jqnatividad/localzone", branch = "bump_dependencies" }
 
 [features]
 default = ["mimalloc"]
