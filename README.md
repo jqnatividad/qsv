@@ -92,7 +92,7 @@
 😣: uses additional memory proportional to the cardinality of the columns in the CSV.  
 🧠: expensive operations are memoized with available inter-session Redis/Disk caching for fetch commands.  
 🗄️: [Extended input support](#extended-input-support).  
-🐻‍❄️: command powered by [Pola.rs](https://pola.rs) engine.  
+🐻‍❄️: command powered by [![polars 0.39.0](https://img.shields.io/badge/polars-0.39.0-blue)](https://github.com/pola-rs/polars/releases/tag/rs-0.39.0) engine.  
 🤖: command uses Natural Language Processing & General AI techniques.  
 🏎️: multithreaded and/or faster when an index (📇) is available.  
 🚀: multithreaded even without an index.  
