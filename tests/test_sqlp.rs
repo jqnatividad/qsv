@@ -808,14 +808,15 @@ fn sqlp_boston311_explain() {
     let got: String = wrk.stdout(&mut cmd);
     let expected_begin = r#"Logical Plan
 "SORT BY [col(""avg_tat""), col(""ward"")]"
-"  FAST_PROJECT: [ward, avg_tat]"
-    AGGREGATE
-"    	[[(col(""closed_dt"")) - (col(""open_dt""))].mean().cast(Float32).alias(""avg_tat"")] BY [col(""ward"")] FROM""#;
+  AGGREGATE
+"  	[[(col(""closed_dt"")) - (col(""open_dt""))].mean().cast(Float32).alias(""avg_tat"")] BY [col(""ward"")] FROM"
+""
+      Csv SCAN"#;
     assert!(got.starts_with(expected_begin));
 
     let expected_end = r#"boston311-100.csv
-        PROJECT 4/29 COLUMNS
-"        SELECTION: [(col(""case_status"")) == (String(Closed))]""#;
+      PROJECT 4/29 COLUMNS
+"      SELECTION: [(col(""case_status"")) == (String(Closed))]""#;
     assert!(got.ends_with(expected_end));
 }
 
@@ -828,6 +829,10 @@ fn sqlp_boston311_sql_script() {
         "test.sql",
         r#"create table temp_table as select * from "boston311-100" where ontime = 'OVERDUE';
 create table temp_table2 as select * from temp_table limit 10;
+-- we already got what we needed from temp_table into temp_table2
+-- so we can truncate temp_table. Otherwise, the memory taken by temp_table
+-- won't be released until the end of the script
+truncate temp_table;
 select ward,count(*) as cnt from temp_table2 group by ward order by cnt desc, ward asc;"#,
     );
 
