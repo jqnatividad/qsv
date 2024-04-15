@@ -6,8 +6,8 @@ Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame exp
 (see https://docs.pola.rs/user-guide/sql/intro/).
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/rs-0.39.0/crates/polars-sql/src/functions.rs
-https://github.com/pola-rs/polars/blob/rs-0.39.0/crates/polars-sql/src/keywords.rs and
+https://github.com/pola-rs/polars/blob/rs-0.39.1/crates/polars-sql/src/functions.rs
+https://github.com/pola-rs/polars/blob/rs-0.39.1/crates/polars-sql/src/keywords.rs and
 https://github.com/pola-rs/polars/issues/7227
 
 Returns the shape of the query result (number of rows, number of columns) to stderr.
