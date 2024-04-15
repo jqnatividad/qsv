@@ -2,11 +2,12 @@ static USAGE: &str = r#"
 Run blazing-fast Polars SQL queries against several CSVs - replete with joins, aggregations,
 grouping, table functions, sorting, and more - working on larger than memory CSV files.
 
-Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame expressions.
+Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame expressions
+(see https://docs.pola.rs/user-guide/sql/intro/).
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/rs-0.38.3/crates/polars-sql/src/functions.rs
-https://github.com/pola-rs/polars/blob/rs-0.38.3/crates/polars-sql/src/keywords.rs and
+https://github.com/pola-rs/polars/blob/rs-0.39.0/crates/polars-sql/src/functions.rs
+https://github.com/pola-rs/polars/blob/rs-0.39.0/crates/polars-sql/src/keywords.rs and
 https://github.com/pola-rs/polars/issues/7227
 
 Returns the shape of the query result (number of rows, number of columns) to stderr.
@@ -47,6 +48,11 @@ Example queries:
   # When running several queries, each query needs to be separated by a semicolon,
   # the last query will be returned as the result.
   # Typically, earlier queries are used to create tables that can be used in later queries.
+  # Note that scripts support single-line comments starting with '--' so feel free to
+  # add comments to your script.
+  # In long, complex scripts that produce multiple temporary tables, note that you can use
+  # `truncate table <table_name>;` to free up memory used by temporary tables. Otherwise,
+  # the memory used by the temporary tables won't be freed until the script finishes.
   # See test_sqlp/sqlp_boston311_sql_script() for an example.
    qsv sqlp data.csv data2.csv data3.csv data4.csv script.sql --format json --output data.json
 
@@ -129,6 +135,7 @@ sqlp arguments:
                            If the query ends with ".sql", it will be read as a SQL script file,
                            with each SQL query separated by a semicolon. It will execute the queries
                            in order, and the result of the LAST query will be returned as the result.
+                           SQL scripts support single-line comments starting with '--'.
 
 sqlp options:
     --format <arg>            The output format to use. Valid values are:
@@ -672,6 +679,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut file = File::open(&args.arg_sql)?;
         let mut sql_script = String::new();
         file.read_to_string(&mut sql_script)?;
+
+        // remove comments from the SQL script
+        // we only support single-line comments in SQL scripts
+        // i.e. comments that start with "--" and end at the end of the line
+        // so the regex is performant and simple
+        let comment_regex = Regex::new(r"^--.*$")?;
+        let sql_script = comment_regex.replace_all(&sql_script, "");
         sql_script
             .split(';')
             .map(std::string::ToString::to_string)
