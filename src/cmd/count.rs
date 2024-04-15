@@ -211,11 +211,19 @@ pub fn polars_count_input(
     };
 
     // read the file into a Polars LazyFrame
-    let lazy_df = LazyCsvReader::new(filepath.clone())
+    let lazy_df = match LazyCsvReader::new(filepath.clone())
         .with_separator(conf.get_delimiter())
         .with_comment_prefix(comment_prefix)
         .low_memory(low_memory)
-        .finish()?;
+        .finish()
+    {
+        Ok(lazy_df) => lazy_df,
+        Err(e) => {
+            log::warn!("polars error: {}", e);
+            let (count_regular, _) = count_input(conf, false)?;
+            return Ok((count_regular, 0));
+        },
+    };
 
     // and leverage the magic of Polars SQL with its lazy evaluation, to count the records
     // in an optimized manner with its blazing fast multithreaded, mem-mapped CSV reader!
