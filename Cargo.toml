@@ -252,7 +252,9 @@ jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "6cf
 self_update = { git = "https://github.com/jqnatividad/self_update", branch = "bump-reqwest_hyper-http2" }
 # use upstream rev with unreleased fixes and dependencies. We'll switch back to crates.io once released
 cached = { git = "https://github.com/jaemk/cached", rev = "7662b49" }
-
+# use unreleased version of calamine with fixes
+ calamine = { git = "https://github.com/tafia/calamine", rev = "aaf297e" }
+ 
 [features]
 default = ["mimalloc"]
 distrib_features = [
