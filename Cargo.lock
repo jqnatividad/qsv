@@ -880,15 +880,13 @@ source = "git+https://github.com/jaemk/cached?rev=7662b49#7662b494673f4a3982ef68
 [[package]]
 name = "calamine"
 version = "0.24.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a3a315226fdc5b1c3e33521073e1712a05944bc0664d665ff1f6ff0396334da"
+source = "git+https://github.com/tafia/calamine?rev=aaf297e#aaf297e6b10cdfd189a5fbe4630c5f05130dbb5a"
 dependencies = [
  "byteorder",
  "chrono",
  "codepage",
  "encoding_rs",
  "log",
- "once_cell",
  "quick-xml 0.31.0",
  "serde",
  "zip",
