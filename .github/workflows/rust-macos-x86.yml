@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ci-macos-tests-${{ github.ref }}-1
+  group: ci-macos-x86-tests-${{ github.ref }}-1
   cancel-in-progress: true
 
 env:
