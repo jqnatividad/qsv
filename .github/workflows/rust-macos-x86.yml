@@ -1,0 +1,42 @@
+name: macOS x86_64-apple-darwin
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-macos-tests-${{ github.ref }}-1
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    # runs-on: self-hosted
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    # - uses: actions/setup-python@v5.0.0
+    #   with:
+    #     python-version: '3.12'
+    - name: Installing Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        target: x86_64-apple-darwin
+        override: true
+    # - name: Setup Rust-cache
+    #   uses: Swatinem/rust-cache@v2
+    #   with:
+    #     key: qsv-macoslatestcache
+    #     # To only cache runs from `master`:
+    #     save-if: ${{ github.ref == 'refs/heads/master' }}
+    - name: Run tests
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,geocode,luau,python,polars,to,feature_capable
