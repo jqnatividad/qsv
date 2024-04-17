@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.20.0
+bm_version=3.21.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -472,6 +472,7 @@ run flatten_condensed "$qsv_bin" flatten "$data" --condense 50
 run fmt "$qsv_bin" fmt --crlf "$data"
 run fmt_no_crlf "$qsv_bin" fmt "$data"
 run fmt_no_final_newline "$qsv_bin" fmt --no-final-newline "$data"
+run foreach "$qsv_bin" foreach City "echo {}" "$data"
 run frequency "$qsv_bin" frequency "$data"
 run --index frequency_index "$qsv_bin" frequency "$data"
 run frequency_selregex "$qsv_bin" frequency -s /^R/ "$data"
@@ -535,7 +536,11 @@ run searchset_unicode "$qsv_bin" searchset searchset_patterns_unicode.txt --unic
 run select "$qsv_bin" select \'Agency,Community Board\' "$data"
 run select_regex "$qsv_bin" select /^L/ "$data"
 run slice_one_middle "$qsv_bin" slice -i 500000 "$data"
+run slice_last_1k "$qsv_bin" slice -s 1000 -l 1000 "$data"
+run slice_last_1k_json "$qsv_bin" slice -s 1000 -l 1000 --json "$data"
 run --index slice_one_middle_index "$qsv_bin" slice -i 500000 "$data"
+run --index slice_last_1k_index "$qsv_bin" slice -s 1000 -l 1000 "$data"
+run --index slice_last_1k_json_index "$qsv_bin" slice -s 1000 -l 1000 --json "$data"
 run snappy_compress "$qsv_bin" snappy compress "$data" --output benchmark_data.snappy
 run snappy_decompress "$qsv_bin" snappy decompress benchmark_data.snappy
 run snappy_validate "$qsv_bin" snappy validate benchmark_data.snappy
@@ -596,8 +601,10 @@ run transpose "$qsv_bin" transpose "$data"
 run transpose_multipass "$qsv_bin" transpose --multipass "$data"
 run validate "$qsv_bin" validate "$data" "$schema"
 run validate_no_schema "$qsv_bin" validate "$data"
+run validate_valid_output "$qsv_bin" validate "$data" "$schema" --valid-output -
 run --index validate_index "$qsv_bin" validate "$data" "$schema"
 run --index validate_no_schema_index "$qsv_bin" validate "$data"
+run --index validate_valid_output_index "$qsv_bin" validate "$data" "$schema" --valid-output -
 
 # show count of commands to be benchmarked
 with_index_count=${#commands_with_index[@]}
