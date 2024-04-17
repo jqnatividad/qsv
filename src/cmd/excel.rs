@@ -78,18 +78,19 @@ Excel options:
                                  index, sheet_name, type and visible fields.
                                For all JSON modes, the filename, the full file path, the workbook format
                                and the number of sheets are also included.
+                               If metadata retrieval performance is a concern, use the short modes
+                               as they return instantaneously as they don't need to process the sheet data.
                                
                                All other Excel options are ignored.
                                [default: none]
     --error-format <format>    The format to use when formatting error cells.
                                There are 3 formats:
                                  - "code": return the error code.
-                                    (e.g. #DIV/0!)
-                                 - "formula": return the formula.
+                                    (#DIV/0!; #N/A; #NAME?; #NULL!; #NUM!; #REF!; #VALUE!; #DATA!)
+                                 - "formula": return the formula, prefixed with '#'.
                                     (e.g. #=A1/B1 where B1 is 0; #=100/0)
                                  - "both": return both error code and the formula.
                                     (e.g. #DIV/0!: =A1/B1)
-                               For now, extracting the formula text only works reliably on macOS.
                                [default: code]
     --flexible                 Continue even if the number of columns is different from row to row.
     --trim                     Trim all fields so that leading & trailing whitespaces are removed.
