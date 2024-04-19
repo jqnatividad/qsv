@@ -1,6 +1,6 @@
 use crate::workdir::Workdir;
 
-// Providing an invalid API key with --openai-key without
+// Providing an invalid API key with --api-key without
 // the environment variable set should result in an error
 #[test]
 // #[ignore = "Requires environment variable to NOT be set."]
@@ -22,7 +22,7 @@ fn describegpt_invalid_api_key() {
     cmd.arg("in.csv")
         .arg("--all")
         .arg("--json")
-        .args(["--openai-key", "INVALIDKEY"])
+        .args(["--api-key", "INVALIDKEY"])
         .args(["--max-tokens", "1000"]);
 
     // Error message
