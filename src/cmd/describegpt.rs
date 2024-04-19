@@ -58,38 +58,38 @@ use crate::{util, util::process_input, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input: Option<String>,
-    flag_all: bool,
+    arg_input:        Option<String>,
+    flag_all:         bool,
     flag_description: bool,
-    flag_dictionary: bool,
-    flag_tags: bool,
-    flag_api_key: Option<String>,
-    flag_max_tokens: u16,
-    flag_base_url: String,
-    flag_ollama: bool,
-    flag_model: Option<String>,
-    flag_json: bool,
-    flag_jsonl: bool,
+    flag_dictionary:  bool,
+    flag_tags:        bool,
+    flag_api_key:     Option<String>,
+    flag_max_tokens:  u16,
+    flag_base_url:    String,
+    flag_ollama:      bool,
+    flag_model:       Option<String>,
+    flag_json:        bool,
+    flag_jsonl:       bool,
     flag_prompt_file: Option<String>,
-    flag_user_agent: Option<String>,
-    flag_timeout: u16,
-    flag_output: Option<String>,
-    flag_quiet: bool,
+    flag_user_agent:  Option<String>,
+    flag_timeout:     u16,
+    flag_output:      Option<String>,
+    flag_quiet:       bool,
 }
 
 #[derive(Deserialize)]
 #[allow(dead_code)]
 struct PromptFile {
-    name: String,
-    description: String,
-    author: String,
-    version: String,
-    tokens: u16,
-    dictionary_prompt: String,
+    name:               String,
+    description:        String,
+    author:             String,
+    version:            String,
+    tokens:             u16,
+    dictionary_prompt:  String,
     description_prompt: String,
-    tags_prompt: String,
-    json: bool,
-    jsonl: bool,
+    tags_prompt:        String,
+    json:               bool,
+    jsonl:              bool,
 }
 
 const OPENAI_KEY_ERROR: &str = "Error: QSV_OPENAI_KEY environment variable not found.\nNote that \
@@ -221,12 +221,12 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
     else {
         #[allow(clippy::let_and_return)]
         let default_prompt_file = PromptFile {
-            name: "My Prompt File".to_string(),
-            description: "My prompt file for qsv's describegpt command.".to_string(),
-            author: "My Name".to_string(),
-            version: "1.0.0".to_string(),
-            tokens: 50,
-            dictionary_prompt: "Here are the columns for each field in a data dictionary:\n\n- \
+            name:               "My Prompt File".to_string(),
+            description:        "My prompt file for qsv's describegpt command.".to_string(),
+            author:             "My Name".to_string(),
+            version:            "1.0.0".to_string(),
+            tokens:             50,
+            dictionary_prompt:  "Here are the columns for each field in a data dictionary:\n\n- \
                                  Type: the data type of this column\n- Label: a human-friendly \
                                  label for this column\n- Description: a full description for \
                                  this column (can be multiple sentences)\n\nGenerate a data \
@@ -246,7 +246,7 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
                                  individually, but instead output about the dataset as a whole in \
                                  one 1-8 sentence description."
                 .to_string(),
-            tags_prompt: "A tag is a keyword or label that categorizes datasets with \
+            tags_prompt:        "A tag is a keyword or label that categorizes datasets with \
                                  other, similar datasets. Using the right tags makes it easier \
                                  for others to find and use datasets.\n\nGenerate single-word \
                                  tags{json_add} about the dataset (lowercase only and remove all \
@@ -254,8 +254,8 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
                                  frequency data from a CSV file.\n\nSummary \
                                  Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
                 .to_string(),
-            json: true,
-            jsonl: false,
+            json:               true,
+            jsonl:              false,
         };
         default_prompt_file
     };
