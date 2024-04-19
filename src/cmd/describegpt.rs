@@ -1,7 +1,7 @@
 static USAGE: &str = r#"
-Infers extended metadata about a CSV using summary statistics.
+Infers extended metadata about a CSV using a large language model.
 
-Note that this command uses OpenAI's LLMs for inferencing and is therefore prone to
+Note that this command uses LLMs for inferencing and is therefore prone to
 inaccurate information being produced. Verify output results before using them.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_describegpt.rs.
@@ -20,7 +20,7 @@ describegpt options:
                            human-readable label, a description, and stats.
     --tags                 Prints tags that categorize the dataset. Useful
                            for grouping datasets and filtering.
-    --openai-key <key>     The OpenAI API key to use.
+    --api-key <key>        The API key to use. If using Ollama, set the key to ollama.
                            If the QSV_OPENAI_KEY envvar is set, it will be used instead.                           
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
@@ -28,9 +28,13 @@ describegpt options:
     --jsonl                Return results in JSON Lines format.
     --prompt-file <file>   The JSON file containing the prompts to use for inferencing.
                            If not specified, default prompts will be used.
+    --base-url <url>       The endpoint for interacting with LLMs. Can be used to run local
+                           local LLMs with Ollama, Jan, etc.
+                           [default: https://api.openai.com/v1]
+    --ollama               Required flag when using Ollama.
     --model <model>        The model to use for inferencing.
                            [default: gpt-3.5-turbo-16k]
-    --timeout <secs>       Timeout for OpenAI completions in seconds.
+    --timeout <secs>       Timeout for completions in seconds.
                            [default: 60]
     --user-agent <agent>   Specify custom user agent. It supports the following variables -
                            $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
@@ -54,42 +58,44 @@ use crate::{util, util::process_input, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
-    arg_input:        Option<String>,
-    flag_all:         bool,
+    arg_input: Option<String>,
+    flag_all: bool,
     flag_description: bool,
-    flag_dictionary:  bool,
-    flag_tags:        bool,
-    flag_openai_key:  Option<String>,
-    flag_max_tokens:  u16,
-    flag_model:       Option<String>,
-    flag_json:        bool,
-    flag_jsonl:       bool,
+    flag_dictionary: bool,
+    flag_tags: bool,
+    flag_api_key: Option<String>,
+    flag_max_tokens: u16,
+    flag_base_url: String,
+    flag_ollama: bool,
+    flag_model: Option<String>,
+    flag_json: bool,
+    flag_jsonl: bool,
     flag_prompt_file: Option<String>,
-    flag_user_agent:  Option<String>,
-    flag_timeout:     u16,
-    flag_output:      Option<String>,
-    flag_quiet:       bool,
+    flag_user_agent: Option<String>,
+    flag_timeout: u16,
+    flag_output: Option<String>,
+    flag_quiet: bool,
 }
 
 #[derive(Deserialize)]
 #[allow(dead_code)]
 struct PromptFile {
-    name:               String,
-    description:        String,
-    author:             String,
-    version:            String,
-    tokens:             u16,
-    dictionary_prompt:  String,
+    name: String,
+    description: String,
+    author: String,
+    version: String,
+    tokens: u16,
+    dictionary_prompt: String,
     description_prompt: String,
-    tags_prompt:        String,
-    json:               bool,
-    jsonl:              bool,
+    tags_prompt: String,
+    json: bool,
+    jsonl: bool,
 }
 
 const OPENAI_KEY_ERROR: &str = "Error: QSV_OPENAI_KEY environment variable not found.\nNote that \
-                                this command uses OpenAI's LLMs for inferencing and is therefore \
-                                prone to inaccurate information being produced. Verify output \
-                                results before using them.";
+                                this command uses LLMs for inferencing and is therefore prone to \
+                                inaccurate information being produced. Verify output results \
+                                before using them.";
 
 fn print_status(args: &Args, msg: &str) {
     if !args.flag_quiet {
@@ -122,7 +128,7 @@ fn send_request(
     method: &str,
     url: &str,
 ) -> CliResult<reqwest::blocking::Response> {
-    // Send request to OpenAI API
+    // Send request to API
     let mut request = match method {
         "GET" => client.get(url),
         "POST" => client.post(url).body(request_data.unwrap().to_string()),
@@ -155,27 +161,40 @@ fn send_request(
     Ok(response)
 }
 
-// Check if model is valid, including the default model https://api.openai.com/v1/models
+// Check if model is valid, including the default model
 fn is_valid_model(client: &Client, api_key: Option<&str>, args: &Args) -> CliResult<bool> {
+    let models_endpoint = match args.flag_ollama {
+        true => "/api/tags",
+        false => "/models",
+    };
     let response = send_request(
         client,
         api_key,
         None,
         "GET",
-        "https://api.openai.com/v1/models",
+        format!("{0}{1}", args.flag_base_url, models_endpoint).as_str(),
     );
 
     // If response is an error, return the error with fail!
     if let Err(e) = response {
-        return fail_clierror!("Error while requesting OpenAI models: {e}",);
+        return fail_clierror!("Error while requesting models: {e}",);
     }
 
     // Verify model is valid from response {"data": [{"id": "model-id", ...}, ...]
     let response_json: serde_json::Value = response.unwrap().json().unwrap();
-    let models = response_json["data"].as_array().unwrap();
-    for model in models {
-        if model["id"].as_str().unwrap() == args.flag_model.clone().unwrap() {
-            return Ok(true);
+    if args.flag_ollama {
+        let models = response_json["models"].as_array().unwrap();
+        for model in models {
+            if model["name"].as_str().unwrap() == args.flag_model.clone().unwrap() {
+                return Ok(true);
+            }
+        }
+    } else {
+        let models = response_json["data"].as_array().unwrap();
+        for model in models {
+            if model["id"].as_str().unwrap() == args.flag_model.clone().unwrap() {
+                return Ok(true);
+            }
         }
     }
 
@@ -202,12 +221,12 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
     else {
         #[allow(clippy::let_and_return)]
         let default_prompt_file = PromptFile {
-            name:               "My Prompt File".to_string(),
-            description:        "My prompt file for qsv's describegpt command.".to_string(),
-            author:             "My Name".to_string(),
-            version:            "1.0.0".to_string(),
-            tokens:             50,
-            dictionary_prompt:  "Here are the columns for each field in a data dictionary:\n\n- \
+            name: "My Prompt File".to_string(),
+            description: "My prompt file for qsv's describegpt command.".to_string(),
+            author: "My Name".to_string(),
+            version: "1.0.0".to_string(),
+            tokens: 50,
+            dictionary_prompt: "Here are the columns for each field in a data dictionary:\n\n- \
                                  Type: the data type of this column\n- Label: a human-friendly \
                                  label for this column\n- Description: a full description for \
                                  this column (can be multiple sentences)\n\nGenerate a data \
@@ -227,7 +246,7 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
                                  individually, but instead output about the dataset as a whole in \
                                  one 1-8 sentence description."
                 .to_string(),
-            tags_prompt:        "A tag is a keyword or label that categorizes datasets with \
+            tags_prompt: "A tag is a keyword or label that categorizes datasets with \
                                  other, similar datasets. Using the right tags makes it easier \
                                  for others to find and use datasets.\n\nGenerate single-word \
                                  tags{json_add} about the dataset (lowercase only and remove all \
@@ -235,8 +254,8 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
                                  frequency data from a CSV file.\n\nSummary \
                                  Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
                 .to_string(),
-            json:               true,
-            jsonl:              false,
+            json: true,
+            jsonl: false,
         };
         default_prompt_file
     };
@@ -314,16 +333,21 @@ fn get_completion(
     let request_data = json!({
         "model": args.flag_model,
         "max_tokens": max_tokens,
-        "messages": messages
+        "messages": messages,
+        "stream": false
     });
 
-    // Get response from POST request to OpenAI Chat Completions API
+    // Get response from POST request to chat completions endpoint
+    let completions_endpoint = match args.flag_ollama {
+        true => "/api/chat",
+        false => "/chat/completions",
+    };
     let response = send_request(
         &client,
         Some(api_key),
         Some(&request_data),
         "POST",
-        "https://api.openai.com/v1/chat/completions",
+        format!("{0}{1}", args.flag_base_url, completions_endpoint).as_str(),
     )?;
 
     // Parse response as JSON
@@ -331,16 +355,23 @@ fn get_completion(
     // If response is an error, print error message
     if let serde_json::Value::Object(ref map) = response_json {
         if map.contains_key("error") {
-            return fail_clierror!("OpenAI API Error: {}", map["error"]);
+            return fail_clierror!("API Error: {}", map["error"]);
         }
     }
 
     // Get completion from response
-    let completion = response_json["choices"][0]["message"]["content"]
-        .as_str()
-        .unwrap();
-
-    Ok(completion.to_string())
+    match args.flag_ollama {
+        true => {
+            let completion = response_json["message"]["content"].as_str().unwrap();
+            Ok(completion.to_string())
+        },
+        false => {
+            let completion = response_json["choices"][0]["message"]["content"]
+                .as_str()
+                .unwrap();
+            Ok(completion.to_string())
+        },
+    }
 }
 
 // Check if JSON output is expected
@@ -443,8 +474,8 @@ fn run_inference_options(
         Ok(())
     }
 
-    // Get completion from OpenAI API
-    print_status(args, "Interacting with OpenAI API...\n");
+    // Get completion from API
+    print_status(args, "Interacting with API...\n");
 
     let mut total_json_output: serde_json::Value = json!({});
     let mut prompt: String;
@@ -455,7 +486,7 @@ fn run_inference_options(
     // Generate dictionary output
     if args.flag_dictionary || args.flag_all {
         prompt = get_prompt("dictionary_prompt", stats_str, frequency_str, args)?;
-        print_status(args, "Generating data dictionary from OpenAI API...");
+        print_status(args, "Generating data dictionary from API...");
         messages = get_messages(&prompt, &dictionary_completion);
         dictionary_completion = get_completion(args, &arg_is_some, api_key, &messages)?;
         print_status(args, "Received dictionary completion.");
@@ -475,7 +506,7 @@ fn run_inference_options(
             get_prompt("description_prompt", stats_str, frequency_str, args)?
         };
         messages = get_messages(&prompt, &dictionary_completion);
-        print_status(args, "Generating description from OpenAI API...");
+        print_status(args, "Generating description from API...");
         completion = get_completion(args, &arg_is_some, api_key, &messages)?;
         print_status(args, "Received description completion.");
         process_output("description", &completion, &mut total_json_output, args)?;
@@ -489,7 +520,7 @@ fn run_inference_options(
             get_prompt("tags_prompt", stats_str, frequency_str, args)?
         };
         messages = get_messages(&prompt, &dictionary_completion);
-        print_status(args, "Generating tags from OpenAI API...");
+        print_status(args, "Generating tags from API...");
         completion = get_completion(args, &arg_is_some, api_key, &messages)?;
         print_status(args, "Received tags completion.");
         process_output("tags", &completion, &mut total_json_output, args)?;
@@ -544,8 +575,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             val
         },
         Err(_) => {
-            // Check if the --key flag is present
-            if let Some(api_key) = args.flag_openai_key.clone() {
+            // Check if the --api-key flag is present
+            if let Some(api_key) = args.flag_api_key.clone() {
                 if api_key.is_empty() {
                     return fail!(OPENAI_KEY_ERROR);
                 }
