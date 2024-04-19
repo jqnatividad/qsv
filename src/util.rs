@@ -1394,7 +1394,7 @@ pub async fn download_file(
         .use_rustls_tls()
         .http2_adaptive_window(true)
         .connection_verbose(log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace))
-        .timeout(download_timeout)
+        .read_timeout(download_timeout)
         .build()
     {
         Ok(c) => c,
