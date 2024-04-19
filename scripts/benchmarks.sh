@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=3.21.0
+bm_version=4.0.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -148,6 +148,7 @@ if [[ "$arg_pat" == "setup" ]]; then
   need_hyperfine=0
   need_awk=0
   need_sed=0
+  need_duckdb=0
 
   # check if 7z is installed
   if ! command -v "$sevenz_bin" &>/dev/null; then
@@ -167,6 +168,11 @@ if [[ "$arg_pat" == "setup" ]]; then
   # check if sed is installed
   if ! command -v sed &>/dev/null; then
     need_sed=1
+  fi
+
+  # check if duckdb is installed
+  if ! command -v duckdb &>/dev/null; then
+    need_duckdb=1
   fi
 
   # if all required tools are installed, exit
@@ -206,6 +212,12 @@ if [[ "$arg_pat" == "setup" ]]; then
     brew install gnu-sed
   fi
 
+  # if duckdb is not installed, install it
+  if [[ "$need_duckdb" -eq 1 ]]; then
+    echo "INFO: duckdb could not be found. Installing..."
+    brew install duckdb
+  fi
+
   echo "> All required tools installed! You can run ./benchmarks.sh now."
   exit
 fi
@@ -235,6 +247,13 @@ fi
 if ! command -v sed &>/dev/null; then
   echo "ERROR: sed could not be found"
   echo "Please install sed or run \"./benchmarks.sh setup\" to install it."
+  exit
+fi
+
+# check if duckdb is installed
+if ! command -v duckdb &>/dev/null; then
+  echo "ERROR: duckdb could not be found"
+  echo "Please install duckdb or run \"./benchmarks.sh setup\" to install it."
   exit
 fi
 
@@ -560,6 +579,7 @@ run --index split_chunks_index "$qsv_bin" split --chunks 20 split_tempdir_chunks
 run --index split_chunks_index_j1 "$qsv_bin" split --chunks 20 -j 1 split_tempdir_chunks_idx_j1
 run sqlp "$qsv_bin" sqlp "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_aggregations "$qsv_bin" sqlp "$data" -Q '"select Borough, count(*) from _t_1 where \"Complaint Type\"='\''Noise'\'' group by Borough"'
+run sqlp_vs_duckdb_aggregations duckdb :memory: '"select Borough, count(*) from read_csv_auto(\""$data"\") where \"Complaint Type\"='\''Noise'\'' group by Borough"'
 run sqlp_format_arrow "$qsv_bin" sqlp --format arrow "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_format_avro "$qsv_bin" sqlp --format avro "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_format_json "$qsv_bin" sqlp --format json "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
