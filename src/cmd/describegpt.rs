@@ -28,8 +28,8 @@ describegpt options:
     --jsonl                Return results in JSON Lines format.
     --prompt-file <file>   The JSON file containing the prompts to use for inferencing.
                            If not specified, default prompts will be used.
-    --base-url <url>       The endpoint for interacting with LLMs. Can be used to run local
-                           local LLMs with Ollama, Jan, etc.
+    --base-url <url>       The URL of the API for interacting with LLMs. Supports APIs
+                           compatible with the OpenAI API specification (Ollama, Jan, etc.).
                            [default: https://api.openai.com/v1]
     --ollama               Required flag when using Ollama.
     --model <model>        The model to use for inferencing.
