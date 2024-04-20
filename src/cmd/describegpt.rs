@@ -163,9 +163,10 @@ fn send_request(
 
 // Check if model is valid, including the default model
 fn is_valid_model(client: &Client, api_key: Option<&str>, args: &Args) -> CliResult<bool> {
-    let models_endpoint = match args.flag_ollama {
-        true => "/api/tags",
-        false => "/models",
+    let models_endpoint = if args.flag_ollama {
+        "/api/tags"
+    } else {
+        "/models"
     };
     let response = send_request(
         client,
@@ -338,9 +339,10 @@ fn get_completion(
     });
 
     // Get response from POST request to chat completions endpoint
-    let completions_endpoint = match args.flag_ollama {
-        true => "/api/chat",
-        false => "/chat/completions",
+    let completions_endpoint = if args.flag_ollama {
+        "/api/chat"
+    } else {
+        "/chat/completions"
     };
     let response = send_request(
         &client,
@@ -360,17 +362,14 @@ fn get_completion(
     }
 
     // Get completion from response
-    match args.flag_ollama {
-        true => {
-            let completion = response_json["message"]["content"].as_str().unwrap();
-            Ok(completion.to_string())
-        },
-        false => {
-            let completion = response_json["choices"][0]["message"]["content"]
-                .as_str()
-                .unwrap();
-            Ok(completion.to_string())
-        },
+    if args.flag_ollama {
+        let completion = response_json["message"]["content"].as_str().unwrap();
+        Ok(completion.to_string())
+    } else {
+        let completion = response_json["choices"][0]["message"]["content"]
+            .as_str()
+            .unwrap();
+        Ok(completion.to_string())
     }
 }
 
