@@ -21,7 +21,7 @@ describegpt options:
     --tags                 Prints tags that categorize the dataset. Useful
                            for grouping datasets and filtering.
     --api-key <key>        The API key to use. If using Ollama, set the key to ollama.
-                           If the QSV_OPENAI_KEY envvar is set, it will be used instead.                           
+                           If the QSV_LLM_APIKEY envvar is set, it will be used instead.                           
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
     --json                 Return results in JSON format.
@@ -92,7 +92,7 @@ struct PromptFile {
     jsonl:              bool,
 }
 
-const OPENAI_KEY_ERROR: &str = "Error: QSV_OPENAI_KEY environment variable not found.\nNote that \
+const OPENAI_KEY_ERROR: &str = "Error: QSV_LLM_APIKEY environment variable not found.\nNote that \
                                 this command uses LLMs for inferencing and is therefore prone to \
                                 inaccurate information being produced. Verify output results \
                                 before using them.";
@@ -565,11 +565,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // Closure to check if the user gives an argument
     let arg_is_some = |arg: &str| -> bool { argv.contains(&arg) };
 
-    // Check for QSV_OPENAI_KEY in environment variables
-    let api_key = match env::var("QSV_OPENAI_KEY") {
+    // Check for QSV_LLM_APIKEY in environment variables
+    let api_key = match env::var("QSV_LLM_APIKEY") {
         Ok(val) => {
             if val.is_empty() {
-                return fail!("Error: QSV_OPENAI_KEY environment variable is empty.");
+                return fail!("Error: QSV_LLM_APIKEY environment variable is empty.");
             }
             val
         },
