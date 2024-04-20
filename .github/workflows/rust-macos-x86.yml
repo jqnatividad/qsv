@@ -18,13 +18,13 @@ jobs:
   build:
 
     # runs-on: self-hosted
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
     - uses: actions/checkout@v4
-    # - uses: actions/setup-python@v5.0.0
-    #   with:
-    #     python-version: '3.12'
+    - uses: actions/setup-python@v5.0.0
+      with:
+        python-version: '3.12'
     - name: Installing Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
@@ -32,11 +32,11 @@ jobs:
         profile: minimal
         target: x86_64-apple-darwin
         override: true
-    # - name: Setup Rust-cache
-    #   uses: Swatinem/rust-cache@v2
-    #   with:
-    #     key: qsv-macoslatestcache
-    #     # To only cache runs from `master`:
-    #     save-if: ${{ github.ref == 'refs/heads/master' }}
+    - name: Setup Rust-cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        key: qsv-macos13cache
+        # To only cache runs from `master`:
+        save-if: ${{ github.ref == 'refs/heads/master' }}
     - name: Run tests
       run: cargo test --verbose --locked --features=apply,fetch,foreach,geocode,luau,python,polars,to,feature_capable
