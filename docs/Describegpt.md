@@ -1,16 +1,22 @@
 # `describegpt` command
 
-`describegpt` allows users to infer extended metadata about a CSV dataset using large language models, in particular GPT chat completion models from OpenAI's API. It uses `qsv stats` and `qsv frequency` in the background to provide context to the model.
+`describegpt` allows users to infer extended metadata about a CSV dataset using large language models, in particular GPT chat completion models from OpenAI's API, Ollama, or an API compatible with the OpenAI API specification such as Jan. `describegpt` uses `qsv stats` and `qsv frequency` in the background to provide context to the model.
 
-Note that this command uses OpenAI's LLMs for inferencing and is therefore prone to inaccurate information being produced. Verify output results before using them.
+Note that this command uses LLMs for inferencing and is therefore prone to inaccurate information being produced. Verify output results before using them.
 
 ## QSV_OPENAI_KEY
 
-`describegpt` requires an OpenAI API key to use. You can set this key using the `QSV_OPENAI_KEY` environment variable. Check [/docs/ENVIRONMENT_VARIABLES.md](/docs/ENVIRONMENT_VARIABLES.md) for more info.
+`describegpt` requires an OpenAI API key to use by default. You can set this key using the `QSV_OPENAI_KEY` environment variable. Check [/docs/ENVIRONMENT_VARIABLES.md](/docs/ENVIRONMENT_VARIABLES.md) for more info.
 
-## `--openai-key <key>`
+If you're not using the OpenAI API, this environment variable is not necessary so long as you pass a value into `--api-key` (for example when using Ollama, use `--api-key ollama`).
 
-You can also specify your OpenAI API key directly in your CLI using the `--openai-key` option. However, the `QSV_OPENAI_KEY` environment variable takes precedence over this option.
+## `--api-key <key>`
+
+You can also specify your API key directly in your CLI using the `--api-key` option.
+
+Note that if you already have `QSV_OPENAI_KEY` set as an environment variable and it is not empty, this environment variable will override your given flag.
+
+If you're using Ollama, use `--api-key ollama`.
 
 ## `--json`
 
@@ -115,3 +121,17 @@ Here is an example of a prompt:
 ```
 
 Note that this example has `tokens` set to `50` by default but you may want to increase this value to not result in errors as mentioned in the [`--json`](#json) & [`--max-tokens`](#max-tokens-value) section.
+
+## `--ollama`
+
+This is a required flag for when you're using the Ollama API, so make sure you pass it when using Ollama as your server. This is due to Ollama's API not being 1-1 compatible with the OpenAI API specification (particularly the `/models` endpoint may not be implemented yet, see https://github.com/ollama/ollama/issues/2430).
+
+You may find the Ollama OpenAI compatibility documentation here: https://github.com/ollama/ollama/blob/main/docs/openai.md.
+
+An example command for getting an inferred description is as follows:
+
+```bash
+qsv describegpt <filepath> --ollama --base-url http://localhost:11434 --api-key ollama --model <model> --max-tokens <number> --description
+```
+
+Remove the arrow brackets `<>` and replace `filepath` with your file's path, `<model>` with the model you want to use, and `number` with the max tokens you want to set based on your model's context size.
