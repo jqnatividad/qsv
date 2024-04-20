@@ -49,6 +49,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
+    #[allow(clippy::single_match_else)]
     match rconfig.indexed()? {
         Some(mut idx_file) => {
             // we have an index, no need to check avail mem,
