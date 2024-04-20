@@ -18,8 +18,9 @@ Concatenating by rows can be done in two ways:
 
 'rowskey' subcommand:
    CSV data can have different numbers of columns and in different orders. All
-   columns are written in insertion order. Does not work with --no-headers, as
-   the column header names are used as keys.
+   columns are written in insertion order. If a column is missing in a row, an
+   empty field is written. If a column is missing in the header, an empty field
+   is written for all rows.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_cat.rs.
 
@@ -194,12 +195,6 @@ impl Args {
         type AhashIndexSet<T> = IndexSet<T, ahash::RandomState>;
         type AhashIndexMap<T, T2> = IndexMap<T, T2, ahash::RandomState>;
 
-        if self.flag_no_headers {
-            return fail_incorrectusage_clierror!(
-                "cat rowskey does not support --no-headers, as we use column headers as keys."
-            );
-        }
-
         let Ok(group_kind) = GroupKind::from_str(&self.flag_group) else {
             return fail_incorrectusage_clierror!(
                 "Invalid grouping value `{}`. Valid values are 'fullpath', 'parentdirfname', \
@@ -220,6 +215,9 @@ impl Args {
         let temp_dir = tempfile::tempdir()?;
         let mut stdin_tempfilename = std::path::PathBuf::new();
 
+        // we need to create a temporary header in case --no-headers is set
+        let mut temp_header = csv::ByteRecord::new();
+
         // First pass, add all column headers to an IndexSet
         for conf in &self.configs()? {
             if conf.is_stdin() {
@@ -229,7 +227,21 @@ impl Args {
                 std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
             }
             let mut rdr = conf.reader()?;
-            let header = rdr.byte_headers()?;
+
+            // if self.flag_no_headers is set, we create temporary headers
+            // to use as keys, using the convention "_c_1", "_c_2", "_c_3", etc.
+            let header = if self.flag_no_headers {
+                let mut header = csv::ByteRecord::new();
+                rdr.read_byte_record(&mut header)?;
+                temp_header.clear();
+                for (n, _) in header.iter().enumerate() {
+                    temp_header.push_field(format!("_c_{}", n + 1).as_bytes());
+                }
+                &temp_header
+            } else {
+                rdr.byte_headers()?
+            };
+
             for field in header {
                 let fi = field.to_vec().into_boxed_slice();
                 columns_global.insert(fi);
@@ -244,10 +256,13 @@ impl Args {
         let mut wtr = Config::new(&self.flag_output).flexible(true).writer()?;
         let mut new_row = csv::ByteRecord::with_capacity(500, num_columns_global);
 
-        for c in &columns_global {
-            new_row.push_field(c);
+        // write the header
+        if !self.flag_no_headers {
+            for c in &columns_global {
+                new_row.push_field(c);
+            }
+            wtr.write_byte_record(&new_row)?;
         }
-        wtr.write_byte_record(&new_row)?;
 
         // amortize allocations
         let mut grouping_value = String::new();
@@ -267,7 +282,12 @@ impl Args {
                 rdr = conf.reader()?;
                 conf_path = conf.path.clone();
             }
-            header = rdr.byte_headers()?;
+
+            header = if self.flag_no_headers {
+                &temp_header
+            } else {
+                rdr.byte_headers()?
+            };
 
             columns_of_this_file.clear();
 
