@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `sqlp`: added support for single-line comments in SQL scripts https://github.com/jqnatividad/qsv/commit/bb52bcee61d8ea980a2ab093315ead0c153517a5
 * `validate`: add `--valid-output` option https://github.com/jqnatividad/qsv/pull/1730
 * contrib: add sample Bashly completions implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1731
-* `benchmarks`: added `sqlp` vs `duckdb` benchmarks. As `sqlp` is powered by Polars, and `duckdb` is a popular in-memory SQL engine, this benchmark will help us understand how `sqlp` compares to `duckdb` in terms of performance. Right now, `sqlp` is much faster than `duckdb` in most cases, but we want to make sure that we keep it that way.
+* `benchmarks`: added `sqlp` vs `duckdb` benchmarks. Right now, `sqlp` is much faster than `duckdb` in most cases (thanks to Polars - see the [latest TPC-H benchmarks](https://pola.rs/posts/benchmarks/)), but we want to make sure that we keep it that way.
 
 ### Changed
 * `datefmt`: microoptimize formatting https://github.com/jqnatividad/qsv/commit/0ee27e768fdc08b7381094842d22b45940fd0a26
