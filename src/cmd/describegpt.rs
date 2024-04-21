@@ -662,6 +662,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     );
     let Ok(frequency) = Command::new(qsv_path)
         .arg("frequency")
+        .args(["--limit", "50"])
+        .args(["--lmt-threshold", "10"])
         .arg(input_path)
         .output()
     else {
