@@ -638,18 +638,19 @@ fn get_unique_values(
 ) -> CliResult<AHashMap<String, Vec<String>>> {
     // prepare arg for invoking cmd::frequency
     let freq_args = crate::cmd::frequency::Args {
-        arg_input:        args.arg_input.clone(),
-        flag_select:      crate::select::SelectColumns::parse(column_select_arg).unwrap(),
-        flag_limit:       args.flag_enum_threshold as isize,
-        flag_unq_limit:   args.flag_enum_threshold,
-        flag_asc:         false,
-        flag_no_nulls:    true,
-        flag_ignore_case: args.flag_ignore_case,
-        flag_jobs:        Some(util::njobs(args.flag_jobs)),
-        flag_output:      None,
-        flag_no_headers:  args.flag_no_headers,
-        flag_delimiter:   args.flag_delimiter,
-        flag_memcheck:    args.flag_memcheck,
+        arg_input:          args.arg_input.clone(),
+        flag_select:        crate::select::SelectColumns::parse(column_select_arg).unwrap(),
+        flag_limit:         args.flag_enum_threshold as isize,
+        flag_unq_limit:     args.flag_enum_threshold,
+        flag_lmt_threshold: 0,
+        flag_asc:           false,
+        flag_no_nulls:      true,
+        flag_ignore_case:   args.flag_ignore_case,
+        flag_jobs:          Some(util::njobs(args.flag_jobs)),
+        flag_output:        None,
+        flag_no_headers:    args.flag_no_headers,
+        flag_delimiter:     args.flag_delimiter,
+        flag_memcheck:      args.flag_memcheck,
     };
 
     let (headers, ftables) = match freq_args.rconfig().indexed()? {
