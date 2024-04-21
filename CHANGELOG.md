@@ -6,46 +6,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## What's Changed
+## [0.126.0] - 2024-04-21
+
+### Added
+* `cat`: add `--no-headers` support to rowskey subcommand https://github.com/jqnatividad/qsv/pull/1762
+* `describegpt`: add compatibility for other (local) LLMs (Ollama, Jan, etc.) by @rzmk in https://github.com/jqnatividad/qsv/pull/1761
+* `excel`: add `--error-format` option https://github.com/jqnatividad/qsv/pull/1721
+* `excel`: add `--metadata` short JSON mode https://github.com/jqnatividad/qsv/pull/1738
+* `foreach`: add `--dry-run` option https://github.com/jqnatividad/qsv/pull/1740
+* `frequency`: add `--unq-limit` option https://github.com/jqnatividad/qsv/pull/1763
+* `frequency`: add support for negative `--limit`s https://github.com/jqnatividad/qsv/pull/1765
+* `frequency`: add `--lmt-threshold` option https://github.com/jqnatividad/qsv/pull/1766
+* `slice`: add support for negative `--index` option values https://github.com/jqnatividad/qsv/pull/1726
+* `slice`: implement `--json` output option https://github.com/jqnatividad/qsv/pull/1729
+* `sqlp`: added support for single-line comments in SQL scripts https://github.com/jqnatividad/qsv/commit/bb52bcee61d8ea980a2ab093315ead0c153517a5
+* `validate`: add `--valid-output` option https://github.com/jqnatividad/qsv/pull/1730
+* contrib: add sample Bashly completions implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1731
+* `benchmarks`: added `sqlp` vs `duckdb` benchmarks. As `sqlp` is powered by Polars, and `duckdb` is a popular in-memory SQL engine, this benchmark will help us understand how `sqlp` compares to `duckdb` in terms of performance. Right now, `sqlp` is much faster than `duckdb` in most cases, but we want to make sure that we keep it that way.
+
+### Changed
+* `datefmt`: microoptimize formatting https://github.com/jqnatividad/qsv/commit/0ee27e768fdc08b7381094842d22b45940fd0a26
+* `joinp`: adapt to breaking change in Polars 0.39 for lazyframe sort https://github.com/jqnatividad/qsv/commit/c625ca9f5aef59c736a837aaa4eeda7688403c37
+* `sqlp`: change `--infer-len` option default from 250 to 1000 for increased performance https://github.com/jqnatividad/qsv/commit/da1d215d803f8bfe400a7202feeecb8ae14239e9
+* `validate`: microoptimize `to_json_instance()` https://github.com/jqnatividad/qsv/commit/c2e4a1c696300eea04cccacca33f6872622ec086
+* bump Luau from 0.616 to 0.622 https://github.com/jqnatividad/qsv/commit/9216ec3a53767379662657f69c0076f4a52caaff
 * build(deps): bump jql-runner from 7.1.6 to 7.1.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1711
 * build(deps): bump pyo3 from 0.21.0 to 0.21.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1712
+* build(deps): bump pyo3 from 0.21.1 to 0.21.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1750
 * build(deps): bump strsim from 0.11.0 to 0.11.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1715
 * build(deps): bump sysinfo from 0.30.7 to 0.30.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1716
-* Make init_logger more robust by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1717
+* build(deps): bump sysinfo from 0.30.8 to 0.30.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1732
+* build(deps): bump sysinfo from 0.30.9 to 0.30.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1735
+* build(deps): bump sysinfo from 0.30.10 to 0.30.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1755
 * build(deps): bump redis from 0.25.2 to 0.25.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1720
-* `excel`: add `--error-format` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1721
 * build(deps): bump mlua from 0.9.6 to 0.9.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1724
 * build(deps): bump reqwest from 0.12.2 to 0.12.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1725
-* `slice`: support negative `--index` option values by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1726
-* `fetch` & `fetch post`: remove jsonxf crate; use serde_json to prettify JSON strings by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1727
-* `slice`: implement `--json` output option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1729
-* `validate`: add `--valid-output` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1730
-* contrib: add sample Bashly completions implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1731
-* build(deps): bump sysinfo from 0.30.8 to 0.30.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1732
+* build(deps): bump reqwest from 0.12.3 to 0.12.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1759
 * build(deps): bump anyhow from 1.0.81 to 1.0.82 by @dependabot in https://github.com/jqnatividad/qsv/pull/1733
 * build(deps): bump robinraju/release-downloader from 1.9 to 1.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1734
-* build(deps): bump sysinfo from 0.30.9 to 0.30.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1735
-* `excel`: add `--metadata` short JSON mode by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1738
-* `foreach`: add `--dry-run` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1740
-* `count`: empty CSVs count as zero also for polars by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1742
 * build(deps): bump chrono from 0.4.37 to 0.4.38 by @dependabot in https://github.com/jqnatividad/qsv/pull/1744
-* Upgrade polars from 0.38 to 0.39 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1745
+* bump polars from 0.38 to 0.39 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1745
 * build(deps): bump polars from 0.39.0 to 0.39.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1746
+* build(deps): bump polars from 0.39.1 to 0.39.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1752
 * build(deps): bump qsv-dateparser from 0.12.0 to 0.12.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1747
 * build(deps): bump serde_json from 1.0.115 to 1.0.116 by @dependabot in https://github.com/jqnatividad/qsv/pull/1749
-* build(deps): bump pyo3 from 0.21.1 to 0.21.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1750
 * build(deps): bump serde from 1.0.197 to 1.0.198 by @dependabot in https://github.com/jqnatividad/qsv/pull/1751
-* build(deps): bump polars from 0.39.1 to 0.39.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1752
-* build(deps): bump sysinfo from 0.30.10 to 0.30.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1755
-* build(deps): bump reqwest from 0.12.3 to 0.12.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1759
 * build(deps): bump rustls from 0.22.3 to 0.22.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1758
-* describegpt: add compatibility for other (local) LLMs (Ollama, Jan, etc.) by @rzmk in https://github.com/jqnatividad/qsv/pull/1761
-* `cat`: add `--no-headers` support to rowskey subcommand by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1762
-* `frequency`: add `--unq-limit` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1763
-* `frequency`: add support for negative `--limit`s by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1765
-* `frequency`: add `--lmt-threshold` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1766
 * build(deps): bump simple-expand-tilde from 0.1.4 to 0.1.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1767
+* applied select clippy recommendations
+* updated several indirect dependencies
+* added several benchmarks for new/changed commands
+* pin Rust nightly to 2024-04-15 - the same nightly that Polars 0.39 is pinned to
+* bumped MSRV to 1.77.2
 
+### Fixed
+* Make init_logger more robust by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1717
+* `count`: empty CSVs count as zero also for polars. Fixes #1741 https://github.com/jqnatividad/qsv/pull/1742
+* `excel`: fix $1682 by adding `--error-format` option https://github.com/jqnatividad/qsv/issues/1689
+* `fetch` & `fetchpost`: more robust JSON response validation https://github.com/jqnatividad/qsv/commit/ebc7287cd929cc23629ee53c7d82e0b8984bc2b0
+* `slice`: use `write!` macro to get rid of GH Advanced Security lint https://github.com/jqnatividad/qsv/commit/c739097e20d526cb6f49ca69d76fed8b28adc029
+* `deps`: bump h2 from 0.4.3 to 0.4.4 to fix HTTP2 Continuation Flood vulnerability https://github.com/jqnatividad/qsv/commit/6af0da27f4e4a0bb6d5563701c07c89ad00f76b8
+* `deps`: bump rustls from 0.22.3 to 0.22.4 to fix https://nvd.nist.gov/vuln/detail/CVE-2024-32650 https://github.com/jqnatividad/qsv/pull/1758 
+
+### Removed
+* `fetch` & `fetch post`: remove jsonxf crate; use serde_json to prettify JSON strings by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1727
+* `reverse`: remove kludgy expansion of read/write buffers https://github.com/jqnatividad/qsv/commit/46095cdf57f65c5380251c5d59317053ae1f80c3
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.125.0...0.126.0
 
