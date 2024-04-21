@@ -12,15 +12,15 @@ fn snappy_roundtrip() {
             "1",
             "The quick brown fox jumped over the lazy dog by the zigzag quarry site."
         ],
-        svec!["2", "Mary had a little lamb"],
+        svec!["2", "メアリーは小さな羊を持っていた"],
         svec![
             "3",
             "I think that I shall never see a poem lovely as a tree."
         ],
         svec!["4", "I think, therefore I am."],
-        svec!["5", "I am a leaf on the wind."],
+        svec!["5", "मैं हवा पर एक पत्ता हूँ।"],
         svec!["6", "Look at me, I'm the captain now."],
-        svec!["7", "Bazinga!"],
+        svec!["7", "终极问题的答案是42。"],
         svec!["8", "I'm Batman."],
     ];
     wrk.create("in.csv", thedata.clone());
