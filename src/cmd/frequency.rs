@@ -33,6 +33,10 @@ frequency options:
                            of indexing.
     -l, --limit <arg>      Limit the frequency table to the N most common
                            items. Set to '0' to disable a limit.
+                           If negative, only return values with an occurence
+                           count >= absolute value of the negative limit.
+                           e.g. --limit -2 will only return values with an
+                           occurence count >= 2.
                            [default: 10]
     -u, --unq-limit <arg>  If a column has all unique values, limit the
                            frequency table to a sample of N unique items.
@@ -82,7 +86,7 @@ use crate::{
 pub struct Args {
     pub arg_input:        Option<String>,
     pub flag_select:      SelectColumns,
-    pub flag_limit:       usize,
+    pub flag_limit:       isize,
     pub flag_unq_limit:   usize,
     pub flag_asc:         bool,
     pub flag_no_nulls:    bool,
@@ -151,14 +155,26 @@ impl Args {
 
         // check if the column has all unique values
         // by checking if counts length is equal to ftable length
-        if self.flag_unq_limit != self.flag_limit
+        let pos_limit = self.flag_limit.unsigned_abs();
+        let unique_limited = if self.flag_limit > 0
+            && self.flag_unq_limit != pos_limit
             && self.flag_unq_limit > 0
             && counts.len() == ftab.len()
         {
             counts = counts.into_iter().take(self.flag_unq_limit).collect();
-        }
+            true
+        } else {
+            false
+        };
+
+        // check if we need to limit the number of values
         if self.flag_limit > 0 {
-            counts = counts.into_iter().take(self.flag_limit).collect();
+            counts = counts.into_iter().take(pos_limit).collect();
+        } else if self.flag_limit < 0 && !unique_limited {
+            // if limit is negative, only return values with an occurence count >= absolute value of
+            // the negative limit. We only do this if we haven't already unique limited the values
+            let count_limit = pos_limit as u64;
+            counts.retain(|(_, c)| *c >= count_limit);
         }
         counts
             .into_iter()

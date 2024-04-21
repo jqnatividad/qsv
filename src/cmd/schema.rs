@@ -640,7 +640,7 @@ fn get_unique_values(
     let freq_args = crate::cmd::frequency::Args {
         arg_input:        args.arg_input.clone(),
         flag_select:      crate::select::SelectColumns::parse(column_select_arg).unwrap(),
-        flag_limit:       args.flag_enum_threshold,
+        flag_limit:       args.flag_enum_threshold as isize,
         flag_unq_limit:   args.flag_enum_threshold,
         flag_asc:         false,
         flag_no_nulls:    true,
