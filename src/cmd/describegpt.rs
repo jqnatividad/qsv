@@ -97,6 +97,27 @@ const LLM_APIKEY_ERROR: &str = "Error: QSV_LLM_APIKEY environment variable not f
                                 inaccurate information being produced. Verify output results \
                                 before using them.";
 
+const DEFAULT_DICTIONARY_PROMPT: &str =
+    "Here are the columns for each field in a data dictionary:\n\n- Type: the data type of this \
+     column\n- Label: a human-friendly label for this column\n- Description: a full description \
+     for this column (can be multiple sentences)\n\nGenerate a data dictionary as aforementioned \
+     (in JSON output) where each field has Name, Type, Label, and Description (so four columns in \
+     total) based on the following summary statistics and frequency data from a CSV \
+     file.\n\nSummary Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}";
+const DEFAULT_DESCRIPTION_PROMPT: &str =
+    "Generate only a description that is within 8 sentences about the entire dataset{json_add} \
+     based on the following summary statistics and frequency data derived from the CSV file it \
+     came from.\n\nSummary Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}\n\nDo not output \
+     the summary statistics for each field. Do not output the frequency for each field. Do not \
+     output data about each field individually, but instead output about the dataset as a whole \
+     in one 1-8 sentence description.";
+const DEFAULT_TAGS_PROMPT: &str =
+    "A tag is a keyword or label that categorizes datasets with other, similar datasets. Using \
+     the right tags makes it easier for others to find and use datasets.\n\nGenerate single-word \
+     tags{json_add} about the dataset (lowercase only and remove all whitespace) based on the \
+     following summary statistics and frequency data from a CSV file.\n\nSummary \
+     Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}";
+
 fn print_status(args: &Args, msg: &str) {
     if !args.flag_quiet {
         eprintln!("{msg}");
@@ -227,34 +248,9 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
             author:             "My Name".to_string(),
             version:            "1.0.0".to_string(),
             tokens:             50,
-            dictionary_prompt:  "Here are the columns for each field in a data dictionary:\n\n- \
-                                 Type: the data type of this column\n- Label: a human-friendly \
-                                 label for this column\n- Description: a full description for \
-                                 this column (can be multiple sentences)\n\nGenerate a data \
-                                 dictionary as aforementioned (in JSON output) where each field \
-                                 has Name, Type, Label, and Description (so four columns in \
-                                 total) based on the following summary statistics and frequency \
-                                 data from a CSV file.\n\nSummary \
-                                 Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
-                .to_string(),
-            description_prompt: "Generate only a description that is within 8 sentences about the \
-                                 entire dataset{json_add} based on the following summary \
-                                 statistics and frequency data derived from the CSV file it came \
-                                 from.\n\nSummary \
-                                 Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}\n\nDo not \
-                                 output the summary statistics for each field. Do not output the \
-                                 frequency for each field. Do not output data about each field \
-                                 individually, but instead output about the dataset as a whole in \
-                                 one 1-8 sentence description."
-                .to_string(),
-            tags_prompt:        "A tag is a keyword or label that categorizes datasets with \
-                                 other, similar datasets. Using the right tags makes it easier \
-                                 for others to find and use datasets.\n\nGenerate single-word \
-                                 tags{json_add} about the dataset (lowercase only and remove all \
-                                 whitespace) based on the following summary statistics and \
-                                 frequency data from a CSV file.\n\nSummary \
-                                 Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}"
-                .to_string(),
+            dictionary_prompt:  DEFAULT_DICTIONARY_PROMPT.to_owned(),
+            description_prompt: DEFAULT_DESCRIPTION_PROMPT.to_owned(),
+            tags_prompt:        DEFAULT_TAGS_PROMPT.to_owned(),
             json:               true,
             jsonl:              false,
         };
