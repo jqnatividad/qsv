@@ -416,6 +416,7 @@ macro_rules! update_cache_info {
                 if size > 0 {
                     let hits = cache.cache_hits().unwrap_or_default();
                     let misses = cache.cache_misses().unwrap_or(1);
+                    #[allow(clippy::cast_precision_loss)]
                     let hit_ratio = (hits as f64 / (hits + misses) as f64) * 100.0;
                     let capacity = cache.cache_capacity();
                     $progress.set_message(format!(
@@ -433,6 +434,7 @@ macro_rules! update_cache_info {
     ($progress:expr, $cache_hits:expr, $num_rows:expr) => {
         use indicatif::HumanCount;
 
+        #[allow(clippy::cast_precision_loss)]
         let hit_ratio = ($cache_hits as f64 / $num_rows as f64) * 100.0;
         $progress.set_message(format!(
             " of {} records. Cache hit ratio: {hit_ratio:.2}%",
