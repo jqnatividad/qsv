@@ -240,7 +240,10 @@ fn param_prop_frequency(name: &str, rows: CsvData, idx: bool) -> bool {
     }
 
     let mut cmd = wrk.command("frequency");
-    cmd.arg("in.csv").args(["-j", "4"]).args(["--limit", "0"]);
+    cmd.arg("in.csv")
+        .args(["-j", "4"])
+        .args(["--limit", "0"])
+        .args(["--unq-limit", "0"]);
 
     let stdout = wrk.stdout::<String>(&mut cmd);
     let got_ftables = ftables_from_csv_string(stdout);

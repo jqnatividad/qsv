@@ -6,8 +6,15 @@ The frequency table is formatted as CSV data:
     field,value,count
 
 By default, there is a row for the N most frequent values for each field in the
-data. The order and number of values can be tweaked with --asc and --limit,
+data. The order & number of values can be tweaked with --asc, --limit and --unq-limit
 respectively.
+
+The unique limit (--unq-limit) is particularly useful when a column has all unique values
+(e.g. an ID column) and --limit is set to 0.
+Without a unique limit, the frequency table for that column will be the same as the number
+of rows in the data.
+With a unique limit, the frequency table will be a sample of N unique values, all with
+a count of 1.
 
 Since this computes an exact frequency table, memory proportional to the
 cardinality of each column is required.
@@ -26,6 +33,10 @@ frequency options:
                            of indexing.
     -l, --limit <arg>      Limit the frequency table to the N most common
                            items. Set to '0' to disable a limit.
+                           [default: 10]
+    -u, --unq-limit <arg>  If a column has all unique values, limit the
+                           frequency table to a sample of N unique items.
+                           Set to '0' to disable a unique_limit.
                            [default: 10]
     -a, --asc              Sort the frequency tables in ascending order by
                            count. The default is descending order.
@@ -72,6 +83,7 @@ pub struct Args {
     pub arg_input:        Option<String>,
     pub flag_select:      SelectColumns,
     pub flag_limit:       usize,
+    pub flag_unq_limit:   usize,
     pub flag_asc:         bool,
     pub flag_no_nulls:    bool,
     pub flag_ignore_case: bool,
@@ -136,6 +148,15 @@ impl Args {
         } else {
             ftab.most_frequent()
         };
+
+        // check if the column has all unique values
+        // by checking if counts length is equal to ftable length
+        if self.flag_unq_limit != self.flag_limit
+            && self.flag_unq_limit > 0
+            && counts.len() == ftab.len()
+        {
+            counts = counts.into_iter().take(self.flag_unq_limit).collect();
+        }
         if self.flag_limit > 0 {
             counts = counts.into_iter().take(self.flag_limit).collect();
         }
