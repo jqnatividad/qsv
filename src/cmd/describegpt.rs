@@ -92,7 +92,7 @@ struct PromptFile {
     jsonl:              bool,
 }
 
-const OPENAI_KEY_ERROR: &str = "Error: QSV_LLM_APIKEY environment variable not found.\nNote that \
+const LLM_APIKEY_ERROR: &str = "Error: QSV_LLM_APIKEY environment variable not found.\nNote that \
                                 this command uses LLMs for inferencing and is therefore prone to \
                                 inaccurate information being produced. Verify output results \
                                 before using them.";
@@ -577,11 +577,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // Check if the --api-key flag is present
             if let Some(api_key) = args.flag_api_key.clone() {
                 if api_key.is_empty() {
-                    return fail!(OPENAI_KEY_ERROR);
+                    return fail!(LLM_APIKEY_ERROR);
                 }
                 api_key
             } else {
-                return fail!(OPENAI_KEY_ERROR);
+                return fail!(LLM_APIKEY_ERROR);
             }
         },
     };
