@@ -133,6 +133,17 @@ fn frequency_limit() {
 }
 
 #[test]
+fn frequency_negative_limit() {
+    let (wrk, mut cmd) = setup("frequency_negative_limit");
+    cmd.args(["--limit", "-4"]);
+
+    let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    got.sort();
+    let expected = vec![svec!["field", "value", "count"], svec!["h1", "a", "4"]];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn frequency_asc() {
     let (wrk, mut cmd) = setup("frequency_asc");
     cmd.args(["--select", "h2"]).arg("--asc");
