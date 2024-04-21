@@ -144,6 +144,37 @@ fn frequency_negative_limit() {
 }
 
 #[test]
+fn frequency_limit_threshold() {
+    let (wrk, mut cmd) = setup("frequency_limit_threshold");
+    cmd.args(["--limit", "-4"]).args(["--lmt-threshold", "4"]);
+
+    let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    got.sort();
+    let expected = vec![svec!["field", "value", "count"], svec!["h1", "a", "4"]];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn frequency_limit_threshold_notmet() {
+    let (wrk, mut cmd) = setup("frequency_limit_threshold_notmet");
+    cmd.args(["--limit", "-2"]).args(["--lmt-threshold", "3"]);
+
+    let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    got.sort();
+    let expected = vec![
+        svec!["field", "value", "count"],
+        svec!["h1", "(NULL)", "1"],
+        svec!["h1", "(NULL)", "1"],
+        svec!["h1", "a", "4"],
+        svec!["h1", "b", "1"],
+        svec!["h2", "Y", "1"],
+        svec!["h2", "x", "1"],
+        svec!["h2", "y", "2"],
+        svec!["h2", "z", "3"],
+    ];
+    assert_eq!(got, expected);
+}
+#[test]
 fn frequency_asc() {
     let (wrk, mut cmd) = setup("frequency_asc");
     cmd.args(["--select", "h2"]).arg("--asc");

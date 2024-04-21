@@ -5,9 +5,9 @@ The frequency table is formatted as CSV data:
 
     field,value,count
 
-By default, there is a row for the N most frequent values for each field in the
-data. The order & number of values can be tweaked with --asc, --limit and --unq-limit
-respectively.
+By default, there is a row for the N most frequent values for each field in the data.
+The order and number of values can be configured with --asc, --limit, --unq-limit
+and --lmt-threshold respectively.
 
 The unique limit (--unq-limit) is particularly useful when a column has all unique values
 (e.g. an ID column) and --limit is set to 0.
@@ -15,6 +15,11 @@ Without a unique limit, the frequency table for that column will be the same as 
 of rows in the data.
 With a unique limit, the frequency table will be a sample of N unique values, all with
 a count of 1.
+
+The --lmt-threshold option allows you to apply the --limit and --unq-limit options only
+when the number of unique items in a column is greater than or equal to the threshold.
+This is useful when you want to apply limits only to columns with a large number of unique
+items and not to columns with a small number of unique items.
 
 Since this computes an exact frequency table, memory proportional to the
 cardinality of each column is required.
@@ -42,6 +47,11 @@ frequency options:
                            frequency table to a sample of N unique items.
                            Set to '0' to disable a unique_limit.
                            [default: 10]
+    --lmt-threshold <arg>  The threshold for which --limit and --unq-limit
+                           will be applied. If the number of unique items
+                           in a column >= threshold, the limits will be applied.
+                           Set to '0' to disable the threshold and always apply limits.
+                           [default: 0]
     -a, --asc              Sort the frequency tables in ascending order by
                            count. The default is descending order.
     --no-nulls             Don't include NULLs in the frequency table.
@@ -84,18 +94,19 @@ use crate::{
 #[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Deserialize)]
 pub struct Args {
-    pub arg_input:        Option<String>,
-    pub flag_select:      SelectColumns,
-    pub flag_limit:       isize,
-    pub flag_unq_limit:   usize,
-    pub flag_asc:         bool,
-    pub flag_no_nulls:    bool,
-    pub flag_ignore_case: bool,
-    pub flag_jobs:        Option<usize>,
-    pub flag_output:      Option<String>,
-    pub flag_no_headers:  bool,
-    pub flag_delimiter:   Option<Delimiter>,
-    pub flag_memcheck:    bool,
+    pub arg_input:          Option<String>,
+    pub flag_select:        SelectColumns,
+    pub flag_limit:         isize,
+    pub flag_unq_limit:     usize,
+    pub flag_lmt_threshold: usize,
+    pub flag_asc:           bool,
+    pub flag_no_nulls:      bool,
+    pub flag_ignore_case:   bool,
+    pub flag_jobs:          Option<usize>,
+    pub flag_output:        Option<String>,
+    pub flag_no_headers:    bool,
+    pub flag_delimiter:     Option<Delimiter>,
+    pub flag_memcheck:      bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -153,29 +164,35 @@ impl Args {
             ftab.most_frequent()
         };
 
-        // check if the column has all unique values
-        // by checking if counts length is equal to ftable length
-        let pos_limit = self.flag_limit.unsigned_abs();
-        let unique_limited = if self.flag_limit > 0
-            && self.flag_unq_limit != pos_limit
-            && self.flag_unq_limit > 0
-            && counts.len() == ftab.len()
-        {
-            counts = counts.into_iter().take(self.flag_unq_limit).collect();
-            true
-        } else {
-            false
-        };
+        // check if we need to apply limits
+        let counts_len = counts.len();
+        if self.flag_lmt_threshold == 0 || self.flag_lmt_threshold >= counts_len {
+            // check if the column has all unique values
+            // by checking if counts length is equal to ftable length
+            let pos_limit = self.flag_limit.unsigned_abs();
+            let unique_limited = if self.flag_limit > 0
+                && self.flag_unq_limit != pos_limit
+                && self.flag_unq_limit > 0
+                && counts_len == ftab.len()
+            {
+                counts = counts.into_iter().take(self.flag_unq_limit).collect();
+                true
+            } else {
+                false
+            };
 
-        // check if we need to limit the number of values
-        if self.flag_limit > 0 {
-            counts = counts.into_iter().take(pos_limit).collect();
-        } else if self.flag_limit < 0 && !unique_limited {
-            // if limit is negative, only return values with an occurence count >= absolute value of
-            // the negative limit. We only do this if we haven't already unique limited the values
-            let count_limit = pos_limit as u64;
-            counts.retain(|(_, c)| *c >= count_limit);
+            // check if we need to limit the number of values
+            if self.flag_limit > 0 {
+                counts = counts.into_iter().take(pos_limit).collect();
+            } else if self.flag_limit < 0 && !unique_limited {
+                // if limit is negative, only return values with an occurence count >= absolute
+                // value of the negative limit. We only do this if we haven't
+                // already unique limited the values
+                let count_limit = pos_limit as u64;
+                counts.retain(|(_, c)| *c >= count_limit);
+            }
         }
+
         counts
             .into_iter()
             .map(|(bs, c)| {
