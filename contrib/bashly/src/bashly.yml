@@ -1,6 +1,6 @@
 name: qsv
 # name: qsv.exe # Windows
-version: 0.125.0
+version: 0.126.0
 
 flags:
     - long: --list
@@ -140,6 +140,8 @@ commands:
             flags:
                 - long: --group
                   arg: grpkind
+                - long: --group-name
+                  arg: arg
             completions:
                 - <file>
                 - <directory>
@@ -150,8 +152,6 @@ commands:
                 - <file>
                 - <directory>
       flags:
-          - long: --group-name
-            arg: arg
           - *output
           - *no-headers
           - *delimiter
@@ -237,7 +237,7 @@ commands:
           - long: --description
           - long: --dictionary
           - long: --tags
-          - long: --openai-key
+          - long: --api-key
             arg: key
           - long: --max-tokens
             arg: value
@@ -247,6 +247,8 @@ commands:
             arg: file
             completions:
                 - <file>
+          - long: --base-url
+            arg: url
           - long: --model
             arg: model
           - long: --timeout
@@ -307,7 +309,9 @@ commands:
           - long: --sheet
             arg: name/index
           - long: --metadata
-            arg: c|j|J|s
+            arg: c|s|j|J|S
+          - long: --error-format
+            arg: format
           - long: --error-format
             arg: format
           - long: --flexible
@@ -557,6 +561,10 @@ commands:
           - long: --unify
           - long: --new-column
             arg: name
+          - long: --dry-run
+            arg: file|boolean
+            completions:
+                - <directory>
           - *no-headers
           - *delimiter
           - *progressbar
@@ -568,6 +576,10 @@ commands:
           - long: --select
             arg: arg
           - long: --limit
+            arg: arg
+          - long: --unq-limit
+            arg: arg
+          - long: --lmt-threshold
             arg: arg
           - long: --asc
           - long: --no-nulls
@@ -1018,6 +1030,7 @@ commands:
             arg: arg
           - long: --index
             arg: arg
+          - long: --json
           - *output
           - *no-headers
           - *delimiter
@@ -1276,6 +1289,8 @@ commands:
           - long: --pretty-json
           - long: --valid-output
             arg: file
+            completions:
+                - <file>
           - *jobs
           - long: --batch
             arg: size
