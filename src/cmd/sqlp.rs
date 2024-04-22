@@ -128,6 +128,9 @@ sqlp arguments:
                            decompressed automatically.
                            Column headers are required. Use 'qsv rename _all_generic --no-headers'
                            to add generic column names (_col_N) to a CSV with no headers.
+                           If you are using Polars SQL's table functions like read_csv() & read_parquet()
+                           to read input files directly, you can use the special value 'SKIP_INPUT'
+                           to skip input preprocessing.
 
     sql                    The SQL query/ies to run. Each input file will be available as a table
                            named after the file name (without the extension), or as "_t_N"
@@ -145,7 +148,7 @@ sqlp options:
                                 parquet  Apache Parquet
                                 arrow    Apache Arrow IPC
                                 avro     Apache Avro
-                              (default: csv)
+                              [default: csv]
 
                               POLARS CSV INPUT PARSING OPTIONS:
     --try-parsedates          Automatically try to parse dates/datetimes and time.
@@ -155,7 +158,7 @@ sqlp options:
                               the CSV parsing of dates.
     --infer-len <arg>         The number of rows to scan when inferring the schema of the CSV.
                               Set to 0 to do a full table scan (warning: very slow).
-                              (default: 1000)
+                              [default: 1000]
     --low-memory              Use low memory mode when parsing CSVs. This will use less memory
                               but will be slower. It will also process LazyFrames in streaming mode.
                               Only use this when you get out of memory errors.
@@ -176,7 +179,7 @@ sqlp options:
     --rnull-values <arg>      The comma-delimited list of case-sensitive strings to consider as
                               null values when READING CSV files (e.g. NULL, NONE, <empty string>).
                               Use "<empty string>" to consider an empty string a null value.
-                              (default: <empty string>)
+                              [default: <empty string>]
 
                               CSV OUTPUT FORMAT ONLY:
     --datetime-format <fmt>   The datetime format to use writing datetimes.
@@ -185,16 +188,15 @@ sqlp options:
     --date-format <fmt>       The date format to use writing dates.
     --time-format <fmt>       The time format to use writing times.
     --float-precision <arg>   The number of digits of precision to use when writing floats.
-                              (default: 6)
     --wnull-value <arg>       The string to use when WRITING null values.
-                              (default: <empty string>)
+                              [default: <empty string>]
 
                               ARROW/AVRO/PARQUET OUTPUT FORMATS ONLY:
     --compression <arg>       The compression codec to use when writing arrow or parquet files.
                                 For Arrow, valid values are: zstd, lz4, uncompressed
                                 For Avro, valid values are: deflate, snappy, uncompressed (default)
                                 For Parquet, valid values are: zstd, lz4raw, gzip, snappy, uncompressed
-                              (default: zstd)
+                              [default: zstd]
 
                               PARQUET OUTPUT FORMAT ONLY:
     --compress-level <arg>    The compression level to use when using zstd or gzip compression.
@@ -210,7 +212,7 @@ Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
     -d, --delimiter <arg>  The field delimiter for reading and writing CSV data.
-                           Must be a single character. (default: ,)
+                           Must be a single character. [default: ,]
     -Q, --quiet            Do not return result shape to stderr.
 "#;
 
@@ -255,7 +257,7 @@ struct Args {
     arg_sql:                    String,
     flag_format:                String,
     flag_try_parsedates:        bool,
-    flag_infer_len:             Option<usize>,
+    flag_infer_len:             usize,
     flag_low_memory:            bool,
     flag_no_optimizations:      bool,
     flag_ignore_errors:         bool,
@@ -498,7 +500,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
 
     let tmpdir = tempfile::tempdir()?;
-    args.arg_input = process_input(args.arg_input, &tmpdir, "")?;
+
+    let mut skip_input = false;
+    args.arg_input = if args.arg_input == [PathBuf::from_str("SKIP_INPUT").unwrap()] {
+        skip_input = true;
+        Vec::new()
+    } else {
+        process_input(args.arg_input, &tmpdir, "")?
+    };
 
     let rnull_values = if args.flag_rnull_values == "<empty string>" {
         vec![String::new()]
@@ -566,12 +575,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if debuglog_flag {
         log::debug!("Optimization state: {optimization_state:?}");
         log::debug!(
-            "Delimiter: {delim} Infer_schema_len: {infer_len:?} try_parse_dates: {parse_dates} \
-             ignore_errors: {ignore_errors}, low_memory: {low_memory}",
+            "Delimiter: {delim} Infer_schema_len: {infer_len} try_parse_dates: {parse_dates} \
+             ignore_errors: {ignore_errors}, low_memory: {low_memory}, float_precision: \
+             {float_precision:?}, skip_input: {skip_input}",
             infer_len = args.flag_infer_len,
             parse_dates = args.flag_try_parsedates,
             ignore_errors = args.flag_ignore_errors,
-            low_memory = args.flag_low_memory
+            low_memory = args.flag_low_memory,
+            float_precision = args.flag_float_precision,
         );
     }
 
@@ -588,12 +599,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // if there is only one input file and its a CSV and no CSV parsing options are used,
     // we can use the fast path to read the CSV directly into a LazyFrame without having to
     // parse and register it as a table in the SQL context using Polars SQL's read_csv function
-    if args.arg_input.len() == 1
+    // The user can also skip all these heuristics and force the fast path by using the special
+    // value '<SKIP_INPUT>' as the input file.
+    if skip_input {
+        // we don't need to do anything here, as we are skipping input
+        if debuglog_flag {
+            // Using the slow path to read and parse the CSV/s into tables in the SQL context.
+            log::debug!("Skipping input processing...");
+        }
+    } else if args.arg_input.len() == 1
         && !is_sql_script
         && delim == b','
         && !args.flag_no_optimizations
         && !args.flag_try_parsedates
-        && args.flag_infer_len != Some(1000)
+        && args.flag_infer_len != 1000
         && !args.flag_low_memory
         && !args.flag_truncate_ragged_lines
         && !args.flag_ignore_errors
@@ -659,7 +678,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .with_comment_prefix(comment_char.as_deref())
                 .with_null_values(Some(NullValues::AllColumns(rnull_values.clone())))
                 .with_separator(tsvtab_delim(table, delim))
-                .with_infer_schema_length(args.flag_infer_len)
+                .with_infer_schema_length(Some(args.flag_infer_len))
                 .with_try_parse_dates(args.flag_try_parsedates)
                 .with_ignore_errors(args.flag_ignore_errors)
                 .truncate_ragged_lines(args.flag_truncate_ragged_lines)
@@ -669,7 +688,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    if debuglog_flag {
+    if debuglog_flag && !skip_input {
         let tables_in_context = ctx.get_tables();
         log::debug!("Table(s) registered in SQL Context: {tables_in_context:?}");
     }
