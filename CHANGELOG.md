@@ -8,6 +8,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.126.0] - 2024-04-22
 
+# 🤖 Expanded Metadata Inferencing 🤖 #
+
+`describegpt` headlines this release, with its new ability to support other local Large Language Models (LLMs) such as [Ollama](https://ollama.com) and [Jan](https://jan.ai). This broadens the tool's utility in diverse AI environments and unlocks expanded metadata inferencing capabilities in qsv-pro.
+
+Several commands got additional options: `cat` with `--no-headers` support in the `rowskey` subcommand; `excel` with new options like `--error-format` and short `--metadata` mode; and `foreach` with a `--dry-run` option. `frequency` also got new options, including `--unq-limit` for limiting unique counts, support for negative limits, and a `--lmt-threshold` option for compiling comprehensive frequencies below a threshold. `slice` now supports negative indices and new JSON output options, providing more flexibility in data slicing.
+
+This is all rounded out with `sqlp` improvements, including support for single-line comments in SQL scripts and a special SKIP_INPUT value for more efficient data loading - all while increasing performance thanks to the Polars engine being upgraded to 0.39.2. 
+
+---
+
+### New Features
+* `cat`: Added `--no-headers` support to the `rowskey` subcommand, allowing for more versatile manipulation of CSV data.
+* `describegpt`: Added compatibility for other local Large Language Models (LLMs) such as [Ollama](https://ollama.com) and [Jan](https://jan.ai), broadening the tool's utility in diverse AI environments.
+* `excel`: Introduced new options in the excel command: `--error-format` for better error handling and `--metadata` for short JSON mode, enhancing data parsing and metadata management capabilities.
+* `foreach`: added a `--dry-run` option, allowing users to preview the results of scripts without executing them.
+* `frequency`: New options added such as `--unq-limit` for limiting unique counts; support for negative limits to only show frequencies >= abs(negative limit); and a `--lmt-threshold` option to allow the compilation of comprehensive frequencies below the threshold - all providing more detailed control over frequency analysis.
+* `slice`: Support for negative indices to slice from the end and new JSON output options, offering more flexibility in data slicing.
+* `sqlp`: sqlp now supports single-line comments and includes a special SKIP_INPUT value for more efficient data loading. The Polars engine has also been upgraded to [0.39.2](https://github.com/pola-rs/polars/releases/tag/rs-0.39.2), providing enhanced performance and stability.
+
+### Changes and Optimizations
+* __Performance Enhancements__: Microoptimizations in datefmt and validate functions, and increased default length for --infer-len in sqlp for improved performance.
+* __Dependency Updates__: Numerous updates including bumping Luau, jql-runner, pyo3, and other dependencies to enhance stability and security.
+* __Benchmarks Added__: New performance benchmarks for sqlp vs duckdb included, showcasing the efficiency gains through Polars integration.
+
+### Security and Robustness
+* __Security Fixes__: Updated rustls to fix a specific CVE, and other minor fixes to enhance the security and robustness of network and data processing features.
+* __Bug Fixes__: Various bug fixes including improvements in error formatting in excel and robustness in fetch and fetchpost commands.
+
+### Deprecated Features
+* `fetch` & `fetchpost`: Removal of the jsonxf crate from these commands to streamline JSON processing
+* `reverse`: Eliminate kludgy buffer expansions.
+
+This release not only enhances existing functionalities with added options and support for additional models and formats but also emphasizes performance improvements and robustness with critical updates and optimizations.
+
+---
+
 ### Added
 * `cat`: add `--no-headers` support to rowskey subcommand https://github.com/jqnatividad/qsv/pull/1762
 * `describegpt`: add compatibility for other (local) LLMs (Ollama, Jan, etc.) by @rzmk in https://github.com/jqnatividad/qsv/pull/1761
@@ -47,7 +83,7 @@ load input files directly using table functions (e.g. read_csv(), read_parquet()
 * build(deps): bump anyhow from 1.0.81 to 1.0.82 by @dependabot in https://github.com/jqnatividad/qsv/pull/1733
 * build(deps): bump robinraju/release-downloader from 1.9 to 1.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1734
 * build(deps): bump chrono from 0.4.37 to 0.4.38 by @dependabot in https://github.com/jqnatividad/qsv/pull/1744
-* bump polars from 0.38 to 0.39 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1745
+* bump polars from 0.38 to 0.39 https://github.com/jqnatividad/qsv/pull/1745
 * build(deps): bump polars from 0.39.0 to 0.39.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1746
 * build(deps): bump polars from 0.39.1 to 0.39.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1752
 * build(deps): bump qsv-dateparser from 0.12.0 to 0.12.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1747
@@ -64,7 +100,7 @@ load input files directly using table functions (e.g. read_csv(), read_parquet()
 * bumped MSRV to 1.77.2
 
 ### Fixed
-* Make init_logger more robust by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1717
+* Make init_logger more robust https://github.com/jqnatividad/qsv/pull/1717
 * `count`: empty CSVs count as zero also for polars. Fixes #1741 https://github.com/jqnatividad/qsv/pull/1742
 * `excel`: fix $1682 by adding `--error-format` option https://github.com/jqnatividad/qsv/issues/1689
 * `fetch` & `fetchpost`: more robust JSON response validation https://github.com/jqnatividad/qsv/commit/ebc7287cd929cc23629ee53c7d82e0b8984bc2b0
@@ -74,7 +110,7 @@ load input files directly using table functions (e.g. read_csv(), read_parquet()
 * `deps`: bump rustls from 0.22.3 to 0.22.4 to fix https://nvd.nist.gov/vuln/detail/CVE-2024-32650 https://github.com/jqnatividad/qsv/pull/1758 
 
 ### Removed
-* `fetch` & `fetch post`: remove jsonxf crate; use serde_json to prettify JSON strings by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1727
+* `fetch` & `fetch post`: remove jsonxf crate; use serde_json to prettify JSON strings https://github.com/jqnatividad/qsv/pull/1727
 * `reverse`: remove kludgy expansion of read/write buffers https://github.com/jqnatividad/qsv/commit/46095cdf57f65c5380251c5d59317053ae1f80c3
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.125.0...0.126.0
