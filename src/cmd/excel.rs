@@ -631,7 +631,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rows_iter = range.rows();
 
     let range_start = range.start().unwrap_or((0, 0));
-    let sheet_formulas = workbook.worksheet_formula(&sheet)?;
+
+    // get the sheet formulas only if we need them
+    // as this is an expensive operation
+    let sheet_formulas = if error_format == ErrorFormat::Code {
+        Range::empty()
+    } else {
+        workbook.worksheet_formula(&sheet)?
+    };
 
     // amortize allocations
     let mut record = csv::StringRecord::with_capacity(500, col_count);
