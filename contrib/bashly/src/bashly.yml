@@ -564,7 +564,7 @@ commands:
           - long: --dry-run
             arg: file|boolean
             completions:
-                - <directory>
+                - <file>
           - *no-headers
           - *delimiter
           - *progressbar

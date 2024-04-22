@@ -101,7 +101,7 @@ _qsv_completions() {
       ;;
 
     *'foreach'*'--dry-run')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A directory -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -- "$cur" )
       ;;
 
     *'geocode'*'reverse'*)
