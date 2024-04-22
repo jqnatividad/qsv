@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.126.0] - 2024-04-21
+## [0.126.0] - 2024-04-22
 
 ### Added
 * `cat`: add `--no-headers` support to rowskey subcommand https://github.com/jqnatividad/qsv/pull/1762
@@ -20,9 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `slice`: add support for negative `--index` option values https://github.com/jqnatividad/qsv/pull/1726
 * `slice`: implement `--json` output option https://github.com/jqnatividad/qsv/pull/1729
 * `sqlp`: added support for single-line comments in SQL scripts https://github.com/jqnatividad/qsv/commit/bb52bcee61d8ea980a2ab093315ead0c153517a5
+* `sqlp`: added SKIP_INPUT special value to short-circuit input processing if the user wants to
+load input files directly using table functions (e.g. read_csv(), read_parquet(), etc.) https://github.com/jqnatividad/qsv/commit/fe850adb47f1d7aa7f6c3981e350646e7b0c7476
 * `validate`: add `--valid-output` option https://github.com/jqnatividad/qsv/pull/1730
 * contrib: add sample Bashly completions implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1731
-* `benchmarks`: added `sqlp` vs `duckdb` benchmarks. Right now, `sqlp` is much faster than `duckdb` in most cases (thanks to Polars - see the [latest TPC-H benchmarks](https://pola.rs/posts/benchmarks/)), but we want to make sure that we keep it that way.
+* `benchmarks`: added `sqlp` vs `duckdb` benchmarks. Right now, `sqlp` is faster than `duckdb` in most cases (thanks to Polars - see the [latest TPC-H benchmarks](https://pola.rs/posts/benchmarks/)), but we want to make sure that we keep it that way.
 
 ### Changed
 * `datefmt`: microoptimize formatting https://github.com/jqnatividad/qsv/commit/0ee27e768fdc08b7381094842d22b45940fd0a26
@@ -53,6 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * build(deps): bump serde from 1.0.197 to 1.0.198 by @dependabot in https://github.com/jqnatividad/qsv/pull/1751
 * build(deps): bump rustls from 0.22.3 to 0.22.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1758
 * build(deps): bump simple-expand-tilde from 0.1.4 to 0.1.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1767
+* build(deps): bump serial_test from 3.0.0 to 3.1.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1768
+* build(deps): bump actions/setup-python from 5.0.0 to 5.1.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1769
 * applied select clippy recommendations
 * updated several indirect dependencies
 * added several benchmarks for new/changed commands
@@ -65,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `excel`: fix $1682 by adding `--error-format` option https://github.com/jqnatividad/qsv/issues/1689
 * `fetch` & `fetchpost`: more robust JSON response validation https://github.com/jqnatividad/qsv/commit/ebc7287cd929cc23629ee53c7d82e0b8984bc2b0
 * `slice`: use `write!` macro to get rid of GH Advanced Security lint https://github.com/jqnatividad/qsv/commit/c739097e20d526cb6f49ca69d76fed8b28adc029
+* `sqlp`: fixed docopt defaults that were not being parsed correctly https://github.com/jqnatividad/qsv/commit/fe850adb47f1d7aa7f6c3981e350646e7b0c7476
 * `deps`: bump h2 from 0.4.3 to 0.4.4 to fix HTTP2 Continuation Flood vulnerability https://github.com/jqnatividad/qsv/commit/6af0da27f4e4a0bb6d5563701c07c89ad00f76b8
 * `deps`: bump rustls from 0.22.3 to 0.22.4 to fix https://nvd.nist.gov/vuln/detail/CVE-2024-32650 https://github.com/jqnatividad/qsv/pull/1758 
 
