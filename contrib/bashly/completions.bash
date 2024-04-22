@@ -149,7 +149,7 @@ _qsv_completions() {
       ;;
 
     *'describegpt'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--all --api-key --base-url --description --dictionary --help --json --jsonl --max-tokens --model --output --prompt-file --quiet --tags --timeout --user-agent -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--all --api-key --base-url --description --dictionary --help --json --jsonl --max-tokens --model --ollama --output --prompt-file --quiet --tags --timeout --user-agent -h")" -- "$cur" )
       ;;
 
     *'to'*'postgres'*)

@@ -249,6 +249,7 @@ commands:
                 - <file>
           - long: --base-url
             arg: url
+          - long: --ollama
           - long: --model
             arg: model
           - long: --timeout
