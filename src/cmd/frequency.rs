@@ -3,7 +3,7 @@ Compute a frequency table on CSV data.
 
 The frequency table is formatted as CSV data:
 
-    field,value,count
+    field,value,count,percentage
 
 By default, there is a row for the N most frequent values for each field in the data.
 The order and number of values can be configured with --asc, --limit, --unq-limit
@@ -31,37 +31,50 @@ Usage:
     qsv frequency --help
 
 frequency options:
-    -s, --select <arg>     Select a subset of columns to compute frequencies
-                           for. See 'qsv select --help' for the format
-                           details. This is provided here because piping 'qsv
-                           select' into 'qsv frequency' will disable the use
-                           of indexing.
-    -l, --limit <arg>      Limit the frequency table to the N most common
-                           items. Set to '0' to disable a limit.
-                           If negative, only return values with an occurence
-                           count >= absolute value of the negative limit.
-                           e.g. --limit -2 will only return values with an
-                           occurence count >= 2.
-                           [default: 10]
-    -u, --unq-limit <arg>  If a column has all unique values, limit the
-                           frequency table to a sample of N unique items.
-                           Set to '0' to disable a unique_limit.
-                           [default: 10]
-    --lmt-threshold <arg>  The threshold for which --limit and --unq-limit
-                           will be applied. If the number of unique items
-                           in a column >= threshold, the limits will be applied.
-                           Set to '0' to disable the threshold and always apply limits.
-                           [default: 0]
-    -a, --asc              Sort the frequency tables in ascending order by
-                           count. The default is descending order.
-    --no-nulls             Don't include NULLs in the frequency table.
-    -i, --ignore-case      Ignore case when computing frequencies.
-    -j, --jobs <arg>       The number of jobs to run in parallel.
-                           This works much faster when the given CSV data has
-                           an index already created. Note that a file handle
-                           is opened for each job.
-                           When not set, the number of jobs is set to the
-                           number of CPUs detected.
+    -s, --select <arg>      Select a subset of columns to compute frequencies
+                            for. See 'qsv select --help' for the format
+                            details. This is provided here because piping 'qsv
+                            select' into 'qsv frequency' will disable the use
+                            of indexing.
+    -l, --limit <arg>       Limit the frequency table to the N most common
+                            items. Set to '0' to disable a limit.
+                            If negative, only return values with an occurence
+                            count >= absolute value of the negative limit.
+                            e.g. --limit -2 will only return values with an
+                            occurence count >= 2.
+                            [default: 10]
+    -u, --unq-limit <arg>   If a column has all unique values, limit the
+                            frequency table to a sample of N unique items.
+                            Set to '0' to disable a unique_limit.
+                            [default: 10]
+    --lmt-threshold <arg>   The threshold for which --limit and --unq-limit
+                            will be applied. If the number of unique items
+                            in a column >= threshold, the limits will be applied.
+                            Set to '0' to disable the threshold and always apply limits.
+                            [default: 0]
+    --pct-dec-places <arg>  The number of decimal places to round the percentage to.
+                            If negative, the number of decimal places will be set
+                            automatically to the minimum number of decimal places needed
+                            to represent the percentage accurately, up to the absolute
+                            value of the negative number.
+                            [default: -5]
+    --other-sorted          By default, the "Other" category is placed at the
+                            end of the frequency table for a field. If this is enabled, the
+                            "Other" category will be sorted with the rest of the
+                            values by count.
+    --other-text <arg>      The text to use for the "Other" category. If set to "<NONE>",
+                            the "Other" category will not be included in the frequency table.
+                            [default: Other]
+    -a, --asc               Sort the frequency tables in ascending order by
+                            count. The default is descending order.
+    --no-nulls              Don't include NULLs in the frequency table.
+    -i, --ignore-case       Ignore case when computing frequencies.
+    -j, --jobs <arg>        The number of jobs to run in parallel.
+                            This works much faster when the given CSV data has
+                            an index already created. Note that a file handle
+                            is opened for each job.
+                            When not set, the number of jobs is set to the
+                            number of CPUs detected.
 
 Common options:
     -h, --help             Display this message
@@ -78,6 +91,8 @@ Common options:
 
 use std::{fs, io};
 
+use indicatif::HumanCount;
+use rust_decimal::prelude::*;
 use serde::Deserialize;
 use stats::{merge_all, Frequencies};
 use threadpool::ThreadPool;
@@ -94,19 +109,22 @@ use crate::{
 #[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Deserialize)]
 pub struct Args {
-    pub arg_input:          Option<String>,
-    pub flag_select:        SelectColumns,
-    pub flag_limit:         isize,
-    pub flag_unq_limit:     usize,
-    pub flag_lmt_threshold: usize,
-    pub flag_asc:           bool,
-    pub flag_no_nulls:      bool,
-    pub flag_ignore_case:   bool,
-    pub flag_jobs:          Option<usize>,
-    pub flag_output:        Option<String>,
-    pub flag_no_headers:    bool,
-    pub flag_delimiter:     Option<Delimiter>,
-    pub flag_memcheck:      bool,
+    pub arg_input:           Option<String>,
+    pub flag_select:         SelectColumns,
+    pub flag_limit:          isize,
+    pub flag_unq_limit:      usize,
+    pub flag_lmt_threshold:  usize,
+    pub flag_pct_dec_places: isize,
+    pub flag_other_sorted:   bool,
+    pub flag_other_text:     String,
+    pub flag_asc:            bool,
+    pub flag_no_nulls:       bool,
+    pub flag_ignore_case:    bool,
+    pub flag_jobs:           Option<usize>,
+    pub flag_output:         Option<String>,
+    pub flag_no_headers:     bool,
+    pub flag_delimiter:      Option<Delimiter>,
+    pub flag_memcheck:       bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -127,9 +145,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut header_vec: Vec<u8> = Vec::with_capacity(tables.len());
     let mut buffer = itoa::Buffer::new();
+    let mut pct_decimal: Decimal;
+    let mut final_pct_decimal: Decimal;
+    let mut pct_string: String;
+    let mut pct_scale;
+    let mut current_scale;
+    let abs_dec_places = args.flag_pct_dec_places.abs() as u32;
     let mut row;
 
-    wtr.write_record(vec!["field", "value", "count"])?;
+    wtr.write_record(vec!["field", "value", "count", "percentage"])?;
     let head_ftables = headers.iter().zip(tables);
     for (i, (header, ftab)) in head_ftables.enumerate() {
         header_vec = if rconfig.no_headers {
@@ -137,8 +161,46 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else {
             header.to_vec()
         };
-        for (value, count) in args.counts(&ftab) {
-            row = vec![&*header_vec, &*value, buffer.format(count).as_bytes()];
+
+        let mut sorted_counts: Vec<(Vec<u8>, u64, f64)> = args.counts(&ftab);
+
+        // if not --other_sorted and the first value is "Other (", rotate it to the end
+        if !args.flag_other_sorted && sorted_counts.first().unwrap().0.starts_with(b"Other (") {
+            sorted_counts.rotate_left(1);
+        }
+
+        for (value, count, percentage) in sorted_counts {
+            pct_decimal = Decimal::from_f64(percentage).unwrap_or_default();
+            pct_scale = if args.flag_pct_dec_places < 0 {
+                current_scale = pct_decimal.scale();
+                if current_scale > abs_dec_places {
+                    current_scale
+                } else {
+                    abs_dec_places
+                }
+            } else {
+                abs_dec_places
+            };
+            final_pct_decimal = pct_decimal
+                .round_dp_with_strategy(
+                    pct_scale,
+                    rust_decimal::RoundingStrategy::MidpointAwayFromZero,
+                )
+                .normalize();
+            pct_string = if final_pct_decimal.fract().to_string().len() > abs_dec_places as usize {
+                final_pct_decimal
+                    .round_dp_with_strategy(abs_dec_places, RoundingStrategy::MidpointAwayFromZero)
+                    .normalize()
+                    .to_string()
+            } else {
+                final_pct_decimal.to_string()
+            };
+            row = vec![
+                &*header_vec,
+                &*value,
+                buffer.format(count).as_bytes(),
+                pct_string.as_bytes(),
+            ];
             wtr.write_record(row)?;
         }
     }
@@ -157,23 +219,26 @@ impl Args {
             .select(self.flag_select.clone())
     }
 
-    fn counts(&self, ftab: &FTable) -> Vec<(ByteString, u64)> {
-        let mut counts = if self.flag_asc {
-            ftab.least_frequent()
+    #[inline]
+    fn counts(&self, ftab: &FTable) -> Vec<(ByteString, u64, f64)> {
+        let (mut counts, total_count) = if self.flag_asc {
+            // parallel sort in ascending order - least frequent values first
+            ftab.par_frequent(true)
         } else {
-            ftab.most_frequent()
+            // parallel sort in descending order - most frequent values first
+            ftab.par_frequent(false)
         };
 
         // check if we need to apply limits
-        let counts_len = counts.len();
-        if self.flag_lmt_threshold == 0 || self.flag_lmt_threshold >= counts_len {
+        let unique_counts_len = counts.len();
+        if self.flag_lmt_threshold == 0 || self.flag_lmt_threshold >= unique_counts_len {
             // check if the column has all unique values
             // by checking if counts length is equal to ftable length
             let pos_limit = self.flag_limit.unsigned_abs();
             let unique_limited = if self.flag_limit > 0
                 && self.flag_unq_limit != pos_limit
                 && self.flag_unq_limit > 0
-                && counts_len == ftab.len()
+                && unique_counts_len == ftab.len()
             {
                 counts = counts.into_iter().take(self.flag_unq_limit).collect();
                 true
@@ -193,16 +258,41 @@ impl Args {
             }
         }
 
-        counts
+        const NULL_VAL: &[u8] = b"(NULL)";
+        let mut pct_sum = 0.0_f64;
+        let mut pct = 0.0_f64;
+        let mut count_sum = 0_u64;
+
+        let mut counts_final: Vec<(Vec<u8>, u64, f64)> = counts
             .into_iter()
             .map(|(bs, c)| {
+                count_sum += c;
+                pct = (c as f64 * 100.0_f64) / total_count as f64;
+                pct_sum += pct;
                 if b"" == &**bs {
-                    (b"(NULL)"[..].to_vec(), c)
+                    (NULL_VAL.to_vec(), c, pct)
                 } else {
-                    (bs.clone(), c)
+                    (bs.clone(), c, pct)
                 }
             })
-            .collect()
+            .collect();
+
+        let other_count = total_count - count_sum;
+        if other_count > 0 && self.flag_other_text != "<NONE>" {
+            let other_unique_count = unique_counts_len - counts_final.len();
+            counts_final.push((
+                format!(
+                    "{} ({})",
+                    self.flag_other_text,
+                    HumanCount(other_unique_count as u64)
+                )
+                .as_bytes()
+                .to_vec(),
+                other_count,
+                100.0_f64 - pct_sum,
+            ));
+        }
+        counts_final
     }
 
     pub fn sequential_ftables(&self) -> CliResult<(Headers, FTables)> {
