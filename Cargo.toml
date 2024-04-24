@@ -163,7 +163,8 @@ pyo3 = { version = "0.21", features = [
 ], optional = true }
 qsv-dateparser = "0.12"
 qsv_docopt = "1.7"
-qsv-stats = "0.15"
+qsv-stats = "0.16"
+# qsv-stats = { path = "/Users/joelnatividad/Documents/GitHub/rust-stats"}
 qsv_currency = { version = "0.6", optional = true }
 qsv-sniffer = { version = "0.10", default-features = false, features = [
     "runtime-dispatch-simd",
