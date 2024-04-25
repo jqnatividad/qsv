@@ -150,7 +150,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut pct_string: String;
     let mut pct_scale;
     let mut current_scale;
-    let abs_dec_places = args.flag_pct_dec_places.abs() as u32;
+    let abs_dec_places = args.flag_pct_dec_places.unsigned_abs() as u32;
     let mut row;
 
     wtr.write_record(vec!["field", "value", "count", "percentage"])?;
