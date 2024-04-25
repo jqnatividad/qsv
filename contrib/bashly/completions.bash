@@ -197,7 +197,7 @@ _qsv_completions() {
       ;;
 
     *'frequency'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--asc --delimiter --help --ignore-case --jobs --limit --lmt-threshold --memcheck --no-headers --no-nulls --output --select --unq-limit -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--asc --delimiter --help --ignore-case --jobs --limit --lmt-threshold --memcheck --no-headers --no-nulls --other-sorted --other-text --output --pct-dec-places --select --unq-limit -h")" -- "$cur" )
       ;;
 
     *'partition'*)
