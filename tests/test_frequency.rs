@@ -135,6 +135,40 @@ fn frequency_limit() {
 }
 
 #[test]
+fn frequency_pct_dec_places() {
+    let (wrk, mut cmd) = setup("frequency_pct_dec_places");
+    cmd.args(["--limit", "1"]).args(["--pct-dec-places", "3"]);
+
+    let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    got.sort();
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["h1", "Other (3)", "3", "42.857"],
+        svec!["h1", "a", "4", "57.143"],
+        svec!["h2", "Other (3)", "4", "57.143"],
+        svec!["h2", "z", "3", "42.857"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn frequency_neg_pct_dec_places() {
+    let (wrk, mut cmd) = setup("frequency_neg_pct_dec_places");
+    cmd.args(["--limit", "1"]).args(["--pct-dec-places", "-4"]);
+
+    let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    got.sort();
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["h1", "Other (3)", "3", "42.8571"],
+        svec!["h1", "a", "4", "57.1429"],
+        svec!["h2", "Other (3)", "4", "57.1429"],
+        svec!["h2", "z", "3", "42.8571"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn frequency_limit_no_other() {
     let (wrk, mut cmd) = setup("frequency_limit_no_other");
     cmd.args(["--limit", "1"]).args(["--other-text", "<NONE>"]);
