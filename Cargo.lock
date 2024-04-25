@@ -4351,9 +4351,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-stats"
-version = "0.15.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e876921b70876a88becc5f37c1e5f49ef39da0fd180dc59b53e4e6d527eeef01"
+checksum = "4166603b53029b8bd192085044fe206ac59fafa375481ce5a63e6653e25b5c62"
 dependencies = [
  "ahash 0.8.11",
  "num-traits",
