@@ -6,6 +6,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.127.0] - 2024-04-25
+
+# 📊 Enhanced Frequency Analysis 📊 #
+This a quick release adding several `frequency` enhancements for more detailed frequency analysis. The `frequency` command now includes a percentage column, calculates `other` values, and supports limiting unique counts and negative limits.
+These options provides additional context for qsv-pro and `describegpt` so their metadata inferences are more accurate and comprehensive.
+
+Previously, for a 775-row CSV file containing one column named `state` with entries for all 50 states, `frequency` only showed:
+
+```
+field,value,count
+state,NY,100
+state,NJ,70
+state,CA,60
+state,MA,55
+state,FL,45
+state,TX,43
+state,NM,40
+state,AZ,39
+state,NV,38
+state,MI,35
+```
+
+Now, there's a new `percentage` column and `other` values calculation, both of which have configurable options:
+
+```
+field, value, count, percentage
+state, NY, 100, 12.90
+state, NJ, 70, 9.03
+state, CA, 60, 7.74
+state, MA, 55, 7.10
+state, FL, 45, 5.81
+state, TX, 43, 5.55
+state, NM, 40, 5.16
+state, AZ, 39, 5.03
+state, NV, 38, 4.90
+state, MI, 35, 4.52
+state, Other (40), 250, 32.26
+```
+
+This release is also out of cycle to address a big performance regression in the `excel` command caused by unnecessary formula info retrieval for the `--error-format` option introduced in 0.126.0. This has been fixed, and the `excel` command is now back to its speedy self.
+
+---
+
+### Added
+* `frequency`: added percentage column;  `other` values calculation, implementing https://github.com/jqnatividad/qsv/issues/1774 https://github.com/jqnatividad/qsv/pull/1775
+* `benchmarks`: added new `frequency` and `excel` benchmarks https://github.com/jqnatividad/qsv/commit/b83ad3aae1cdf9a1750201cbf9b3ccd4ac3a4192
+
+### Changed
+* contrib(bashly): update completions.bash for qsv v0.126.0 by @rzmk in https://github.com/jqnatividad/qsv/pull/1771
+* build(deps): bump mimalloc from 0.1.39 to 0.1.41 by @dependabot in https://github.com/jqnatividad/qsv/pull/1772
+* build(deps): bump qsv-stats from 0.14.0 to 0.15.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1773
+* updated several indirect dependencies
+* applied select clippy recommendations
+
+### Fixed
+* `excel`: fixed performance regression because qsv was unnecessarily getting formula info (an expensive operation) for `--error-format` option even when not required https://github.com/jqnatividad/qsv/commit/772af3420c44c864e06cd2cb61606900bff17947
+* renamed 0.126.0 sqlp_vs_duckdb benchmark results so they're not to each other for easy direct comparison https://github.com/jqnatividad/qsv/commit/7bcd59e301965b9e8737a9230d1236e8d34ab4bf
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.126.0...0.127.0
+
 ## [0.126.0] - 2024-04-22
 
 # 🤖 Expanded Metadata Inferencing 🤖 #
