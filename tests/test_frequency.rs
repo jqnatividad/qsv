@@ -237,6 +237,40 @@ fn frequency_asc_ignorecase() {
 }
 
 #[test]
+fn frequency_custom_other_text() {
+    let (wrk, mut cmd) = setup("frequency_custom_other_text");
+    cmd.args(["--limit", "-4"])
+        .args(["--lmt-threshold", "4"])
+        .args(["--other-text", "其他"]);
+
+    let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    got.sort();
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["h1", "a", "4", "57.14286"],
+        svec!["h1", "其他 (3)", "3", "42.85714"],
+        svec!["h2", "其他 (4)", "7", "100"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn frequency_other_text_none() {
+    let (wrk, mut cmd) = setup("frequency_other_text_none");
+    cmd.args(["--limit", "-4"])
+        .args(["--lmt-threshold", "4"])
+        .args(["--other-text", "<NONE>"]);
+
+    let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    got.sort();
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["h1", "a", "4", "57.14286"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn frequency_select() {
     let (wrk, mut cmd) = setup("frequency_select");
     cmd.args(["--limit", "0"]).args(["--select", "h2"]);
