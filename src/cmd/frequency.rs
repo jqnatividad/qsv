@@ -221,6 +221,8 @@ impl Args {
 
     #[inline]
     fn counts(&self, ftab: &FTable) -> Vec<(ByteString, u64, f64)> {
+        const NULL_VAL: &[u8] = b"(NULL)";
+
         let (mut counts, total_count) = if self.flag_asc {
             // parallel sort in ascending order - least frequent values first
             ftab.par_frequent(true)
@@ -258,7 +260,6 @@ impl Args {
             }
         }
 
-        const NULL_VAL: &[u8] = b"(NULL)";
         let mut pct_sum = 0.0_f64;
         let mut pct = 0.0_f64;
         let mut count_sum = 0_u64;
