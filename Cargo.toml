@@ -221,7 +221,8 @@ vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
 
 [target.'cfg(not(target_arch = "aarch64"))'.dependencies]
-simdutf8 = "0.1"
+simdutf8    = "0.1"
+parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
 
 # use SIMD on aarch64 (Apple Silicon, Raspberry Pi 4, etc.)
 [target.'cfg(target_arch = "aarch64")'.dependencies]
@@ -249,8 +250,8 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "fdc8e25" }
 # however, it's not released yet, so we'll keep using patch.crates-io to get the latest
 jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "6cf8232" }
 # use unreleased version of calamine with fixes
- calamine = { git = "https://github.com/tafia/calamine", rev = "58c8ba2" }
- 
+calamine = { git = "https://github.com/tafia/calamine", rev = "58c8ba2" }
+
 [features]
 default = ["mimalloc"]
 distrib_features = [
