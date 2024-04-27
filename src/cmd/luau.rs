@@ -20,7 +20,7 @@ Some usage examples:
   Sum numeric columns 'a' and 'b' and call new column 'c'
   $ qsv luau map c "a + b"
   $ qsv luau map c "col.a + col['b']"
-  $ qsv luau map c "col[1] + col[2]"
+  $ qsv luau map c --colindex "col[1] + col[2]"
 
   There is some magic in the previous example as 'a' and 'b' are passed in
   as strings (not numbers), but Luau still manages to add them up.
