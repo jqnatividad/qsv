@@ -164,7 +164,6 @@ pyo3 = { version = "0.21", features = [
 qsv-dateparser = "0.12"
 qsv_docopt = "1.7"
 qsv-stats = "0.16"
-# qsv-stats = { path = "/Users/joelnatividad/Documents/GitHub/rust-stats"}
 qsv_currency = { version = "0.6", optional = true }
 qsv-sniffer = { version = "0.10", default-features = false, features = [
     "runtime-dispatch-simd",
@@ -250,7 +249,7 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "fdc8e25" }
 # however, it's not released yet, so we'll keep using patch.crates-io to get the latest
 jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "6cf8232" }
 # use unreleased version of calamine with fixes
- calamine = { git = "https://github.com/tafia/calamine", rev = "aaf297e" }
+ calamine = { git = "https://github.com/tafia/calamine", rev = "58c8ba2" }
  
 [features]
 default = ["mimalloc"]
