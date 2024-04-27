@@ -643,28 +643,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // amortize allocations
     let mut record = csv::StringRecord::with_capacity(500, col_count);
     let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
-    let mut col_name: String;
 
-    // process the first row as the header row
+    // get headers
     info!("exporting sheet ({sheet})... processing first row as header...");
-    let first_row = match rows_iter.next() {
-        Some(first_row) => first_row,
-        None => &[Data::Empty],
-    };
-    for cell in first_row {
-        col_name = match *cell {
-            Data::String(ref s) => s.to_string(),
-            Data::Empty => String::new(),
-            Data::Error(ref _e) => String::new(),
-            Data::Int(ref i) => i.to_string(),
-            Data::Float(ref f) => f.to_string(),
-            Data::DateTime(ref exceldatetime) => exceldatetime.to_string(),
-            Data::Bool(ref b) => b.to_string(),
-            Data::DateTimeIso(ref dt) => dt.to_string(),
-            Data::DurationIso(ref d) => d.to_string(),
-        };
-        record.push_field(&col_name);
+    let headers = range.headers().unwrap_or_default();
+    for header in headers {
+        record.push_field(&header);
     }
+    rows_iter.next(); // we processed the header row
 
     let trim = args.flag_trim;
 
