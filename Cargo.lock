@@ -342,7 +342,7 @@ dependencies = [
  "arrow-schema",
  "chrono",
  "half",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "num",
 ]
 
@@ -415,7 +415,7 @@ dependencies = [
  "arrow-data",
  "arrow-schema",
  "half",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
 ]
 
 [[package]]
@@ -850,7 +850,7 @@ dependencies = [
  "cached_proc_macro",
  "cached_proc_macro_types",
  "directories",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "instant",
  "once_cell",
  "r2d2",
@@ -1432,7 +1432,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "978747c1d849a7d2ee5e8adc0159961c48fb7e5db2f06af6723b80123bb53856"
 dependencies = [
  "cfg-if",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "lock_api",
  "once_cell",
  "parking_lot_core 0.9.10",
@@ -2190,7 +2190,7 @@ version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8588661a8607108a5ca69cab034063441a0413a0b041c13618a7dd348021ef6f"
 dependencies = [
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "serde",
 ]
 
@@ -2205,9 +2205,9 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.14.3"
+version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "290f1a1d9242c78d09ce40a5e87e7554ee637af1351968159f4952f028f75604"
+checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
 dependencies = [
  "ahash 0.8.11",
  "allocator-api2",
@@ -2220,7 +2220,7 @@ version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8094feaf31ff591f651a2664fb9cfd92bba7a60ce3197265e9482ebe753c8f7"
 dependencies = [
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
 ]
 
 [[package]]
@@ -2429,7 +2429,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "168fb715dda47215e360912c096649d23d58bf392ac62f73919e831745e40f26"
 dependencies = [
  "equivalent",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
 ]
 
 [[package]]
@@ -3637,7 +3637,7 @@ dependencies = [
  "foreign_vec",
  "futures",
  "getrandom",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "itoa",
  "itoap",
  "lz4",
@@ -3693,7 +3693,7 @@ dependencies = [
  "chrono-tz 0.8.6",
  "comfy-table",
  "either",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "indexmap",
  "num-traits",
  "once_cell",
@@ -3773,7 +3773,7 @@ dependencies = [
  "ahash 0.8.11",
  "chrono",
  "fallible-streaming-iterator",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "indexmap",
  "itoa",
  "num-traits",
@@ -3822,7 +3822,7 @@ dependencies = [
  "chrono",
  "chrono-tz 0.8.6",
  "either",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "hex",
  "indexmap",
  "jsonpath_lib_polars_vendor",
@@ -3877,7 +3877,7 @@ dependencies = [
  "crossbeam-channel",
  "crossbeam-queue",
  "enum_dispatch",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "num-traits",
  "polars-arrow",
  "polars-compute",
@@ -3902,7 +3902,7 @@ dependencies = [
  "ahash 0.8.11",
  "bytemuck",
  "chrono-tz 0.8.6",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "once_cell",
  "percent-encoding",
  "polars-arrow",
@@ -3979,7 +3979,7 @@ checksum = "c760b6c698cfe2fbbbd93d6cfb408db14ececfe1d92445dae2229ce1b5b21ae8"
 dependencies = [
  "ahash 0.8.11",
  "bytemuck",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "indexmap",
  "num-traits",
  "once_cell",
@@ -4260,7 +4260,7 @@ dependencies = [
  "governor",
  "grex",
  "gzp",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "indexmap",
  "indicatif",
  "itertools",
@@ -4345,7 +4345,7 @@ dependencies = [
  "bytecount",
  "csv",
  "csv-core",
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "memchr",
  "qsv-dateparser",
  "regex",
@@ -6207,7 +6207,7 @@ version = "0.16.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "471d1c1645d361eb782a1650b1786a8fb58dd625e681a04c09f5ff7c8764a7b0"
 dependencies = [
- "hashbrown 0.14.3",
+ "hashbrown 0.14.5",
  "once_cell",
 ]
 
