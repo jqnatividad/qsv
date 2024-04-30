@@ -33,12 +33,17 @@ input options:
     --quote <arg>            The quote character to use. [default: "]
     --escape <arg>           The escape character to use. When not specified,
                              quotes are escaped by doubling them.
-    --no-quoting             Disable quoting completely. 
-                             Otherwise, input uses csv::QuoteStyle::NonNumeric,
-                             which puts quotes around all fields that are non-numeric.
-                             Namely, when writing a field that doesn't parse as a valid
-                             float or integer, quotes will be used.
-                             This makes CSV files more portable.
+    --no-quoting             Disable quoting completely when reading CSV data.
+    --quote-style <arg>      The quoting style to use when writing CSV data.
+                             Possible values: all, necessary, nonnumeric and never.
+                              All: Quotes all fields.
+                              Necessary: Quotes fields only when necessary - when fields
+                               contain a quote, delimiter or record terminator. 
+                               Quotes are also necessary when writing an empty record 
+                               (which is indistinguishable from a record with one empty field).
+                              NonNumeric: Quotes all fields that are non-numeric.
+                              Never: Never write quotes. Even if it produces invalid CSV.
+                             [default: necessary]
     --skip-lines <arg>       The number of preamble lines to skip.
     --auto-skip              Sniffs a CSV for preamble lines and automatically
                              skips them. Takes precedence over --skip-lines option.
@@ -90,6 +95,7 @@ struct Args {
     flag_quote:           Delimiter,
     flag_escape:          Option<Delimiter>,
     flag_no_quoting:      bool,
+    flag_quote_style:     String,
     flag_skip_lines:      Option<u64>,
     flag_skip_lastlines:  Option<u64>,
     flag_auto_skip:       bool,
@@ -135,16 +141,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_auto_skip {
         std::env::remove_var("QSV_SNIFF_PREAMBLE");
     }
-    let wconfig = Config::new(&args.flag_output);
+    let mut wconfig = Config::new(&args.flag_output);
 
     if let Some(escape) = args.flag_escape {
         rconfig = rconfig.escape(Some(escape.as_byte())).double_quote(false);
     }
     if args.flag_no_quoting {
         rconfig = rconfig.quoting(false);
-    } else {
-        rconfig = rconfig.quote_style(csv::QuoteStyle::NonNumeric);
     }
+    wconfig = wconfig.quote_style(match args.flag_quote_style.as_str() {
+        "necessary" => csv::QuoteStyle::Necessary,
+        "all" => csv::QuoteStyle::Always,
+        "nonnumeric" => csv::QuoteStyle::NonNumeric,
+        "never" => csv::QuoteStyle::Never,
+        _ => {
+            return fail_incorrectusage_clierror!(
+                "Invalid --quote-style option: {}. Valid values: all, necessary, nonnumeric, \
+                 never.",
+                args.flag_quote_style
+            );
+        },
+    });
+
     if args.flag_auto_skip || args.flag_skip_lines.is_some() || args.flag_skip_lastlines.is_some() {
         rconfig = rconfig.flexible(true);
     }

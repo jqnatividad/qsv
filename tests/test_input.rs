@@ -70,6 +70,76 @@ fn test_input_autoskip() {
 }
 
 #[test]
+fn test_input_quotestyle_nonnumeric() {
+    let wrk = Workdir::new("input_quotestyle_nonnumeric");
+    wrk.create(
+        "testdata.csv",
+        vec![
+            svec!["column1", "float column", "int column", "description"],
+            svec!["a", "1.0", "1", "this is a string"],
+            svec!["c", "3.5", "3", "this is another string"],
+            svec!["e", "3.14", "42", "this is a third string"],
+        ],
+    );
+    let mut cmd = wrk.command("input");
+    cmd.args(["--quote-style", "nonnumeric"])
+        .arg("testdata.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#""column1","float column","int column","description"
+"a",1.0,1,"this is a string"
+"c",3.5,3,"this is another string"
+"e",3.14,42,"this is a third string""#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn test_input_quotestyle_necessary() {
+    let wrk = Workdir::new("input_quotestyle_necessary");
+    wrk.create(
+        "testdata.csv",
+        vec![
+            svec!["column1", "float column", "int column", "description"],
+            svec!["a", "1.0", "1", "1,234,5678 - number with commas"],
+            svec!["c", "3.5", "3", "this is another string"],
+            svec!["e", "3.14", "42", "this is a third string"],
+        ],
+    );
+    let mut cmd = wrk.command("input");
+    cmd.args(["--quote-style", "necessary"]).arg("testdata.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"column1,float column,int column,description
+a,1.0,1,"1,234,5678 - number with commas"
+c,3.5,3,this is another string
+e,3.14,42,this is a third string"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn test_input_quotestyle_all() {
+    let wrk = Workdir::new("input_quotestyle_all");
+    wrk.create(
+        "testdata.csv",
+        vec![
+            svec!["column1", "float column", "int column", "description"],
+            svec!["a", "1.0", "1", "1,234,5678 - number with commas"],
+            svec!["c", "3.5", "3", "this is another string"],
+            svec!["e", "3.14", "42", "this is a third string"],
+        ],
+    );
+    let mut cmd = wrk.command("input");
+    cmd.args(["--quote-style", "all"]).arg("testdata.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#""column1","float column","int column","description"
+"a","1.0","1","1,234,5678 - number with commas"
+"c","3.5","3","this is another string"
+"e","3.14","42","this is a third string""#;
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn test_input_skip_one_line() {
     let wrk = Workdir::new("input_skip_one_line");
     wrk.create(
