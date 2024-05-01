@@ -31,11 +31,14 @@ search options:
     -f, --flag <column>    If given, the command will not filter rows
                            but will instead flag the found rows in a new
                            column named <column>, with the row numbers
-                           of the matched rows.
+                           of the matched rows and 0 for the non-matched rows.
     -q, --quick            Return on first match with an exitcode of 0, returning
                            the row number of the first match to stderr.
                            Return exit code 1 if no match is found.
                            No output is produced.
+    --preview-match <arg>  Preview the first <arg> matches or all the matches found in
+                           <arg> milliseconds, whichever occurs first. Returns the preview
+                           to stderr. Output is still written to stdout or --output as usual.
     -c, --count            Return number of matches to stderr.
     --size-limit <mb>      Set the approximate size limit (MB) of the compiled
                            regular expression. If the compiled expression exceeds this 
@@ -87,6 +90,7 @@ struct Args {
     flag_size_limit:     usize,
     flag_dfa_size_limit: usize,
     flag_quick:          bool,
+    flag_preview_match:  Option<usize>,
     flag_count:          bool,
     flag_progressbar:    bool,
     flag_quiet:          bool,
@@ -148,9 +152,76 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut row_ctr: u64 = 0;
     let mut m;
     let mut buffer = itoa::Buffer::new();
+    let invert_match = args.flag_invert_match;
+    let quick = args.flag_quick;
 
     #[allow(unused_assignments)]
     let mut matched_rows = String::with_capacity(20); // to save on allocs
+
+    // if preview_match is set, we do an initial loop for the
+    // first N matches or all the matches found in N milliseconds
+    if let Some(preview_match) = args.flag_preview_match {
+        // create a buffered stderr writer
+        let mut stderr_wtr = csv::WriterBuilder::new()
+            .buffer_capacity(8192)
+            .from_writer(std::io::stderr());
+
+        if !rconfig.no_headers && !args.flag_quick {
+            stderr_wtr.write_record(&headers)?;
+        }
+
+        let mut preview_match_ctr = 0;
+        let preview_timeout = std::time::Duration::from_millis(preview_match as u64);
+        let start_time = std::time::Instant::now();
+        while rdr.read_byte_record(&mut record)? {
+            row_ctr += 1;
+            m = sel.select(&record).any(|f| pattern.is_match(f));
+            if invert_match {
+                m = !m;
+            }
+            if m {
+                preview_match_ctr += 1;
+                if quick {
+                    break;
+                }
+                if preview_match_ctr <= preview_match {
+                    stderr_wtr.write_record(&record)?;
+                    wtr.write_byte_record(&record)?;
+                }
+                if preview_match_ctr >= preview_match || start_time.elapsed() > preview_timeout {
+                    break;
+                }
+            }
+
+            if flag {
+                flag_rowi += 1;
+                record.push_field(if m {
+                    buffer.format(flag_rowi).clone_into(&mut matched_rows);
+                    matched_rows.as_bytes()
+                } else {
+                    b"0"
+                });
+                wtr.write_byte_record(&record)?;
+            } else if m {
+                wtr.write_byte_record(&record)?;
+            }
+        }
+        match_ctr = preview_match_ctr as u64;
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
+        if show_progress {
+            progress.inc(row_ctr);
+        }
+        stderr_wtr.flush()?;
+        if !args.flag_quiet {
+            eprintln!(
+                "Previewed {} matches in {} initial records in {} ms.",
+                preview_match_ctr,
+                row_ctr,
+                start_time.elapsed().as_millis()
+            );
+        }
+    }
+
     while rdr.read_byte_record(&mut record)? {
         row_ctr += 1;
         #[cfg(any(feature = "feature_capable", feature = "lite"))]
@@ -158,12 +229,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             progress.inc(1);
         }
         m = sel.select(&record).any(|f| pattern.is_match(f));
-        if args.flag_invert_match {
+        if invert_match {
             m = !m;
         }
         if m {
             match_ctr += 1;
-            if args.flag_quick {
+            if quick {
                 break;
             }
         }

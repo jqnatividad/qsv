@@ -461,3 +461,38 @@ fn search_flag_invert_match_count() {
 
     wrk.assert_success(&mut cmd);
 }
+
+#[test]
+fn search_preview() {
+    let wrk = Workdir::new("search_preview");
+
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("search");
+    cmd.arg("Beacon Hill")
+        .arg(test_file)
+        .args(["--preview-match", "2"]);
+
+    let preview = wrk.output_stderr(&mut cmd);
+    let expected_preview = r#"case_enquiry_id,open_dt,target_dt,closed_dt,ontime,case_status,closure_reason,case_title,subject,reason,type,queue,department,submittedphoto,closedphoto,location,fire_district,pwd_district,city_council_district,police_district,neighborhood,neighborhood_services_district,ward,precinct,location_street_name,location_zipcode,latitude,longitude,source
+101004113298,2022-01-01 00:16:00,2022-04-01 00:16:06,2022-01-10 08:42:23,ONTIME,Closed,Case Closed. Closed date : Mon Jan 10 08:42:23 EST 2022 Resolved No Cause 1/10/22 ,SCHEDULED Unsatisfactory Utilities - Electrical  Plumbing,Inspectional Services,Housing,Unsatisfactory Utilities - Electrical  Plumbing,ISD_Housing (INTERNAL),ISD,,,47 W Cedar St  Boston  MA  02114,3,1B,8,A1,Beacon Hill,14,Ward 5,0504,47 W Cedar St,02114,42.3594,-71.07,Constituent Call
+101004141354,2022-01-20 08:07:49,2022-01-21 08:30:00,2022-01-20 08:45:03,ONTIME,Closed,Case Closed. Closed date : Thu Jan 20 08:45:03 EST 2022 Noted ,CE Collection,Public Works Department,Street Cleaning,CE Collection,PWDx_District 1B: North End,PWDx,,,21-23 Temple St  Boston  MA  02114,3,1B,1,A1,Beacon Hill,3,Ward 3,0306,21-23 Temple St,02114,42.3606,-71.0638,City Worker App
+Previewed 2 matches in 8 initial records in 0 ms.
+"#;
+    assert_eq!(preview, expected_preview);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["case_enquiry_id", "open_dt", "target_dt", "closed_dt", "ontime", "case_status", "closure_reason", "case_title", "subject", "reason", "type", "queue", "department", "submittedphoto", "closedphoto", "location", "fire_district", "pwd_district", "city_council_district", "police_district", "neighborhood", "neighborhood_services_district", "ward", "precinct", "location_street_name", "location_zipcode", "latitude", "longitude", "source"], 
+        svec!["101004113298", "2022-01-01 00:16:00", "2022-04-01 00:16:06", "2022-01-10 08:42:23", "ONTIME", "Closed", "Case Closed. Closed date : Mon Jan 10 08:42:23 EST 2022 Resolved No Cause 1/10/22 ", "SCHEDULED Unsatisfactory Utilities - Electrical  Plumbing", "Inspectional Services", "Housing", "Unsatisfactory Utilities - Electrical  Plumbing", "ISD_Housing (INTERNAL)", "ISD", "", "", "47 W Cedar St  Boston  MA  02114", "3", "1B", "8", "A1", "Beacon Hill", "14", "Ward 5", "0504", "47 W Cedar St", "02114", "42.3594", "-71.07", "Constituent Call"], 
+        svec!["101004113298", "2022-01-01 00:16:00", "2022-04-01 00:16:06", "2022-01-10 08:42:23", "ONTIME", "Closed", "Case Closed. Closed date : Mon Jan 10 08:42:23 EST 2022 Resolved No Cause 1/10/22 ", "SCHEDULED Unsatisfactory Utilities - Electrical  Plumbing", "Inspectional Services", "Housing", "Unsatisfactory Utilities - Electrical  Plumbing", "ISD_Housing (INTERNAL)", "ISD", "", "", "47 W Cedar St  Boston  MA  02114", "3", "1B", "8", "A1", "Beacon Hill", "14", "Ward 5", "0504", "47 W Cedar St", "02114", "42.3594", "-71.07", "Constituent Call"],
+        svec!["101004141354", "2022-01-20 08:07:49", "2022-01-21 08:30:00", "2022-01-20 08:45:03", "ONTIME", "Closed", "Case Closed. Closed date : Thu Jan 20 08:45:03 EST 2022 Noted ", "CE Collection", "Public Works Department", "Street Cleaning", "CE Collection", "PWDx_District 1B: North End", "PWDx", "", "", "21-23 Temple St  Boston  MA  02114", "3", "1B", "1", "A1", "Beacon Hill", "3", "Ward 3", "0306", "21-23 Temple St", "02114", "42.3606", "-71.0638", "City Worker App"], 
+        svec!["101004141367", "2022-01-20 08:15:45", "2022-01-21 08:30:00", "2022-01-20 08:45:12", "ONTIME", "Closed", "Case Closed. Closed date : Thu Jan 20 08:45:12 EST 2022 Noted ", "CE Collection", "Public Works Department", "Street Cleaning", "CE Collection", "PWDx_District 1B: North End", "PWDx", "", "", "12 Derne St  Boston  MA  02114", "3", "1B", "1", "A1", "Beacon Hill", "3", "Ward 3", "0306", "12 Derne St", "02114", "42.3596", "-71.0634", "City Worker App"], 
+        svec!["101004113348", "2022-01-01 06:46:29", "2022-01-05 08:30:00", "2022-01-01 15:10:16", "ONTIME", "Closed", "Case Closed. Closed date : Sat Jan 01 15:10:16 EST 2022 Noted Trash bags sent in for collection. No evidence or code violations found at this time  ", "Improper Storage of Trash (Barrels)", "Public Works Department", "Code Enforcement", "Improper Storage of Trash (Barrels)", "PWDx_Code Enforcement", "PWDx", "https://311.boston.gov/media/boston/report/photos/61d03f0d05bbcf180c2965fd/report.jpg", "", "14 S Russell St  Boston  MA  02114", "3", "1B", "1", "A1", "Beacon Hill", "3", "Ward 3", "0306", "14 S Russell St", "02114", "42.3607", "-71.0659", "Citizens Connect App"], 
+        svec!["101004113431", "2022-01-01 10:35:45", "2022-01-05 08:30:00", "2022-01-01 14:59:41", "ONTIME", "Closed", "Case Closed. Closed date : Sat Jan 01 14:59:41 EST 2022 Noted Bags sent in for collection. Ticket issued  ", "Improper Storage of Trash (Barrels)", "Public Works Department", "Code Enforcement", "Improper Storage of Trash (Barrels)", "PWDx_Code Enforcement", "PWDx", "https://311.boston.gov/media/boston/report/photos/61d074c005bbcf180c298048/report.jpg", "", "40 Anderson St  Boston  MA  02114", "3", "1B", "8", "A1", "Beacon Hill", "14", "Ward 5", "0504", "40 Anderson St", "02114", "42.3598", "-71.0676", "Citizens Connect App"], 
+        svec!["101004113717", "2022-01-01 21:11:00", "2022-01-04 08:30:00", "2022-01-04 09:30:03", "OVERDUE", "Closed", "Case Closed. Closed date : 2022-01-04 09:30:03.91 Case Noted Dear Constituent     NGRID is aware of the broken gate and will send a crew to repair.    We are waiting on there schedule to do so.    Regards   Rich DiMarzo  781-853-9016 ", "Request for Pothole Repair", "Public Works Department", "Highway Maintenance", "Request for Pothole Repair", "PWDx_Contractor Complaints", "PWDx", "https://311.boston.gov/media/boston/report/photos/61d109cf05bbcf180c29c167/Pothole_1.jpg", "", "INTERSECTION of Charles River Plz & Cambridge St  Boston  MA  ", "3", "1B", "7", "A1", "Beacon Hill", "3", "3", "0305", "INTERSECTION Charles River Plz & Cambridge St", "", "42.3594", "-71.0587", "Citizens Connect App"], 
+        svec!["101004115066", "2022-01-03 15:51:00", "2022-01-04 15:51:30", "", "OVERDUE", "Open", " ", "Sidewalk Repair (Make Safe)", "Public Works Department", "Highway Maintenance", "Sidewalk Repair (Make Safe)", "PWDx_Highway Construction", "PWDx", "https://311.boston.gov/media/boston/report/photos/61d361c905bbcf180c2b1dd3/report.jpg", "", "64 Anderson St  Boston  MA  02114", "3", "1B", "8", "A1", "Beacon Hill", "14", "Ward 5", "0503", "64 Anderson St", "02114", "42.359", "-71.0676", "Citizens Connect App"],
+    ];
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
