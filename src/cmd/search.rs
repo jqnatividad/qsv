@@ -38,7 +38,7 @@ search options:
                            No output is produced.
     --preview-match <arg>  Preview the first <arg> matches or all the matches found in
                            <arg> milliseconds, whichever occurs first. Returns the preview
-                           to stderr. Output is still written to stdout.
+                           to stderr. Output is still written to stdout or --output as usual.
     -c, --count            Return number of matches to stderr.
     --size-limit <mb>      Set the approximate size limit (MB) of the compiled
                            regular expression. If the compiled expression exceeds this 
@@ -171,8 +171,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         let mut preview_match_ctr = 0;
-        let start_time = std::time::Instant::now();
         let preview_timeout = std::time::Duration::from_millis(preview_match as u64);
+        let start_time = std::time::Instant::now();
         while rdr.read_byte_record(&mut record)? {
             row_ctr += 1;
             m = sel.select(&record).any(|f| pattern.is_match(f));
