@@ -161,8 +161,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // if preview_match is set, we do an initial loop for the
     // first N matches or all the matches found in N milliseconds
     if let Some(preview_match) = args.flag_preview_match {
-        // create a stderr writer
-        let mut stderr_wtr = csv::Writer::from_writer(std::io::stderr());
+        // create a buffered stderr writer
+        let mut stderr_wtr = csv::WriterBuilder::new()
+            .buffer_capacity(8192)
+            .from_writer(std::io::stderr());
 
         if !rconfig.no_headers && !args.flag_quick {
             stderr_wtr.write_record(&headers)?;
