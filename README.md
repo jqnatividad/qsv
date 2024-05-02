@@ -354,7 +354,7 @@ See [Features](docs/FEATURES.md) for more info.
 ## Minimum Supported Rust Version
 
 qsv's MSRV policy is to require the latest stable [Rust version](https://github.com/rust-lang/rust/blob/master/RELEASES.md) that is [supported by Homebrew](https://formulae.brew.sh/formula/rust#default), currently [![HomeBrew](https://img.shields.io/homebrew/v/rust?logo=homebrew)](https://formulae.brew.sh/formula/rust). 
-However, if the latest Rust stable has been released for more than a week and Homebrew has not yet updated its Rust formula, qsv will go ahead and require the latest Rust stable version.
+qsv itself may upgrade its MSRV, but a new qsv release will only be made once Homebrew supports the latest Rust stable.
 
 ## Goals / Non-Goals
 
