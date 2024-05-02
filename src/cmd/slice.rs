@@ -41,18 +41,15 @@ Common options:
                            Must be a single character. (default: ,)
 "#;
 
-use std::{fs, io, io::Write, sync::OnceLock};
+use std::fs;
 
 use serde::Deserialize;
 
 use crate::{
-    config,
     config::{Config, Delimiter},
     index::Indexed,
     util, CliResult,
 };
-
-static NULL_VAL: OnceLock<String> = OnceLock::new();
 
 #[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Deserialize)]
@@ -71,9 +68,6 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    // set this once, as this is used repeatedly in a hot loop
-    NULL_VAL.set("null".to_string()).unwrap();
-
     match args.rconfig().indexed()? {
         None => args.no_index(),
         Some(idxed) => args.with_index(idxed),
@@ -81,99 +75,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 impl Args {
-    fn create_json_writer(&self) -> io::Result<Box<dyn Write + Send + 'static>> {
-        // create a JSON writer
-        // if flag_output is None or "-" then write to stdout
-        let output = self.flag_output.as_ref().map_or("-", |s| s.as_str());
-        let writer: Box<dyn Write + Send + 'static> = match output {
-            "-" => Box::new(io::BufWriter::with_capacity(
-                config::DEFAULT_WTR_BUFFER_CAPACITY,
-                io::stdout(),
-            )),
-            _ => Box::new(io::BufWriter::with_capacity(
-                config::DEFAULT_WTR_BUFFER_CAPACITY,
-                fs::File::create(output)?,
-            )),
-        };
-        Ok(writer)
-    }
-
-    #[inline]
-    fn write_json(
-        &self,
-        headers: &csv::ByteRecord,
-        records: impl Iterator<Item = csv::ByteRecord>,
-    ) -> CliResult<()> {
-        let mut json_wtr = self.create_json_writer()?;
-
-        let header_vec: Vec<String> = headers
-            .iter()
-            .enumerate()
-            .map(|(col_idx, b)| {
-                if self.flag_no_headers {
-                    col_idx.to_string()
-                } else {
-                    String::from_utf8_lossy(b).to_string()
-                }
-            })
-            .collect();
-
-        // Write the opening bracket for the JSON array
-        write!(json_wtr, "[")?;
-        let mut is_first = true;
-
-        let rec_len = header_vec.len().saturating_sub(1);
-        let mut temp_val;
-        let mut json_string_val: serde_json::Value;
-        for record in records {
-            if !is_first {
-                // Write a comma before each record except the first one
-                write!(json_wtr, ",")?;
-            }
-            write!(json_wtr, "{{")?;
-            for (idx, b) in record.iter().enumerate() {
-                if let Ok(val) = simdutf8::basic::from_utf8(b) {
-                    temp_val = val.to_owned();
-                } else {
-                    temp_val = String::from_utf8_lossy(b).to_string();
-                }
-                if temp_val.is_empty() {
-                    temp_val.clone_from(NULL_VAL.get().unwrap());
-                } else {
-                    // we round-trip the value to serde_json::Value
-                    // to escape the string properly per JSON spec
-                    json_string_val = serde_json::Value::String(temp_val);
-                    temp_val = json_string_val.to_string();
-                }
-                // safety: idx is always in bounds
-                // so we can get_unchecked here
-                if idx < rec_len {
-                    unsafe {
-                        write!(
-                            &mut json_wtr,
-                            "\"{key}\":{value},",
-                            key = header_vec.get_unchecked(idx),
-                            value = temp_val
-                        )?;
-                    }
-                } else {
-                    unsafe {
-                        write!(
-                            &mut json_wtr,
-                            "\"{key}\":{value}",
-                            key = header_vec.get_unchecked(idx),
-                            value = temp_val
-                        )?;
-                    }
-                }
-            }
-            write!(json_wtr, "}}")?;
-            is_first = false;
-        }
-        writeln!(json_wtr, "]")?;
-        Ok(json_wtr.flush()?)
-    }
-
     fn no_index(&self) -> CliResult<()> {
         let mut rdr = self.rconfig().reader()?;
 
@@ -185,7 +86,7 @@ impl Args {
                 .skip(start)
                 .take(end - start)
                 .map(|r| r.unwrap());
-            self.write_json(&headers, records)
+            util::write_json(&self.flag_output, self.flag_no_headers, &headers, records)
         } else {
             let mut wtr = self.wconfig().writer()?;
             self.rconfig().write_headers(&mut rdr, &mut wtr)?;
@@ -208,7 +109,7 @@ impl Args {
                 .byte_records()
                 .take(end - start)
                 .map(|r| r.unwrap());
-            self.write_json(&headers, records)
+            util::write_json(&self.flag_output, self.flag_no_headers, &headers, records)
         } else {
             let mut wtr = self.wconfig().writer()?;
             self.rconfig().write_headers(&mut *indexed_file, &mut wtr)?;
