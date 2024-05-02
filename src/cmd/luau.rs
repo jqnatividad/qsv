@@ -10,10 +10,15 @@ The executed Luau has 3 ways to reference row columns (as strings):
   1. Directly by using column name (e.g. Amount), can be disabled with -g
   2. Indexing col variable by column name: col.Amount or col["Total Balance"]
   3. Indexing col variable by column 1-based index: col[1], col[2], etc.
-     This is only available with the --colindex and --no-headers options.
+     This is only available with the --colindex or --no-headers options.
 
 Of course, if your input has no headers, then 3. will be the only available
 option.
+
+It has two subcommands:
+  map     - Create new columns by mapping the result of a Luau script for each row.
+  filter  - Filter rows by executing a Luau script for each row. Rows that return
+            true are kept, the rest are filtered out.
 
 Some usage examples:
 
