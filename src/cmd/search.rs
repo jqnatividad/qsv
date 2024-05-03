@@ -49,6 +49,12 @@ search options:
                            expression engine's Discrete Finite Automata.
                            Modify this only if you're getting regular expression
                            compilation errors. [default: 10]
+    --json                 Output the result as JSON. Fields are written
+                           as key-value pairs. The key is the column name.
+                           The value is the field value. The output is a
+                           JSON array. If --no-headers is set, then
+                           the keys are the column indices (zero-based).
+                           Automatically sets --quiet.
                            
 Common options:
     -h, --help             Display this message
@@ -89,6 +95,7 @@ struct Args {
     flag_flag:           Option<String>,
     flag_size_limit:     usize,
     flag_dfa_size_limit: usize,
+    flag_json:           bool,
     flag_quick:          bool,
     flag_preview_match:  Option<usize>,
     flag_count:          bool,
@@ -118,18 +125,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .no_headers(args.flag_no_headers)
         .select(args.flag_select);
 
+    let flag_quick = args.flag_quick;
+    let flag_quiet = args.flag_quiet || args.flag_json;
+    let flag_json = args.flag_json;
+
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
+
+    let mut json_wtr = if flag_json {
+        util::create_json_writer(&args.flag_output)?
+    } else {
+        Box::new(std::io::sink())
+    };
 
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
-    let flag = args.flag_flag.map_or(false, |column_name| {
+    let flag_flag = args.flag_flag.map_or(false, |column_name| {
         headers.push_field(column_name.as_bytes());
         true
     });
 
-    if !rconfig.no_headers && !args.flag_quick {
+    if !rconfig.no_headers && !flag_quick && !flag_json {
         wtr.write_record(&headers)?;
     }
 
@@ -153,7 +170,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut m;
     let mut buffer = itoa::Buffer::new();
     let invert_match = args.flag_invert_match;
-    let quick = args.flag_quick;
 
     #[allow(unused_assignments)]
     let mut matched_rows = String::with_capacity(20); // to save on allocs
@@ -161,12 +177,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // if preview_match is set, we do an initial loop for the
     // first N matches or all the matches found in N milliseconds
     if let Some(preview_match) = args.flag_preview_match {
-        // create a buffered stderr writer
-        let mut stderr_wtr = csv::WriterBuilder::new()
-            .buffer_capacity(8192)
-            .from_writer(std::io::stderr());
+        // create a stderr CSV writer
+        let mut stderr_wtr = csv::WriterBuilder::new().from_writer(std::io::stderr());
 
-        if !rconfig.no_headers && !args.flag_quick {
+        let mut stderr_jsonwtr = if flag_json {
+            util::create_json_writer(&Some("stderr".to_string()))?
+        } else {
+            Box::new(std::io::sink())
+        };
+
+        if !rconfig.no_headers && !flag_quick && !flag_json {
             stderr_wtr.write_record(&headers)?;
         }
 
@@ -181,19 +201,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             if m {
                 preview_match_ctr += 1;
-                if quick {
+                if flag_quick {
                     break;
                 }
                 if preview_match_ctr <= preview_match {
-                    stderr_wtr.write_record(&record)?;
-                    wtr.write_byte_record(&record)?;
+                    if flag_json {
+                        util::write_json_record(
+                            &mut stderr_jsonwtr,
+                            args.flag_no_headers,
+                            &headers,
+                            &record,
+                        )?;
+                        util::write_json_record(
+                            &mut json_wtr,
+                            args.flag_no_headers,
+                            &headers,
+                            &record,
+                        )?;
+                    } else {
+                        stderr_wtr.write_record(&record)?;
+                        wtr.write_byte_record(&record)?;
+                    }
                 }
                 if preview_match_ctr >= preview_match || start_time.elapsed() > preview_timeout {
                     break;
                 }
             }
 
-            if flag {
+            if flag_flag {
                 flag_rowi += 1;
                 record.push_field(if m {
                     buffer.format(flag_rowi).clone_into(&mut matched_rows);
@@ -201,9 +236,27 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 } else {
                     b"0"
                 });
-                wtr.write_byte_record(&record)?;
+                if flag_json {
+                    util::write_json_record(
+                        &mut json_wtr,
+                        args.flag_no_headers,
+                        &headers,
+                        &record,
+                    )?;
+                } else {
+                    wtr.write_byte_record(&record)?;
+                }
             } else if m {
-                wtr.write_byte_record(&record)?;
+                if flag_json {
+                    util::write_json_record(
+                        &mut json_wtr,
+                        args.flag_no_headers,
+                        &headers,
+                        &record,
+                    )?;
+                } else {
+                    wtr.write_byte_record(&record)?;
+                }
             }
         }
         match_ctr = preview_match_ctr as u64;
@@ -212,7 +265,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             progress.inc(row_ctr);
         }
         stderr_wtr.flush()?;
-        if !args.flag_quiet {
+        if !flag_quiet {
             eprintln!(
                 "Previewed {} matches in {} initial records in {} ms.",
                 preview_match_ctr,
@@ -234,12 +287,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
         if m {
             match_ctr += 1;
-            if quick {
+            if flag_quick {
                 break;
             }
         }
 
-        if flag {
+        if flag_flag {
             flag_rowi += 1;
             record.push_field(if m {
                 buffer.format(flag_rowi).clone_into(&mut matched_rows);
@@ -247,9 +300,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             } else {
                 b"0"
             });
-            wtr.write_byte_record(&record)?;
+            if flag_json {
+                util::write_json_record(&mut json_wtr, args.flag_no_headers, &headers, &record)?;
+            } else {
+                wtr.write_byte_record(&record)?;
+            }
         } else if m {
-            wtr.write_byte_record(&record)?;
+            if flag_json {
+                util::write_json_record(&mut json_wtr, args.flag_no_headers, &headers, &record)?;
+            } else {
+                wtr.write_byte_record(&record)?;
+            }
         }
     }
     wtr.flush()?;
@@ -265,7 +326,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if args.flag_count && !args.flag_quick {
-        if !args.flag_quiet {
+        if !flag_quiet {
             eprintln!("{match_ctr}");
         }
         info!("matches: {match_ctr}");
