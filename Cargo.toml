@@ -74,7 +74,7 @@ atoi_simd = "0.15"
 bincode = "1.3"
 byteorder = "1.5"
 bytes = "1"
-cached = { version = "0.50", features = [
+cached = { version = "0.51", features = [
     "disk_store",
     "redis_ahash",
 ], optional = true }
