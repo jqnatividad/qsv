@@ -1690,6 +1690,7 @@ pub fn create_json_writer(
     Ok(writer)
 }
 
+/// iterate over the CSV ByteRecords and write them to the JSON file
 pub fn write_json(
     output: &Option<String>,
     no_headers: bool,
@@ -1716,11 +1717,13 @@ pub fn write_json(
 
     let rec_len = header_vec.len().saturating_sub(1);
     let mut temp_val;
-    let mut json_string_val: serde_json::Value;
     let null_val = "null".to_string();
+    let mut json_string_val: serde_json::Value;
 
     for record in records {
-        if !is_first {
+        if is_first {
+            is_first = false;
+        } else {
             // Write a comma before each record except the first one
             write!(json_wtr, ",")?;
         }
@@ -1734,7 +1737,7 @@ pub fn write_json(
             if temp_val.is_empty() {
                 temp_val.clone_from(&null_val);
             } else {
-                // we round-trip the value to serde_json::Value
+                // we round-trip the value to serde_json
                 // to escape the string properly per JSON spec
                 json_string_val = serde_json::Value::String(temp_val);
                 temp_val = json_string_val.to_string();
@@ -1745,16 +1748,17 @@ pub fn write_json(
                 unsafe {
                     write!(
                         &mut json_wtr,
-                        "\"{key}\":{value},",
+                        r#""{key}":{value},"#,
                         key = header_vec.get_unchecked(idx),
                         value = temp_val
                     )?;
                 }
             } else {
+                // last column in the JSON record, no comma
                 unsafe {
                     write!(
                         &mut json_wtr,
-                        "\"{key}\":{value}",
+                        r#""{key}":{value}"#,
                         key = header_vec.get_unchecked(idx),
                         value = temp_val
                     )?;
@@ -1762,17 +1766,27 @@ pub fn write_json(
             }
         }
         write!(json_wtr, "}}")?;
-        is_first = false;
     }
+    // Write the closing bracket for the JSON array
     writeln!(json_wtr, "]")?;
+
     Ok(json_wtr.flush()?)
 }
 
+/// write a single csv::ByteRecord to a JSON record writer
+/// if no_headers is true, the column index (0-based) is used as the key
+/// if no_headers is false, the header is used as the key
+/// if is_first is true, a comma is not written before the record
+/// if is_first is false, a comma is written before the record
+/// is_first is passed as a mutable reference so that it can be updated
+/// in this helper function efficiently
+/// in this way, we can stream JSON records to a writer
 pub fn write_json_record<W: std::io::Write>(
     json_wtr: &mut W,
     no_headers: bool,
     headers: &csv::ByteRecord,
     record: &csv::ByteRecord,
+    is_first: &mut bool,
 ) -> std::io::Result<()> {
     let header_vec: Vec<String> = headers
         .iter()
@@ -1791,7 +1805,12 @@ pub fn write_json_record<W: std::io::Write>(
     let mut json_string_val: serde_json::Value;
     let null_val = "null".to_string();
 
-    write!(json_wtr, "{{")?;
+    if *is_first {
+        write!(json_wtr, "{{")?;
+        *is_first = false;
+    } else {
+        write!(json_wtr, ",{{")?;
+    }
     for (idx, b) in record.iter().enumerate() {
         if let Ok(val) = simdutf8::basic::from_utf8(b) {
             temp_val = val.to_owned();
@@ -1808,7 +1827,7 @@ pub fn write_json_record<W: std::io::Write>(
             unsafe {
                 write!(
                     json_wtr,
-                    "\"{key}\":{value},",
+                    r#""{key}":{value},"#,
                     key = header_vec.get_unchecked(idx),
                     value = temp_val
                 )?;
@@ -1817,7 +1836,7 @@ pub fn write_json_record<W: std::io::Write>(
             unsafe {
                 write!(
                     json_wtr,
-                    "\"{key}\":{value}",
+                    r#""{key}":{value}"#,
                     key = header_vec.get_unchecked(idx),
                     value = temp_val
                 )?;
