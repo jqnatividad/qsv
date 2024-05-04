@@ -36,8 +36,8 @@ search options:
                            the row number of the first match to stderr.
                            Return exit code 1 if no match is found.
                            No output is produced.
-    --preview-match <arg>  Preview the first <arg> matches or all the matches found in
-                           <arg> milliseconds, whichever occurs first. Returns the preview
+    --preview-match <arg>  Preview the first N matches or all the matches found in
+                           N milliseconds, whichever occurs first. Returns the preview
                            to stderr. Output is still written to stdout or --output as usual.
     -c, --count            Return number of matches to stderr.
     --size-limit <mb>      Set the approximate size limit (MB) of the compiled
@@ -97,7 +97,7 @@ struct Args {
     flag_dfa_size_limit: usize,
     flag_json:           bool,
     flag_quick:          bool,
-    flag_preview_match:  Option<usize>,
+    flag_preview_match:  Option<u64>,
     flag_count:          bool,
     flag_progressbar:    bool,
     flag_quiet:          bool,
@@ -125,9 +125,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .no_headers(args.flag_no_headers)
         .select(args.flag_select);
 
+    // args struct booleans in hot loop assigned to local variables
+    // to help the compiler optimize the code
     let flag_quick = args.flag_quick;
     let flag_quiet = args.flag_quiet || args.flag_json;
     let flag_json = args.flag_json;
+    let flag_no_headers = args.flag_no_headers;
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
@@ -174,6 +177,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut matched_rows = String::with_capacity(20); // to save on allocs
 
+    let mut json_started = false;
+    let mut is_first = true;
+
     // if preview_match is set, we do an initial loop for the
     // first N matches or all the matches found in N milliseconds
     if let Some(preview_match) = args.flag_preview_match {
@@ -190,11 +196,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             stderr_wtr.write_record(&headers)?;
         }
 
+        // write the JSON array start
+        if flag_json {
+            json_wtr.write_all(b"[")?;
+            stderr_jsonwtr.write_all(b"[")?;
+            json_started = true;
+        }
+
         let mut preview_match_ctr = 0;
-        let preview_timeout = std::time::Duration::from_millis(preview_match as u64);
+        let mut is_first_stderr = true;
+        let preview_timeout = std::time::Duration::from_millis(preview_match);
         let start_time = std::time::Instant::now();
         while rdr.read_byte_record(&mut record)? {
             row_ctr += 1;
+
             m = sel.select(&record).any(|f| pattern.is_match(f));
             if invert_match {
                 m = !m;
@@ -208,15 +223,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if flag_json {
                         util::write_json_record(
                             &mut stderr_jsonwtr,
-                            args.flag_no_headers,
+                            flag_no_headers,
                             &headers,
                             &record,
+                            &mut is_first_stderr,
                         )?;
                         util::write_json_record(
                             &mut json_wtr,
-                            args.flag_no_headers,
+                            flag_no_headers,
                             &headers,
                             &record,
+                            &mut is_first,
                         )?;
                     } else {
                         stderr_wtr.write_record(&record)?;
@@ -239,9 +256,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if flag_json {
                     util::write_json_record(
                         &mut json_wtr,
-                        args.flag_no_headers,
+                        flag_no_headers,
                         &headers,
                         &record,
+                        &mut is_first,
                     )?;
                 } else {
                     wtr.write_byte_record(&record)?;
@@ -250,16 +268,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if flag_json {
                     util::write_json_record(
                         &mut json_wtr,
-                        args.flag_no_headers,
+                        flag_no_headers,
                         &headers,
                         &record,
+                        &mut is_first,
                     )?;
                 } else {
                     wtr.write_byte_record(&record)?;
                 }
             }
         }
-        match_ctr = preview_match_ctr as u64;
+        match_ctr = preview_match_ctr;
         #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
             progress.inc(row_ctr);
@@ -273,10 +292,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 start_time.elapsed().as_millis()
             );
         }
+        if flag_json {
+            stderr_jsonwtr.write_all(b"]")?;
+            stderr_jsonwtr.flush()?;
+        }
+    }
+
+    if flag_json && !json_started {
+        json_wtr.write_all(b"[")?;
     }
 
     while rdr.read_byte_record(&mut record)? {
         row_ctr += 1;
+
         #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
             progress.inc(1);
@@ -301,19 +329,36 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 b"0"
             });
             if flag_json {
-                util::write_json_record(&mut json_wtr, args.flag_no_headers, &headers, &record)?;
+                util::write_json_record(
+                    &mut json_wtr,
+                    flag_no_headers,
+                    &headers,
+                    &record,
+                    &mut is_first,
+                )?;
             } else {
                 wtr.write_byte_record(&record)?;
             }
         } else if m {
             if flag_json {
-                util::write_json_record(&mut json_wtr, args.flag_no_headers, &headers, &record)?;
+                util::write_json_record(
+                    &mut json_wtr,
+                    flag_no_headers,
+                    &headers,
+                    &record,
+                    &mut is_first,
+                )?;
             } else {
                 wtr.write_byte_record(&record)?;
             }
         }
     }
-    wtr.flush()?;
+    if flag_json {
+        json_wtr.write_all(b"]")?;
+        json_wtr.flush()?;
+    } else {
+        wtr.flush()?;
+    }
 
     #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
