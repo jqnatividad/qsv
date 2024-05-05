@@ -139,6 +139,10 @@ stats options:
                               by using this option before running the `schema` and `tojsonl`
                               commands and they will automatically load the binary encoded
                               stats file if it exists.
+    --cache-threshold <arg>   The threshold in milliseconds to cache the stats results.
+                              If a stats run takes longer than this threshold, the stats
+                              results will be cached. Set to 0 to suppress caching.
+                              [default: 5000]
 
 Common options:
     -h, --help             Display this message
@@ -219,6 +223,7 @@ pub struct Args {
     pub flag_force:           bool,
     pub flag_jobs:            Option<usize>,
     pub flag_stats_binout:    bool,
+    pub flag_cache_threshold: u64,
     pub flag_output:          Option<String>,
     pub flag_no_headers:      bool,
     pub flag_delimiter:       Option<Delimiter>,
@@ -368,6 +373,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut stats_for_encoding: Vec<Stats> = Vec::new();
 
     let mut compute_stats = true;
+    let mut create_cache = args.flag_cache_threshold > 0;
 
     let write_stats_binout = args.flag_stats_binout;
 
@@ -511,11 +517,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
 
             // update the stats args json metadata
-            current_stats_args.canonical_input_path =
-                path.canonicalize()?.to_str().unwrap().to_string();
-            current_stats_args.record_count = *record_count;
             current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
-            current_stats_args.date_generated = chrono::Utc::now().to_rfc3339();
+
+            if create_cache && current_stats_args.compute_duration_ms > args.flag_cache_threshold {
+                // if the stats run took longer than the cache threshold and the threshold > 0,
+                // cache the stats so we don't have to recompute it next time
+                current_stats_args.canonical_input_path =
+                    path.canonicalize()?.to_str().unwrap().to_string();
+                current_stats_args.record_count = *record_count;
+                current_stats_args.date_generated = chrono::Utc::now().to_rfc3339();
+            } else {
+                // if the stats run took less than the cache threshold or the threshold is 0,
+                // don't cache the stats
+                create_cache = false;
+            }
         }
     }
 
@@ -557,7 +572,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             fs::copy(currstats_filename.clone(), stats_pathbuf.clone())?;
         }
 
-        if compute_stats {
+        if compute_stats && create_cache {
             // save the stats args to "<FILESTEM>.stats.csv.json"
             // if we computed the stats
             stats_pathbuf.set_extension("csv.json");
@@ -610,7 +625,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // if we're outputting to a file, copy the stats file to the output file
         if currstats_filename != output {
             // if the stats file is not the same as the output file, copy it
-            fs::copy(currstats_filename, output)?;
+            fs::copy(currstats_filename.clone(), output)?;
+        }
+        if !create_cache {
+            // if we didn't cache the stats, remove the temp stats file
+            fs::remove_file(currstats_filename)?;
         }
     }
 
