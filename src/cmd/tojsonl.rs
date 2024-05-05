@@ -165,6 +165,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_no_boolean
     };
 
+    let mut lowecase_buffer = String::new();
+
     // create a vec lookup about inferred field data types
     let mut field_type_vec: Vec<JsonlType> = Vec::with_capacity(headers.len());
     for (_field_name, field_def) in &properties_map {
@@ -196,7 +198,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 }
                             } else if let Some(str_val) = vals[0].as_str() {
                                 // else, if its a string, get the first character of val1 lowercase
-                                boolcheck(str_val)
+                                boolcheck(str_val, &mut lowecase_buffer)
                             } else {
                                 '*'
                             }
@@ -211,7 +213,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 _ => '*',
                             }
                         } else if let Some(str_val) = vals[1].as_str() {
-                            boolcheck(str_val)
+                            boolcheck(str_val, &mut lowecase_buffer)
                         } else {
                             '*'
                         };
@@ -290,8 +292,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .par_iter()
             .map(|record_item| {
                 let mut record = record_item.clone();
-                let mut temp_string = String::new();
-                let mut temp_string2: String;
+                let mut json_string = String::new();
+                let mut temp_string2 = String::new();
 
                 let mut header_key = Value::String(String::new());
                 let mut temp_val = Value::String(String::new());
@@ -299,7 +301,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 if args.flag_trim {
                     record.trim();
                 }
-                write!(temp_string, "{{").unwrap();
+                write!(json_string, "{{").unwrap();
                 for (idx, field) in record.iter().enumerate() {
                     let field_val = if let Some(field_type) = field_type_vec.get(idx) {
                         match field_type {
@@ -317,7 +319,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             JsonlType::Null => "null",
                             JsonlType::Integer | JsonlType::Number => field,
                             JsonlType::Boolean => {
-                                if let 't' | 'y' | '1' = boolcheck(field) {
+                                if let 't' | 'y' | '1' = boolcheck(field, &mut temp_string2) {
                                     "true"
                                 } else {
                                     "false"
@@ -329,15 +331,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     };
                     header_key = headers[idx].into();
                     if field_val.is_empty() {
-                        write!(temp_string, r#"{header_key}:null,"#).unwrap();
+                        write!(json_string, r#"{header_key}:null,"#).unwrap();
                     } else {
-                        write!(temp_string, r#"{header_key}:{field_val},"#).unwrap();
+                        write!(json_string, r#"{header_key}:{field_val},"#).unwrap();
                     }
                 }
-                temp_string.pop(); // remove last comma
-                temp_string.push('}');
+                json_string.pop(); // remove last comma
+                json_string.push('}');
                 record.clear();
-                record.push_field(&temp_string);
+                record.push_field(&json_string);
                 record
             })
             .collect_into_vec(&mut batch_results);
@@ -354,7 +356,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 }
 
 #[inline]
-fn boolcheck(field_str: &str) -> char {
+/// check if a field is a boolean
+/// by checking the first character of the field
+/// and the field's domain is true/false, yes/no
+fn boolcheck(field_str: &str, lowercase_buffer: &mut String) -> char {
     let mut chars = field_str.chars();
     let mut first_char = chars.next().unwrap_or('_');
     first_char.make_ascii_lowercase();
@@ -362,13 +367,12 @@ fn boolcheck(field_str: &str) -> char {
     if field_str.len() < 2 {
         return first_char;
     }
-    if field_str.eq_ignore_ascii_case("true")
-        || field_str.eq_ignore_ascii_case("false")
-        || field_str.eq_ignore_ascii_case("yes")
-        || field_str.eq_ignore_ascii_case("no")
-    {
-        first_char
-    } else {
-        '_'
+
+    // we use to_lowercase_into to avoid allocations for this function
+    // which is called in a hot loop
+    util::to_lowercase_into(field_str, lowercase_buffer);
+    match lowercase_buffer.as_str() {
+        "true" | "false" | "yes" | "no" => first_char,
+        _ => '_',
     }
 }
