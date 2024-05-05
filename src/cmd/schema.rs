@@ -450,6 +450,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_delimiter:       args.flag_delimiter,
         flag_memcheck:        args.flag_memcheck,
         flag_stats_binout:    true,
+        flag_cache_threshold: 5000,
     };
 
     let canonical_input_path = Path::new(&args.arg_input.clone().unwrap()).canonicalize()?;
