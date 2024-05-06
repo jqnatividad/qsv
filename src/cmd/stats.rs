@@ -373,7 +373,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut stats_for_encoding: Vec<Stats> = Vec::new();
 
     let mut compute_stats = true;
-    let mut create_cache = args.flag_cache_threshold > 0;
+    let mut create_cache = args.flag_cache_threshold > 0 || args.flag_stats_binout;
 
     let write_stats_binout = args.flag_stats_binout;
 
@@ -519,7 +519,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // update the stats args json metadata
             current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
 
-            if create_cache && current_stats_args.compute_duration_ms > args.flag_cache_threshold {
+            if (create_cache && current_stats_args.compute_duration_ms > args.flag_cache_threshold)
+                || (create_cache && args.flag_cache_threshold == 1)
+            {
                 // if the stats run took longer than the cache threshold and the threshold > 0,
                 // cache the stats so we don't have to recompute it next time
                 current_stats_args.canonical_input_path =
@@ -529,7 +531,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             } else {
                 // if the stats run took less than the cache threshold or the threshold is 0,
                 // don't cache the stats
-                create_cache = false;
+                create_cache = args.flag_cache_threshold != 0 || args.flag_stats_binout;
             }
         }
     }
@@ -618,7 +620,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if stdout_output_flag {
         // if we're outputting to stdout, copy the stats file to stdout
-        let currstats = fs::read_to_string(currstats_filename)?;
+        let currstats = fs::read_to_string(currstats_filename.clone())?;
         io::stdout().write_all(currstats.as_bytes())?;
         io::stdout().flush()?;
     } else if let Some(output) = args.flag_output {
@@ -627,10 +629,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // if the stats file is not the same as the output file, copy it
             fs::copy(currstats_filename.clone(), output)?;
         }
-        if !create_cache {
-            // if we didn't cache the stats, remove the temp stats file
-            fs::remove_file(currstats_filename)?;
-        }
+        
+    }
+    if !create_cache {
+        // if we didn't cache the stats, remove the temp stats file
+        fs::remove_file(currstats_filename)?;
     }
 
     Ok(())
