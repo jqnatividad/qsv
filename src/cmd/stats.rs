@@ -141,7 +141,8 @@ stats options:
                               stats file if it exists.
     --cache-threshold <arg>   The threshold in milliseconds to cache the stats results.
                               If a stats run takes longer than this threshold, the stats
-                              results will be cached. Set to 0 to suppress caching.
+                              results will be cached. Set to 0 to suppress caching. Set
+                              to 1 to force caching.
                               [default: 5000]
 
 Common options:
@@ -519,22 +520,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // update the stats args json metadata
             current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
 
-            if (create_cache && current_stats_args.compute_duration_ms > args.flag_cache_threshold)
-                || (create_cache && args.flag_cache_threshold == 1)
-            {
+            if create_cache && current_stats_args.compute_duration_ms > args.flag_cache_threshold {
                 // if the stats run took longer than the cache threshold and the threshold > 0,
                 // cache the stats so we don't have to recompute it next time
                 current_stats_args.canonical_input_path =
                     path.canonicalize()?.to_str().unwrap().to_string();
                 current_stats_args.record_count = *record_count;
                 current_stats_args.date_generated = chrono::Utc::now().to_rfc3339();
-            } else {
-                // if the stats run took less than the cache threshold or the threshold is 0,
-                // don't cache the stats
-                create_cache = args.flag_cache_threshold != 0 || args.flag_stats_binout;
             }
         }
     }
+
+    // ensure create_cache is also true if the user specified --cache-threshold 1
+    create_cache = create_cache || args.flag_cache_threshold == 1;
 
     wtr.flush()?;
 
@@ -572,6 +570,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if currstats_filename != stats_pathbuf.to_str().unwrap() {
             // if the stats file is not the same as the input file, copy it
             fs::copy(currstats_filename.clone(), stats_pathbuf.clone())?;
+        }
+
+        if !create_cache {
+            // remove the stats cache file
+            if fs::remove_file(stats_pathbuf.clone()).is_err() {
+                // fails silently if it can't remove the stats file
+                log::warn!(
+                    "Could not remove stats cache file: {}",
+                    stats_pathbuf.display()
+                );
+            }
         }
 
         if compute_stats && create_cache {
@@ -620,19 +629,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if stdout_output_flag {
         // if we're outputting to stdout, copy the stats file to stdout
-        let currstats = fs::read_to_string(currstats_filename.clone())?;
+        let currstats = fs::read_to_string(currstats_filename)?;
         io::stdout().write_all(currstats.as_bytes())?;
         io::stdout().flush()?;
     } else if let Some(output) = args.flag_output {
         // if we're outputting to a file, copy the stats file to the output file
         if currstats_filename != output {
             // if the stats file is not the same as the output file, copy it
-            fs::copy(currstats_filename.clone(), output)?;
+            fs::copy(currstats_filename, output)?;
         }
-    }
-    if !create_cache {
-        // if we didn't cache the stats, remove the temp stats file
-        fs::remove_file(currstats_filename)?;
     }
 
     Ok(())
