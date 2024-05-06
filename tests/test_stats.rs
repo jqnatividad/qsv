@@ -835,6 +835,90 @@ fn stats_typesonly_with_dates() {
 }
 
 #[test]
+fn stats_typesonly_cache_threshold_zero() {
+    use std::path::Path;
+
+    let wrk = Workdir::new("stats_typesonly_cache_threshold_zero");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--typesonly")
+        .arg("--infer-dates")
+        .arg("--dates-whitelist")
+        .arg("all")
+        .args(["--cache-threshold", "0"])
+        .arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100-typesonly-withdates-stats.csv");
+
+    assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
+
+    // check that the stats cache files were NOT created
+    assert!(!Path::new(&wrk.path("boston311-100.stats.csv")).exists());
+    assert!(!Path::new(&wrk.path("boston311-100.stats.csv.json")).exists());
+}
+
+#[test]
+fn stats_typesonly_cache() {
+    use std::path::Path;
+
+    let wrk = Workdir::new("stats_typesonly_cache");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--typesonly")
+        .arg("--infer-dates")
+        .arg("--dates-whitelist")
+        .arg("all")
+        .arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100-typesonly-withdates-stats.csv");
+
+    assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
+
+    // check that the stats cache files were created
+    assert!(Path::new(&wrk.path("boston311-100.stats.csv")).exists());
+    assert!(Path::new(&wrk.path("boston311-100.stats.csv.json")).exists());
+}
+
+#[test]
+fn stats_cache() {
+    use std::path::Path;
+
+    let wrk = Workdir::new("stats_cache");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--infer-dates")
+        .arg("--dates-whitelist")
+        .arg("all")
+        // set cache threshold to 1 byte to force cache creation
+        .args(["--cache-threshold", "1"])
+        .arg(test_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    wrk.create("in2.csv", got);
+
+    // removed variance & stddev columns as its causing flaky CI test for float values
+    let mut cmd = wrk.command("select");
+    cmd.arg("1-9,12-").arg("in2.csv");
+
+    let got2: String = wrk.stdout(&mut cmd);
+    let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
+
+    assert_eq!(dos2unix(&got2), dos2unix(&expected2).trim_end());
+
+    // check that the stats cache files were created
+    assert!(Path::new(&wrk.path("boston311-100.stats.csv")).exists());
+    assert!(Path::new(&wrk.path("boston311-100.stats.csv.json")).exists());
+}
+
+#[test]
 fn stats_infer_boolean_1_0() {
     let wrk = Workdir::new("stats_infer_boolean_1_0");
     let test_file = wrk.load_test_file("boston311-10-boolean-1or0.csv");
