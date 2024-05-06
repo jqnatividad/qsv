@@ -445,11 +445,12 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_prefer_dmy:      args.flag_prefer_dmy,
         flag_force:           args.flag_force,
         flag_jobs:            Some(util::njobs(args.flag_jobs)),
+        flag_stats_binout:    true,
+        flag_cache_threshold: 1, // force the creation of stats cache files
         flag_output:          None,
         flag_no_headers:      args.flag_no_headers,
         flag_delimiter:       args.flag_delimiter,
         flag_memcheck:        args.flag_memcheck,
-        flag_stats_binout:    true,
     };
 
     let canonical_input_path = Path::new(&args.arg_input.clone().unwrap()).canonicalize()?;

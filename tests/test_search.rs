@@ -519,9 +519,8 @@ fn search_preview() {
     let expected_preview = r#"case_enquiry_id,open_dt,target_dt,closed_dt,ontime,case_status,closure_reason,case_title,subject,reason,type,queue,department,submittedphoto,closedphoto,location,fire_district,pwd_district,city_council_district,police_district,neighborhood,neighborhood_services_district,ward,precinct,location_street_name,location_zipcode,latitude,longitude,source
 101004113298,2022-01-01 00:16:00,2022-04-01 00:16:06,2022-01-10 08:42:23,ONTIME,Closed,Case Closed. Closed date : Mon Jan 10 08:42:23 EST 2022 Resolved No Cause 1/10/22 ,SCHEDULED Unsatisfactory Utilities - Electrical  Plumbing,Inspectional Services,Housing,Unsatisfactory Utilities - Electrical  Plumbing,ISD_Housing (INTERNAL),ISD,,,47 W Cedar St  Boston  MA  02114,3,1B,8,A1,Beacon Hill,14,Ward 5,0504,47 W Cedar St,02114,42.3594,-71.07,Constituent Call
 101004141354,2022-01-20 08:07:49,2022-01-21 08:30:00,2022-01-20 08:45:03,ONTIME,Closed,Case Closed. Closed date : Thu Jan 20 08:45:03 EST 2022 Noted ,CE Collection,Public Works Department,Street Cleaning,CE Collection,PWDx_District 1B: North End,PWDx,,,21-23 Temple St  Boston  MA  02114,3,1B,1,A1,Beacon Hill,3,Ward 3,0306,21-23 Temple St,02114,42.3606,-71.0638,City Worker App
-Previewed 2 matches in 8 initial records in 0 ms.
-"#;
-    assert_eq!(preview, expected_preview);
+Previewed 2 matches in 8 initial records in"#;
+    assert!(preview.starts_with(expected_preview));
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
