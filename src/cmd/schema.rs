@@ -446,7 +446,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         flag_force:           args.flag_force,
         flag_jobs:            Some(util::njobs(args.flag_jobs)),
         flag_stats_binout:    true,
-        flag_cache_threshold: 1,
+        flag_cache_threshold: 1, // force the creation of stats cache files
         flag_output:          None,
         flag_no_headers:      args.flag_no_headers,
         flag_delimiter:       args.flag_delimiter,
