@@ -629,7 +629,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // if the stats file is not the same as the output file, copy it
             fs::copy(currstats_filename.clone(), output)?;
         }
-        
     }
     if !create_cache {
         // if we didn't cache the stats, remove the temp stats file
