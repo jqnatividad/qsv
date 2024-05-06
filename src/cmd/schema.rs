@@ -571,9 +571,7 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
     let stats_columns = if stats_bin_loaded {
         // if stats.bin file is loaded, we need to get the headers from the stats.csv file
         let stats_bin_csv_path = canonical_input_path.with_extension("stats.csv");
-        log::debug!("stats_bin_csv_path: {stats_bin_csv_path:?}");
         let mut stats_csv_reader = csv::Reader::from_path(stats_bin_csv_path)?;
-        log::debug!("stats_csv_reader: {stats_csv_reader:?}");
         let stats_csv_headers = stats_csv_reader.headers()?.clone();
         drop(stats_csv_reader);
         stats_csv_headers
