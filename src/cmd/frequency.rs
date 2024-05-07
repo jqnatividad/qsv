@@ -169,7 +169,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             && sorted_counts
                 .first()
                 .map(|(value, _, _)| {
-                    value.starts_with(&format!("{} (", args.flag_other_text).as_bytes().to_vec())
+                    value.starts_with(&format!("{} (", args.flag_other_text).as_bytes())
                 })
                 .unwrap_or(false)
         {
