@@ -165,7 +165,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut sorted_counts: Vec<(Vec<u8>, u64, f64)> = args.counts(&ftab);
 
         // if not --other_sorted and the first value is "Other (", rotate it to the end
-        if !args.flag_other_sorted && sorted_counts.first().unwrap().0.starts_with(b"Other (") {
+        if !args.flag_other_sorted
+            && sorted_counts
+                .first()
+                .map(|(value, _, _)| {
+                    value.starts_with(&format!("{} (", args.flag_other_text).as_bytes().to_vec())
+                })
+                .unwrap_or(false)
+        {
             sorted_counts.rotate_left(1);
         }
 
