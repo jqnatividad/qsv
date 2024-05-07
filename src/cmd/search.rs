@@ -39,8 +39,8 @@ search options:
                            Return exit code 1 if no match is found.
                            No output is produced.
     --preview-match <arg>  Preview the first N matches or all the matches found in
-                           N milliseconds, whichever occurs first. Returns the preview
-                           to stderr. Output is still written to stdout or --output as usual.
+                           N milliseconds, whichever occurs first. Returns the preview to
+                           stderr. Output is still written to stdout or --output as usual.
     -c, --count            Return number of matches to stderr.
     --size-limit <mb>      Set the approximate size limit (MB) of the compiled
                            regular expression. If the compiled expression exceeds this 
