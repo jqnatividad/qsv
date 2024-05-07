@@ -166,12 +166,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // if not --other_sorted and the first value is "Other (", rotate it to the end
         if !args.flag_other_sorted
-            && sorted_counts
-                .first()
-                .map(|(value, _, _)| {
-                    value.starts_with(&format!("{} (", args.flag_other_text).as_bytes())
-                })
-                .unwrap_or(false)
+            && sorted_counts.first().is_some_and(|(value, _, _)| {
+                value.starts_with(format!("{} (", args.flag_other_text).as_bytes())
+            })
         {
             sorted_counts.rotate_left(1);
         }
