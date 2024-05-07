@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=4.2.0
+bm_version=4.3.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -554,6 +554,12 @@ run schema "$qsv_bin" schema --force "$data"
 run --index schema_index "$qsv_bin" schema "$data"
 run search "$qsv_bin" search -s \'Agency Name\' "'(?i)us'" "$data"
 run search_unicode "$qsv_bin" search --unicode -s \'Agency Name\' "'(?i)us'" "$data"
+run search_file "$qsv_bin" search "'(?i)us'" "$data"
+run search_file_unicode "$qsv_bin" search --unicode "'(?i)us'" "$data"
+run search_file_case_sensitive "$qsv_bin" search "'us'" "$data"
+run search_file_case_sensitive_unicode "$qsv_bin" search --unicode "'us'" "$data"
+run search_file_flag "$qsv_bin" search "'(?i)us'" "$data" --flag flagged
+run search_file_flag_matchonly "$qsv_bin" search "'(?i)us'" "$data" --flag M
 run searchset "$qsv_bin" searchset searchset_patterns.txt "$data"
 run searchset_ignorecase "$qsv_bin" searchset --ignore-case searchset_patterns.txt "$data"
 run searchset_unicode "$qsv_bin" searchset searchset_patterns_unicode.txt --unicode "$data"
