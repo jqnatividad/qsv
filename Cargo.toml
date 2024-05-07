@@ -245,10 +245,10 @@ serial_test = { version = "3.1", features = ["file_locks"] }
 # needed as dynfmt doesn't work in release mode without this
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 # needed to get latest dependencies and unreleased fixes
-grex = { git = "https://github.com/pemistahl/grex", rev = "fdc8e25" }
+grex = { git = "https://github.com/pemistahl/grex", rev = "0c8ab87" }
 # our PR to bump reqwest to 0.12 has been merged, so we can switch back to upstream
 # however, it's not released yet, so we'll keep using patch.crates-io to get the latest
-jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "6cf8232" }
+jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "cfab602" }
 # use unreleased version of calamine with fixes
 calamine = { git = "https://github.com/tafia/calamine", rev = "58c8ba2" }
 
