@@ -32,6 +32,8 @@ search options:
                            but will instead flag the found rows in a new
                            column named <column>, with the row numbers
                            of the matched rows and 0 for the non-matched rows.
+                           If column is named M, only the M column will be written
+                           to the output, and only matched rows are returned.
     -q, --quick            Return on first match with an exitcode of 0, returning
                            the row number of the first match to stderr.
                            Return exit code 1 if no match is found.
@@ -144,7 +146,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
+    let mut matches_only = false;
+
     let flag_flag = args.flag_flag.map_or(false, |column_name| {
+        if column_name == "M" {
+            headers.clear();
+            matches_only = true;
+        }
         headers.push_field(column_name.as_bytes());
         true
     });
@@ -206,6 +214,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut preview_match_ctr = 0;
         let mut is_first_stderr = true;
         let preview_timeout = std::time::Duration::from_millis(preview_match);
+        let mut match_row;
         let start_time = std::time::Instant::now();
         while rdr.read_byte_record(&mut record)? {
             row_ctr += 1;
@@ -247,12 +256,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             if flag_flag {
                 flag_rowi += 1;
-                record.push_field(if m {
+                match_row = if m {
                     buffer.format(flag_rowi).clone_into(&mut matched_rows);
                     matched_rows.as_bytes()
                 } else {
                     b"0"
-                });
+                };
+                if matches_only {
+                    if match_row == b"0" {
+                        continue;
+                    }
+                    record.clear();
+                }
+                record.push_field(match_row);
                 if flag_json {
                     util::write_json_record(
                         &mut json_wtr,
@@ -302,6 +318,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         json_wtr.write_all(b"[")?;
     }
 
+    let mut match_row;
     while rdr.read_byte_record(&mut record)? {
         row_ctr += 1;
 
@@ -322,12 +339,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if flag_flag {
             flag_rowi += 1;
-            record.push_field(if m {
+            match_row = if m {
                 buffer.format(flag_rowi).clone_into(&mut matched_rows);
                 matched_rows.as_bytes()
             } else {
                 b"0"
-            });
+            };
+            if matches_only {
+                if match_row == b"0" {
+                    continue;
+                }
+                record.clear();
+            }
+            record.push_field(match_row);
             if flag_json {
                 util::write_json_record(
                     &mut json_wtr,
