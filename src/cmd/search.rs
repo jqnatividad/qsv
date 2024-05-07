@@ -128,7 +128,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .select(args.flag_select);
 
     // args struct booleans in hot loop assigned to local variables
-    // to help the compiler optimize the code
+    // to help the compiler optimize the code & hopefully use registers
     let flag_quick = args.flag_quick;
     let flag_quiet = args.flag_quiet || args.flag_json;
     let flag_json = args.flag_json;
@@ -149,6 +149,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut matches_only = false;
 
     let flag_flag = args.flag_flag.map_or(false, |column_name| {
+        // if --flag column is "M", then we only output the M column
         if column_name == "M" {
             headers.clear();
             matches_only = true;
@@ -213,8 +214,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         let mut preview_match_ctr = 0;
         let mut is_first_stderr = true;
-        let preview_timeout = std::time::Duration::from_millis(preview_match);
         let mut match_row;
+
+        // make preview-match timeout at least 10 ms
+        let preview_timeout = std::time::Duration::from_millis(std::cmp::max(preview_match, 10));
         let start_time = std::time::Instant::now();
         while rdr.read_byte_record(&mut record)? {
             row_ctr += 1;
