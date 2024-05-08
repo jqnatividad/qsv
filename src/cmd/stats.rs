@@ -41,7 +41,7 @@ as its an expensive operation to match a date candidate against 19 possible date
 with each format, having several variants.
 
 The date formats recognized and its sub-variants along with examples can be found at 
-https://github.com/jqnatividad/belt/tree/main/dateparser#accepted-date-formats.
+https://github.com/jqnatividad/qsv-dateparser?tab=readme-ov-file#accepted-date-formats.
 
 Computing statistics on a large file can be made MUCH faster if you create an index for it
 first with 'qsv index' to enable multithreading. With an index, the file is split into equal
