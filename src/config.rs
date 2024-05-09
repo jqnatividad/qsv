@@ -72,26 +72,26 @@ impl<'de> Deserialize<'de> for Delimiter {
 
 #[derive(Clone, Debug)]
 pub struct Config {
-    pub path:          Option<PathBuf>, // None implies <stdin>
-    idx_path:          Option<PathBuf>,
-    select_columns:    Option<SelectColumns>,
-    delimiter:         u8,
-    pub no_headers:    bool,
-    pub flexible:      bool,
-    terminator:        csv::Terminator,
-    pub quote:         u8,
-    quote_style:       csv::QuoteStyle,
-    double_quote:      bool,
-    escape:            Option<u8>,
-    quoting:           bool,
-    pub preamble_rows: u64,
-    trim:              csv::Trim,
-    autoindex_size:    u64,
-    prefer_dmy:        bool,
-    pub comment:       Option<u8>,
-    snappy:            bool, // flag to enable snappy compression/decompression
-    pub read_buffer:   u32,
-    pub write_buffer:  u32,
+    pub path:           Option<PathBuf>, // None implies <stdin>
+    idx_path:           Option<PathBuf>,
+    select_columns:     Option<SelectColumns>,
+    delimiter:          u8,
+    pub no_headers:     bool,
+    pub flexible:       bool,
+    terminator:         csv::Terminator,
+    pub quote:          u8,
+    quote_style:        csv::QuoteStyle,
+    double_quote:       bool,
+    escape:             Option<u8>,
+    quoting:            bool,
+    pub preamble_rows:  u64,
+    trim:               csv::Trim,
+    pub autoindex_size: u64,
+    prefer_dmy:         bool,
+    pub comment:        Option<u8>,
+    snappy:             bool, // flag to enable snappy compression/decompression
+    pub read_buffer:    u32,
+    pub write_buffer:   u32,
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors

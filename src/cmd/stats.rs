@@ -139,10 +139,14 @@ stats options:
                               by using this option BEFORE running the `schema` and `tojsonl`
                               commands and they will automatically load the binary encoded
                               stats file if it exists.
-    --cache-threshold <arg>   The threshold in milliseconds to cache the stats results.
-                              If a stats run takes longer than this threshold, the stats
-                              results will be cached. Set to 0 to suppress caching. Set
-                              to 1 to force caching.
+ -c, --cache-threshold <arg>  When greater than 1, the threshold in milliseconds before caching
+                              stats results. If a stats run takes longer than this threshold,
+                              the stats results will be cached.
+                              Set to 0 to suppress caching. 
+                              Set to 1 to force caching.
+                              Set to a negative number to automatically create an index
+                              when the input file size is greater than abs(arg) in bytes
+                              AND to force caching.
                               [default: 5000]
 
 Common options:
@@ -174,7 +178,7 @@ It's type inferences are also used by the `tojsonl` command to generate properly
 JSONL files.
 
 To safeguard against undefined behavior, `stats` is the most extensively tested command,
-with >480 tests.
+with ~500 tests.
 */
 
 use std::{
@@ -224,7 +228,7 @@ pub struct Args {
     pub flag_force:           bool,
     pub flag_jobs:            Option<usize>,
     pub flag_stats_binout:    bool,
-    pub flag_cache_threshold: u64,
+    pub flag_cache_threshold: isize,
     pub flag_output:          Option<String>,
     pub flag_no_headers:      bool,
     pub flag_delimiter:       Option<Delimiter>,
@@ -478,6 +482,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 util::mem_file_check(&path, false, args.flag_memcheck)?;
             }
 
+            // check if flag_cache_threshold is a negative number,
+            // if so, set the autoindex_size to absolute of the number
+            if args.flag_cache_threshold < 0 {
+                fconfig.autoindex_size = args.flag_cache_threshold.unsigned_abs() as u64;
+            }
+
             // we need to count the number of records in the file to calculate sparsity
             let record_count = RECORD_COUNT.get_or_init(|| util::count_rows(&fconfig).unwrap());
             log::info!("scanning {record_count} records...");
@@ -520,7 +530,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // update the stats args json metadata
             current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
 
-            if create_cache && current_stats_args.compute_duration_ms > args.flag_cache_threshold {
+            if create_cache
+                && current_stats_args.compute_duration_ms > args.flag_cache_threshold as u64
+            {
                 // if the stats run took longer than the cache threshold and the threshold > 0,
                 // cache the stats so we don't have to recompute it next time
                 current_stats_args.canonical_input_path =
@@ -532,7 +544,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // ensure create_cache is also true if the user specified --cache-threshold 1
-    create_cache = create_cache || args.flag_cache_threshold == 1;
+    create_cache = create_cache || args.flag_cache_threshold == 1 || args.flag_cache_threshold < 0;
 
     wtr.flush()?;
 
