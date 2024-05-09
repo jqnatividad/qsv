@@ -73,8 +73,8 @@ stats options:
     -s, --select <arg>        Select a subset of columns to compute stats for.
                               See 'qsv select --help' for the format details.
                               This is provided here because piping 'qsv select'
-                              into 'qsv stats' will disable the use of indexing.
-    -E, --everything          Show all statistics available.
+                              into 'qsv stats' will prevent the use of indexing.
+    -E, --everything          Compute all statistics available.
     --typesonly               Infer data types only and do not compute statistics.
                               Note that if you want to infer dates, you'll still need to use
                               the --infer-dates and --dates-whitelist options.
@@ -82,15 +82,15 @@ stats options:
                               the --cardinality option. When a column's cardinality is 2,
                               and the 2 values' first characters are 0/1, t/f & y/n
                               case-insensitive, the data type is inferred as boolean.
-    --mode                    Show the mode/s & antimode/s. Multimodal-aware.
+    --mode                    Compute the mode/s & antimode/s. Multimodal-aware.
                               This requires loading all CSV data in memory.
-    --cardinality             Show the cardinality.
+    --cardinality             Compute the cardinality.
                               This requires loading all CSV data in memory.
-    --median                  Show the median.
+    --median                  Compute the median.
                               This requires loading all CSV data in memory.
-    --mad                     Shows the median absolute deviation (MAD).
+    --mad                     Compute the median absolute deviation (MAD).
                               This requires loading all CSV data in memory.
-    --quartiles               Show the quartiles, the IQR, the lower/upper inner/outer
+    --quartiles               Compute the quartiles, the IQR, the lower/upper inner/outer
                               fences and skewness.
                               This requires loading all CSV data in memory.
     --round <decimal_places>  Round statistics to <decimal_places>. Rounding is done following
@@ -133,10 +133,10 @@ stats options:
                               number of CPUs detected.
     --stats-binout            Write the stats in binary format. This is used internally
                               by other qsv commands (currently `schema` & `tojsonl`) to
-                              load cached stats into memory faster. If set, the binary
-                              encoded stats will be written to <FILESTEM>.stats.csv.bin.sz.
+                              load cached stats into memory faster. If set, the snappy compressed
+                              binary encoded stats will be written to <FILESTEM>.stats.csv.bin.sz.
                               You can preemptively create the binary encoded stats file
-                              by using this option before running the `schema` and `tojsonl`
+                              by using this option BEFORE running the `schema` and `tojsonl`
                               commands and they will automatically load the binary encoded
                               stats file if it exists.
     --cache-threshold <arg>   The threshold in milliseconds to cache the stats results.
