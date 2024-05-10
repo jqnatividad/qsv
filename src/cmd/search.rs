@@ -8,7 +8,7 @@ The columns to search can be limited with the '--select' flag (but the full row
 is still written to the output if there is a match).
 
 Returns exitcode 0 when matches are found, returning number of matches to stderr.
-Returns exitcode 1 when no match is found.
+Returns exitcode 1 when no match is found, unless the '--not-one' flag is used.
 
 When --quick is enabled, no output is produced and exitcode 0 is returned on 
 the first match.
