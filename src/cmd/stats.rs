@@ -139,10 +139,16 @@ stats options:
                               by using this option BEFORE running the `schema` and `tojsonl`
                               commands and they will automatically load the binary encoded
                               stats file if it exists.
-    --cache-threshold <arg>   The threshold in milliseconds to cache the stats results.
-                              If a stats run takes longer than this threshold, the stats
-                              results will be cached. Set to 0 to suppress caching. Set
-                              to 1 to force caching.
+ -c, --cache-threshold <arg>  When greater than 1, the threshold in milliseconds before caching
+                              stats results. If a stats run takes longer than this threshold,
+                              the stats results will be cached.
+                              Set to 0 to suppress caching. 
+                              Set to 1 to force caching.
+                              Set to a negative number to automatically create an index
+                              when the input file size is greater than abs(arg) in bytes.
+                              If the negative number ends with 5, it will delete the index
+                              file and the stats cache file after the stats run. Otherwise,
+                              the index file and the cache files are kept.
                               [default: 5000]
 
 Common options:
@@ -174,7 +180,7 @@ It's type inferences are also used by the `tojsonl` command to generate properly
 JSONL files.
 
 To safeguard against undefined behavior, `stats` is the most extensively tested command,
-with >480 tests.
+with ~500 tests.
 */
 
 use std::{
@@ -224,7 +230,7 @@ pub struct Args {
     pub flag_force:           bool,
     pub flag_jobs:            Option<usize>,
     pub flag_stats_binout:    bool,
-    pub flag_cache_threshold: u64,
+    pub flag_cache_threshold: isize,
     pub flag_output:          Option<String>,
     pub flag_no_headers:      bool,
     pub flag_delimiter:       Option<Delimiter>,
@@ -375,6 +381,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut compute_stats = true;
     let mut create_cache = args.flag_cache_threshold > 0 || args.flag_stats_binout;
+    let mut autoindex_set = false;
 
     let write_stats_binout = args.flag_stats_binout;
 
@@ -478,6 +485,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 util::mem_file_check(&path, false, args.flag_memcheck)?;
             }
 
+            // check if flag_cache_threshold is a negative number,
+            // if so, set the autoindex_size to absolute of the number
+            if args.flag_cache_threshold.is_negative() {
+                fconfig.autoindex_size = args.flag_cache_threshold.unsigned_abs() as u64;
+                autoindex_set = true;
+            }
+
             // we need to count the number of records in the file to calculate sparsity
             let record_count = RECORD_COUNT.get_or_init(|| util::count_rows(&fconfig).unwrap());
             log::info!("scanning {record_count} records...");
@@ -520,7 +534,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // update the stats args json metadata
             current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
 
-            if create_cache && current_stats_args.compute_duration_ms > args.flag_cache_threshold {
+            if create_cache
+                && current_stats_args.compute_duration_ms > args.flag_cache_threshold as u64
+            {
                 // if the stats run took longer than the cache threshold and the threshold > 0,
                 // cache the stats so we don't have to recompute it next time
                 current_stats_args.canonical_input_path =
@@ -532,7 +548,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     // ensure create_cache is also true if the user specified --cache-threshold 1
-    create_cache = create_cache || args.flag_cache_threshold == 1;
+    create_cache =
+        create_cache || args.flag_cache_threshold == 1 || args.flag_cache_threshold.is_negative();
 
     wtr.flush()?;
 
@@ -570,6 +587,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if currstats_filename != stats_pathbuf.to_str().unwrap() {
             // if the stats file is not the same as the input file, copy it
             fs::copy(currstats_filename.clone(), stats_pathbuf.clone())?;
+        }
+
+        if args.flag_cache_threshold.is_negative() && args.flag_cache_threshold % 10 == -5 {
+            // if the cache threshold is a negative number ending in 5,
+            // delete both the index file and the stats cache file
+            if autoindex_set {
+                let index_file = path.with_extension("csv.idx");
+                log::debug!("deleting index file: {}", index_file.display());
+                if std::fs::remove_file(index_file.clone()).is_err() {
+                    // fails silently if it can't remove the index file
+                    log::warn!("Could not remove index file: {}", index_file.display());
+                }
+            }
+            create_cache = false;
         }
 
         if !create_cache {
