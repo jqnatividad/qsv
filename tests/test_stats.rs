@@ -938,7 +938,6 @@ fn stats_cache_negative_threshold() {
 
     // the index file SHOULD have been created as the input file size > 10 kb
     assert!(Path::new(&format!("{test_file}.idx")).exists());
-    // assert!(Path::new(&format!("{test_file}.idx")).exists());
 
     wrk.create("in2.csv", got);
 
@@ -991,6 +990,45 @@ fn stats_cache_negative_threshold_unmet() {
     // check that the stats cache files were created
     assert!(Path::new(&wrk.path("boston311-100.stats.csv")).exists());
     assert!(Path::new(&wrk.path("boston311-100.stats.csv.json")).exists());
+}
+
+#[test]
+fn stats_cache_negative_threshold_five() {
+    use std::path::Path;
+
+    let wrk = Workdir::new("stats_cache_negative_threshold_five");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--infer-dates")
+        .arg("--dates-whitelist")
+        .arg("all")
+        // set cache threshold to -10245 to set autoindex_size to 10 kb
+        // this creates an index file, and then autodeletes it AND the stats cache files
+        .args(["-c", "-10245"])
+        .arg(test_file.clone());
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    // the index file WAS CREATED as the input file is > 10k
+    // but the index file WAS DELETED after stats exits as the threshold was negative
+    // and ends with a 5
+    assert!(!Path::new(&format!("{test_file}.idx")).exists());
+
+    wrk.create("in2.csv", got);
+
+    // removed variance & stddev columns as its causing flaky CI test for float values
+    let mut cmd = wrk.command("select");
+    cmd.arg("1-9,12-").arg("in2.csv");
+
+    let got2: String = wrk.stdout(&mut cmd);
+    let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
+
+    assert_eq!(dos2unix(&got2), dos2unix(&expected2).trim_end());
+
+    // check that the stats cache files were created
+    assert!(!Path::new(&wrk.path("boston311-100.stats.csv")).exists());
+    assert!(!Path::new(&wrk.path("boston311-100.stats.csv.json")).exists());
 }
 
 #[test]
