@@ -8,7 +8,7 @@ The columns to search can be limited with the '--select' flag (but the full row
 is still written to the output if there is a match).
 
 Returns exitcode 0 when matches are found, returning number of matches to stderr.
-Returns exitcode 1 when no match is found.
+Returns exitcode 1 when no match is found, unless the '--not-one' flag is used.
 
 When --quick is enabled, no output is produced and exitcode 0 is returned on 
 the first match.
@@ -57,6 +57,7 @@ search options:
                            JSON array. If --no-headers is set, then
                            the keys are the column indices (zero-based).
                            Automatically sets --quiet.
+    --not-one              Use exit code 0 instead of 1 for no match found.
                            
 Common options:
     -h, --help             Display this message
@@ -98,6 +99,7 @@ struct Args {
     flag_size_limit:     usize,
     flag_dfa_size_limit: usize,
     flag_json:           bool,
+    flag_not_one:        bool,
     flag_quick:          bool,
     flag_preview_match:  Option<u64>,
     flag_count:          bool,
@@ -133,6 +135,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let flag_quiet = args.flag_quiet || args.flag_json;
     let flag_json = args.flag_json;
     let flag_no_headers = args.flag_no_headers;
+    let flag_not_one = args.flag_not_one;
 
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
@@ -404,7 +407,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         info!("matches: {match_ctr}");
     }
 
-    if match_ctr == 0 {
+    if match_ctr == 0 && !flag_not_one {
         return Err(CliError::NoMatch());
     } else if args.flag_quick {
         if !args.flag_quiet {
