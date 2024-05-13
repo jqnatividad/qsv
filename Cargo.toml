@@ -122,7 +122,7 @@ indicatif = "0.17"
 itertools = "0.12"
 itoa = "1"
 jemallocator = { version = "0.5", optional = true }
-jsonschema = { version = "0.17", features = [
+jsonschema = { version = "0.18", features = [
     "resolve-file",
     "resolve-http",
 ], default-features = false }
@@ -246,9 +246,6 @@ serial_test = { version = "3.1", features = ["file_locks"] }
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "0c8ab87" }
-# our PR to bump reqwest to 0.12 has been merged, so we can switch back to upstream
-# however, it's not released yet, so we'll keep using patch.crates-io to get the latest
-jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "cfab602" }
 # use unreleased version of calamine with fixes
 calamine = { git = "https://github.com/tafia/calamine", rev = "58c8ba2" }
 
