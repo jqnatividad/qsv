@@ -2,13 +2,14 @@ static USAGE: &str = r#"
 Compute summary statistics & infers data types for each column in a CSV. 
 
 Summary statistics includes sum, min/max/range, min/max length, mean, stddev, variance,
-nullcount, sparsity, quartiles, interquartile range (IQR), lower/upper fences, skewness, median, 
-cardinality, mode/s & "antimode/s", and median absolute deviation (MAD). Note that some
-statistics requires loading the entire file into memory, so they must be enabled explicitly. 
+nullcount, max_precision, sparsity, quartiles, interquartile range (IQR), lower/upper fences,
+skewness, median, cardinality, mode/s & "antimode/s", and median absolute deviation (MAD).
+Note that some statistics require loading the entire file into memory, so they must be
+enabled explicitly. 
 
 By default, the following "streaming" statistics are reported for *every* column:
-sum, min/max/range values, min/max length, mean, stddev, variance, nullcount & sparsity.
-The default set of statistics corresponds to statistics that can be computed efficiently
+sum, min/max/range values, min/max length, mean, stddev, variance, nullcount, max_precision and
+sparsity. The default set of statistics corresponds to ones that can be computed efficiently
 on a stream of data (i.e., constant memory) and works with arbitrarily large CSV files.
 
 The following additional "non-streaming" statistics require loading the entire file into memory:
@@ -828,8 +829,8 @@ impl Args {
             return csv::StringRecord::from(vec!["field", "type"]);
         }
 
-        // with --everything, we have 30 columns at most
-        let mut fields = Vec::with_capacity(30);
+        // with --everything, we have 31 columns at most
+        let mut fields = Vec::with_capacity(31);
         fields.extend_from_slice(&[
             "field",
             "type",
@@ -843,6 +844,7 @@ impl Args {
             "stddev",
             "variance",
             "nullcount",
+            "max_precision",
             "sparsity",
         ]);
         let all = self.flag_everything;
@@ -971,16 +973,17 @@ impl Commute for WhichStats {
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct Stats {
-    typ:       FieldType,
-    sum:       Option<TypedSum>,
-    minmax:    Option<TypedMinMax>,
-    online:    Option<OnlineStats>,
-    nullcount: u64,
-    modes:     Option<Unsorted<Vec<u8>>>,
-    median:    Option<Unsorted<f64>>,
-    mad:       Option<Unsorted<f64>>,
-    quartiles: Option<Unsorted<f64>>,
-    which:     WhichStats,
+    typ:           FieldType,
+    sum:           Option<TypedSum>,
+    minmax:        Option<TypedMinMax>,
+    online:        Option<OnlineStats>,
+    nullcount:     u64,
+    max_precision: u16,
+    modes:         Option<Unsorted<Vec<u8>>>,
+    median:        Option<Unsorted<f64>>,
+    mad:           Option<Unsorted<f64>>,
+    quartiles:     Option<Unsorted<f64>>,
+    which:         WhichStats,
 }
 
 #[inline]
@@ -1027,6 +1030,7 @@ impl Stats {
             minmax,
             online,
             nullcount: 0,
+            max_precision: 0,
             modes,
             median,
             mad,
@@ -1097,6 +1101,20 @@ impl Stats {
                     if let Some(v) = self.online.as_mut() {
                         v.add(&n);
                     }
+                    if sample_type == TFloat {
+                        let mut buffer = ryu::Buffer::new();
+                        // safety: we know that n is a valid f64
+                        // so there will always be a fraction part, even if it's 0
+                        let fractpart = buffer.format_finite(n).split('.').next_back().unwrap();
+                        self.max_precision = std::cmp::max(
+                            self.max_precision,
+                            (if *fractpart == *"0" {
+                                0
+                            } else {
+                                fractpart.len()
+                            }) as u16,
+                        );
+                    }
                 }
             },
             TDateTime | TDate => {
@@ -1139,8 +1157,8 @@ impl Stats {
 
         let typ = self.typ;
         // prealloc memory for performance
-        // we have 30 columns at most with --everything
-        let mut pieces = Vec::with_capacity(30);
+        // we have 31 columns at most with --everything
+        let mut pieces = Vec::with_capacity(31);
 
         let empty = String::new;
 
@@ -1323,6 +1341,13 @@ impl Stats {
         let mut buffer = itoa::Buffer::new();
         pieces.push(buffer.format(self.nullcount).to_owned());
 
+        // max precision
+        if typ == TFloat {
+            pieces.push(self.max_precision.to_string());
+        } else {
+            pieces.push(empty());
+        }
+
         // sparsity
         // stats is also called by the `schema` and `tojsonl` commands to infer a schema,
         // sparsity is not required by those cmds and we don't necessarily have the
@@ -1469,6 +1494,7 @@ impl Commute for Stats {
         self.minmax.merge(other.minmax);
         self.online.merge(other.online);
         self.nullcount += other.nullcount;
+        self.max_precision = std::cmp::max(self.max_precision, other.max_precision);
         self.modes.merge(other.modes);
         self.median.merge(other.median);
         self.quartiles.merge(other.quartiles);
