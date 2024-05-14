@@ -75,10 +75,14 @@ fn index_outdated_stats() {
             "stddev",
             "variance",
             "nullcount",
+            "max_precision",
             "sparsity"
         ],
-        svec!["letter", "String", "", "a", "c", "", "1", "1", "", "", "", "0", "0"],
-        svec!["number", "Integer", "6", "1", "3", "2", "1", "1", "2", "0.8165", "0.6667", "0", "0"],
+        svec!["letter", "String", "", "a", "c", "", "1", "1", "", "", "", "0", "", "0"],
+        svec![
+            "number", "Integer", "6", "1", "3", "2", "1", "1", "2", "0.8165", "0.6667", "0", "",
+            "0"
+        ],
     ];
 
     assert_eq!(got, expected);
