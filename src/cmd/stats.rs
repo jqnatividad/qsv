@@ -97,6 +97,7 @@ stats options:
     --round <decimal_places>  Round statistics to <decimal_places>. Rounding is done following
                               Midpoint Nearest Even (aka "Bankers Rounding") rule.
                               https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html
+                              If set to the sentinel value 9999, no rounding is done.
                               For dates - range, stddev & IQR are always at least 5 decimal places as
                               they are reported in days, and 5 places gives us millisecond precision.
                               [default: 4]
