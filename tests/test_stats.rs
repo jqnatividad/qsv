@@ -681,6 +681,27 @@ fn stats_rounding() {
 }
 
 #[test]
+fn stats_no_rounding() {
+    let wrk = Workdir::new("stats_no_rounding");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("--everything")
+        .args(["--round", "9999"])
+        .arg(test_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    wrk.create("in2.csv", got);
+
+    let got2: String = wrk.stdout(&mut cmd);
+    let expected2 = wrk.load_test_resource("boston311-100-everything-norounding-stats.csv");
+
+    // this should NOT BE EQUAL as floats are not rounded, and comparing floats is not reliable
+    assert_ne!(dos2unix(&got2), dos2unix(&expected2).trim_end());
+}
+
+#[test]
 fn stats_no_date_inference() {
     let wrk = Workdir::new("stats_no_date_inference");
     let test_file = wrk.load_test_file("boston311-100.csv");

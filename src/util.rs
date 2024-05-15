@@ -1237,6 +1237,12 @@ impl ColumnNameParser {
 pub fn round_num(dec_f64: f64, places: u32) -> String {
     use rust_decimal::{Decimal, RoundingStrategy};
 
+    // if places is the sentinel value 9999, we don't round, just return the number as is
+    if places == 9999 {
+        let mut buffer = ryu::Buffer::new();
+        return buffer.format(dec_f64).to_owned();
+    }
+
     // use from_f64_retain, so we have all the excess bits before rounding with
     // round_dp_with_strategy as from_f64 will prematurely round when it drops the excess bits
     let Some(dec_num) = Decimal::from_f64_retain(dec_f64) else {
