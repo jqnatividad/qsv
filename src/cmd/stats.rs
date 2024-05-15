@@ -1101,7 +1101,7 @@ impl Stats {
                     if let Some(v) = self.online.as_mut() {
                         v.add(&n);
                     }
-                    if sample_type == TFloat {
+                    if t == TFloat {
                         let mut buffer = ryu::Buffer::new();
                         // safety: we know that n is a valid f64
                         // so there will always be a fraction part, even if it's 0
