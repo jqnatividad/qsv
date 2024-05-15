@@ -1540,8 +1540,8 @@ impl FieldType {
             return (FieldType::TString, None);
         }
 
-        let utf8_string = if current_type == FieldType::TFloat
-            || current_type == FieldType::TInteger
+        let utf8_string = if current_type == FieldType::TInteger
+            || current_type == FieldType::TFloat
             || current_type == FieldType::TNull
         {
             if let Ok(int_val) = atoi_simd::parse::<i64>(sample) {
