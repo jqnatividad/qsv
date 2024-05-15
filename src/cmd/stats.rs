@@ -708,11 +708,11 @@ impl Args {
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         let (send, recv) = channel::bounded(0);
         for i in 0..nchunks {
-            // safety: the index file call is always safe seeking may fail and you have a bigger
-            // problem as the index file was modified WHILE stats is running and you
-            // NEED to abort if that happens, however unlikely
             let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
             pool.execute(move || {
+                // safety: indexed() is safe as we know we have an index file
+                // if it does return an Err, you have a bigger problem as the index file was modified
+                // WHILE stats is running and you NEED to abort if that happens, however unlikely
                 let mut idx = args.rconfig().indexed().unwrap().unwrap();
                 idx.seek((i * chunk_size) as u64)
                     .expect("File seek failed.");
