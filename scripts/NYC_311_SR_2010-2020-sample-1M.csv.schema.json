@@ -1,0 +1,564 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "JSON Schema for NYC_311_SR_2010-2020-sample-1M.csv",
+  "description": "Inferred JSON Schema from QSV schema command",
+  "type": "object",
+  "properties": {
+    "Unique Key": {
+      "description": "Unique Key column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minimum": 11465364,
+      "maximum": 48478173,
+      "type": [
+        "integer"
+      ]
+    },
+    "Created Date": {
+      "description": "Created Date column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "format": "date-time",
+      "type": [
+        "string"
+      ]
+    },
+    "Closed Date": {
+      "description": "Closed Date column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "format": "date-time",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Agency": {
+      "description": "Agency column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 3,
+      "maxLength": 42,
+      "type": [
+        "string"
+      ],
+      "enum": [
+        "3-1-1",
+        "ACS",
+        "DCA",
+        "DCAS",
+        "DCP",
+        "DEP",
+        "DFTA",
+        "DHS",
+        "DOB",
+        "DOE",
+        "DOF",
+        "DOHMH",
+        "DOITT",
+        "DORIS",
+        "DOT",
+        "DPR",
+        "DSNY",
+        "DVS",
+        "EDC",
+        "FDNY",
+        "HPD",
+        "HRA",
+        "MAYORâS OFFICE OF SPECIAL ENFORCEMENT",
+        "MOC",
+        "NYCEM",
+        "NYPD",
+        "TAX",
+        "TLC"
+      ]
+    },
+    "Agency Name": {
+      "description": "Agency Name column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 3,
+      "maxLength": 82,
+      "type": [
+        "string"
+      ]
+    },
+    "Complaint Type": {
+      "description": "Complaint Type column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 3,
+      "maxLength": 41,
+      "type": [
+        "string"
+      ]
+    },
+    "Descriptor": {
+      "description": "Descriptor column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 80,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Location Type": {
+      "description": "Location Type column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 36,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Incident Zip": {
+      "description": "Incident Zip column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 10,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Incident Address": {
+      "description": "Incident Address column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 55,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Street Name": {
+      "description": "Street Name column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 55,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Cross Street 1": {
+      "description": "Cross Street 1 column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 32,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Cross Street 2": {
+      "description": "Cross Street 2 column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 35,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Intersection Street 1": {
+      "description": "Intersection Street 1 column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 35,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Intersection Street 2": {
+      "description": "Intersection Street 2 column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 33,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Address Type": {
+      "description": "Address Type column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 12,
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "ADDRESS",
+        "BLOCKFACE",
+        "INTERSECTION",
+        "LATLONG",
+        "PLACENAME",
+        null
+      ]
+    },
+    "City": {
+      "description": "City column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 22,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Landmark": {
+      "description": "Landmark column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 32,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Facility Type": {
+      "description": "Facility Type column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 15,
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "DSNY Garage",
+        "N/A",
+        "Precinct",
+        "School",
+        "School District",
+        null
+      ]
+    },
+    "Status": {
+      "description": "Status column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 4,
+      "maxLength": 16,
+      "type": [
+        "string"
+      ],
+      "enum": [
+        "Assigned",
+        "Closed",
+        "Closed - Testing",
+        "Email Sent",
+        "In Progress",
+        "Open",
+        "Pending",
+        "Started",
+        "Unassigned",
+        "Unspecified"
+      ]
+    },
+    "Due Date": {
+      "description": "Due Date column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "format": "date-time",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Resolution Description": {
+      "description": "Resolution Description column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 934,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Resolution Action Updated Date": {
+      "description": "Resolution Action Updated Date column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "format": "date-time",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Community Board": {
+      "description": "Community Board column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 8,
+      "maxLength": 25,
+      "type": [
+        "string"
+      ]
+    },
+    "BBL": {
+      "description": "BBL column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 10,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Borough": {
+      "description": "Borough column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 5,
+      "maxLength": 13,
+      "type": [
+        "string"
+      ],
+      "enum": [
+        "BRONX",
+        "BROOKLYN",
+        "MANHATTAN",
+        "QUEENS",
+        "STATEN ISLAND",
+        "Unspecified"
+      ]
+    },
+    "X Coordinate (State Plane)": {
+      "description": "X Coordinate (State Plane) column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minimum": 913281,
+      "maximum": 1067220,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "Y Coordinate (State Plane)": {
+      "description": "Y Coordinate (State Plane) column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minimum": 121152,
+      "maximum": 271876,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "Open Data Channel Type": {
+      "description": "Open Data Channel Type column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 5,
+      "maxLength": 7,
+      "type": [
+        "string"
+      ],
+      "enum": [
+        "MOBILE",
+        "ONLINE",
+        "OTHER",
+        "PHONE",
+        "UNKNOWN"
+      ]
+    },
+    "Park Facility Name": {
+      "description": "Park Facility Name column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 3,
+      "maxLength": 82,
+      "type": [
+        "string"
+      ]
+    },
+    "Park Borough": {
+      "description": "Park Borough column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 5,
+      "maxLength": 13,
+      "type": [
+        "string"
+      ],
+      "enum": [
+        "BRONX",
+        "BROOKLYN",
+        "MANHATTAN",
+        "QUEENS",
+        "STATEN ISLAND",
+        "Unspecified"
+      ]
+    },
+    "Vehicle Type": {
+      "description": "Vehicle Type column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 23,
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "Ambulette / Paratransit",
+        "Car Service",
+        "Commuter Van",
+        "Green Taxi",
+        null
+      ]
+    },
+    "Taxi Company Borough": {
+      "description": "Taxi Company Borough column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 13,
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "BRONX",
+        "BROOKLYN",
+        "Bronx",
+        "Brooklyn",
+        "MANHATTAN",
+        "Manhattan",
+        "QUEENS",
+        "Queens",
+        "STATEN ISLAND",
+        "Staten Island",
+        null
+      ]
+    },
+    "Taxi Pick Up Location": {
+      "description": "Taxi Pick Up Location column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 60,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Bridge Highway Name": {
+      "description": "Bridge Highway Name column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 42,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Bridge Highway Direction": {
+      "description": "Bridge Highway Direction column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 33,
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "Bronx Bound",
+        "Bronx/North Bound",
+        "Brooklyn Bound",
+        "East Bound",
+        "East/Bronx Bound",
+        "East/Brooklyn Bound",
+        "East/Long Island Bound",
+        "East/Queens Bound",
+        "Eastbound",
+        "Eastbound/To Ocean Pkwy",
+        "From the Rockaways",
+        "Leaving Coney Island",
+        "Manhattan Bound",
+        "N/A",
+        "New Jersey Bound",
+        "North Bound",
+        "North/Bronx Bound",
+        "North/Eastbound",
+        "North/To Bayonne Br",
+        "North/Westbound (To GW Br)",
+        "North/Westchester County Bound",
+        "Northbound",
+        "Northbound/Uptown",
+        "Queens Bound",
+        "South Bound",
+        "South/Downtown",
+        "South/East (To Throgs Neck Br)",
+        "South/JFK Airport Bound",
+        "South/Long Island Bound",
+        "South/Manhattan Bound",
+        "South/New Jersey Bound",
+        "South/Queens Bound",
+        "South/Toward Triborough Br",
+        "Southbound",
+        "Southbound/Downtown",
+        "Southbound/To OuterBr Cr",
+        "Southbound/To RFK Triborough Br",
+        "Southbound/To Triborough Br",
+        "To FDR/East Side",
+        "To the Rockaways",
+        "West Bound",
+        "West/Brooklyn Bound",
+        "West/Manhattan Bound",
+        "West/Staten Island Bound",
+        "West/Toward RFK Triborough Bridge",
+        "West/Toward Triborough Br",
+        "Westbound",
+        "Westbound/To BQE",
+        "Westbound/To Goethals Br",
+        null
+      ]
+    },
+    "Road Ramp": {
+      "description": "Road Ramp column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 7,
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "N/A",
+        "Ramp",
+        "Roadway",
+        null
+      ]
+    },
+    "Bridge Highway Segment": {
+      "description": "Bridge Highway Segment column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 100,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Latitude": {
+      "description": "Latitude column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minimum": 40.1123853,
+      "maximum": 40.9128688,
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "Longitude": {
+      "description": "Longitude column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minimum": -77.5195844,
+      "maximum": -73.7005968,
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "Location": {
+      "description": "Location column from NYC_311_SR_2010-2020-sample-1M.csv",
+      "minLength": 0,
+      "maxLength": 40,
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "Unique Key",
+    "Created Date",
+    "Closed Date",
+    "Agency",
+    "Agency Name",
+    "Complaint Type",
+    "Descriptor",
+    "Location Type",
+    "Incident Zip",
+    "Incident Address",
+    "Street Name",
+    "Cross Street 1",
+    "Cross Street 2",
+    "Intersection Street 1",
+    "Intersection Street 2",
+    "Address Type",
+    "City",
+    "Landmark",
+    "Facility Type",
+    "Status",
+    "Due Date",
+    "Resolution Description",
+    "Resolution Action Updated Date",
+    "Community Board",
+    "BBL",
+    "Borough",
+    "X Coordinate (State Plane)",
+    "Y Coordinate (State Plane)",
+    "Open Data Channel Type",
+    "Park Facility Name",
+    "Park Borough",
+    "Vehicle Type",
+    "Taxi Company Borough",
+    "Taxi Pick Up Location",
+    "Bridge Highway Name",
+    "Bridge Highway Direction",
+    "Road Ramp",
+    "Bridge Highway Segment",
+    "Latitude",
+    "Longitude",
+    "Location"
+  ]
+}
