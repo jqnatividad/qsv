@@ -711,8 +711,9 @@ impl Args {
             let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
             pool.execute(move || {
                 // safety: indexed() is safe as we know we have an index file
-                // if it does return an Err, you have a bigger problem as the index file was modified
-                // WHILE stats is running and you NEED to abort if that happens, however unlikely
+                // if it does return an Err, you have a bigger problem as the index file was
+                // modified WHILE stats is running and you NEED to abort if that
+                // happens, however unlikely
                 let mut idx = args.rconfig().indexed().unwrap().unwrap();
                 idx.seek((i * chunk_size) as u64)
                     .expect("File seek failed.");
@@ -761,16 +762,18 @@ impl Args {
 
         // safety: we know INFER_DATE_FLAGS is Some because we called init_date_inference
         let infer_date_flags = INFER_DATE_FLAGS.get().unwrap();
+
         // so we don't need to get infer_boolean/prefer_dmy from big args struct for each iteration
+        // and hopefully the compiler will optimize this and use registers in the hot loop
         let infer_boolean = self.flag_infer_boolean;
         let prefer_dmy = self.flag_prefer_dmy;
 
-        // safety: because we're using iterators and INFER_DATE_FLAGS has the same size,
-        // we know we don't need to bounds check
-        unsafe {
-            let mut i;
-            for row in it {
-                i = 0;
+        let mut i;
+        for row in it {
+            i = 0;
+            // safety: because we're using iterators and INFER_DATE_FLAGS has the same size,
+            // we know we don't need to bounds check
+            unsafe {
                 for field in sel.select(&row.unwrap_unchecked()) {
                     stats.get_unchecked_mut(i).add(
                         field,
