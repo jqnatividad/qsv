@@ -1,0 +1,412 @@
+field,value,count,percentage
+Unique Key,11465364,1,0.0001
+Unique Key,15626977,1,0.0001
+Unique Key,15627082,1,0.0001
+Unique Key,15627475,1,0.0001
+Unique Key,15627812,1,0.0001
+Unique Key,15628262,1,0.0001
+Unique Key,15628780,1,0.0001
+Unique Key,15633025,1,0.0001
+Unique Key,15633031,1,0.0001
+Unique Key,15633053,1,0.0001
+Unique Key,"Other (999,990)",999990,99.999
+Created Date,01/24/2013 12:00:00 AM,347,0.0347
+Created Date,01/07/2014 12:00:00 AM,315,0.0315
+Created Date,01/08/2015 12:00:00 AM,283,0.0283
+Created Date,02/16/2015 12:00:00 AM,269,0.0269
+Created Date,11/25/2013 12:00:00 AM,259,0.0259
+Created Date,01/08/2014 12:00:00 AM,247,0.0247
+Created Date,01/07/2015 12:00:00 AM,241,0.0241
+Created Date,01/04/2012 12:00:00 AM,240,0.024
+Created Date,01/04/2010 12:00:00 AM,235,0.0235
+Created Date,01/23/2014 12:00:00 AM,231,0.0231
+Created Date,"Other (841,004)",997333,99.7333
+Closed Date,(NULL),28619,2.8619
+Closed Date,11/15/2010 12:00:00 AM,384,0.0384
+Closed Date,11/07/2012 12:00:00 AM,329,0.0329
+Closed Date,12/09/2010 12:00:00 AM,267,0.0267
+Closed Date,01/28/2013 12:00:00 AM,259,0.0259
+Closed Date,01/09/2014 12:00:00 AM,255,0.0255
+Closed Date,11/28/2011 12:00:00 AM,254,0.0254
+Closed Date,01/06/2014 12:00:00 AM,252,0.0252
+Closed Date,02/28/2011 12:00:00 AM,245,0.0245
+Closed Date,11/08/2010 12:00:00 AM,239,0.0239
+Closed Date,"Other (688,827)",968897,96.8897
+Agency,NYPD,265116,26.5116
+Agency,HPD,258033,25.8033
+Agency,DOT,132462,13.2462
+Agency,DSNY,81606,8.1606
+Agency,DEP,75895,7.5895
+Agency,DOB,51806,5.1806
+Agency,DPR,45581,4.5581
+Agency,DOHMH,25138,2.5138
+Agency,DOF,20691,2.0691
+Agency,TLC,11402,1.1402
+Agency,Other (18),32270,3.227
+Agency Name,New York City Police Department,265038,26.5038
+Agency Name,Department of Housing Preservation and Development,258019,25.8019
+Agency Name,Department of Transportation,132462,13.2462
+Agency Name,Department of Environmental Protection,75895,7.5895
+Agency Name,Department of Buildings,50649,5.0649
+Agency Name,Department of Parks and Recreation,45580,4.558
+Agency Name,Department of Health and Mental Hygiene,25001,2.5001
+Agency Name,Department of Sanitation,22701,2.2701
+Agency Name,Taxi and Limousine Commission,11187,1.1187
+Agency Name,Department of Consumer Affairs,9494,0.9494
+Agency Name,Other (543),103974,10.3974
+Complaint Type,Noise - Residential,89439,8.9439
+Complaint Type,HEAT/HOT WATER,56639,5.6639
+Complaint Type,Illegal Parking,45032,4.5032
+Complaint Type,Blocked Driveway,42356,4.2356
+Complaint Type,Street Condition,41469,4.1469
+Complaint Type,Street Light Condition,39856,3.9856
+Complaint Type,HEATING,35738,3.5738
+Complaint Type,PLUMBING,30209,3.0209
+Complaint Type,Water System,28195,2.8195
+Complaint Type,Noise - Street/Sidewalk,27506,2.7506
+Complaint Type,Other (277),563561,56.3561
+Descriptor,Loud Music/Party,93646,9.3646
+Descriptor,ENTIRE BUILDING,36885,3.6885
+Descriptor,HEAT,35088,3.5088
+Descriptor,No Access,31631,3.1631
+Descriptor,Street Light Out,29659,2.9659
+Descriptor,Pothole,25010,2.501
+Descriptor,Banging/Pounding,24553,2.4553
+Descriptor,APARTMENT ONLY,19754,1.9754
+Descriptor,Loud Talking,14553,1.4553
+Descriptor,CEILING,14350,1.435
+Descriptor,"Other (1,382)",674871,67.4871
+Location Type,RESIDENTIAL BUILDING,255562,25.5562
+Location Type,(NULL),239131,23.9131
+Location Type,Street/Sidewalk,145653,14.5653
+Location Type,Residential Building/House,92765,9.2765
+Location Type,Street,92190,9.219
+Location Type,Sidewalk,63250,6.325
+Location Type,Store/Commercial,12798,1.2798
+Location Type,Property Address,8497,0.8497
+Location Type,Club/Bar/Restaurant,8303,0.8303
+Location Type,Park,7078,0.7078
+Location Type,Other (152),74773,7.4773
+Incident Zip,(NULL),54978,5.4978
+Incident Zip,11226,17114,1.7114
+Incident Zip,10467,14495,1.4495
+Incident Zip,11207,12872,1.2872
+Incident Zip,11385,12469,1.2469
+Incident Zip,10458,12468,1.2468
+Incident Zip,10453,12175,1.2175
+Incident Zip,10468,12052,1.2052
+Incident Zip,11221,11940,1.194
+Incident Zip,10457,11783,1.1783
+Incident Zip,Other (525),827654,82.7654
+Incident Address,(NULL),174700,17.47
+Incident Address,655 EAST  230 STREET,1538,0.1538
+Incident Address,78-15 PARSONS BOULEVARD,694,0.0694
+Incident Address,672 EAST  231 STREET,663,0.0663
+Incident Address,89-21 ELMHURST AVENUE,660,0.066
+Incident Address,34 ARDEN STREET,587,0.0587
+Incident Address,BROADWAY,537,0.0537
+Incident Address,1025 BOYNTON AVENUE,503,0.0503
+Incident Address,674 EAST  231 STREET,396,0.0396
+Incident Address,159-06 UNION TURNPIKE,344,0.0344
+Incident Address,"Other (341,986)",819378,81.9378
+Street Name,(NULL),174720,17.472
+Street Name,BROADWAY,9702,0.9702
+Street Name,GRAND CONCOURSE,5851,0.5851
+Street Name,OCEAN AVENUE,3946,0.3946
+Street Name,5 AVENUE,3694,0.3694
+Street Name,3 AVENUE,3487,0.3487
+Street Name,AMSTERDAM AVENUE,3234,0.3234
+Street Name,ST NICHOLAS AVENUE,2877,0.2877
+Street Name,2 AVENUE,2647,0.2647
+Street Name,MORRIS AVENUE,2620,0.262
+Street Name,"Other (14,827)",787222,78.7222
+Cross Street 1,(NULL),320401,32.0401
+Cross Street 1,BEND,12562,1.2562
+Cross Street 1,BROADWAY,8548,0.8548
+Cross Street 1,3 AVENUE,6154,0.6154
+Cross Street 1,5 AVENUE,6138,0.6138
+Cross Street 1,AMSTERDAM AVENUE,5450,0.545
+Cross Street 1,DEAD END,4643,0.4643
+Cross Street 1,7 AVENUE,4635,0.4635
+Cross Street 1,2 AVENUE,4303,0.4303
+Cross Street 1,8 AVENUE,3849,0.3849
+Cross Street 1,"Other (16,228)",623317,62.3317
+Cross Street 2,(NULL),323644,32.3644
+Cross Street 2,BEND,12390,1.239
+Cross Street 2,BROADWAY,8833,0.8833
+Cross Street 2,DEAD END,5626,0.5626
+Cross Street 2,8 AVENUE,4309,0.4309
+Cross Street 2,7 AVENUE,4216,0.4216
+Cross Street 2,3 AVENUE,3878,0.3878
+Cross Street 2,2 AVENUE,3807,0.3807
+Cross Street 2,1 AVENUE,3729,0.3729
+Cross Street 2,NOSTRAND AVENUE,3400,0.34
+Cross Street 2,"Other (16,476)",626168,62.6168
+Intersection Street 1,(NULL),767422,76.7422
+Intersection Street 1,BROADWAY,3761,0.3761
+Intersection Street 1,CARPENTER AVENUE,2918,0.2918
+Intersection Street 1,BEND,2009,0.2009
+Intersection Street 1,3 AVENUE,1957,0.1957
+Intersection Street 1,5 AVENUE,1808,0.1808
+Intersection Street 1,AMSTERDAM AVENUE,1328,0.1328
+Intersection Street 1,2 AVENUE,1323,0.1323
+Intersection Street 1,7 AVENUE,1012,0.1012
+Intersection Street 1,8 AVENUE,980,0.098
+Intersection Street 1,"Other (11,227)",215482,21.5482
+Intersection Street 2,(NULL),767709,76.7709
+Intersection Street 2,BROADWAY,3462,0.3462
+Intersection Street 2,BEND,1942,0.1942
+Intersection Street 2,2 AVENUE,1690,0.169
+Intersection Street 2,3 AVENUE,1630,0.163
+Intersection Street 2,LOWERRE PLACE,1557,0.1557
+Intersection Street 2,WHITE PLAINS ROAD,1535,0.1535
+Intersection Street 2,1 AVENUE,1344,0.1344
+Intersection Street 2,5 AVENUE,1258,0.1258
+Intersection Street 2,8 AVENUE,1125,0.1125
+Intersection Street 2,"Other (11,664)",216748,21.6748
+Address Type,ADDRESS,710380,71.038
+Address Type,INTERSECTION,133361,13.3361
+Address Type,(NULL),125802,12.5802
+Address Type,BLOCKFACE,22620,2.262
+Address Type,LATLONG,7421,0.7421
+Address Type,PLACENAME,416,0.0416
+City,BROOKLYN,296254,29.6254
+City,NEW YORK,189069,18.9069
+City,BRONX,181168,18.1168
+City,(NULL),61963,6.1963
+City,STATEN ISLAND,49045,4.9045
+City,JAMAICA,13659,1.3659
+City,FLUSHING,10475,1.0475
+City,Jamaica,10278,1.0278
+City,ASTORIA,9520,0.952
+City,RIDGEWOOD,7541,0.7541
+City,Other (372),171028,17.1028
+Landmark,(NULL),912779,91.2779
+Landmark,EAST  230 STREET,1545,0.1545
+Landmark,EAST  231 STREET,1291,0.1291
+Landmark,BROADWAY,1148,0.1148
+Landmark,5 AVENUE,584,0.0584
+Landmark,3 AVENUE,473,0.0473
+Landmark,GRAND CONCOURSE,473,0.0473
+Landmark,PARSONS BOULEVARD,443,0.0443
+Landmark,2 AVENUE,393,0.0393
+Landmark,8 AVENUE,363,0.0363
+Landmark,"Other (5,905)",80508,8.0508
+Facility Type,N/A,628279,62.8279
+Facility Type,Precinct,193259,19.3259
+Facility Type,(NULL),145478,14.5478
+Facility Type,DSNY Garage,32310,3.231
+Facility Type,School,617,0.0617
+Facility Type,School District,57,0.0057
+Status,Closed,952522,95.2522
+Status,Pending,20119,2.0119
+Status,Open,12340,1.234
+Status,In Progress,7841,0.7841
+Status,Assigned,6651,0.6651
+Status,Started,377,0.0377
+Status,Email Sent,142,0.0142
+Status,Closed - Testing,3,0.0003
+Status,Unassigned,3,0.0003
+Status,Unspecified,2,0.0002
+Due Date,(NULL),647794,64.7794
+Due Date,04/08/2015 10:00:58 AM,214,0.0214
+Due Date,05/02/2014 03:32:17 PM,183,0.0183
+Due Date,03/30/2018 10:10:39 AM,172,0.0172
+Due Date,06/27/2015 10:29:08 AM,157,0.0157
+Due Date,07/09/2016 11:21:17 AM,146,0.0146
+Due Date,04/03/2016 03:32:41 PM,140,0.014
+Due Date,09/12/2014 02:25:36 PM,131,0.0131
+Due Date,06/22/2018 03:13:02 PM,110,0.011
+Due Date,10/10/2018 09:00:21 AM,104,0.0104
+Due Date,"Other (345,067)",350849,35.0849
+Resolution Description,The Police Department responded to the complaint and with the information available observed no evidence of the violation at that time.,91408,9.1408
+Resolution Description,The Department of Housing Preservation and Development inspected the following conditions. No violations were issued. The complaint has been closed.,72962,7.2962
+Resolution Description,The Police Department responded to the complaint and took action to fix the condition.,63868,6.3868
+Resolution Description,Service Request status for this request is available on the Department of Transportation?s website. Please click the ?Learn More? link below.,52155,5.2155
+Resolution Description,The Department of Housing Preservation and Development inspected the following conditions. Violations were issued. Information about specific violations is available at www.nyc.gov/hpd.,43722,4.3722
+Resolution Description,The Police Department responded to the complaint and determined that police action was not necessary.,35500,3.55
+Resolution Description,"The Department of Housing Preservation and Development was not able to gain access to inspect the following conditions. The complaint has been closed. If the condition still exists, please file a new complaint.",34676,3.4676
+Resolution Description,The Police Department responded and upon arrival those responsible for the condition were gone.,31937,3.1937
+Resolution Description,The complaint you filed is a duplicate of a condition already reported by another tenant for a building-wide condition. The original complaint is still open. HPD may attempt to contact you to verify the correction of the condition or may conduct an inspection of your unit if the original complainant is not available for verification.,21290,2.129
+Resolution Description,(NULL),20480,2.048
+Resolution Description,"Other (1,206)",532002,53.2002
+Resolution Action Updated Date,(NULL),15072,1.5072
+Resolution Action Updated Date,11/15/2010 12:00:00 AM,385,0.0385
+Resolution Action Updated Date,11/07/2012 12:00:00 AM,336,0.0336
+Resolution Action Updated Date,12/09/2010 12:00:00 AM,273,0.0273
+Resolution Action Updated Date,02/28/2011 12:00:00 AM,268,0.0268
+Resolution Action Updated Date,01/09/2014 12:00:00 AM,262,0.0262
+Resolution Action Updated Date,01/28/2013 12:00:00 AM,261,0.0261
+Resolution Action Updated Date,11/08/2010 12:00:00 AM,257,0.0257
+Resolution Action Updated Date,01/06/2014 12:00:00 AM,255,0.0255
+Resolution Action Updated Date,11/28/2011 12:00:00 AM,253,0.0253
+Resolution Action Updated Date,"Other (690,304)",982378,98.2378
+Community Board,0 Unspecified,49878,4.9878
+Community Board,12 MANHATTAN,29845,2.9845
+Community Board,12 QUEENS,23570,2.357
+Community Board,01 BROOKLYN,21714,2.1714
+Community Board,03 BROOKLYN,21292,2.1292
+Community Board,12 BRONX,20693,2.0693
+Community Board,04 BRONX,20507,2.0507
+Community Board,07 QUEENS,20480,2.048
+Community Board,05 BROOKLYN,20302,2.0302
+Community Board,07 BRONX,20084,2.0084
+Community Board,Other (67),751635,75.1635
+BBL,(NULL),243046,24.3046
+BBL,2048330028,1566,0.1566
+BBL,4068290001,696,0.0696
+BBL,4015110001,664,0.0664
+BBL,2048330080,663,0.0663
+BBL,1021740175,612,0.0612
+BBL,2037140054,503,0.0503
+BBL,2039447501,446,0.0446
+BBL,2048330083,398,0.0398
+BBL,2025110068,375,0.0375
+BBL,"Other (268,373)",751031,75.1031
+Borough,BROOKLYN,296081,29.6081
+Borough,QUEENS,228818,22.8818
+Borough,MANHATTAN,195488,19.5488
+Borough,BRONX,180142,18.0142
+Borough,Unspecified,49878,4.9878
+Borough,STATEN ISLAND,49593,4.9593
+X Coordinate (State Plane),(NULL),85327,8.5327
+X Coordinate (State Plane),1022911,1568,0.1568
+X Coordinate (State Plane),1037000,701,0.0701
+X Coordinate (State Plane),1023174,675,0.0675
+X Coordinate (State Plane),1018372,669,0.0669
+X Coordinate (State Plane),1004402,590,0.059
+X Coordinate (State Plane),1018209,488,0.0488
+X Coordinate (State Plane),1023188,410,0.041
+X Coordinate (State Plane),1037538,348,0.0348
+X Coordinate (State Plane),1012586,347,0.0347
+X Coordinate (State Plane),"Other (102,546)",908877,90.8877
+Y Coordinate (State Plane),(NULL),85327,8.5327
+Y Coordinate (State Plane),264242,1566,0.1566
+Y Coordinate (State Plane),202363,706,0.0706
+Y Coordinate (State Plane),211606,665,0.0665
+Y Coordinate (State Plane),264429,663,0.0663
+Y Coordinate (State Plane),253313,601,0.0601
+Y Coordinate (State Plane),239723,495,0.0495
+Y Coordinate (State Plane),264423,401,0.0401
+Y Coordinate (State Plane),201770,356,0.0356
+Y Coordinate (State Plane),201185,352,0.0352
+Y Coordinate (State Plane),"Other (116,082)",908868,90.8868
+Open Data Channel Type,PHONE,497606,49.7606
+Open Data Channel Type,UNKNOWN,230402,23.0402
+Open Data Channel Type,ONLINE,177334,17.7334
+Open Data Channel Type,MOBILE,79892,7.9892
+Open Data Channel Type,OTHER,14766,1.4766
+Park Facility Name,Unspecified,993141,99.3141
+Park Facility Name,Central Park,261,0.0261
+Park Facility Name,Riverside Park,136,0.0136
+Park Facility Name,Prospect Park,129,0.0129
+Park Facility Name,N/A,84,0.0084
+Park Facility Name,Flushing Meadows Corona Park,68,0.0068
+Park Facility Name,Forest Park,66,0.0066
+Park Facility Name,Franz Sigel Park,51,0.0051
+Park Facility Name,Hudson River Park,50,0.005
+Park Facility Name,Rockaway Beach Boardwalk,50,0.005
+Park Facility Name,"Other (1,879)",5964,0.5964
+Park Borough,BROOKLYN,296081,29.6081
+Park Borough,QUEENS,228818,22.8818
+Park Borough,MANHATTAN,195488,19.5488
+Park Borough,BRONX,180142,18.0142
+Park Borough,Unspecified,49878,4.9878
+Park Borough,STATEN ISLAND,49593,4.9593
+Vehicle Type,(NULL),999652,99.9652
+Vehicle Type,Car Service,317,0.0317
+Vehicle Type,Ambulette / Paratransit,19,0.0019
+Vehicle Type,Commuter Van,11,0.0011
+Vehicle Type,Green Taxi,1,0.0001
+Taxi Company Borough,(NULL),999156,99.9156
+Taxi Company Borough,BROOKLYN,207,0.0207
+Taxi Company Borough,QUEENS,194,0.0194
+Taxi Company Borough,MANHATTAN,171,0.0171
+Taxi Company Borough,BRONX,127,0.0127
+Taxi Company Borough,STATEN ISLAND,42,0.0042
+Taxi Company Borough,Manhattan,35,0.0035
+Taxi Company Borough,Brooklyn,28,0.0028
+Taxi Company Borough,Queens,26,0.0026
+Taxi Company Borough,Bronx,13,0.0013
+Taxi Company Borough,Other (1),1,0.0001
+Taxi Pick Up Location,(NULL),992129,99.2129
+Taxi Pick Up Location,Other,4091,0.4091
+Taxi Pick Up Location,JFK Airport,562,0.0562
+Taxi Pick Up Location,Intersection,486,0.0486
+Taxi Pick Up Location,La Guardia Airport,387,0.0387
+Taxi Pick Up Location,"JFK AIRPORT, QUEENS (JAMAICA) ,NY, 11430",84,0.0084
+Taxi Pick Up Location,New York-Penn Station,78,0.0078
+Taxi Pick Up Location,Grand Central Station,69,0.0069
+Taxi Pick Up Location,Port Authority Bus Terminal,55,0.0055
+Taxi Pick Up Location,"LA GUARDIA AIRPORT, QUEENS (EAST ELMHURST) ,NY, 11369",38,0.0038
+Taxi Pick Up Location,"Other (1,893)",2021,0.2021
+Bridge Highway Name,(NULL),997711,99.7711
+Bridge Highway Name,Belt Pkwy,276,0.0276
+Bridge Highway Name,BQE/Gowanus Expwy,254,0.0254
+Bridge Highway Name,Grand Central Pkwy,186,0.0186
+Bridge Highway Name,Long Island Expwy,173,0.0173
+Bridge Highway Name,FDR Dr,166,0.0166
+Bridge Highway Name,Van Wyck Expwy,114,0.0114
+Bridge Highway Name,Staten Island Expwy,102,0.0102
+Bridge Highway Name,Major Deegan Expwy,88,0.0088
+Bridge Highway Name,Cross Island Pkwy,79,0.0079
+Bridge Highway Name,Other (58),851,0.0851
+Bridge Highway Direction,(NULL),997691,99.7691
+Bridge Highway Direction,East/Long Island Bound,210,0.021
+Bridge Highway Direction,North/Bronx Bound,208,0.0208
+Bridge Highway Direction,East/Queens Bound,197,0.0197
+Bridge Highway Direction,West/Staten Island Bound,175,0.0175
+Bridge Highway Direction,West/Brooklyn Bound,98,0.0098
+Bridge Highway Direction,West/Manhattan Bound,95,0.0095
+Bridge Highway Direction,Manhattan Bound,93,0.0093
+Bridge Highway Direction,Northbound/Uptown,92,0.0092
+Bridge Highway Direction,North/Westchester County Bound,77,0.0077
+Bridge Highway Direction,Other (40),1064,0.1064
+Road Ramp,(NULL),997693,99.7693
+Road Ramp,Roadway,1731,0.1731
+Road Ramp,Ramp,555,0.0555
+Road Ramp,N/A,21,0.0021
+Bridge Highway Segment,(NULL),997556,99.7556
+Bridge Highway Segment,Ramp,92,0.0092
+Bridge Highway Segment,Roadway,54,0.0054
+Bridge Highway Segment,Clove Rd/Richmond Rd (Exit 13) - Lily Pond Ave/Bay St (Exit 15 S-N),23,0.0023
+Bridge Highway Segment,N/A,23,0.0023
+Bridge Highway Segment,Outer Roadway,21,0.0021
+Bridge Highway Segment,Rockaway Pkwy (Exit 13) - Flatbush Ave (Exit 11N),21,0.0021
+Bridge Highway Segment,Bikepath,19,0.0019
+Bridge Highway Segment,East 42nd St (Exit 9) - East 61st St / East 63rd St (Exit 12),17,0.0017
+Bridge Highway Segment,Flatbush Ave (Exit 11N) - Gateway National Recreation Area (Exit 12),15,0.0015
+Bridge Highway Segment,Other (927),2159,0.2159
+Latitude,(NULL),254695,25.4695
+Latitude,40.89187241649303,1538,0.1538
+Latitude,40.1123853,1153,0.1153
+Latitude,40.89238451539139,663,0.0663
+Latitude,40.7474203,552,0.0552
+Latitude,40.7219591,441,0.0441
+Latitude,40.8245945,432,0.0432
+Latitude,40.89236798554616,396,0.0396
+Latitude,40.7203282,303,0.0303
+Latitude,40.72195913199264,253,0.0253
+Latitude,"Other (353,684)",739574,73.9574
+Longitude,(NULL),254695,25.4695
+Longitude,-73.86016845296459,1538,0.1538
+Longitude,-77.5195844,1153,0.1153
+Longitude,-73.8592161325675,663,0.0663
+Longitude,-73.876853,552,0.0552
+Longitude,-73.8096968,441,0.0441
+Longitude,-73.8772991,432,0.0432
+Longitude,-73.85916553107027,396,0.0396
+Longitude,-73.8077606,303,0.0303
+Longitude,-73.80969682426189,253,0.0253
+Longitude,"Other (353,986)",739574,73.9574
+Location,(NULL),254695,25.4695
+Location,"(40.89187241649303, -73.86016845296459)",1538,0.1538
+Location,"(40.1123853, -77.5195844)",1153,0.1153
+Location,"(40.89238451539139, -73.8592161325675)",663,0.0663
+Location,"(40.7474203, -73.876853)",552,0.0552
+Location,"(40.7219591, -73.8096968)",441,0.0441
+Location,"(40.8245945, -73.8772991)",432,0.0432
+Location,"(40.89236798554616, -73.85916553107027)",396,0.0396
+Location,"(40.7203282, -73.8077606)",303,0.0303
+Location,"(40.72195913199264, -73.80969682426189)",253,0.0253
+Location,"Other (375,762)",739574,73.9574
