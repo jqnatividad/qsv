@@ -280,6 +280,14 @@ const MS_IN_DAY_INT: i64 = 86_400_000;
 // 5 decimal places give us millisecond precision
 const DAY_DECIMAL_PLACES: u32 = 5;
 
+// maximum number of output columns
+const MAX_STAT_COLUMNS: usize = 31;
+
+// maximum number of antimodes to display
+const MAX_ANTIMODES: usize = 10;
+// maximum length of antimode string before truncating and appending "..."
+const MAX_ANTIMODE_LEN: usize = 100;
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
     if args.flag_typesonly {
@@ -834,7 +842,7 @@ impl Args {
         }
 
         // with --everything, we have 31 columns at most
-        let mut fields = Vec::with_capacity(31);
+        let mut fields = Vec::with_capacity(MAX_STAT_COLUMNS);
         fields.extend_from_slice(&[
             "field",
             "type",
@@ -1162,7 +1170,7 @@ impl Stats {
         let typ = self.typ;
         // prealloc memory for performance
         // we have 31 columns at most with --everything
-        let mut pieces = Vec::with_capacity(31);
+        let mut pieces = Vec::with_capacity(MAX_STAT_COLUMNS);
 
         let empty = String::new;
 
@@ -1215,7 +1223,7 @@ impl Stats {
 
                         // We only store the first 10 antimodes
                         // so if antimodes_count > 10, add the "*PREVIEW: " prefix
-                        if antimodes_count > 10 {
+                        if antimodes_count > MAX_ANTIMODES {
                             antimodes_list.push_str("*PREVIEW: ");
                         }
 
@@ -1229,8 +1237,8 @@ impl Stats {
                         antimodes_list.push_str(antimodes_vals);
 
                         // and truncate at 100 characters with an ellipsis
-                        if antimodes_list.len() > 100 {
-                            util::utf8_truncate(&mut antimodes_list, 101);
+                        if antimodes_list.len() > MAX_ANTIMODE_LEN {
+                            util::utf8_truncate(&mut antimodes_list, MAX_ANTIMODE_LEN + 1);
                             antimodes_list.push_str("...");
                         }
 
@@ -1354,8 +1362,8 @@ impl Stats {
 
         // sparsity
         // stats is also called by the `schema` and `tojsonl` commands to infer a schema,
-        // sparsity is not required by those cmds and we don't necessarily have the
-        // record_count when called by those cmds, so just set sparsity to nullcount
+        // sparsity is not required by those cmds and we don't necessarily have a valid
+        // RECORD_COUNT when called by those cmds, so just set sparsity to nullcount
         // (i.e. divide by 1) so we don't panic.
         #[allow(clippy::cast_precision_loss)]
         let sparsity: f64 = self.nullcount as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64;
@@ -1425,7 +1433,7 @@ impl Stats {
                 let iqr = q3 - q1;
 
                 // use fused multiply add (mul_add) when possible
-                // fused mul_add is more accurate & may be more performant if the
+                // fused mul_add is more accurate & is more performant if the
                 // target architecture has a dedicated `fma` CPU instruction
                 // https://doc.rust-lang.org/std/primitive.f64.html#method.mul_add
 
@@ -1770,7 +1778,7 @@ impl TypedMinMax {
                 self.floats.add(n as f64);
             },
             // it must be a TDate or TDateTime
-            // we use _ here for the match to avoid
+            // we use "_" here instead of "TDate | TDateTime" for the match to avoid
             // the overhead of matching on the OR value, however minor
             _ => {
                 let n = atoi_simd::parse::<i64>(sample).unwrap();
