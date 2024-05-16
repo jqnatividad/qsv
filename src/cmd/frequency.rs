@@ -240,9 +240,9 @@ impl Args {
         if self.flag_lmt_threshold == 0 || self.flag_lmt_threshold >= unique_counts_len {
             // check if the column has all unique values
             // by checking if counts length is equal to ftable length
-            let pos_limit = self.flag_limit.unsigned_abs();
+            let abs_limit = self.flag_limit.unsigned_abs();
             let unique_limited = if self.flag_limit > 0
-                && self.flag_unq_limit != pos_limit
+                && self.flag_unq_limit != abs_limit
                 && self.flag_unq_limit > 0
                 && unique_counts_len == ftab.len()
             {
@@ -254,12 +254,12 @@ impl Args {
 
             // check if we need to limit the number of values
             if self.flag_limit > 0 {
-                counts = counts.into_iter().take(pos_limit).collect();
+                counts.truncate(abs_limit);
             } else if self.flag_limit < 0 && !unique_limited {
                 // if limit is negative, only return values with an occurence count >= absolute
                 // value of the negative limit. We only do this if we haven't
                 // already unique limited the values
-                let count_limit = pos_limit as u64;
+                let count_limit = abs_limit as u64;
                 counts.retain(|(_, count)| *count >= count_limit);
             }
         }
