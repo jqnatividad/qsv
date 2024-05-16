@@ -127,6 +127,8 @@ pub struct Args {
     pub flag_memcheck:       bool,
 }
 
+const NULL_VAL: &[u8] = b"(NULL)";
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let rconfig = args.rconfig();
@@ -225,8 +227,6 @@ impl Args {
 
     #[inline]
     fn counts(&self, ftab: &FTable) -> Vec<(ByteString, u64, f64)> {
-        const NULL_VAL: &[u8] = b"(NULL)";
-
         let (mut counts, total_count) = if self.flag_asc {
             // parallel sort in ascending order - least frequent values first
             ftab.par_frequent(true)
@@ -260,24 +260,30 @@ impl Args {
                 // value of the negative limit. We only do this if we haven't
                 // already unique limited the values
                 let count_limit = pos_limit as u64;
-                counts.retain(|(_, c)| *c >= count_limit);
+                counts.retain(|(_, count)| *count >= count_limit);
             }
         }
 
         let mut pct_sum = 0.0_f64;
         let mut pct = 0.0_f64;
         let mut count_sum = 0_u64;
+        let pct_factor = if total_count > 0 {
+            100.0_f64 / total_count.to_f64().unwrap_or(1.0_f64)
+        } else {
+            0.0_f64
+        };
 
+        #[allow(clippy::cast_precision_loss)]
         let mut counts_final: Vec<(Vec<u8>, u64, f64)> = counts
             .into_iter()
-            .map(|(bs, c)| {
-                count_sum += c;
-                pct = (c as f64 * 100.0_f64) / total_count as f64;
+            .map(|(byte_string, count)| {
+                count_sum += count;
+                pct = count as f64 * pct_factor;
                 pct_sum += pct;
-                if b"" == &**bs {
-                    (NULL_VAL.to_vec(), c, pct)
+                if *b"" == **byte_string {
+                    (NULL_VAL.to_vec(), count, pct)
                 } else {
-                    (bs.clone(), c, pct)
+                    (byte_string.to_owned(), count, pct)
                 }
             })
             .collect();
