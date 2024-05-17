@@ -246,7 +246,7 @@ impl Args {
                 && self.flag_unq_limit > 0
                 && unique_counts_len == ftab.len()
             {
-                counts = counts.into_iter().take(self.flag_unq_limit).collect();
+                counts.truncate(self.flag_unq_limit);
                 true
             } else {
                 false
