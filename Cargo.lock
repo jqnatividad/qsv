@@ -2055,7 +2055,7 @@ checksum = "ef00db96830bb9a926b78e89a6073db29d9a55f328d3b79fe832c32352b64829"
 dependencies = [
  "bincode",
  "csv",
- "itertools",
+ "itertools 0.12.1",
  "kiddo",
  "rayon",
  "serde",
@@ -2128,7 +2128,7 @@ name = "grex"
 version = "1.4.5"
 source = "git+https://github.com/pemistahl/grex?rev=0c8ab87#0c8ab8764e799e5057f9d21ca85182387b263015"
 dependencies = [
- "itertools",
+ "itertools 0.12.1",
  "lazy_static",
  "ndarray",
  "petgraph",
@@ -2501,6 +2501,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2625,7 +2634,7 @@ dependencies = [
  "fixed",
  "generator",
  "init_with",
- "itertools",
+ "itertools 0.12.1",
  "log",
  "num-traits",
  "ordered-float 4.2.0",
@@ -4263,7 +4272,7 @@ dependencies = [
  "hashbrown 0.14.5",
  "indexmap",
  "indicatif",
- "itertools",
+ "itertools 0.13.0",
  "itoa",
  "jemallocator",
  "jql-runner",
