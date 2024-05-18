@@ -622,7 +622,7 @@ fn stats_prefer_dmy() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-9,12-").arg("in2.csv");
+    cmd.arg("1-10,13-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
@@ -647,7 +647,7 @@ fn stats_prefer_mdy() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-9,12-").arg("in2.csv");
+    cmd.arg("1-10,13-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
 
@@ -672,7 +672,7 @@ fn stats_rounding() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-9,12-").arg("in2.csv");
+    cmd.arg("1-10,13-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-8places-stats.csv");
@@ -715,7 +715,7 @@ fn stats_no_date_inference() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-9,12-").arg("in2.csv");
+    cmd.arg("1-10,13-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-nodate-stats.csv");
@@ -741,7 +741,7 @@ fn stats_with_date_inference() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-9,12-").arg("in2.csv");
+    cmd.arg("1-10,13-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-date-stats.csv");
@@ -813,7 +813,7 @@ fn stats_with_date_type() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-9,12-").arg("in2.csv");
+    cmd.arg("1-10,13-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-datenotime-stats.csv");
@@ -927,7 +927,7 @@ fn stats_cache() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-9,12-").arg("in2.csv");
+    cmd.arg("1-10,13-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
@@ -964,7 +964,7 @@ fn stats_cache_negative_threshold() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-9,12-").arg("in2.csv");
+    cmd.arg("1-10,13-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
@@ -1001,7 +1001,7 @@ fn stats_cache_negative_threshold_unmet() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-9,12-").arg("in2.csv");
+    cmd.arg("1-10,13-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
@@ -1040,7 +1040,7 @@ fn stats_cache_negative_threshold_five() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-9,12-").arg("in2.csv");
+    cmd.arg("1-10,13-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
