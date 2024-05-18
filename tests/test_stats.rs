@@ -1098,6 +1098,28 @@ fn stats_typesonly_infer_boolean_t_f() {
 }
 
 #[test]
+fn stats_is_ascii() {
+    let wrk = Workdir::new("stats_is_ascii");
+    let test_file = wrk.load_test_file("boston311-100-with-nonascii.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg(test_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    wrk.create("in2.csv", got);
+
+    // removed variance & stddev columns as its causing flaky CI test for float values
+    let mut cmd = wrk.command("select");
+    cmd.arg("1-10,13-").arg("in2.csv");
+
+    let got2: String = wrk.stdout(&mut cmd);
+    let expected2 = wrk.load_test_resource("boston311-100-with-nonascii-stats.csv");
+
+    assert_eq!(dos2unix(&got2), dos2unix(&expected2).trim_end());
+}
+
+#[test]
 fn stats_everything_utf8_japanese_issue817() {
     let wrk = Workdir::new("stats_everything_utf8_japanese");
     let test_file = wrk.load_test_file("utf8-japanesedata.csv");
