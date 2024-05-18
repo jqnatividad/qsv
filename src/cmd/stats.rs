@@ -34,6 +34,7 @@ Date range, stddev, variance, MAD & IQR are returned in days, not timestamp mill
 
 Each column's data type is also inferred (NULL, Integer, String, Float, Date, DateTime and
 Boolean with --infer-boolean option).
+For String data types, it also determines if the column is all ASCII characters.
 Unlike the sniff command, stats' data type inferences are GUARANTEED, as the entire file
 is scanned, and not just sampled.
 
@@ -281,7 +282,7 @@ const MS_IN_DAY_INT: i64 = 86_400_000;
 const DAY_DECIMAL_PLACES: u32 = 5;
 
 // maximum number of output columns
-const MAX_STAT_COLUMNS: usize = 31;
+const MAX_STAT_COLUMNS: usize = 32;
 
 // maximum number of antimodes to display
 const MAX_ANTIMODES: usize = 10;
@@ -841,11 +842,12 @@ impl Args {
             return csv::StringRecord::from(vec!["field", "type"]);
         }
 
-        // with --everything, we have 31 columns at most
+        // with --everything, we have 32 columns at most
         let mut fields = Vec::with_capacity(MAX_STAT_COLUMNS);
         fields.extend_from_slice(&[
             "field",
             "type",
+            "is_ascii",
             "sum",
             "min",
             "max",
@@ -986,6 +988,7 @@ impl Commute for WhichStats {
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct Stats {
     typ:           FieldType,
+    is_ascii:      bool,
     sum:           Option<TypedSum>,
     minmax:        Option<TypedMinMax>,
     online:        Option<OnlineStats>,
@@ -1038,6 +1041,7 @@ impl Stats {
         }
         Stats {
             typ: FieldType::default(),
+            is_ascii: true,
             sum,
             minmax,
             online,
@@ -1090,8 +1094,9 @@ impl Stats {
                     };
                 }
             },
-            // do nothing for String type
-            TString => {},
+            TString => {
+                self.is_ascii &= sample.is_ascii();
+            },
             TFloat | TInteger => {
                 if sample_type == TNull {
                     if self.which.include_nulls {
@@ -1169,7 +1174,7 @@ impl Stats {
 
         let typ = self.typ;
         // prealloc memory for performance
-        // we have 31 columns at most with --everything
+        // we have 32 columns at most with --everything
         let mut pieces = Vec::with_capacity(MAX_STAT_COLUMNS);
 
         let empty = String::new;
@@ -1289,6 +1294,13 @@ impl Stats {
         // we're doing --typesonly with --infer-boolean, we don't need to calculate anything else
         if self.which.typesonly && infer_boolean {
             return csv::StringRecord::from(pieces);
+        }
+
+        // is_ascii
+        if typ == FieldType::TString {
+            pieces.push(self.is_ascii.to_string());
+        } else {
+            pieces.push(empty());
         }
 
         // sum
@@ -1502,6 +1514,7 @@ impl Commute for Stats {
     #[inline]
     fn merge(&mut self, other: Stats) {
         self.typ.merge(other.typ);
+        self.is_ascii &= other.is_ascii;
         self.sum.merge(other.sum);
         self.minmax.merge(other.minmax);
         self.online.merge(other.online);
