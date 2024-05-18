@@ -1,30 +1,30 @@
-field,type,sum,min,max,range,min_length,max_length,mean,nullcount,max_precision,sparsity,mad,lower_outer_fence,lower_inner_fence,q1,q2_median,q3,iqr,upper_inner_fence,upper_outer_fence,skewness,cardinality,mode,mode_count,mode_occurrences,antimode,antimode_count,antimode_occurrences
-case_enquiry_id,Integer,10100411645180,101004113298,101004155594,42296,12,12,101004116451.8,0,,0,673,101004109567,101004111646,101004113725,101004114353,101004115111,1386,101004117190,101004119269,0.0938,100,,0,0,*ALL,0,1
-open_dt,String,,2022-01-01 00:16:00,2022-01-31 11:46:00,,19,19,,0,,0,,,,,,,,,,,100,,0,0,*ALL,0,1
-target_dt,String,,2022-01-03 10:32:34,2022-05-20 13:03:21,,0,19,,11,,0.11,,,,,,,,,,,42,2022-01-04 08:30:00,1,25,"*PREVIEW: 2022-01-03 10:32:34,2022-01-03 11:58:12,2022-01-04 09:58:36,2022-01-04 10:41:29,2022-01-04...",34,1
-closed_dt,String,,2022-01-01 12:56:14,2022-04-25 14:30:31,,0,19,,15,,0.15,,,,,,,,,,,86,,1,15,"*PREVIEW: 2022-01-01 12:56:14,2022-01-01 14:17:15,2022-01-01 14:59:41,2022-01-01 15:10:16,2022-01-01...",85,1
-ontime,String,,ONTIME,OVERDUE,,6,7,,0,,0,,,,,,,,,,,2,ONTIME,1,83,OVERDUE,1,17
-case_status,String,,Closed,Open,,4,6,,0,,0,,,,,,,,,,,2,Closed,1,85,Open,1,15
-closure_reason,String,, ,Case Closed. Closed date : Wed Jan 19 11:42:16 EST 2022 Resolved Removed df  ,,1,284,,0,,0,,,,,,,,,,,86, ,1,15,"*PREVIEW: Case Closed Case Resolved  NEW CART#21026466 DELV ON 1/11/22  ,Case Closed Case Resolved  ...",85,1
-case_title,String,,Abandoned Vehicles,Traffic Signal Inspection,,10,57,,0,,0,,,,,,,,,,,42,Parking Enforcement,1,20,"*PREVIEW: Animal Generic Request,BTDT: Complaint,City/State Snow Issues,DISPATCHED Short Term Rental...",24,1
-subject,String,,Animal Control,Transportation - Traffic Division,,14,33,,0,,0,,,,,,,,,,,9,Public Works Department,1,51,"Animal Control,Boston Police Department,Boston Water & Sewer Commission",3,1
-reason,String,,Administrative & General Requests,Street Lights,,7,33,,0,,0,,,,,,,,,,,20,Enforcement & Abandoned Vehicles,1,23,"Administrative & General Requests,Animal Issues,Building,Employee & General Comments,Noise Disturban...",7,1
-type,String,,Abandoned Vehicles,Unsatisfactory Utilities - Electrical  Plumbing,,10,47,,0,,0,,,,,,,,,,,36,Parking Enforcement,1,20,"*PREVIEW: Animal Generic Request,City/State Snow Issues,Electrical,General Comments For a Program or...",15,1
-queue,String,,BTDT_AVRS Interface Queue,PWDx_Street Light_General Lighting Request,,13,55,,0,,0,,,,,,,,,,,35,BTDT_Parking Enforcement,1,21,"*PREVIEW: BTDT_BostonBikes,BTDT_Engineering_New Sign and Pavement Marking Requests,BTDT_Sign Shop_Si...",15,1
-department,String,,BTDT,PWDx,,3,4,,0,,0,,,,,,,,,,,7,PWDx,1,49,GEN_,1,2
-submittedphoto,String,,https://311.boston.gov/media/boston/report/photos/61d03f0d05bbcf180c2965fd/report.jpg,https://311.boston.gov/media/boston/report/photos/61d75bba05bbcf180c2d41de/report.jpg,,0,100,,58,,0.58,,,,,,,,,,,43,,1,58,"*PREVIEW: https://311.boston.gov/media/boston/report/photos/61d03f0d05bbcf180c2965fd/report.jpg,http...",42,1
-closedphoto,NULL,,,,,0,0,,100,,1,,,,,,,,,,,1,,1,100,,0,0
-location,String,, ,INTERSECTION of Verdun St & Gallivan Blvd  Dorchester  MA  ,,1,63,,0,,0,,,,,,,,,,,98,"563 Columbus Ave  Roxbury  MA  02118,INTERSECTION of Gallivan Blvd & Washington St  Dorchester  MA  ",2,2,"*PREVIEW:  ,103 N Beacon St  Brighton  MA  02135,11 Aberdeen St  Boston  MA  02215,1148 Hyde Park Av...",96,1
-fire_district,String,, ,9,,1,2,,0,,0,,,,,,,,,,,10,3,1,19, ,1,1
-pwd_district,String,, ,1C,,1,3,,0,,0,,,,,,,,,,,14,1B,1,16, ,1,1
-city_council_district,String,, ,9,,1,1,,0,,0,,,,,,,,,,,10,1,1,22, ,1,1
-police_district,String,, ,E5,,1,3,,0,,0,,,,,,,,,,,13,A1,1,20, ,1,1
-neighborhood,String,, ,West Roxbury,,1,38,,0,,0,,,,,,,,,,,19,Dorchester,1,15," ,Brighton,Mission Hill",3,1
-neighborhood_services_district,String,, ,9,,1,2,,0,,0,,,,,,,,,,,16,3,1,15," ,12",2,1
-ward,String,, ,Ward 9,,1,7,,0,,0,,,,,,,,,,,42,Ward 3,1,10,"*PREVIEW:  ,01,02,04,06,07,1,10,16,18",23,1
-precinct,String,, ,2210,,0,4,,1,,0.01,,,,,,,,,,,76,0306,1,5,"*PREVIEW: NULL, ,0102,0105,0108,0109,0201,0204,0305,0307",61,1
-location_street_name,String,,103 N Beacon St,INTERSECTION Verdun St & Gallivan Blvd,,0,45,,1,,0.01,,,,,,,,,,,97,"20 Washington St,563 Columbus Ave,INTERSECTION Gallivan Blvd & Washington St",3,2,"*PREVIEW: NULL,103 N Beacon St,11 Aberdeen St,1148 Hyde Park Ave,119 L St,12 Derne St,126 Elm St,127...",94,1
-location_zipcode,String,,02109,02215,,0,5,,17,,0.17,,,,,,,,,,,24,,1,17,"02126,02134,02210,02215",4,1
-latitude,Float,4233.6674,42.2553,42.3806,0.1253,6,7,42.3367,0,4,0,0.0163,42.2034,42.2619,42.3204,42.3432,42.3594,0.039,42.4179,42.4764,-0.1667,78,42.3594,1,20,"*PREVIEW: 42.2553,42.2601,42.2609,42.2645,42.2674,42.2789,42.2797,42.2804,42.2821,42.2878",74,1
-longitude,Float,-7107.2688,-71.1626,-71.0298,0.1328,6,8,-71.0727,0,4,0,0.0121,-71.1741,-71.1294,-71.0848,-71.0609,-71.055,0.0298,-71.0104,-70.9658,-0.6101,77,-71.0587,1,19,"*PREVIEW: -71.0298,-71.0301,-71.0309,-71.0323,-71.0325,-71.0329,-71.0336,-71.0338,-71.034,-71.0355",72,1
-source,String,,Citizens Connect App,Self Service,,12,20,,0,,0,,,,,,,,,,,4,Citizens Connect App,1,56,Self Service,1,3
+field,type,is_ascii,sum,min,max,range,min_length,max_length,mean,nullcount,max_precision,sparsity,mad,lower_outer_fence,lower_inner_fence,q1,q2_median,q3,iqr,upper_inner_fence,upper_outer_fence,skewness,cardinality,mode,mode_count,mode_occurrences,antimode,antimode_count,antimode_occurrences
+case_enquiry_id,Integer,,10100411645180,101004113298,101004155594,42296,12,12,101004116451.8,0,,0,673,101004109567,101004111646,101004113725,101004114353,101004115111,1386,101004117190,101004119269,0.0938,100,,0,0,*ALL,0,1
+open_dt,String,true,,2022-01-01 00:16:00,2022-01-31 11:46:00,,19,19,,0,,0,,,,,,,,,,,100,,0,0,*ALL,0,1
+target_dt,String,true,,2022-01-03 10:32:34,2022-05-20 13:03:21,,0,19,,11,,0.11,,,,,,,,,,,42,2022-01-04 08:30:00,1,25,"*PREVIEW: 2022-01-03 10:32:34,2022-01-03 11:58:12,2022-01-04 09:58:36,2022-01-04 10:41:29,2022-01-04...",34,1
+closed_dt,String,true,,2022-01-01 12:56:14,2022-04-25 14:30:31,,0,19,,15,,0.15,,,,,,,,,,,86,,1,15,"*PREVIEW: 2022-01-01 12:56:14,2022-01-01 14:17:15,2022-01-01 14:59:41,2022-01-01 15:10:16,2022-01-01...",85,1
+ontime,String,true,,ONTIME,OVERDUE,,6,7,,0,,0,,,,,,,,,,,2,ONTIME,1,83,OVERDUE,1,17
+case_status,String,true,,Closed,Open,,4,6,,0,,0,,,,,,,,,,,2,Closed,1,85,Open,1,15
+closure_reason,String,true,, ,Case Closed. Closed date : Wed Jan 19 11:42:16 EST 2022 Resolved Removed df  ,,1,284,,0,,0,,,,,,,,,,,86, ,1,15,"*PREVIEW: Case Closed Case Resolved  NEW CART#21026466 DELV ON 1/11/22  ,Case Closed Case Resolved  ...",85,1
+case_title,String,true,,Abandoned Vehicles,Traffic Signal Inspection,,10,57,,0,,0,,,,,,,,,,,42,Parking Enforcement,1,20,"*PREVIEW: Animal Generic Request,BTDT: Complaint,City/State Snow Issues,DISPATCHED Short Term Rental...",24,1
+subject,String,true,,Animal Control,Transportation - Traffic Division,,14,33,,0,,0,,,,,,,,,,,9,Public Works Department,1,51,"Animal Control,Boston Police Department,Boston Water & Sewer Commission",3,1
+reason,String,true,,Administrative & General Requests,Street Lights,,7,33,,0,,0,,,,,,,,,,,20,Enforcement & Abandoned Vehicles,1,23,"Administrative & General Requests,Animal Issues,Building,Employee & General Comments,Noise Disturban...",7,1
+type,String,true,,Abandoned Vehicles,Unsatisfactory Utilities - Electrical  Plumbing,,10,47,,0,,0,,,,,,,,,,,36,Parking Enforcement,1,20,"*PREVIEW: Animal Generic Request,City/State Snow Issues,Electrical,General Comments For a Program or...",15,1
+queue,String,true,,BTDT_AVRS Interface Queue,PWDx_Street Light_General Lighting Request,,13,55,,0,,0,,,,,,,,,,,35,BTDT_Parking Enforcement,1,21,"*PREVIEW: BTDT_BostonBikes,BTDT_Engineering_New Sign and Pavement Marking Requests,BTDT_Sign Shop_Si...",15,1
+department,String,true,,BTDT,PWDx,,3,4,,0,,0,,,,,,,,,,,7,PWDx,1,49,GEN_,1,2
+submittedphoto,String,true,,https://311.boston.gov/media/boston/report/photos/61d03f0d05bbcf180c2965fd/report.jpg,https://311.boston.gov/media/boston/report/photos/61d75bba05bbcf180c2d41de/report.jpg,,0,100,,58,,0.58,,,,,,,,,,,43,,1,58,"*PREVIEW: https://311.boston.gov/media/boston/report/photos/61d03f0d05bbcf180c2965fd/report.jpg,http...",42,1
+closedphoto,NULL,,,,,,0,0,,100,,1,,,,,,,,,,,1,,1,100,,0,0
+location,String,true,, ,INTERSECTION of Verdun St & Gallivan Blvd  Dorchester  MA  ,,1,63,,0,,0,,,,,,,,,,,98,"563 Columbus Ave  Roxbury  MA  02118,INTERSECTION of Gallivan Blvd & Washington St  Dorchester  MA  ",2,2,"*PREVIEW:  ,103 N Beacon St  Brighton  MA  02135,11 Aberdeen St  Boston  MA  02215,1148 Hyde Park Av...",96,1
+fire_district,String,true,, ,9,,1,2,,0,,0,,,,,,,,,,,10,3,1,19, ,1,1
+pwd_district,String,true,, ,1C,,1,3,,0,,0,,,,,,,,,,,14,1B,1,16, ,1,1
+city_council_district,String,true,, ,9,,1,1,,0,,0,,,,,,,,,,,10,1,1,22, ,1,1
+police_district,String,true,, ,E5,,1,3,,0,,0,,,,,,,,,,,13,A1,1,20, ,1,1
+neighborhood,String,true,, ,West Roxbury,,1,38,,0,,0,,,,,,,,,,,19,Dorchester,1,15," ,Brighton,Mission Hill",3,1
+neighborhood_services_district,String,true,, ,9,,1,2,,0,,0,,,,,,,,,,,16,3,1,15," ,12",2,1
+ward,String,true,, ,Ward 9,,1,7,,0,,0,,,,,,,,,,,42,Ward 3,1,10,"*PREVIEW:  ,01,02,04,06,07,1,10,16,18",23,1
+precinct,String,true,, ,2210,,0,4,,1,,0.01,,,,,,,,,,,76,0306,1,5,"*PREVIEW: NULL, ,0102,0105,0108,0109,0201,0204,0305,0307",61,1
+location_street_name,String,true,,103 N Beacon St,INTERSECTION Verdun St & Gallivan Blvd,,0,45,,1,,0.01,,,,,,,,,,,97,"20 Washington St,563 Columbus Ave,INTERSECTION Gallivan Blvd & Washington St",3,2,"*PREVIEW: NULL,103 N Beacon St,11 Aberdeen St,1148 Hyde Park Ave,119 L St,12 Derne St,126 Elm St,127...",94,1
+location_zipcode,String,true,,02109,02215,,0,5,,17,,0.17,,,,,,,,,,,24,,1,17,"02126,02134,02210,02215",4,1
+latitude,Float,,4233.6674,42.2553,42.3806,0.1253,6,7,42.3367,0,4,0,0.0163,42.2034,42.2619,42.3204,42.3432,42.3594,0.039,42.4179,42.4764,-0.1667,78,42.3594,1,20,"*PREVIEW: 42.2553,42.2601,42.2609,42.2645,42.2674,42.2789,42.2797,42.2804,42.2821,42.2878",74,1
+longitude,Float,,-7107.2688,-71.1626,-71.0298,0.1328,6,8,-71.0727,0,4,0,0.0121,-71.1741,-71.1294,-71.0848,-71.0609,-71.055,0.0298,-71.0104,-70.9658,-0.6101,77,-71.0587,1,19,"*PREVIEW: -71.0298,-71.0301,-71.0309,-71.0323,-71.0325,-71.0329,-71.0336,-71.0338,-71.034,-71.0355",72,1
+source,String,true,,Citizens Connect App,Self Service,,12,20,,0,,0,,,,,,,,,,,4,Citizens Connect App,1,56,Self Service,1,3
