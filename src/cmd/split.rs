@@ -2,6 +2,8 @@ static USAGE: &str = r#"
 Splits the given CSV data into chunks. It has three modes: by size (rowcount),
 by number of chunks and by kb-size.
 
+See `partition` command for splitting by a column value.
+
 When splitting by size, the CSV data is split into chunks of the given number of
 rows. The last chunk may have fewer rows if the number of records is not evenly
 divisible by the given rowcount.

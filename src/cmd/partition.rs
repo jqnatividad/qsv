@@ -1,5 +1,8 @@
 static USAGE: &str = r#"
-Partitions the given CSV data into chunks based on the value of a column
+Partitions the given CSV data into chunks based on the value of a column.
+
+See `split` command to split a CSV data by row count, by number of chunks or
+by kb-size.
 
 The files are written to the output directory with filenames based on the
 values in the partition column and the `--filename` flag.
