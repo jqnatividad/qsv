@@ -1675,21 +1675,27 @@ pub fn format_systemtime(time: SystemTime, format_specifier: &str) -> String {
 
 pub fn create_json_writer(
     output: &Option<String>,
+    buffer_capacity: usize,
 ) -> std::io::Result<Box<dyn Write + Send + 'static>> {
     // create a JSON writer
     // if flag_output is None or "-" then write to stdout
     let output = output.as_ref().map_or("-", |s| s.as_str());
+    let buffer_size = if buffer_capacity == 0 {
+        config::DEFAULT_WTR_BUFFER_CAPACITY
+    } else {
+        buffer_capacity
+    };
     let writer: Box<dyn Write + Send + 'static> = match output {
         "-" => Box::new(std::io::BufWriter::with_capacity(
-            config::DEFAULT_WTR_BUFFER_CAPACITY,
+            buffer_size,
             std::io::stdout(),
         )),
         "stderr" => Box::new(std::io::BufWriter::with_capacity(
-            config::DEFAULT_WTR_BUFFER_CAPACITY,
+            buffer_size,
             std::io::stderr(),
         )),
         _ => Box::new(std::io::BufWriter::with_capacity(
-            config::DEFAULT_WTR_BUFFER_CAPACITY,
+            buffer_size,
             fs::File::create(output)?,
         )),
     };
@@ -1703,7 +1709,7 @@ pub fn write_json(
     headers: &csv::ByteRecord,
     records: impl Iterator<Item = csv::ByteRecord>,
 ) -> CliResult<()> {
-    let mut json_wtr = create_json_writer(output)?;
+    let mut json_wtr = create_json_writer(output, config::DEFAULT_WTR_BUFFER_CAPACITY * 4)?;
 
     let header_vec: Vec<String> = headers
         .iter()
@@ -1851,3 +1857,84 @@ pub fn write_json_record<W: std::io::Write>(
     }
     Ok(write!(json_wtr, "}}")?)
 }
+
+// comment out for now as this is still WIP
+// pub fn create_json_record(
+//     no_headers: bool,
+//     headers: &csv::ByteRecord,
+//     record: &csv::ByteRecord,
+//     is_first: &mut bool,
+// ) -> CliResult<String> {
+//     let header_vec: Vec<String> = headers
+//         .iter()
+//         .enumerate()
+//         .map(|(col_idx, b)| {
+//             if no_headers {
+//                 col_idx.to_string()
+//             } else {
+//                 String::from_utf8_lossy(b).to_string()
+//             }
+//         })
+//         .collect();
+
+//     let mut json_record = String::new();
+
+//     let rec_len = header_vec.len().saturating_sub(1);
+//     let mut temp_val;
+//     let mut json_string_val: serde_json::Value;
+//     let null_val = "null".to_string();
+
+//     if *is_first {
+//         // write!(json_wtr, "{{")?;
+//         json_record.push('{');
+//         *is_first = false;
+//     } else {
+//         // write!(json_wtr, ",{{")?;
+//         json_record.push_str(",{");
+//     }
+//     for (idx, b) in record.iter().enumerate() {
+//         if let Ok(val) = simdutf8::basic::from_utf8(b) {
+//             temp_val = val.to_owned();
+//         } else {
+//             temp_val = String::from_utf8_lossy(b).to_string();
+//         }
+//         if temp_val.is_empty() {
+//             temp_val.clone_from(&null_val);
+//         } else {
+//             json_string_val = serde_json::Value::String(temp_val);
+//             temp_val = json_string_val.to_string();
+//         }
+//         if idx < rec_len {
+//             unsafe {
+//                 // write!(
+//                 //     json_wtr,
+//                 //     r#""{key}":{value},"#,
+//                 //     key = header_vec.get_unchecked(idx),
+//                 //     value = temp_val
+//                 // )?;
+//                 json_record.push_str(&format!(
+//                     r#""{key}":{value},"#,
+//                     key = header_vec.get_unchecked(idx),
+//                     value = temp_val
+//                 ));
+//             }
+//         } else {
+//             unsafe {
+//                 // write!(
+//                 //     json_wtr,
+//                 //     r#""{key}":{value}"#,
+//                 //     key = header_vec.get_unchecked(idx),
+//                 //     value = temp_val
+//                 // )?;
+//                 json_record.push_str(&format!(
+//                     r#""{key}":{value}"#,
+//                     key = header_vec.get_unchecked(idx),
+//                     value = temp_val
+//                 ));
+//             }
+//         }
+//     }
+//     // Ok(write!(json_wtr, "}}")?)
+//     json_record.push('}');
+//     Ok(json_record)
+// }

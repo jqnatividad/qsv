@@ -73,12 +73,12 @@ Common options:
 
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
-use log::{debug, info};
+use log::info;
 use regex::bytes::RegexBuilder;
 use serde::Deserialize;
 
 use crate::{
-    config::{Config, Delimiter},
+    config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     select::SelectColumns,
     util, CliError, CliResult,
 };
@@ -115,14 +115,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_unicode
     };
 
-    debug!("Compiling regular expression <{}>", args.arg_regex);
     let pattern = RegexBuilder::new(&args.arg_regex)
         .case_insensitive(args.flag_ignore_case)
         .unicode(regex_unicode)
         .size_limit(args.flag_size_limit * (1 << 20))
         .dfa_size_limit(args.flag_dfa_size_limit * (1 << 20))
         .build()?;
-    debug!("Successfully compiled regular expression!");
 
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
@@ -141,7 +139,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
     let mut json_wtr = if flag_json {
-        util::create_json_writer(&args.flag_output)?
+        util::create_json_writer(&args.flag_output, DEFAULT_WTR_BUFFER_CAPACITY * 4)?
     } else {
         Box::new(std::io::sink())
     };
@@ -199,7 +197,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut stderr_wtr = csv::WriterBuilder::new().from_writer(std::io::stderr());
 
         let mut stderr_jsonwtr = if flag_json {
-            util::create_json_writer(&Some("stderr".to_string()))?
+            util::create_json_writer(&Some("stderr".to_string()), DEFAULT_WTR_BUFFER_CAPACITY * 4)?
         } else {
             Box::new(std::io::sink())
         };
