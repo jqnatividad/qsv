@@ -214,7 +214,7 @@ pub fn polars_count_input(
     let lazy_df = match LazyCsvReader::new(filepath.clone())
         .with_separator(conf.get_delimiter())
         .with_comment_prefix(comment_prefix)
-        .low_memory(low_memory)
+        .with_low_memory(low_memory)
         .finish()
     {
         Ok(lazy_df) => lazy_df,
