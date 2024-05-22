@@ -267,9 +267,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (true, false, false, false, false, false) => join.run(JoinType::Left, validation, false),
         (false, true, false, false, false, false) => join.run(JoinType::Anti, validation, false),
         (false, false, true, false, false, false) => join.run(JoinType::Semi, validation, false),
-        (false, false, false, true, false, false) => {
-            join.run(JoinType::Outer { coalesce: true }, validation, false)
-        },
+        (false, false, false, true, false, false) => join.run(JoinType::Outer, validation, false),
         (false, false, false, false, true, false) => join.run(JoinType::Cross, validation, false),
         (false, false, false, false, false, true) => {
             // safety: flag_strategy is always is_some() as it has a default value
@@ -526,13 +524,13 @@ impl Args {
             }
 
             LazyCsvReader::new(&self.arg_input1)
-                .has_header(true)
+                .with_has_header(true)
                 .with_missing_is_null(self.flag_nulls)
                 .with_comment_prefix(comment_char.as_deref())
                 .with_separator(tsvtab_delim(&self.arg_input1, delim))
                 .with_infer_schema_length(num_rows)
                 .with_try_parse_dates(try_parsedates)
-                .low_memory(low_memory)
+                .with_low_memory(low_memory)
                 .with_ignore_errors(ignore_errors)
                 .finish()?
         };
@@ -551,13 +549,13 @@ impl Args {
             }
 
             LazyCsvReader::new(&self.arg_input2)
-                .has_header(true)
+                .with_has_header(true)
                 .with_missing_is_null(self.flag_nulls)
                 .with_comment_prefix(comment_char.as_deref())
                 .with_separator(tsvtab_delim(&self.arg_input2, delim))
                 .with_infer_schema_length(num_rows)
                 .with_try_parse_dates(try_parsedates)
-                .low_memory(low_memory)
+                .with_low_memory(low_memory)
                 .with_ignore_errors(ignore_errors)
                 .finish()?
         };
