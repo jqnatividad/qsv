@@ -6,7 +6,7 @@ macro_rules! joinp_test {
             use std::process;
 
             #[allow(unused_imports)]
-            use super::{make_rows, make_rows_full, setup};
+            use super::{make_rows, setup};
             use crate::workdir::Workdir;
 
             #[test]
@@ -26,7 +26,7 @@ macro_rules! joinp_test_tab {
             use std::process;
 
             #[allow(unused_imports)]
-            use super::{make_rows, make_rows_full, setup};
+            use super::{make_rows, setup};
             use crate::workdir::Workdir;
 
             #[test]
@@ -46,7 +46,7 @@ macro_rules! joinp_test_comments {
             use std::process;
 
             #[allow(unused_imports)]
-            use super::{make_rows, make_rows_full, setup};
+            use super::{make_rows, setup};
             use crate::workdir::Workdir;
 
             #[test]
@@ -67,7 +67,7 @@ macro_rules! joinp_test_compressed {
             use std::process;
 
             #[allow(unused_imports)]
-            use super::{make_rows, make_rows_full, setup};
+            use super::{make_rows, setup};
             use crate::workdir::Workdir;
 
             #[test]
@@ -141,13 +141,6 @@ fn make_rows(left_only: bool, rows: Vec<Vec<String>>) -> Vec<Vec<String>> {
     } else {
         all_rows.push(svec!["city", "state", "place"]);
     }
-    all_rows.extend(rows.into_iter());
-    all_rows
-}
-
-fn make_rows_full(rows: Vec<Vec<String>>) -> Vec<Vec<String>> {
-    let mut all_rows = vec![];
-    all_rows.push(svec!["city", "state", "city_right", "place"]);
     all_rows.extend(rows.into_iter());
     all_rows
 }
@@ -415,48 +408,95 @@ joinp_test!(
 );
 
 joinp_test!(joinp_full, |wrk: Workdir, mut cmd: process::Command| {
+    cmd.arg("--full").arg("--coalesce");
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected1 = make_rows(
+        false,
+        vec![
+            svec!["Boston", "MA", "Logan Airport"],
+            svec!["Boston", "MA", "Boston Garden"],
+            svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+            svec!["Orlando", "", "Disney World"],
+            svec!["San Francisco", "CA", ""],
+            svec!["New York", "NY", ""],
+        ],
+    );
+    let expected2 = make_rows(
+        false,
+        vec![
+            svec!["Boston", "MA", "Logan Airport"],
+            svec!["Boston", "MA", "Boston Garden"],
+            svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+            svec!["Orlando", "", "Disney World"],
+            svec!["New York", "NY", ""],
+            svec!["San Francisco", "CA", ""],
+        ],
+    );
+    assert!(got == expected1 || got == expected2);
+});
+
+joinp_test!(joinp_full_not_coalesced, |wrk: Workdir, mut cmd: process::Command| {
     cmd.arg("--full");
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected1 = make_rows_full(vec![
-        svec!["Boston", "MA", "Boston", "Logan Airport"],
-        svec!["Boston", "MA", "Boston", "Boston Garden"],
-        svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
-        svec!["", "", "Orlando", "Disney World"],
-        svec!["San Francisco", "CA", "", ""],
-        svec!["New York", "NY", "", ""],
-    ]);
-    let expected2 = make_rows_full(vec![
-        svec!["Boston", "MA", "Boston", "Logan Airport"],
-        svec!["Boston", "MA", "Boston", "Boston Garden"],
-        svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
-        svec!["", "", "Orlando", "Disney World"],
-        svec!["New York", "NY", "", ""],
-        svec!["San Francisco", "CA", "", ""],
-    ]);
+    let mut expected1 = make_rows(
+        false,
+        vec![
+            svec!["city", "state", "city_right", "place"], 
+            svec!["Boston", "MA", "Boston", "Logan Airport"], 
+            svec!["Boston", "MA", "Boston", "Boston Garden"], 
+            svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"], 
+            svec!["", "", "Orlando", "Disney World"], 
+            svec!["San Francisco", "CA", "", ""], 
+            svec!["New York", "NY", "", ""],
+        ],
+    );
+    // remove the first old header from expected1
+    expected1.remove(0);
+    
+    let mut expected2 = make_rows(
+        false,
+        vec![
+            svec!["city", "state", "city_right", "place"], 
+            svec!["Boston", "MA", "Boston", "Logan Airport"], 
+            svec!["Boston", "MA", "Boston", "Boston Garden"], 
+            svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"], 
+            svec!["", "", "Orlando", "Disney World"], 
+            svec!["New York", "NY", "", ""],
+            svec!["San Francisco", "CA", "", ""], 
+        ],
+    );
+    expected2.remove(0);
+
     assert!(got == expected1 || got == expected2);
 });
 
 joinp_test_compressed!(
     joinp_full_compressed,
     |wrk: Workdir, mut cmd: process::Command| {
-        cmd.arg("--full");
+        cmd.arg("--full").arg("--coalesce");
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-        let expected1 = make_rows_full(vec![
-            svec!["Boston", "MA", "Boston", "Logan Airport"],
-            svec!["Boston", "MA", "Boston", "Boston Garden"],
-            svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
-            svec!["", "", "Orlando", "Disney World"],
-            svec!["San Francisco", "CA", "", ""],
-            svec!["New York", "NY", "", ""],
-        ]);
-        let expected2 = make_rows_full(vec![
-            svec!["Boston", "MA", "Boston", "Logan Airport"],
-            svec!["Boston", "MA", "Boston", "Boston Garden"],
-            svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
-            svec!["", "", "Orlando", "Disney World"],
-            svec!["New York", "NY", "", ""],
-            svec!["San Francisco", "CA", "", ""],
-        ]);
+        let expected1 = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+                svec!["Orlando", "", "Disney World"],
+                svec!["San Francisco", "CA", ""],
+                svec!["New York", "NY", ""],
+            ],
+        );
+        let expected2 = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+                svec!["Orlando", "", "Disney World"],
+                svec!["New York", "NY", ""],
+                svec!["San Francisco", "CA", ""],
+            ],
+        );
         assert!(got == expected1 || got == expected2);
     }
 );
@@ -464,24 +504,30 @@ joinp_test_compressed!(
 joinp_test_comments!(
     joinp_full_comments,
     |wrk: Workdir, mut cmd: process::Command| {
-        cmd.arg("--full");
+        cmd.arg("--full").arg("--coalesce");
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-        let expected1 = make_rows_full(vec![
-            svec!["Boston", "MA", "Boston", "Logan Airport"],
-            svec!["Boston", "MA", "Boston", "Boston Garden"],
-            svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
-            svec!["", "", "Orlando", "Disney World"],
-            svec!["San Francisco", "CA", "", ""],
-            svec!["New York", "NY", "", ""],
-        ]);
-        let expected2 = make_rows_full(vec![
-            svec!["Boston", "MA", "Boston", "Logan Airport"],
-            svec!["Boston", "MA", "Boston", "Boston Garden"],
-            svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
-            svec!["", "", "Orlando", "Disney World"],
-            svec!["New York", "NY", "", ""],
-            svec!["San Francisco", "CA", "", ""],
-        ]);
+        let expected1 = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+                svec!["Orlando", "", "Disney World"],
+                svec!["San Francisco", "CA", ""],
+                svec!["New York", "NY", ""],
+            ],
+        );
+        let expected2 = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+                svec!["Orlando", "", "Disney World"],
+                svec!["New York", "NY", ""],
+                svec!["San Francisco", "CA", ""],
+            ],
+        );
         assert!(got == expected1 || got == expected2);
     }
 );
