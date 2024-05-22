@@ -159,6 +159,7 @@ polars = { version = "0.40", features = [
     "dtype-full",
     "serde-lazy",
 ], optional = true }
+polars-ops = { version = "0.40", optional = true }
 pyo3 = { version = "0.21", features = [
     "auto-initialize",
     "gil-refs",
@@ -307,7 +308,7 @@ to = ["csvs_convert"]
 to_parquet = ["csvs_convert/parquet"]
 lite = []
 datapusher_plus = ["self_update"]
-polars = ["dep:polars", "smartstring"]
+polars = ["dep:polars", "polars-ops", "smartstring"]
 feature_capable = []
 nightly = [
     "regex/unstable",
