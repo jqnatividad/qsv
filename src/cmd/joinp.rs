@@ -52,6 +52,10 @@ joinp options:
                            number of rows in the given data sets, respectively.
                            The columns1 and columns2 arguments are ignored.
 
+    --coalesce             Force the join to coalesce columns with the same name.
+                           For inner joins, this is not necessary as the join
+                           columns are automatically coalesced.
+
     --filter-left <arg>    Filter the left CSV data set by the given Polars SQL
                            expression BEFORE the join. Only rows that evaluates
                            to true are used in the join.
@@ -183,6 +187,7 @@ use polars::{
     },
     sql::SQLContext,
 };
+use polars_ops::frame::JoinCoalesce;
 use serde::Deserialize;
 use smartstring::SmartString;
 use tempfile::tempdir;
@@ -200,6 +205,7 @@ struct Args {
     flag_left_semi:        bool,
     flag_full:             bool,
     flag_cross:            bool,
+    flag_coalesce:         bool,
     flag_filter_left:      Option<String>,
     flag_filter_right:     Option<String>,
     flag_validate:         Option<String>,
@@ -333,6 +339,7 @@ struct JoinStruct {
     right_sel:        String,
     output:           Option<String>,
     delim:            u8,
+    coalesce:         bool,
     streaming:        bool,
     no_optimizations: bool,
     sql_filter:       Option<String>,
@@ -371,6 +378,12 @@ impl JoinStruct {
             );
         }
 
+        let coalesce_flag = if self.coalesce {
+            JoinCoalesce::CoalesceColumns
+        } else {
+            JoinCoalesce::JoinSpecific
+        };
+
         let optimization_state = if self.no_optimizations {
             // use default optimization state
             polars::lazy::frame::OptState {
@@ -401,6 +414,7 @@ impl JoinStruct {
                 .join_builder()
                 .with(self.right_lf.with_optimizations(optimization_state))
                 .how(JoinType::Cross)
+                .coalesce(coalesce_flag)
                 .allow_parallel(true)
                 .validate(validation)
                 .finish()
@@ -430,6 +444,7 @@ impl JoinStruct {
                 .left_on(left_selcols)
                 .right_on(right_selcols)
                 .how(jointype)
+                .coalesce(coalesce_flag)
                 .allow_parallel(true)
                 .validate(validation)
                 .finish()
@@ -572,6 +587,7 @@ impl Args {
             right_sel: self.arg_columns2.clone(),
             output: self.flag_output.clone(),
             delim,
+            coalesce: self.flag_coalesce.clone(),
             streaming: self.flag_streaming,
             no_optimizations: self.flag_no_optimizations,
             sql_filter: self.flag_sql_filter.clone(),
