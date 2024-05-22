@@ -673,7 +673,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 );
             }
             let lf = LazyCsvReader::new(table)
-                .has_header(true)
+                .with_has_header(true)
                 .with_missing_is_null(true)
                 .with_comment_prefix(comment_char.as_deref())
                 .with_null_values(Some(NullValues::AllColumns(rnull_values.clone())))
@@ -681,8 +681,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .with_infer_schema_length(Some(args.flag_infer_len))
                 .with_try_parse_dates(args.flag_try_parsedates)
                 .with_ignore_errors(args.flag_ignore_errors)
-                .truncate_ragged_lines(args.flag_truncate_ragged_lines)
-                .low_memory(args.flag_low_memory)
+                .with_truncate_ragged_lines(args.flag_truncate_ragged_lines)
+                .with_low_memory(args.flag_low_memory)
                 .finish()?;
             ctx.register(table_name, lf.with_optimizations(optimization_state));
         }
