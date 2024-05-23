@@ -94,6 +94,10 @@ joinp options:
                            will be skipped. If not set, the query will fail.
                            Only use this when debugging queries, as polars does batched
                            parsing and will skip the entire batch where the error occurred.
+    --decimal-comma        Use comma as the decimal separator when parsing CSVs.
+                           Otherwise, use period as the decimal separator.
+                           Note that you'll need to set --delimiter to an alternate delimiter
+                           other than the default comma if you are using this option.
 
                            ASOF JOIN OPTIONS:
     --asof                 Do an 'asof' join. This is similar to a left inner
@@ -212,6 +216,7 @@ struct Args {
     flag_nulls:            bool,
     flag_streaming:        bool,
     flag_try_parsedates:   bool,
+    flag_decimal_comma:    bool,
     flag_infer_len:        usize,
     flag_low_memory:       bool,
     flag_no_optimizations: bool,
@@ -545,6 +550,7 @@ impl Args {
                 .with_separator(tsvtab_delim(&self.arg_input1, delim))
                 .with_infer_schema_length(num_rows)
                 .with_try_parse_dates(try_parsedates)
+                .with_decimal_comma(self.flag_decimal_comma)
                 .with_low_memory(low_memory)
                 .with_ignore_errors(ignore_errors)
                 .finish()?
@@ -570,6 +576,7 @@ impl Args {
                 .with_separator(tsvtab_delim(&self.arg_input2, delim))
                 .with_infer_schema_length(num_rows)
                 .with_try_parse_dates(try_parsedates)
+                .with_decimal_comma(self.flag_decimal_comma)
                 .with_low_memory(low_memory)
                 .with_ignore_errors(ignore_errors)
                 .finish()?
