@@ -164,7 +164,7 @@ pub fn polars_count_input(
     conf: &Config,
     low_memory: bool,
 ) -> Result<(u64, usize), crate::clitypes::CliError> {
-    use polars::{prelude::*, sql::SQLContext};
+    use polars::{lazy::frame::LazyFrame, prelude::*, sql::SQLContext};
 
     log::info!("using polars");
 
@@ -196,19 +196,19 @@ pub fn polars_count_input(
     };
 
     let mut ctx = SQLContext::new();
-    let lazy_df: polars::lazy::frame::LazyFrame;
+    let lazy_df: LazyFrame;
     let delimiter = conf.get_delimiter();
 
-    // if its a "regular" CSV, use polars' read_csv()
-    // which is much faster than the regular CSV reader
+    // if its a "regular" CSV, use polars' read_csv() SQL table function
+    // which is much faster than the LazyCsvReader
     let count_query = if comment_prefix.is_none() && delimiter == b',' && !low_memory {
         format!(
             "SELECT COUNT(*) FROM read_csv('{}')",
             filepath.to_string_lossy(),
         )
     } else {
-        // read the file into a Polars LazyFrame
-        // as we need to use the LazyCsvReader builder to set CSV read options
+        // otherwise, read the file into a Polars LazyFrame
+        // using the LazyCsvReader builder to set CSV read options
         lazy_df = match LazyCsvReader::new(filepath.clone())
             .with_separator(delimiter)
             .with_comment_prefix(comment_prefix)
