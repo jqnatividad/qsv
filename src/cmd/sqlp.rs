@@ -180,6 +180,8 @@ sqlp options:
                               null values when READING CSV files (e.g. NULL, NONE, <empty string>).
                               Use "<empty string>" to consider an empty string a null value.
                               [default: <empty string>]
+    --decimal-comma           Use comma as the decimal separator when parsing CSVs.
+                              Otherwise, use period as the decimal separator.
 
                               CSV OUTPUT FORMAT ONLY:
     --datetime-format <fmt>   The datetime format to use writing datetimes.
@@ -262,6 +264,7 @@ struct Args {
     flag_no_optimizations:      bool,
     flag_ignore_errors:         bool,
     flag_truncate_ragged_lines: bool,
+    flag_decimal_comma:         bool,
     flag_datetime_format:       Option<String>,
     flag_date_format:           Option<String>,
     flag_time_format:           Option<String>,
@@ -617,6 +620,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         && !args.flag_truncate_ragged_lines
         && !args.flag_ignore_errors
         && args.flag_rnull_values.is_empty()
+        && !args.flag_decimal_comma
         && comment_char.is_none()
         && std::path::Path::new(&args.arg_input[0])
             .extension()
@@ -682,6 +686,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .with_try_parse_dates(args.flag_try_parsedates)
                 .with_ignore_errors(args.flag_ignore_errors)
                 .with_truncate_ragged_lines(args.flag_truncate_ragged_lines)
+                .with_decimal_comma(args.flag_decimal_comma)
                 .with_low_memory(args.flag_low_memory)
                 .finish()?;
             ctx.register(table_name, lf.with_optimizations(optimization_state));
