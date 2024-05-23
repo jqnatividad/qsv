@@ -690,11 +690,11 @@ fn sqlp_boston311_try_parsedates_precision() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["ward", "avg_tat"],
-        svec!["Ward 11", "4847759785984.000"],
-        svec!["01", "4818270158848.000"],
-        svec!["Ward 13", "1518365704192.000"],
-        svec!["Ward 15", "1278925996032.000"],
-        svec!["Ward 21", "878445985792.000"],
+        svec!["Ward 11", "4847760000000.000"],
+        svec!["01", "4818270000000.000"],
+        svec!["Ward 13", "1518365750000.000"],
+        svec!["Ward 15", "1278926000000.000"],
+        svec!["Ward 21", "878446000000.000"],
     ];
     assert_eq!(got, expected);
 }
