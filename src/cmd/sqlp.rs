@@ -182,6 +182,8 @@ sqlp options:
                               [default: <empty string>]
     --decimal-comma           Use comma as the decimal separator when parsing CSVs.
                               Otherwise, use period as the decimal separator.
+                              Note that you'll need to set --delimiter to an alternate delimiter
+                              other than the default comma if you are using this option.
 
                               CSV OUTPUT FORMAT ONLY:
     --datetime-format <fmt>   The datetime format to use writing datetimes.
