@@ -154,10 +154,7 @@ polars = { version = "0.40", features = [
     "performant",
     "cse",
     "avro",
-    "temporal",
-    "timezones",
     "dtype-full",
-    "serde-lazy",
 ], optional = true }
 polars-ops = { version = "0.40", optional = true }
 pyo3 = { version = "0.21", features = [
