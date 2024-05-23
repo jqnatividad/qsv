@@ -1,7 +1,18 @@
 static USAGE: &str = r#"
-Prints a count of the number of records in the CSV data. If the polars feature is
-enabled, it will use the much faster multithreaded, mem-mapped Polars CSV reader.
-Otherwise, it will use the regular, single-threaded CSV reader.
+Returns a count of the number of records in the CSV data.
+
+It has three modes of operation:
+ 1. If a valid index is present, it will use it to lookup the count and
+    return instantaneously. (fastest)
+
+ If no index is present, it will read the CSV and count the number
+ of records by scanning the file. 
+   
+   2. If the polars feature is enabled, it will use the multithreaded,
+      mem-mapped Polars CSV reader. (faster - not available on qsvlite)
+      
+   3. If the polars feature is not enabled, it will use the "regular",
+      single-threaded CSV reader.
 
 Note that the count will not include the header row (unless --no-headers is
 given).
@@ -18,6 +29,9 @@ count options:
                            Its an estimate as it doesn't count quotes, and will be an
                            undercount if the record has quoted fields.
                            The count and width are separated by a semicolon.
+                           Note that this option will require scanning the entire file
+                           using the "regular", single-threaded, streaming CSV reader
+                           and will not use the index nor the Polars CSV reader.
 
                            WHEN THE POLARS FEATURE IS ENABLED:
     --no-polars            Use the "regular", single-threaded, streaming CSV reader instead
@@ -25,8 +39,8 @@ count options:
                            Use this when you encounter memory issues when counting with the
                            Polars CSV reader. The streaming reader is slower but can read
                            any valid CSV file of any size.
-    --low-memory           Use the Polars CSV Reader's low-memory mode. This
-                           mode is slower but uses less memory. If counting still fails,
+    --low-memory           Use the Polars CSV Reader's low-memory mode. This mode
+                           is slower but uses less memory. If counting still fails,
                            use --no-polars instead to use the streaming CSV reader.
 
 
