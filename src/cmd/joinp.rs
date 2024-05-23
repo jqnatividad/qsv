@@ -587,7 +587,7 @@ impl Args {
             right_sel: self.arg_columns2.clone(),
             output: self.flag_output.clone(),
             delim,
-            coalesce: self.flag_coalesce.clone(),
+            coalesce: self.flag_coalesce,
             streaming: self.flag_streaming,
             no_optimizations: self.flag_no_optimizations,
             sql_filter: self.flag_sql_filter.clone(),
