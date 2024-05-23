@@ -52,6 +52,10 @@ joinp options:
                            number of rows in the given data sets, respectively.
                            The columns1 and columns2 arguments are ignored.
 
+    --coalesce             Force the join to coalesce columns with the same name.
+                           For inner joins, this is not necessary as the join
+                           columns are automatically coalesced.
+
     --filter-left <arg>    Filter the left CSV data set by the given Polars SQL
                            expression BEFORE the join. Only rows that evaluates
                            to true are used in the join.
@@ -183,6 +187,7 @@ use polars::{
     },
     sql::SQLContext,
 };
+use polars_ops::frame::JoinCoalesce;
 use serde::Deserialize;
 use smartstring::SmartString;
 use tempfile::tempdir;
@@ -200,6 +205,7 @@ struct Args {
     flag_left_semi:        bool,
     flag_full:             bool,
     flag_cross:            bool,
+    flag_coalesce:         bool,
     flag_filter_left:      Option<String>,
     flag_filter_right:     Option<String>,
     flag_validate:         Option<String>,
@@ -267,9 +273,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (true, false, false, false, false, false) => join.run(JoinType::Left, validation, false),
         (false, true, false, false, false, false) => join.run(JoinType::Anti, validation, false),
         (false, false, true, false, false, false) => join.run(JoinType::Semi, validation, false),
-        (false, false, false, true, false, false) => {
-            join.run(JoinType::Outer { coalesce: true }, validation, false)
-        },
+        (false, false, false, true, false, false) => join.run(JoinType::Outer, validation, false),
         (false, false, false, false, true, false) => join.run(JoinType::Cross, validation, false),
         (false, false, false, false, false, true) => {
             // safety: flag_strategy is always is_some() as it has a default value
@@ -335,6 +339,7 @@ struct JoinStruct {
     right_sel:        String,
     output:           Option<String>,
     delim:            u8,
+    coalesce:         bool,
     streaming:        bool,
     no_optimizations: bool,
     sql_filter:       Option<String>,
@@ -373,6 +378,12 @@ impl JoinStruct {
             );
         }
 
+        let coalesce_flag = if self.coalesce {
+            JoinCoalesce::CoalesceColumns
+        } else {
+            JoinCoalesce::JoinSpecific
+        };
+
         let optimization_state = if self.no_optimizations {
             // use default optimization state
             polars::lazy::frame::OptState {
@@ -403,6 +414,7 @@ impl JoinStruct {
                 .join_builder()
                 .with(self.right_lf.with_optimizations(optimization_state))
                 .how(JoinType::Cross)
+                .coalesce(coalesce_flag)
                 .allow_parallel(true)
                 .validate(validation)
                 .finish()
@@ -432,6 +444,7 @@ impl JoinStruct {
                 .left_on(left_selcols)
                 .right_on(right_selcols)
                 .how(jointype)
+                .coalesce(coalesce_flag)
                 .allow_parallel(true)
                 .validate(validation)
                 .finish()
@@ -526,13 +539,13 @@ impl Args {
             }
 
             LazyCsvReader::new(&self.arg_input1)
-                .has_header(true)
+                .with_has_header(true)
                 .with_missing_is_null(self.flag_nulls)
                 .with_comment_prefix(comment_char.as_deref())
                 .with_separator(tsvtab_delim(&self.arg_input1, delim))
                 .with_infer_schema_length(num_rows)
                 .with_try_parse_dates(try_parsedates)
-                .low_memory(low_memory)
+                .with_low_memory(low_memory)
                 .with_ignore_errors(ignore_errors)
                 .finish()?
         };
@@ -551,13 +564,13 @@ impl Args {
             }
 
             LazyCsvReader::new(&self.arg_input2)
-                .has_header(true)
+                .with_has_header(true)
                 .with_missing_is_null(self.flag_nulls)
                 .with_comment_prefix(comment_char.as_deref())
                 .with_separator(tsvtab_delim(&self.arg_input2, delim))
                 .with_infer_schema_length(num_rows)
                 .with_try_parse_dates(try_parsedates)
-                .low_memory(low_memory)
+                .with_low_memory(low_memory)
                 .with_ignore_errors(ignore_errors)
                 .finish()?
         };
@@ -574,6 +587,7 @@ impl Args {
             right_sel: self.arg_columns2.clone(),
             output: self.flag_output.clone(),
             delim,
+            coalesce: self.flag_coalesce,
             streaming: self.flag_streaming,
             no_optimizations: self.flag_no_optimizations,
             sql_filter: self.flag_sql_filter.clone(),

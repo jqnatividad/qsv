@@ -138,7 +138,7 @@ mlua = { version = "0.9", features = [
 num_cpus = "1"
 odht = "0.3"
 phf = { version = "0.11", features = ["macros"], optional = true }
-polars = { version = "0.39", features = [
+polars = { version = "0.40", features = [
     "lazy",
     "streaming",
     "object",
@@ -154,9 +154,9 @@ polars = { version = "0.39", features = [
     "performant",
     "cse",
     "avro",
-    "csv",
     "dtype-full",
 ], optional = true }
+polars-ops = { version = "0.40", optional = true }
 pyo3 = { version = "0.21", features = [
     "auto-initialize",
     "gil-refs",
@@ -305,7 +305,7 @@ to = ["csvs_convert"]
 to_parquet = ["csvs_convert/parquet"]
 lite = []
 datapusher_plus = ["self_update"]
-polars = ["dep:polars", "smartstring"]
+polars = ["dep:polars", "polars-ops", "smartstring"]
 feature_capable = []
 nightly = [
     "regex/unstable",

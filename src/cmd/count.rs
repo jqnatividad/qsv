@@ -195,41 +195,61 @@ pub fn polars_count_input(
         None
     };
 
-    let optimization_state = polars::lazy::frame::OptState {
-        projection_pushdown: true,
-        predicate_pushdown:  true,
-        type_coercion:       true,
-        simplify_expr:       true,
-        file_caching:        true,
-        slice_pushdown:      true,
-        comm_subplan_elim:   false,
-        comm_subexpr_elim:   true,
-        streaming:           true,
-        fast_projection:     true,
-        eager:               false,
-        row_estimate:        true,
+    let mut ctx = SQLContext::new();
+    let lazy_df: polars::lazy::frame::LazyFrame;
+    let delimiter = conf.get_delimiter();
+
+    // if its a "regular" CSV, use polars' read_csv()
+    // which is much faster than the regular CSV reader
+    let count_query = if comment_prefix.is_none() && delimiter == b',' && !low_memory {
+        format!(
+            "SELECT COUNT(*) FROM read_csv('{}')",
+            filepath.to_string_lossy(),
+        )
+    } else {
+        // read the file into a Polars LazyFrame
+        // as we need to use the LazyCsvReader builder to set CSV read options
+        lazy_df = match LazyCsvReader::new(filepath.clone())
+            .with_separator(delimiter)
+            .with_comment_prefix(comment_prefix)
+            .with_low_memory(low_memory)
+            .finish()
+        {
+            Ok(lazy_df) => lazy_df,
+            Err(e) => {
+                log::warn!("polars error loading CSV: {e}");
+                let (count_regular, _) = count_input(conf, false)?;
+                return Ok((count_regular, 0));
+            },
+        };
+        let optimization_state = polars::lazy::frame::OptState {
+            projection_pushdown: true,
+            predicate_pushdown:  true,
+            type_coercion:       true,
+            simplify_expr:       true,
+            file_caching:        true,
+            slice_pushdown:      true,
+            comm_subplan_elim:   false,
+            comm_subexpr_elim:   true,
+            streaming:           true,
+            fast_projection:     true,
+            eager:               false,
+            row_estimate:        true,
+        };
+        ctx.register("sql_lf", lazy_df.with_optimizations(optimization_state));
+        "SELECT COUNT(*) FROM sql_lf".to_string()
     };
 
-    // read the file into a Polars LazyFrame
-    let lazy_df = match LazyCsvReader::new(filepath.clone())
-        .with_separator(conf.get_delimiter())
-        .with_comment_prefix(comment_prefix)
-        .low_memory(low_memory)
-        .finish()
-    {
-        Ok(lazy_df) => lazy_df,
+    // now leverage the magic of Polars SQL with its lazy evaluation, to count the records
+    // in an optimized manner with its blazing fast multithreaded, mem-mapped CSV reader!
+    let sqlresult_lf = match ctx.execute(&count_query) {
+        Ok(sqlresult_lf) => sqlresult_lf,
         Err(e) => {
-            log::warn!("polars error: {}", e);
+            log::warn!("polars error executing count query: {e}");
             let (count_regular, _) = count_input(conf, false)?;
             return Ok((count_regular, 0));
         },
     };
-
-    // and leverage the magic of Polars SQL with its lazy evaluation, to count the records
-    // in an optimized manner with its blazing fast multithreaded, mem-mapped CSV reader!
-    let mut ctx = SQLContext::new();
-    ctx.register("sql_lf", lazy_df.with_optimizations(optimization_state));
-    let sqlresult_lf = ctx.execute("SELECT COUNT(*) FROM sql_lf")?;
 
     let mut count = if let Ok(cnt) = sqlresult_lf.collect()?["len"].u32() {
         cnt.get(0).ok_or("polars error: cannot get count")? as u64
