@@ -78,7 +78,7 @@ cached = { version = "0.51", features = [
     "disk_store",
     "redis_ahash",
 ], optional = true }
-calamine = { version = "0.24", features = ["dates"] }
+calamine = { version = "0.25", features = ["dates"] }
 censor = { version = "0.3", optional = true }
 chrono = { version = "0.4", default-features = false }
 chrono-tz = "0.9"
@@ -246,8 +246,6 @@ serial_test = { version = "3.1", features = ["file_locks"] }
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "0c8ab87" }
-# use unreleased version of calamine with fixes
-calamine = { git = "https://github.com/tafia/calamine", rev = "58c8ba2" }
 # polars 0.40.0 with unreleased fixes
 polars     = { git = "https://github.com/pola-rs/polars", rev = "6de7422" }
 polars-ops = { git = "https://github.com/pola-rs/polars", rev = "6de7422" }
