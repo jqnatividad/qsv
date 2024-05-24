@@ -278,7 +278,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (true, false, false, false, false, false) => join.run(JoinType::Left, validation, false),
         (false, true, false, false, false, false) => join.run(JoinType::Anti, validation, false),
         (false, false, true, false, false, false) => join.run(JoinType::Semi, validation, false),
-        (false, false, false, true, false, false) => join.run(JoinType::Outer, validation, false),
+        (false, false, false, true, false, false) => join.run(JoinType::Full, validation, false),
         (false, false, false, false, true, false) => join.run(JoinType::Cross, validation, false),
         (false, false, false, false, false, true) => {
             // safety: flag_strategy is always is_some() as it has a default value
@@ -397,18 +397,19 @@ impl JoinStruct {
             }
         } else {
             polars::lazy::frame::OptState {
-                projection_pushdown: true,
-                predicate_pushdown:  true,
-                type_coercion:       true,
-                simplify_expr:       true,
-                file_caching:        true,
-                slice_pushdown:      true,
-                comm_subplan_elim:   true,
-                comm_subexpr_elim:   true,
-                streaming:           self.streaming,
-                fast_projection:     true,
-                eager:               false,
-                row_estimate:        true,
+                projection_pushdown:  true,
+                predicate_pushdown:   true,
+                cluster_with_columns: true,
+                type_coercion:        true,
+                simplify_expr:        true,
+                file_caching:         true,
+                slice_pushdown:       true,
+                comm_subplan_elim:    true,
+                comm_subexpr_elim:    true,
+                streaming:            self.streaming,
+                fast_projection:      true,
+                eager:                false,
+                row_estimate:         true,
             }
         };
         log::debug!("Optimization state: {optimization_state:?}");

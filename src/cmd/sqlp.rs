@@ -559,18 +559,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     } else {
         polars::lazy::frame::OptState {
-            projection_pushdown: true,
-            predicate_pushdown:  true,
-            type_coercion:       true,
-            simplify_expr:       true,
-            file_caching:        !args.flag_low_memory,
-            slice_pushdown:      true,
-            comm_subplan_elim:   !args.flag_low_memory,
-            comm_subexpr_elim:   true,
-            streaming:           args.flag_low_memory,
-            fast_projection:     true,
-            eager:               false,
-            row_estimate:        true,
+            projection_pushdown:  true,
+            predicate_pushdown:   true,
+            cluster_with_columns: true,
+            type_coercion:        true,
+            simplify_expr:        true,
+            file_caching:         !args.flag_low_memory,
+            slice_pushdown:       true,
+            comm_subplan_elim:    !args.flag_low_memory,
+            comm_subexpr_elim:    true,
+            streaming:            args.flag_low_memory,
+            fast_projection:      true,
+            eager:                false,
+            row_estimate:         true,
         }
     };
     // gated by log::log_enabled!(log::Level::Debug) to avoid the

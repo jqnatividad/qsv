@@ -237,18 +237,19 @@ pub fn polars_count_input(
             },
         };
         let optimization_state = polars::lazy::frame::OptState {
-            projection_pushdown: true,
-            predicate_pushdown:  true,
-            type_coercion:       true,
-            simplify_expr:       true,
-            file_caching:        true,
-            slice_pushdown:      true,
-            comm_subplan_elim:   false,
-            comm_subexpr_elim:   true,
-            streaming:           true,
-            fast_projection:     true,
-            eager:               false,
-            row_estimate:        true,
+            projection_pushdown:  true,
+            predicate_pushdown:   true,
+            cluster_with_columns: true,
+            type_coercion:        true,
+            simplify_expr:        true,
+            file_caching:         true,
+            slice_pushdown:       true,
+            comm_subplan_elim:    false,
+            comm_subexpr_elim:    true,
+            streaming:            true,
+            fast_projection:      true,
+            eager:                false,
+            row_estimate:         true,
         };
         ctx.register("sql_lf", lazy_df.with_optimizations(optimization_state));
         "SELECT COUNT(*) FROM sql_lf".to_string()
