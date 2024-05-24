@@ -248,6 +248,9 @@ dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_
 grex = { git = "https://github.com/pemistahl/grex", rev = "0c8ab87" }
 # use unreleased version of calamine with fixes
 calamine = { git = "https://github.com/tafia/calamine", rev = "58c8ba2" }
+# polars 0.40.0 with unreleased fixes
+polars     = { git = "https://github.com/pola-rs/polars", rev = "d4c3aba" }
+polars-ops = { git = "https://github.com/pola-rs/polars", rev = "d4c3aba" }
 
 [features]
 default = ["mimalloc"]
