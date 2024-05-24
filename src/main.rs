@@ -264,7 +264,7 @@ sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
                 QsvExitCode::Good
             },
             Err(CliError::Flag(err)) => {
-                werr!("usage error: {err}");
+                werr!("{err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::IncorrectUsage
             },

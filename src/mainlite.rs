@@ -167,7 +167,7 @@ Please choose one of the following commands:",
                 QsvExitCode::Good
             },
             Err(CliError::Flag(err)) => {
-                werr!("usage error: {err}");
+                werr!("{err}");
                 util::log_end(qsv_args, now);
                 QsvExitCode::IncorrectUsage
             },

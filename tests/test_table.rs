@@ -88,7 +88,7 @@ fn invalid_delimiter_len() {
     let got: String = wrk.output_stderr(&mut cmd);
     assert_eq!(
         &*got,
-        "usage error: Could not convert '||' to a single ASCII character.\n"
+        "Could not convert '||' to a single ASCII character.\n"
     )
 }
 

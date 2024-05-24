@@ -489,7 +489,7 @@ fn fetch_jql_jqlfile_error() {
         .arg("data.csv");
 
     let got: String = wrk.output_stderr(&mut cmd);
-    assert!(got.starts_with("usage error: Invalid arguments."));
+    assert!(got.starts_with("Invalid arguments."));
 
     wrk.assert_err(&mut cmd);
 }
