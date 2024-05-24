@@ -249,8 +249,8 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "0c8ab87" }
 # use unreleased version of calamine with fixes
 calamine = { git = "https://github.com/tafia/calamine", rev = "58c8ba2" }
 # polars 0.40.0 with unreleased fixes
-polars     = { git = "https://github.com/pola-rs/polars", rev = "d4c3aba" }
-polars-ops = { git = "https://github.com/pola-rs/polars", rev = "d4c3aba" }
+polars     = { git = "https://github.com/pola-rs/polars", rev = "6de7422" }
+polars-ops = { git = "https://github.com/pola-rs/polars", rev = "6de7422" }
 
 [features]
 default = ["mimalloc"]
