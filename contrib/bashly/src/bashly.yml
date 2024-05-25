@@ -1,6 +1,6 @@
 name: qsv
 # name: qsv.exe # Windows
-version: 0.127.0
+version: 0.128.0
 
 flags:
     - long: --list
@@ -707,6 +707,8 @@ commands:
           - long: --escape
             arg: arg
           - long: --no-quoting
+          - long: --quote-style
+            arg: arg
           - long: --skip-lines
             arg: arg
           - long: --auto-skip
@@ -746,7 +748,7 @@ commands:
           - *no-headers
           - *delimiter
 
-    - name: join
+    - name: joinp
       completions:
           - <file>
       flags:
@@ -755,6 +757,7 @@ commands:
           - long: --left-semi
           - long: --full
           - long: --cross
+          - long: --coalesce
           - long: --filter-left
             arg: arg
           - long: --filter-right
@@ -769,6 +772,7 @@ commands:
           - long: --low-memory
           - long: --no-optimizations
           - long: --ignore-errors
+          - long: --decimal-comma
           - long: --asof
           - long: --left_by
             arg: arg
@@ -980,11 +984,15 @@ commands:
           - long: --flag
             arg: column
           - long: --quick
+          - long: --preview-match
+            arg: arg
           - long: --count
           - long: --size-limit
             arg: mb
           - long: --dfa-size-limit
             arg: mb
+          - long: --json
+          - long: --not-one
           - *output
           - *no-headers
           - *delimiter
@@ -1160,6 +1168,7 @@ commands:
           - long: --ignore-errors
           - long: --rnull-values
             arg: <arg>
+          - long: --decimal-comma
           - long: --datetime-format
             arg: <fmt>
           - long: --date-format
@@ -1205,6 +1214,8 @@ commands:
           - long: --force
           - *jobs
           - long: --stats-binout
+          - long: --cache-threshold
+            arg: arg
           - *output
           - *no-headers
           - *delimiter
