@@ -4266,7 +4266,7 @@ dependencies = [
 
 [[package]]
 name = "qsv"
-version = "0.127.0"
+version = "0.128.0"
 dependencies = [
  "actix-governor",
  "actix-web",
