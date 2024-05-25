@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------------------
 -- Module for date and time calculations
 --
--- Version 2.2
+-- Version 2.2.1
 -- Copyright (C) 2005-2006, by Jas Latrix (jastejada@yahoo.com)
 -- Copyright (C) 2013-2021, by Thijs Schreijer
 -- Licensed under MIT, http://opensource.org/licenses/MIT
@@ -201,7 +201,7 @@
   do
     local major = 2
     local minor = 2
-    local revision = 0
+    local revision = 1
     date.version = major * 10000000 + minor * 10000 + revision
   end
 --#end -- not DATE_OBJECT_AFX
@@ -301,7 +301,7 @@
     local is, ie; is, ie, self[1], self[2], self[3], self[4], self[5] = find(self.s, s, self.i)
     if is then self.e, self.i = self.i, 1+ie; if f then f(unpack(self)) end return self end
   end
-   local function date_parse(str)
+  local function date_parse(str)
     local y,m,d, h,r,s,  z,  w,u, j,  e,  x,c,  dn,df
     local sw = newstrwalker(gsub(gsub(str, "(%b())", ""),"^(%s*)","")) -- remove comment, trim leading space
     --local function error_out() print(y,m,d,h,r,s) end
@@ -314,21 +314,21 @@
     local function seth(q) h = h and error_dup() or tonumber(q) end
     local function setr(q) r = r and error_dup() or tonumber(q) end
     local function sets(q) s = s and error_dup() or tonumber(q) end
-    local function adds(q) s = s + tonumber(q) end
+    local function adds(q) s = s + tonumber("."..string.sub(q,2,-1)) end
     local function setj(q) j = (m or w or j) and error_dup() or tonumber(q); end
     local function setz(q) z = (z ~= 0 and z) and error_dup() or q end
     local function setzn(zs,zn) zn = tonumber(zn); setz( ((zn<24) and (zn*60) or (mod(zn,100) + floor(zn/100) * 60))*( zs=='+' and -1 or 1) ) end
     local function setzc(zs,zh,zm) setz( ((tonumber(zh)*60) + tonumber(zm))*( zs=='+' and -1 or 1) ) end
 
     if not (sw("^(%d%d%d%d)",sety) and (sw("^(%-?)(%d%d)%1(%d%d)",function(_,a,b) setm(tonumber(a)); setd(tonumber(b)) end) or sw("^(%-?)[Ww](%d%d)%1(%d?)",function(_,a,b) w, u = tonumber(a), tonumber(b or 1) end) or sw("^%-?(%d%d%d)",setj) or sw("^%-?(%d%d)",function(a) setm(a);setd(1) end))
-    and ((sw("^%s*[Tt]?(%d%d):?",seth) and sw("^(%d%d):?",setr) and sw("^(%d%d)",sets) and sw("^(%.%d+)",adds))
+    and ((sw("^%s*[Tt]?(%d%d):?",seth) and sw("^(%d%d):?",setr) and sw("^(%d%d)",sets) and sw("^([,%.]%d+)",adds) and sw("%s*([+-])(%d%d):?(%d%d)%s*$",setzc))
       or sw:finish() or (sw"^%s*$" or sw"^%s*[Zz]%s*$" or sw("^%s-([%+%-])(%d%d):?(%d%d)%s*$",setzc) or sw("^%s*([%+%-])(%d%d)%s*$",setzn))
       )  )
     then --print(y,m,d,h,r,s,z,w,u,j)
     sw:restart(); y,m,d,h,r,s,z,w,u,j = nil,nil,nil,nil,nil,nil,nil,nil,nil,nil
       repeat -- print(sw:aimchr())
         if sw("^[tT:]?%s*(%d%d?):",seth) then --print("$Time")
-          _ = sw("^%s*(%d%d?)",setr) and sw("^%s*:%s*(%d%d?)",sets) and sw("^(%.%d+)",adds)
+          _ = sw("^%s*(%d%d?)",setr) and sw("^%s*:%s*(%d%d?)",sets) and sw("^([,%.]%d+)",adds)
         elseif sw("^(%d+)[/\\%s,-]?%s*") then --print("$Digits")
           x, c = tonumber(sw[1]), len(sw[1])
           if (x >= 70) or (m and d and (not y)) or (c > 3) then
@@ -343,7 +343,7 @@
             setm(mod(sw[0],12)+1)
           elseif inlist(x, sl_timezone, 2, sw) then
             c = fix(sw[0]) -- ignore gmt and utc
-            if c ~= 0 then setz(c, x) end
+            if c ~= 0 then setz(c) end
           elseif not inlist(x, sl_weekdays, 2, sw) then
             sw:back()
             -- am pm bce ad ce bc
@@ -375,7 +375,7 @@
     df = makedayfrc(h or 0, r or 0, s or 0, 0) + ((z or 0)*TICKSPERMIN)
     --print("Zone",h,r,s,z,m,d,y,df)
     return date_new(dn, df) -- no need to :normalize();
-   end
+  end
   local function date_fromtable(v)
     local y, m, d = fix(v.year), getmontharg(v.month), fix(v.day)
     local h, r, s, t = tonumber(v.hour), tonumber(v.min), tonumber(v.sec), tonumber(v.ticks)
