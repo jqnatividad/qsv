@@ -10,59 +10,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # CSVConfV8 Edition 🎉 #
 
-## What's Changed
-* contrib(bashly): update completions.bash for qsv v0.127.0 by @rzmk in https://github.com/jqnatividad/qsv/pull/1776
-* build(deps): bump serde from 1.0.198 to 1.0.199 by @dependabot in https://github.com/jqnatividad/qsv/pull/1777
-* build(deps): bump flate2 from 1.0.28 to 1.0.29 by @dependabot in https://github.com/jqnatividad/qsv/pull/1778
-* build(deps): bump serial_test from 3.1.0 to 3.1.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1779
-* build(deps): bump data-encoding from 2.5.0 to 2.6.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1780
-* build(deps): bump hashbrown from 0.14.3 to 0.14.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1781
-* build(deps): bump flate2 from 1.0.29 to 1.0.30 by @dependabot in https://github.com/jqnatividad/qsv/pull/1784
-* build(deps): bump serde from 1.0.199 to 1.0.200 by @dependabot in https://github.com/jqnatividad/qsv/pull/1787
-* `search`: add `--preview-match` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1785
-* build(deps): bump cached from 0.50.0 to 0.51.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1789
-* `search`: add `--json` output option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1790
-* build(deps): bump titlecase from 3.0.0 to 3.1.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1791
-* `search`: fix `--json` output by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1792
-* build(deps): bump cached from 0.51.0 to 0.51.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1793
-* build(deps): bump sysinfo from 0.30.11 to 0.30.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1797
-* `stats`: add `--cache-threshold` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1795
-* build(deps): bump anyhow from 1.0.82 to 1.0.83 by @dependabot in https://github.com/jqnatividad/qsv/pull/1798
-* `search`: add "match-only" `--flag` option mode by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1799
-* build(deps): bump semver from 1.0.22 to 1.0.23 by @dependabot in https://github.com/jqnatividad/qsv/pull/1800
-* build(deps): bump ryu from 1.0.17 to 1.0.18 by @dependabot in https://github.com/jqnatividad/qsv/pull/1801
-* build(deps): bump cached from 0.51.1 to 0.51.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1802
-* build(deps): bump serde from 1.0.200 to 1.0.201 by @dependabot in https://github.com/jqnatividad/qsv/pull/1804
-* build(deps): bump cached from 0.51.2 to 0.51.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1805
-* build(deps): bump serde_json from 1.0.116 to 1.0.117 by @dependabot in https://github.com/jqnatividad/qsv/pull/1806
-* build(deps): bump file-format from 0.24.0 to 0.25.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1807
-* build(deps): bump csvs_convert from 0.8.9 to 0.8.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1808
-* `stats`: add `--cache-threshold` autoindex creation/deletion  logic by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1809
+---
+
+### Added
+* `input`: add `--quote-style` option https://github.com/jqnatividad/qsv/commit/df3c8f14a4eaa2fba7237dfe30df2fef8c98eccd
+* `joinp`: add `--coalesce` option https://github.com/jqnatividad/qsv/commit/8d142e51d683ab425fc53b2dddfdeeff6a814ffa
+* `search`: add `--preview-match` option https://github.com/jqnatividad/qsv/pull/1785
+* `search`: add `--json` output option https://github.com/jqnatividad/qsv/pull/1790
+* `search`: add "match-only" `--flag` option mode https://github.com/jqnatividad/qsv/pull/1799
 * `search`: add `--not-one` flag for not using exit code 1 when no match by @rzmk in https://github.com/jqnatividad/qsv/pull/1810
-* build(deps): bump simple-expand-tilde from 0.1.5 to 0.1.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1811
+* `sqlp`: add `--decimal-comma` option https://github.com/jqnatividad/qsv/pull/1832
+* `stats`: add `--cache-threshold` option https://github.com/jqnatividad/qsv/pull/1795
+* `stats`: add `--cache-threshold` autoindex creation/deletion  logic https://github.com/jqnatividad/qsv/pull/1809
+* `stats`: add additional mode to `--cache-threshold` https://github.com/jqnatividad/qsv/commit/63fdc55828ec55bf7545c37bd56a4d537aa0cf71
+* `stats`: now computes max_precision for floats https://github.com/jqnatividad/qsv/pull/1815
+* `stats`: add `--round` 9999 sentinel value support to suppress rounding https://github.com/jqnatividad/qsv/pull/1818
+* `stats`: add `is_ascii` column https://github.com/jqnatividad/qsv/pull/1824
+* added new benchmarks for `search` command https://github.com/jqnatividad/qsv/commit/58d73c3beb41071d6cd8532768f0991f0554b717
+
+### Changed
+* `count`: document three count modes https://github.com/jqnatividad/qsv/commit/3d5a333ca8aef3aeaf74ff9e153b5118eb6a605b
+* `excel`: use simpler `range::headers()` to get headers https://github.com/jqnatividad/qsv/commit/069acbf5a6e86132214521324720608f4258c20f
+* `frequency`: ensure `--other-sorted` works with `--other-text` https://github.com/jqnatividad/qsv/commit/7430ad76bda869be7729ea5000ad4d85a875433b
+* `frequency`: microoptimize hot loop https://github.com/jqnatividad/qsv/commit/d9c01e17fa6c4f853a501fe75c6a6b8a30c269d2, https://github.com/jqnatividad/qsv/commit/7c9f925184100f89f6f3a77ae4f7b93448103f38 and 
+* `luau`: improve usage text https://github.com/jqnatividad/qsv/commit/cb6b4d9b7bfb60a10385057ca093453e3549e424
+* `luau`: we now bundle luau 0.625 from 0.622 https://github.com/jqnatividad/qsv/commit/40609751950a852f998fba41edb35aab31c74c20
+* `luau`: update vendored LuaDate library from 2.2.0 to 2.2.1 https://github.com/jqnatividad/qsv/pull/1840
+* `schema`: adjust to reflect `stats --cache-threshold` option https://github.com/jqnatividad/qsv/commit/92fed8696fd885d3721f07eeedcf67732febed4c
+* `slice`: move json output helpers to util https://github.com/jqnatividad/qsv/commit/1f44b488784fd0c1ef22786ab7aeacbf2f8cf976
+* `tojsonl`: refactor boolcheck helper https://github.com/jqnatividad/qsv/commit/74d5f5a8c934254e11ee611973cc10524a288a9e
+* `docs`: cross-reference `split` & `partition` commands https://github.com/jqnatividad/qsv/pull/1828
+* contrib(bashly): update completions.bash for qsv v0.127.0 by @rzmk in https://github.com/jqnatividad/qsv/pull/1776
+* contrib(bashly): update completions.bash for qsv v0.128.0 by @rzmk in https://github.com/jqnatividad/qsv/pull/1838
+* `deps`: upgrade to polars 0.40.0 https://github.com/jqnatividad/qsv/pull/1831
+* build(deps): bump actix-web from 4.5.1 to 4.6.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1825
+* build(deps): bump anyhow from 1.0.82 to 1.0.83 by @dependabot in https://github.com/jqnatividad/qsv/pull/1798
+* build(deps): bump anyhow from 1.0.83 to 1.0.85 by @dependabot in https://github.com/jqnatividad/qsv/pull/1823
+* build(deps): bump anyhow from 1.0.85 to 1.0.86 by @dependabot in https://github.com/jqnatividad/qsv/pull/1826
+* build(deps): bump cached from 0.50.0 to 0.51.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1789
+* build(deps): bump cached from 0.51.0 to 0.51.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1793
+* build(deps): bump cached from 0.51.1 to 0.51.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1802
+* build(deps): bump cached from 0.51.2 to 0.51.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1805
+* build(deps): bump crossbeam-channel from 0.5.12 to 0.5.13 by @dependabot in https://github.com/jqnatividad/qsv/pull/1827
+* build(deps): bump csvs_convert from 0.8.9 to 0.8.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1808
+* build(deps): bump data-encoding from 2.5.0 to 2.6.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1780
+* build(deps): bump file-format from 0.24.0 to 0.25.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1807
+* build(deps): bump flate2 from 1.0.28 to 1.0.29 by @dependabot in https://github.com/jqnatividad/qsv/pull/1778
+* build(deps): bump flate2 from 1.0.29 to 1.0.30 by @dependabot in https://github.com/jqnatividad/qsv/pull/1784
+* build(deps): bump hashbrown from 0.14.3 to 0.14.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1781
+* build(deps): bump itertools from 0.12.1 to 0.13.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1822
+* deps: bump forked jsonschema from 0.17.1 to 0.18.0 https://github.com/jqnatividad/qsv/commit/f02620fd170804b1995b070e8133522b98a8c443
+* build(deps): bump mimalloc from 0.1.41 to 0.1.42 by @dependabot in https://github.com/jqnatividad/qsv/pull/1829
+* build(deps): bump mlua from 0.9.7 to 0.9.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1821
 * build(deps): bump qsv-stats from 0.16.0 to 0.17.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1813
 * build(deps): bump qsv-stats from 0.17.1 to 0.17.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1814
-* `stats`: now computes max_precision for floats by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1815
 * build(deps): bump qsv-stats from 0.17.2 to 0.18.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1816
+* build(deps): bump ryu from 1.0.17 to 1.0.18 by @dependabot in https://github.com/jqnatividad/qsv/pull/1801
+* build(deps): bump semver from 1.0.22 to 1.0.23 by @dependabot in https://github.com/jqnatividad/qsv/pull/1800
+* build(deps): bump serde from 1.0.198 to 1.0.199 by @dependabot in https://github.com/jqnatividad/qsv/pull/1777
+* build(deps): bump serde from 1.0.199 to 1.0.200 by @dependabot in https://github.com/jqnatividad/qsv/pull/1787
+* build(deps): bump serde from 1.0.200 to 1.0.201 by @dependabot in https://github.com/jqnatividad/qsv/pull/1804
 * build(deps): bump serde from 1.0.201 to 1.0.202 by @dependabot in https://github.com/jqnatividad/qsv/pull/1817
-* `stats`: add `--round` 9999 sentinel value support to suppress rounding by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1818
-* build(deps): bump mlua from 0.9.7 to 0.9.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1821
-* build(deps): bump itertools from 0.12.1 to 0.13.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1822
-* build(deps): bump anyhow from 1.0.83 to 1.0.85 by @dependabot in https://github.com/jqnatividad/qsv/pull/1823
-* `stats`: add `is_ascii` column by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1824
-* build(deps): bump crossbeam-channel from 0.5.12 to 0.5.13 by @dependabot in https://github.com/jqnatividad/qsv/pull/1827
-* build(deps): bump anyhow from 1.0.85 to 1.0.86 by @dependabot in https://github.com/jqnatividad/qsv/pull/1826
-* build(deps): bump actix-web from 4.5.1 to 4.6.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1825
-* `docs`: cross-reference `split` & `partition` commands by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1828
-* build(deps): bump mimalloc from 0.1.41 to 0.1.42 by @dependabot in https://github.com/jqnatividad/qsv/pull/1829
-* `deps`: upgrade to polars 0.40.0 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1831
-* `sqlp`: add `--decimal-comma` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1832
-* pass through docopt messages without a prefix by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1835
-* apply Polars SQL `count(*) group` by fix by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1837
-* contrib(bashly): update completions.bash for qsv v0.128.0 by @rzmk in https://github.com/jqnatividad/qsv/pull/1838
+* build(deps): bump serde_json from 1.0.116 to 1.0.117 by @dependabot in https://github.com/jqnatividad/qsv/pull/1806
+* build(deps): bump serial_test from 3.1.0 to 3.1.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1779
+* build(deps): bump simple-expand-tilde from 0.1.5 to 0.1.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/1811
+* build(deps): bump sysinfo from 0.30.11 to 0.30.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1797
+* build(deps): bump titlecase from 3.0.0 to 3.1.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1791
 * build(deps): bump jql-runner from 7.1.8 to 7.1.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1839
-* `luau`: update vendored LuaDate library from 2.2.0 to 2.2.1 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1840
+* apply select clippy suggestions
+* updated several indirect dependencies
+* pin Rust nightly to 2024-05-14
+* bump MSRV to 1.78
 
+### Fixed
+* `luau`: correct example when using `--colindex` https://github.com/jqnatividad/qsv/commit/cbbed21718324346031a3201407f274abfec5ee6
+* `search`: fix `--json` output https://github.com/jqnatividad/qsv/pull/1792
+* pass through docopt messages without a prefix https://github.com/jqnatividad/qsv/pull/1835
+* apply Polars SQL `count(*) group by` fix https://github.com/jqnatividad/qsv/pull/1837
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.127.0...0.128.0
 
