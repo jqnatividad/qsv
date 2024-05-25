@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.128.0] - 2024-05-24
+## [0.128.0] - 2024-05-25
 
 # CSVConfV8 Edition 🎉 #
 
@@ -59,6 +59,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `sqlp`: add `--decimal-comma` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1832
 * pass through docopt messages without a prefix by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1835
 * apply Polars SQL `count(*) group` by fix by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1837
+* contrib(bashly): update completions.bash for qsv v0.128.0 by @rzmk in https://github.com/jqnatividad/qsv/pull/1838
+* build(deps): bump jql-runner from 7.1.8 to 7.1.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1839
+* `luau`: update vendored LuaDate library from 2.2.0 to 2.2.1 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1840
 
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.127.0...0.128.0
