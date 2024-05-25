@@ -247,8 +247,8 @@ dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "0c8ab87" }
 # polars 0.40.0 with unreleased fixes
-polars     = { git = "https://github.com/pola-rs/polars", rev = "6de7422" }
-polars-ops = { git = "https://github.com/pola-rs/polars", rev = "6de7422" }
+polars     = { git = "https://github.com/pola-rs/polars", rev = "d68d499" }
+polars-ops = { git = "https://github.com/pola-rs/polars", rev = "d68d499" }
 
 [features]
 default = ["mimalloc"]
