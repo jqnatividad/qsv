@@ -8,11 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.128.0] - 2024-05-25
 
-# CSVConfV8 Edition 🎉 #
+# ❤️ csv,conf,v8 Edition - [_¡Ándale! ¡Ándale! ¡Arriba! ¡Arriba!_](https://www.youtube.com/watch?v=5bmiDLH5htU) 🎉 #
+
+Yii-hah! We're Mexico bound as we head to [csv,conf,v8](https://csvconf.com) to present and share qsv with fellow data-makers and wranglers from all over!
+
+And we've packed a lot into this release for the occcasion:
+* `search` got a lot of love as it now powers `qsv-pro`'s new `search` feature to get near-instant search results even on large datasets.
+* `stats` - the ❤️ of qsv, now has cache fine-tuning options with the `--cache-threshold` option. It now also computes `max_precision` for floats and `is_ascii` for strings. It also has a new `--round` 9999 sentinel value to suppress rounding of statistics.
+* `schema` & `tojsonl` are now faster thanks to `stats --cache-threshold` autoindex creation/deletion logic.
+* We [upgraded Polars to 0.40.0](https://github.com/pola-rs/polars/releases/tag/rs-0.40.0) for even more speed and stability for the `count`, `joinp` & `sqlp` commands.
+* `count` now has an additional blazing fast counting mode using Polars' `read_csv()` table function.
+* `frequency` gets some micro-optimizations for even faster frequency analysis.
+* `luau` is bundled with luau [0.625](https://github.com/luau-lang/luau/releases/tag/0.625) from [0.622](https://github.com/luau-lang/luau/releases/tag/0.622). We also upgraded the bundled LuaDate library [from 2.2.0 to 2.2.1](https://github.com/Tieske/date?tab=readme-ov-file#changes).
+
+Overall, qsv manages to keep its performance edge despite the addition of new capabilities and features, and we'll give a whirlwind tour in [our talk at csv,conf,v8](https://csvconf.com/schedule/). 
+
+We'll also preview what we've been calling the __People's APPI__ - our _"Answering People/Policymaker Interface"_ in [qsv pro](https://qsvpro.dathere.com). This is a new way to interact with qsv that's more conversational and less command-line-y using a natural language interface. It's a way to make qsv more accessible to more people, especially those who are not comfortable with the command line.
+
+We're excited to share these with the csv,conf,v8 community and the wider world! Nos vemos en Puebla!
+
+[_¡Ándele! ¡Ándele! ¡Epa! ¡Epa! ¡Epa!_](https://www.youtube.com/watch?v=cc-3wVQuD7k)
 
 ---
 
 ### Added
+* `count`: additional Polars-powered counting mode using `read_csv()` SQL table function https://github.com/jqnatividad/qsv/commit/05c580912365356e9c5383654f351e0cc6ebaab6
 * `input`: add `--quote-style` option https://github.com/jqnatividad/qsv/commit/df3c8f14a4eaa2fba7237dfe30df2fef8c98eccd
 * `joinp`: add `--coalesce` option https://github.com/jqnatividad/qsv/commit/8d142e51d683ab425fc53b2dddfdeeff6a814ffa
 * `search`: add `--preview-match` option https://github.com/jqnatividad/qsv/pull/1785
@@ -30,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 * `count`: document three count modes https://github.com/jqnatividad/qsv/commit/3d5a333ca8aef3aeaf74ff9e153b5118eb6a605b
+* `describegpt`: update `--max-tokens` type for LLMs with larger context sizes by @rzmk https://github.com/jqnatividad/qsv/pull/1841
 * `excel`: use simpler `range::headers()` to get headers https://github.com/jqnatividad/qsv/commit/069acbf5a6e86132214521324720608f4258c20f
 * `frequency`: ensure `--other-sorted` works with `--other-text` https://github.com/jqnatividad/qsv/commit/7430ad76bda869be7729ea5000ad4d85a875433b
 * `frequency`: microoptimize hot loop https://github.com/jqnatividad/qsv/commit/d9c01e17fa6c4f853a501fe75c6a6b8a30c269d2, https://github.com/jqnatividad/qsv/commit/7c9f925184100f89f6f3a77ae4f7b93448103f38 and 
