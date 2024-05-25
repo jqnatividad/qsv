@@ -301,7 +301,7 @@ _qsv_completions() {
       ;;
 
     *'search'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--count --delimiter --dfa-size-limit --flag --help --ignore-case --invert-match --no-headers --output --progressbar --quick --quiet --select --size-limit --unicode -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--count --delimiter --dfa-size-limit --flag --help --ignore-case --invert-match --json --no-headers --not-one --output --preview-match --progressbar --quick --quiet --select --size-limit --unicode -h")" -- "$cur" )
       ;;
 
     *'sample'*)
@@ -321,7 +321,7 @@ _qsv_completions() {
       ;;
 
     *'input'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--auto-skip --comment --delimiter --encoding-errors --escape --help --no-quoting --output --quote --skip-lastlines --skip-lines --trim-fields --trim-headers -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--auto-skip --comment --delimiter --encoding-errors --escape --help --no-quoting --output --quote --quote-style --skip-lastlines --skip-lines --trim-fields --trim-headers -h")" -- "$cur" )
       ;;
 
     *'slice'*)
@@ -365,11 +365,11 @@ _qsv_completions() {
       ;;
 
     *'stats'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--cardinality --dates-whitelist --delimiter --everything --force --help --infer-boolean --infer-dates --jobs --mad --median --memcheck --mode --no-headers --nulls --output --prefer-dmy --quartiles --round --select --stats-binout --typesonly -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--cache-threshold --cardinality --dates-whitelist --delimiter --everything --force --help --infer-boolean --infer-dates --jobs --mad --median --memcheck --mode --no-headers --nulls --output --prefer-dmy --quartiles --round --select --stats-binout --typesonly -h")" -- "$cur" )
       ;;
 
     *'sqlp'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--compress-level --compression --date-format --datetime-format --delimiter --float-precision --format --help --ignore-errors --infer-len --low-memory --memcheck --no-headers --no-optimizations --output --quiet --rnull-values --statistics --time-format --truncate-ragged-lines --try-parsedates --wnull-value -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--compress-level --compression --date-format --datetime-format --decimal-comma --delimiter --float-precision --format --help --ignore-errors --infer-len --low-memory --memcheck --no-headers --no-optimizations --output --quiet --rnull-values --statistics --time-format --truncate-ragged-lines --try-parsedates --wnull-value -h")" -- "$cur" )
       ;;
 
     *'sort'*)
@@ -389,7 +389,7 @@ _qsv_completions() {
       ;;
 
     *'join'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--asof --cross --date-format --datetime-format --delimiter --filter-left --filter-right --float-precision --full --help --ignore-errors --infer-len --left --left-anti --left-semi --left_by --low-memory --no-optimizations --null-value --nulls --output --quiet --right_by --sql-filter --strategy --streaming --time-format --tolerance --try-parsedates --validate -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--asof --coalesce --cross --date-format --datetime-format --decimal-comma --delimiter --filter-left --filter-right --float-precision --full --help --ignore-errors --infer-len --left --left-anti --left-semi --left_by --low-memory --no-optimizations --null-value --nulls --output --quiet --right_by --sql-filter --strategy --streaming --time-format --tolerance --try-parsedates --validate -h")" -- "$cur" )
       ;;
 
     *'fill'*)
