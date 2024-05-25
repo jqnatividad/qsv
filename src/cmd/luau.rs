@@ -106,8 +106,8 @@ SPECIAL VARIABLES:
 
 For security and safety reasons as a purpose-built embeddable interpreter,
 Luau's standard library is relatively minimal (https://luau-lang.org/library).
-That's why qsv preloads the LuaDate library as date manipulation is a common task.
-See https://tieske.github.io/date/#date-id96473 on how to use the LuaDate library.
+That's why qsv bundles & preloads LuaDate v2.2.1 as date manipulation is a common task.
+See https://tieske.github.io/date/ on how to use the LuaDate library.
 
 Additional libraries can be loaded from the LUAU_PATH using luau's "require" function.
 See https://github.com/LewisJEllis/awesome-lua for a list of other libraries.
