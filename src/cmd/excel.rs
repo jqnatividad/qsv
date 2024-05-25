@@ -694,6 +694,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let chunk_size = row_count.div_ceil(ncpus);
 
     let keep_zero_time = args.flag_keep_zero_time;
+    let formula_get_value_error = "cannot get formula".to_string();
 
     let processed_rows: Vec<Vec<csv::StringRecord>> = rows
         .par_chunks(chunk_size)
@@ -709,8 +710,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let mut processed_chunk: Vec<csv::StringRecord> = Vec::with_capacity(chunk_size);
             let mut col_idx = 0_u32;
 
-            let formula_get_value_error = "cannot get formula".to_string();
-            let mut cell_value: &String;
+            let mut cell_formula;
 
             for (row_idx, row) in chunk {
                 for cell in *row {
@@ -786,18 +786,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         Data::DateTimeIso(ref dt) => record.push_field(dt),
                         Data::DurationIso(ref d) => record.push_field(d),
                         Data::Error(ref e) => {
-                            match error_format {
-                                ErrorFormat::Code => record.push_field(&format!("{e}")),
-                                ErrorFormat::Formula | ErrorFormat::Both => {
-                                    cell_value = sheet_formulas
-                                        .get_value((*row_idx, col_idx))
-                                        .unwrap_or(&formula_get_value_error);
-                                    if error_format == ErrorFormat::Formula {
-                                        record.push_field(&format!("#={cell_value}"));
-                                    } else {
-                                        record.push_field(&format!("{e}: ={cell_value}"));
-                                    }
-                                },
+                            if let ErrorFormat::Code = error_format {
+                                record.push_field(&format!("{e}"))
+                            } else {
+                                cell_formula = sheet_formulas
+                                    .get_value((*row_idx, col_idx))
+                                    .unwrap_or(&formula_get_value_error);
+                                if error_format == ErrorFormat::Formula {
+                                    record.push_field(&format!("#={cell_formula}"));
+                                } else {
+                                    // ErrorFormat::Both
+                                    record.push_field(&format!("{e}: ={cell_formula}"));
+                                }
                             };
                         },
                     };
