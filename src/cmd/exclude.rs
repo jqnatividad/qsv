@@ -243,10 +243,8 @@ impl<R: io::Read + io::Seek> ValueIndex<R> {
     }
 }
 
-#[cfg(debug_assertions)]
 use std::fmt;
 
-#[cfg(debug_assertions)]
 impl<R> fmt::Debug for ValueIndex<R> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Sort the values by order of first appearance.

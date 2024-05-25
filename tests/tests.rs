@@ -170,7 +170,6 @@ impl ops::DerefMut for CsvRecord {
     }
 }
 
-#[cfg(debug_assertions)]
 impl fmt::Debug for CsvRecord {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let bytes: Vec<_> = self.iter().map(std::string::String::as_bytes).collect();
