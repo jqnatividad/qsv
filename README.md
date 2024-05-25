@@ -434,7 +434,7 @@ See [FAQ](https://github.com/jqnatividad/qsv/discussions/categories/faq) for mor
 
 |qsv was made possible by|
 :-------------------------:|
-|[![datHere Logo](docs/images/datHere-logo-withtagline.png)](https://datHere.com)<br>|
+|[![datHere Logo](docs/images/datHere-logo-tagline.png)](https://datHere.com)<br>|
 |Standards-based, best-of-breed, open source solutions<br>to make your **Data Useful, Usable & Used.**   |
 
 </div>
