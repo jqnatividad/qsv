@@ -748,7 +748,7 @@ commands:
           - *no-headers
           - *delimiter
 
-    - name: join
+    - name: joinp
       completions:
           - <file>
       flags:
