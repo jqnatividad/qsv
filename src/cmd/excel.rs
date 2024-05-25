@@ -786,8 +786,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         Data::DateTimeIso(ref dt) => record.push_field(dt),
                         Data::DurationIso(ref d) => record.push_field(d),
                         Data::Error(ref e) => {
-                            if let ErrorFormat::Code = error_format {
-                                record.push_field(&format!("{e}"))
+                            if error_format == ErrorFormat::Code {
+                                record.push_field(&format!("{e}"));
                             } else {
                                 cell_formula = sheet_formulas
                                     .get_value((*row_idx, col_idx))
