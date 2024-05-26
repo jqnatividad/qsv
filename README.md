@@ -291,7 +291,7 @@ qsv leverages the awesome [Rust CSV](https://docs.rs/csv/latest/csv/) crate to r
 
 Click [here](https://docs.rs/csv-core/latest/csv_core/struct.Reader.html#rfc-4180) to find out more about how qsv conforms to the standard using this crate.
 
-When dealing with "atypical" CSV files, you can use the `input` command to normalize them to be RFC 4180-compliant.
+When dealing with "atypical" CSV files, you can use the `input` & `fmt` commands to normalize them to be RFC 4180-compliant.
 
 ## UTF-8 Encoding
 
@@ -369,7 +369,7 @@ Luau will also serve as the backbone of a whole library of **qsv recipes** - reu
  as command line interfaces go :shrug:. Its commands have numerous options but have sensible defaults. The usage text is written for a data analyst audience, not developers; and there are numerous examples in the usage text, with the tests doubling as examples as well. In the future, it will also have a Graphical User Interface (GUI).
 * **As Secure as Possible** - qsv is designed to be secure. It has no external runtime dependencies, is [written](https://aws.amazon.com/blogs/opensource/why-aws-loves-rust-and-how-wed-like-to-help/) [in](https://msrc.microsoft.com/blog/2019/07/why-rust-for-safe-systems-programming/) [Rust](https://opensource.googleblog.com/2023/06/rust-fact-vs-fiction-5-insights-from-googles-rust-journey-2022.html), and it's codebase is automatically audited for security vulnerabilities with automated [DevSkim](https://github.com/microsoft/DevSkim#devskim), ["cargo audit"](https://rustsec.org) and [Codacy](https://app.codacy.com/gh/jqnatividad/qsv/dashboard) Github Actions workflows.  
 It uses the latest stable Rust version, with an aggressive MSRV policy and the latest version of all its dependencies.
-It has an extensive test suite with ~1,300 tests, including several [property tests](https://medium.com/criteo-engineering/introduction-to-property-based-testing-f5236229d237) which [randomly generate](https://github.com/BurntSushi/quickcheck#quickcheck) parameters for oft-used commands. It also has a [Security Policy](SECURITY.md).  
+It has an extensive test suite with ~1,440 tests, including several [property tests](https://medium.com/criteo-engineering/introduction-to-property-based-testing-f5236229d237) which [randomly generate](https://github.com/BurntSushi/quickcheck#quickcheck) parameters for oft-used commands. It also has a [Security Policy](SECURITY.md).  
 Its prebuilt binary archives are [zipsigned](https://github.com/Kijewski/zipsign#zipsign), so you can [verify their integrity](#verifying-the-integrity-of-the-prebuilt-binaries-zip-archives). Its self-update mechanism automatically verifies the integrity of the prebuilt binaries archive before applying an update.
 * **As Easy to Contribute to as Possible** - qsv is designed to be easy to contribute to, with a focus on maintainability. It's architecture allows the easy addition of self-contained commands gated by feature flags, the source code is heavily commented, the usage text is embedded, and there are helper functions that make it easy to create tests. See [Features](docs/FEATURES.md) and [Contributing](CONTRIBUTING.md) for more info.
 
@@ -381,7 +381,7 @@ It can process well-formed CSVs in _any_ language so long as its UTF-8 encoded. 
 Finally, though the default Geonames index of the `geocode` command is English-only, the index can be rebuilt with the `geocode index-update` subcommand with the `--languages` option to return place names in multiple languages ([with support for 253 languages](http://download.geonames.org/export/dump/alternatenames/)).
 
 ## Testing
-qsv has ~1,460 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
+qsv has ~1,440 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
 Each command has its own test suite in a separate file with the convention `test_<COMMAND>.rs`.
 Apart from preventing regressions, the tests also serve as good illustrative examples, and are often linked from the usage text of each corresponding command.
 
@@ -409,7 +409,9 @@ cargo t stats -F all_features
 cargo t luau -F feature_capable,luau
 
 # to test the count command with multiple features
-cargo t count -F feature_capable,luau,polars
+# we use "test_count" as we don't want to run other tests
+# that have "count" in the testname - e.g. test_geocode_countryinfo
+cargo t test_count -F feature_capable,luau,polars
 
 # to test using an alternate allocator
 # other than the default mimalloc allocator
