@@ -641,14 +641,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // amortize allocations
-    let mut record = csv::StringRecord::with_capacity(500, col_count);
+    let mut record = csv::ByteRecord::with_capacity(500, col_count);
     let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
 
     // get headers
     info!("exporting sheet ({sheet})... processing first row as header...");
     let headers = range.headers().unwrap_or_default();
     for header in headers {
-        record.push_field(&header);
+        record.push_field(header.as_bytes());
     }
     rows_iter.next(); // we processed the header row
 
@@ -656,14 +656,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if trim {
         record.trim();
+        let mut field_string = String::new();
         record.iter().for_each(|field| {
-            if field.contains('\n') {
-                trimmed_record.push_field(&field.replace('\n', " "));
+            field_string = String::from_utf8_lossy(field).to_string();
+            if field.contains(&b'\n') {
+                trimmed_record.push_field(&field_string.replace('\n', " "));
             } else {
-                trimmed_record.push_field(field);
+                trimmed_record.push_field(&field_string);
             }
         });
-        record.clone_from(&trimmed_record);
+        record.clone_from(trimmed_record.as_byte_record());
     }
     info!("header: {record:?}");
     wtr.write_record(&record)?;
@@ -696,28 +698,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let keep_zero_time = args.flag_keep_zero_time;
     let formula_get_value_error = "cannot get formula".to_string();
 
-    let processed_rows: Vec<Vec<csv::StringRecord>> = rows
+    let processed_rows: Vec<Vec<csv::ByteRecord>> = rows
         .par_chunks(chunk_size)
         .map(|chunk| {
-            let mut record = csv::StringRecord::with_capacity(500, col_count);
+            let mut record = csv::ByteRecord::with_capacity(500, col_count);
             let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
             let mut float_val;
             let mut work_date;
             let mut ryu_buffer = ryu::Buffer::new();
             let mut itoa_buffer = itoa::Buffer::new();
+            let mut format_buffer = String::new();
             let mut formatted_date = String::new();
 
-            let mut processed_chunk: Vec<csv::StringRecord> = Vec::with_capacity(chunk_size);
+            let mut processed_chunk: Vec<csv::ByteRecord> = Vec::with_capacity(chunk_size);
             let mut col_idx = 0_u32;
+
+            let mut field_string = String::new();
 
             let mut cell_formula;
 
             for (row_idx, row) in chunk {
                 for cell in *row {
                     match *cell {
-                        Data::Empty => record.push_field(""),
-                        Data::String(ref s) => record.push_field(s),
-                        Data::Int(ref i) => record.push_field(itoa_buffer.format(*i)),
+                        Data::Empty => record.push_field(b""),
+                        Data::String(ref s) => record.push_field(s.as_bytes()),
+                        Data::Int(ref i) => record.push_field(itoa_buffer.format(*i).as_bytes()),
                         Data::Float(ref f) => {
                             float_val = *f;
                             // push the ryu-formatted float value if its
@@ -728,12 +733,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 || float_val > i64::MAX as f64
                                 || float_val < i64::MIN as f64
                             {
-                                record.push_field(ryu_buffer.format_finite(float_val));
+                                record.push_field(ryu_buffer.format_finite(float_val).as_bytes());
                             } else {
                                 // its an i64 integer. We can't use ryu to format it, because it
                                 // will be formatted as a
                                 // float (have a ".0"). So we use itoa.
-                                record.push_field(itoa_buffer.format(float_val as i64));
+                                record.push_field(itoa_buffer.format(float_val as i64).as_bytes());
                             }
                         },
                         Data::DateTime(ref edt) => {
@@ -778,44 +783,45 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 work_date = edt.as_duration().unwrap().to_string();
                             };
 
-                            record.push_field(&work_date);
+                            record.push_field(work_date.as_bytes());
                         },
                         Data::Bool(ref b) => {
-                            record.push_field(if *b { "true" } else { "false" });
+                            record.push_field(if *b { b"true" } else { b"false" });
                         },
-                        Data::DateTimeIso(ref dt) => record.push_field(dt),
-                        Data::DurationIso(ref d) => record.push_field(d),
+                        Data::DateTimeIso(ref dt) => record.push_field(dt.as_bytes()),
+                        Data::DurationIso(ref d) => record.push_field(d.as_bytes()),
                         Data::Error(ref e) => {
+                            format_buffer.clear();
                             if error_format == ErrorFormat::Code {
-                                record.push_field(&format!("{e}"));
+                                write!(format_buffer, "{e}").unwrap();
                             } else {
                                 cell_formula = sheet_formulas
                                     .get_value((*row_idx, col_idx))
                                     .unwrap_or(&formula_get_value_error);
                                 if error_format == ErrorFormat::Formula {
-                                    record.push_field(&format!("#={cell_formula}"));
+                                    write!(format_buffer, "#={cell_formula}").unwrap();
                                 } else {
                                     // ErrorFormat::Both
-                                    record.push_field(&format!("{e}: ={cell_formula}"));
+                                    write!(format_buffer, "{e}: ={cell_formula}").unwrap();
                                 }
                             };
+                            record.push_field(format_buffer.as_bytes());
                         },
                     };
                     col_idx += 1;
                 }
 
                 if trim {
-                    // record.trim() is faster than trimming each field piecemeal
                     record.trim();
                     record.iter().for_each(|field| {
-                        if field.contains('\n') {
-                            trimmed_record.push_field(&field.replace('\n', " "));
+                        field_string = String::from_utf8_lossy(field).to_string();
+                        if field.contains(&b'\n') {
+                            trimmed_record.push_field(&field_string.replace('\n', " "));
                         } else {
-                            trimmed_record.push_field(field);
+                            trimmed_record.push_field(&field_string);
                         }
                     });
-                    record.clone_from(&trimmed_record);
-                    trimmed_record.clear();
+                    record.clone_from(trimmed_record.as_byte_record())
                 }
 
                 // we use mem::take here to avoid a clone/allocation of the record
