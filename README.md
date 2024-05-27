@@ -117,7 +117,9 @@ For macOS, ["ad-hoc" signatures](https://users.rust-lang.org/t/distributing-cli-
 xattr -d com.apple.quarantine qsv
 ```
 
-#### Verifying the Integrity of the Prebuilt Binaries Zip Archives
+An additional benefit of using the prebuilt binaries is that they have the `self_update` feature enabled, allowing you to quickly update qsv to the latest version with a simple `qsv --update`. For further security, the `self_update` feature only fetches [releases from this GitHub repo](https://github.com/jqnatividad/qsv/releases) and automatically verifies the signature of the downloaded zip archive before installing the update.
+
+#### Manually verifying the Integrity of the Prebuilt Binaries Zip Archives
 All prebuilt binaries zip archives are signed with [zipsign](https://github.com/Kijewski/zipsign#zipsign) with the following public key [qsv-zipsign-public.key](https://github.com/jqnatividad/qsv/raw/master/src/qsv-zipsign-public.key). To verify the integrity of the downloaded zip archives:
 
 ```bash
