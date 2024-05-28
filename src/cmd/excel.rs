@@ -699,12 +699,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let processed_rows: Vec<Vec<csv::StringRecord>> = rows
         .par_chunks(chunk_size)
         .map(|chunk| {
+            // amortize allocations
             let mut record = csv::StringRecord::with_capacity(500, col_count);
             let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
             let mut float_val;
             let mut work_date;
             let mut ryu_buffer = ryu::Buffer::new();
             let mut itoa_buffer = itoa::Buffer::new();
+            let mut format_buffer = String::new();
             let mut formatted_date = String::new();
 
             let mut processed_chunk: Vec<csv::StringRecord> = Vec::with_capacity(chunk_size);
@@ -763,8 +765,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                     }
                                 } else {
                                     // if the datetime is invalid, just return the datetime as a
-                                    // string this should never
-                                    // happen as we did a is_datetime check
+                                    // string this should never happen as we did a is_datetime check
                                     // before we got here. We're just doing it so that work_date
                                     // is initialized properly without wasting an allocation
                                     work_date = edt.to_string();
@@ -786,19 +787,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         Data::DateTimeIso(ref dt) => record.push_field(dt),
                         Data::DurationIso(ref d) => record.push_field(d),
                         Data::Error(ref e) => {
+                            // safety: the unwraps in this block are safe because the format strings
+                            // are hardcoded and are guaranteed to be correct
+                            format_buffer.clear();
                             if error_format == ErrorFormat::Code {
-                                record.push_field(&format!("{e}"));
+                                write!(format_buffer, "{e}").unwrap();
                             } else {
                                 cell_formula = sheet_formulas
                                     .get_value((*row_idx, col_idx))
                                     .unwrap_or(&formula_get_value_error);
                                 if error_format == ErrorFormat::Formula {
-                                    record.push_field(&format!("#={cell_formula}"));
+                                    write!(format_buffer, "#={cell_formula}").unwrap();
                                 } else {
                                     // ErrorFormat::Both
-                                    record.push_field(&format!("{e}: ={cell_formula}"));
+                                    write!(format_buffer, "{e}: ={cell_formula}").unwrap();
                                 }
                             };
+                            record.push_field(format_buffer.as_str());
                         },
                     };
                     col_idx += 1;
