@@ -208,13 +208,7 @@ fn excel_trim_xls() {
             "the quick brown fox jumped over the lazy dog by the zigzag quarry site"
         ],
         svec!["d", "line1 line2 line3", "f"],
-        // we only trim ASCII definition of whitespace
-        // i.e. bytes in the class [\t\n\v\f\r ]
-        svec![
-            "e",
-            "5c",
-            "\u{2002}\u{2003} surrounded by en and em spaces   \u{2002}\u{2005}\u{a0}\u{2003}"
-        ],
+        svec!["e", "5c", "surrounded by en and em spaces"],
     ];
     assert_eq!(got, expected);
 }
