@@ -540,6 +540,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ae037714f313c1353189ead58ef9eec30a8e8dc101b2622d461418fd59e28a9"
 
 [[package]]
+name = "atoi_simd"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4790f9e8961209112beb783d85449b508673cf4a6a419c8449b210743ac4dbe9"
+
+[[package]]
 name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3661,7 +3667,7 @@ source = "git+https://github.com/pola-rs/polars?rev=d68d499#d68d499ae344b3bfedad
 dependencies = [
  "ahash 0.8.11",
  "atoi",
- "atoi_simd",
+ "atoi_simd 0.15.6",
  "avro-schema",
  "bytemuck",
  "chrono",
@@ -3785,7 +3791,7 @@ source = "git+https://github.com/pola-rs/polars?rev=d68d499#d68d499ae344b3bfedad
 dependencies = [
  "ahash 0.8.11",
  "async-trait",
- "atoi_simd",
+ "atoi_simd 0.15.6",
  "bytes",
  "chrono",
  "fast-float",
@@ -4273,7 +4279,7 @@ dependencies = [
  "ahash 0.8.11",
  "anyhow",
  "assert-json-diff",
- "atoi_simd",
+ "atoi_simd 0.16.0",
  "bincode",
  "byteorder",
  "bytes",
