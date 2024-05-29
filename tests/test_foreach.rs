@@ -1,7 +1,7 @@
-#![cfg(target_family = "unix")]
 use crate::workdir::Workdir;
 
 #[test]
+#[cfg(target_family = "unix")]
 fn foreach() {
     let wrk = Workdir::new("foreach");
     wrk.create(
@@ -36,6 +36,7 @@ echo NAME = Mary"#;
 }
 
 #[test]
+#[cfg(target_family = "unix")]
 fn foreach_multiple_braces() {
     let wrk = Workdir::new("foreach");
     wrk.create(
@@ -76,6 +77,7 @@ echo NAME = Mary, Mary, Mary"#;
 }
 
 #[test]
+#[cfg(target_family = "unix")]
 fn foreach_special_chars_1171() {
     let wrk = Workdir::new("foreach_special_chars");
     wrk.create(
@@ -133,6 +135,7 @@ echo dig +short https://civic-data-ecosystem.github.io a"#;
 }
 
 #[test]
+#[cfg(target_family = "unix")]
 fn foreach_unify() {
     let wrk = Workdir::new("foreach_unify");
     wrk.create(
@@ -156,6 +159,7 @@ fn foreach_unify() {
 }
 
 #[test]
+#[cfg(target_family = "unix")]
 fn foreach_new_column() {
     let wrk = Workdir::new("foreach_nc");
     wrk.create(
@@ -181,6 +185,7 @@ fn foreach_new_column() {
 }
 
 #[test]
+#[cfg(target_family = "unix")]
 fn foreach_multiple_commands_with_shell_script() {
     let wrk = Workdir::new("foreach_multiple_commands_with_shell_script");
     wrk.create(

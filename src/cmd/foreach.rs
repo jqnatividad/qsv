@@ -1,7 +1,8 @@
-#![cfg(target_family = "unix")]
 static USAGE: &str = r#"
-Execute a shell command once per line in given CSV file. Only works in
-Linux, macOS and other Unix-like environments (i.e. not Windows).
+Execute a shell command once per line in given CSV file.
+
+NOTE: Windows users are recommended to use Git Bash as their terminal when
+running this command.
 
 WARNING: This command can be dangerous. Be careful when using it with
 untrusted input.
@@ -64,14 +65,18 @@ Common options:
     -p, --progressbar      Show progress bars. Not valid for stdin.
 "#;
 
+#[cfg(target_family = "unix")]
+use std::os::unix::ffi::OsStrExt;
 use std::{
-    ffi::OsStr,
-    io::{self, BufReader, BufWriter, Write},
-    os::unix::ffi::OsStrExt,
+    ffi::{OsStr, OsString},
+    io::{self, BufReader, BufWriter, Read, Write},
     process::{Command, Stdio},
+    str::FromStr,
 };
 
 use indicatif::{ProgressBar, ProgressDrawTarget};
+#[cfg(target_family = "windows")]
+use local_encoding::windows::multi_byte_to_wide_char;
 use regex::bytes::{NoExpand, Regex};
 use serde::Deserialize;
 
@@ -193,7 +198,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         #[allow(unused_mut)]
         let mut command_pieces = splitter_pattern.find_iter(&templated_command);
+        #[cfg(target_family = "unix")]
         let prog = OsStr::from_bytes(command_pieces.next().unwrap().as_bytes());
+        #[cfg(target_family = "windows")]
+        let command_bytes = command_pieces.next().unwrap().as_bytes();
+        #[cfg(target_family = "windows")]
+        let command_wide_char = multi_byte_to_wide_char(65001, 0, command_bytes).unwrap();
+        #[cfg(target_family = "windows")]
+        let prog_str = OsString::from_str(command_wide_char.as_str()).unwrap();
+        #[cfg(target_family = "windows")]
+        let prog = prog_str.as_os_str();
 
         let cmd_args: Vec<String> = command_pieces
             .map(|piece| {
@@ -206,7 +220,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .collect();
 
         if dry_run {
+            #[cfg(target_family = "unix")]
             let prog_str = simdutf8::basic::from_utf8(prog.as_bytes()).unwrap_or_default();
+            #[cfg(target_family = "windows")]
+            let prog_str = simdutf8::basic::from_utf8(prog.as_encoded_bytes()).unwrap_or_default();
             cmd_args_string = cmd_args.join(" ");
             dry_run_file.write_all(format!("{prog_str} {cmd_args_string}\n").as_bytes())?;
             continue;
