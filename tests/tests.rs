@@ -30,6 +30,7 @@ macro_rules! rassert_eq {
 
 mod workdir;
 
+mod test_100;
 #[cfg(feature = "apply")]
 mod test_apply;
 #[cfg(feature = "datapusher_plus")]
