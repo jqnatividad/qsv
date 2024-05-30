@@ -155,6 +155,7 @@ polars = { version = "0.40", features = [
     "cse",
     "avro",
     "dtype-full",
+    "coalesce",
 ], optional = true }
 polars-ops = { version = "0.40", optional = true }
 pyo3 = { version = "0.21", features = [
@@ -250,8 +251,8 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "0c8ab87" }
 # which has better performance and several bug fixes
 calamine = { git = "https://github.com/jqnatividad/calamine", branch = "bump_zip_from_1_to_2" }
 # polars 0.40.0 with unreleased fixes
-polars     = { git = "https://github.com/pola-rs/polars", rev = "d68d499" }
-polars-ops = { git = "https://github.com/pola-rs/polars", rev = "d68d499" }
+polars     = { git = "https://github.com/pola-rs/polars", rev = "d7b4f72" }
+polars-ops = { git = "https://github.com/pola-rs/polars", rev = "d7b4f72" }
 
 [features]
 default = ["mimalloc"]
