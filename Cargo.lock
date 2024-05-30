@@ -4289,6 +4289,7 @@ dependencies = [
  "censor",
  "chrono",
  "chrono-tz 0.9.0",
+ "clang-sys",
  "console",
  "cpc",
  "crossbeam-channel",

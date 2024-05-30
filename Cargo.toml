@@ -82,6 +82,7 @@ calamine = { version = "0.25", features = ["dates"] }
 censor = { version = "0.3", optional = true }
 chrono = { version = "0.4", default-features = false }
 chrono-tz = "0.9"
+clang-sys = "=1.8.0"
 console = { version = "0.15", optional = true }
 cpc = { version = "1.9", optional = true }
 crossbeam-channel = "0.5"
