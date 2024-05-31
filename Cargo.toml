@@ -82,7 +82,7 @@ calamine = { version = "0.25", features = ["dates"] }
 censor = { version = "0.3", optional = true }
 chrono = { version = "0.4", default-features = false }
 chrono-tz = "0.9"
-clang-sys = "=1.8.0"
+clang-sys = { version = "=1.8.0", optional = true }
 console = { version = "0.15", optional = true }
 cpc = { version = "1.9", optional = true }
 crossbeam-channel = "0.5"
@@ -307,7 +307,7 @@ geocode = [
 ]
 luau = ["mlua", "sanitize-filename", "simple-expand-tilde"]
 python = ["pyo3"]
-to = ["csvs_convert"]
+to = ["csvs_convert", "clang-sys"]
 to_parquet = ["csvs_convert/parquet"]
 lite = []
 datapusher_plus = ["self_update"]
