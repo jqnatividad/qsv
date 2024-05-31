@@ -1606,7 +1606,7 @@ pub fn process_input(
     // check the input files
     for path in work_input {
         // does the input file exist?
-        if !path.exists() {
+        if !path.exists() && path != PathBuf::from("rfd") {
             return fail_clierror!("Input file '{}' does not exist", path.display());
         }
 

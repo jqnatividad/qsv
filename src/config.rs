@@ -7,6 +7,7 @@ use std::{
 
 use log::{debug, info, warn};
 use qsv_sniffer::{SampleSize, Sniffer};
+use rfd::FileDialog;
 use serde::de::{Deserialize, Deserializer, Error};
 
 use crate::{
@@ -123,6 +124,36 @@ impl Config {
             //     (Some(PathBuf::from(s)), delim, snappy)
             // },
             Some(ref s) if &**s == "-" => (None, default_delim, false),
+            Some(ref s) if &**s == "rfd" => {
+                if let Some(path) = FileDialog::new().set_directory("/").pick_file() {
+                    let file_extension = path
+                        .extension()
+                        .unwrap_or_default()
+                        .to_str()
+                        .unwrap()
+                        .to_ascii_lowercase();
+                    let mut snappy = false;
+                    let delim = if file_extension == "tsv" || file_extension == "tab" {
+                        b'\t'
+                    } else if file_extension == "csv" {
+                        b','
+                    } else {
+                        let filename = path.file_name().unwrap().to_str().unwrap();
+                        if filename.ends_with(".csv.sz") {
+                            snappy = true;
+                            b','
+                        } else if filename.ends_with(".tsv.sz") || filename.ends_with(".tab.sz") {
+                            snappy = true;
+                            b'\t'
+                        } else {
+                            default_delim
+                        }
+                    };
+                    (Some(path), delim, snappy || file_extension.ends_with("sz"))
+                } else {
+                    panic!("No file selected from file dialog.")
+                }
+            },
             Some(ref s) => {
                 let path = PathBuf::from(s);
                 let file_extension = path
