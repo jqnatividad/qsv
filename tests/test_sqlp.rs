@@ -95,24 +95,24 @@ sqlp_test!(
         cmd.arg("select * from cities full outer join places on cities.city = places.city");
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
         let expected1 = vec![
-            svec!["city", "state", "city_right", "place"],
+            svec!["city", "state", "city:places", "place"],
             svec!["Boston", "MA", "Boston", "Logan Airport"],
             svec!["Boston", "MA", "Boston", "Boston Garden"],
             svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
             svec!["", "", "Orlando", "Disney World"],
-            svec!["San Francisco", "CA", "", ""],
             svec!["New York", "NY", "", ""],
+            svec!["San Francisco", "CA", "", ""],
         ];
         let expected2 = vec![
-            svec!["city", "state", "city_right", "place"],
+            svec!["city", "state", "city:places", "place"],
             svec!["Boston", "MA", "Boston", "Logan Airport"],
             svec!["Boston", "MA", "Boston", "Boston Garden"],
             svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
             svec!["", "", "Orlando", "Disney World"],
-            svec!["New York", "NY", "", ""],
             svec!["San Francisco", "CA", "", ""],
+            svec!["New York", "NY", "", ""],
         ];
-        // assert!(got == expected1 || got == expected2);
+        assert!(got == expected1 || got == expected2);
     }
 );
 
