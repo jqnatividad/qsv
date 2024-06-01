@@ -249,9 +249,10 @@ dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_
 grex = { git = "https://github.com/pemistahl/grex", rev = "0c8ab87" }
 # calamine 0.25.0 with unreleased fixes
 calamine = { git = "https://github.com/tafia/calamine", rev = "6b41309" }
-# polars 0.40.0 with unreleased fixes
-polars     = { git = "https://github.com/pola-rs/polars", rev = "d7b4f72" }
-polars-ops = { git = "https://github.com/pola-rs/polars", rev = "d7b4f72" }
+# latest Rust polars with unreleased fixes
+# we track Python polars which has a much faster release cycle than Rust polars
+polars     = { git = "https://github.com/pola-rs/polars", tag = "py-0.20.31" }
+polars-ops = { git = "https://github.com/pola-rs/polars", tag = "py-0.20.31" }
 
 [features]
 default = ["mimalloc"]
