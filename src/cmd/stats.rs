@@ -753,12 +753,13 @@ impl Args {
                     .unwrap();
             });
         }
-        assert!(results.len() == records.len());
         for (i, recv) in results.into_iter().enumerate() {
-            // safety: the assert above guarantees that records index access is safe and
-            // doesn't require a bounds check.
+            // safety: results.len() == records.len() so we know the index is valid
+            // and doesn't require a bounds check.
             // The unwrap on recv.recv() is safe as the channel is bounded
-            records[i] = recv.recv().unwrap();
+            unsafe {
+                *records.get_unchecked_mut(i) = recv.recv().unwrap();
+            }
         }
         records
     }
