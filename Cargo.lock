@@ -2466,6 +2466,7 @@ checksum = "168fb715dda47215e360912c096649d23d58bf392ac62f73919e831745e40f26"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.5",
+ "rayon",
 ]
 
 [[package]]
@@ -2587,9 +2588,9 @@ dependencies = [
 
 [[package]]
 name = "jql-parser"
-version = "7.1.10"
+version = "7.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92b4cd679b1e0803b83303a3217c75cf0807dc6d2b5d11bc1655fffbf48328d1"
+checksum = "bee2201c6f72d31ae67ddd13edcd48e3f8fedf8d1fb07b447a6ba6255cdeb701"
 dependencies = [
  "thiserror",
  "winnow 0.6.9",
@@ -2597,10 +2598,11 @@ dependencies = [
 
 [[package]]
 name = "jql-runner"
-version = "7.1.10"
+version = "7.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "487178c64fa5210d0fff6ce3ff64412b1bf33494ef072127026cc249aa4c8c3b"
+checksum = "f1596577ebd498e503124a13a78cca86a75564856538b1c44eba4089b208b656"
 dependencies = [
+ "indexmap",
  "jql-parser",
  "rayon",
  "serde_json",
