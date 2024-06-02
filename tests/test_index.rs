@@ -73,16 +73,21 @@ fn index_outdated_stats() {
             "min_length",
             "max_length",
             "mean",
+            "sem",
             "stddev",
             "variance",
+            "cv",
             "nullcount",
             "max_precision",
             "sparsity"
         ],
-        svec!["letter", "String", "true", "", "a", "c", "", "1", "1", "", "", "", "0", "", "0"],
         svec![
-            "number", "Integer", "", "6", "1", "3", "2", "1", "1", "2", "0.8165", "0.6667", "0",
-            "", "0"
+            "letter", "String", "true", "", "a", "c", "", "1", "1", "", "", "", "", "", "0", "",
+            "0"
+        ],
+        svec![
+            "number", "Integer", "", "6", "1", "3", "2", "1", "1", "2", "0.4714", "0.8165",
+            "0.6667", "40.8248", "0", "", "0"
         ],
     ];
 

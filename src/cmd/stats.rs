@@ -1,15 +1,15 @@
 static USAGE: &str = r#"
 Compute summary statistics & infers data types for each column in a CSV. 
 
-Summary statistics includes sum, min/max/range, min/max length, mean, stddev, variance,
-nullcount, max_precision, sparsity, quartiles, interquartile range (IQR), lower/upper fences,
-skewness, median, cardinality, mode/s & "antimode/s", and median absolute deviation (MAD).
-Note that some statistics require loading the entire file into memory, so they must be
-enabled explicitly. 
+Summary statistics includes sum, min/max/range, min/max length, mean, standard error of the mean (SEM),
+stddev, variance, coefficient of variation (CV), nullcount, max_precision, sparsity, quartiles,
+interquartile range (IQR), lower/upper fences, skewness, median, cardinality, mode/s & "antimode/s", 
+and median absolute deviation (MAD). Note that some statistics require loading the entire file into
+memory, so they must be enabled explicitly. 
 
 By default, the following "streaming" statistics are reported for *every* column:
-sum, min/max/range values, min/max length, mean, stddev, variance, nullcount, max_precision and
-sparsity. The default set of statistics corresponds to ones that can be computed efficiently
+sum, min/max/range values, min/max length, mean, sem, stddev, variance, cv, nullcount, max_precision
+and sparsity. The default set of statistics corresponds to ones that can be computed efficiently
 on a stream of data (i.e., constant memory) and works with arbitrarily large CSV files.
 
 The following additional "non-streaming" statistics require loading the entire file into memory:
@@ -282,7 +282,7 @@ const MS_IN_DAY_INT: i64 = 86_400_000;
 const DAY_DECIMAL_PLACES: u32 = 5;
 
 // maximum number of output columns
-const MAX_STAT_COLUMNS: usize = 32;
+const MAX_STAT_COLUMNS: usize = 34;
 
 // maximum number of antimodes to display
 const MAX_ANTIMODES: usize = 10;
@@ -843,7 +843,7 @@ impl Args {
             return csv::StringRecord::from(vec!["field", "type"]);
         }
 
-        // with --everything, we have 32 columns at most
+        // with --everything, we have 34 columns at most
         let mut fields = Vec::with_capacity(MAX_STAT_COLUMNS);
         fields.extend_from_slice(&[
             "field",
@@ -856,8 +856,10 @@ impl Args {
             "min_length",
             "max_length",
             "mean",
+            "sem",
             "stddev",
             "variance",
+            "cv",
             "nullcount",
             "max_precision",
             "sparsity",
@@ -1175,7 +1177,7 @@ impl Stats {
 
         let typ = self.typ;
         // prealloc memory for performance
-        // we have 32 columns at most with --everything
+        // we have 34 columns at most with --everything
         let mut pieces = Vec::with_capacity(MAX_STAT_COLUMNS);
 
         let empty = String::new;
@@ -1334,32 +1336,44 @@ impl Stats {
             pieces.extend_from_slice(&[empty(), empty()]);
         }
 
-        // mean, stddev & variance
+        // mean, sem, stddev, variance & cv
         if typ == TString || typ == TNull {
-            pieces.extend_from_slice(&[empty(), empty(), empty()]);
+            pieces.extend_from_slice(&[empty(), empty(), empty(), empty(), empty()]);
         } else if let Some(ref v) = self.online {
+            let std_dev = v.stddev();
+            let sem = std_dev / (v.len() as f64).sqrt();
+            let mean = v.mean();
+            let cv = (std_dev / mean) * 100_f64;
             if self.typ == TFloat || self.typ == TInteger {
                 pieces.extend_from_slice(&[
-                    util::round_num(v.mean(), round_places),
-                    util::round_num(v.stddev(), round_places),
+                    util::round_num(mean, round_places),
+                    util::round_num(sem, round_places),
+                    util::round_num(std_dev, round_places),
                     util::round_num(v.variance(), round_places),
+                    util::round_num(cv, round_places),
                 ]);
             } else {
-                pieces.push(timestamp_ms_to_rfc3339(v.mean() as i64, typ));
-                // instead of returning stdev in seconds, let's return it in
+                // by the time we get here, the type is a TDateTime or TDate
+                pieces.push(timestamp_ms_to_rfc3339(mean as i64, typ));
+                // instead of returning sem, stdev & variance as timestamps, return it in
                 // days as it easier to handle
                 // Round to at least 5 decimal places, so we have millisecond precision
                 pieces.push(util::round_num(
-                    v.stddev() / MS_IN_DAY,
+                    sem / MS_IN_DAY,
+                    u32::max(round_places, DAY_DECIMAL_PLACES),
+                ));
+                pieces.push(util::round_num(
+                    std_dev / MS_IN_DAY,
                     u32::max(round_places, DAY_DECIMAL_PLACES),
                 ));
                 pieces.push(util::round_num(
                     v.variance() / (MS_IN_DAY * MS_IN_DAY),
                     u32::max(round_places, DAY_DECIMAL_PLACES),
                 ));
+                pieces.push(util::round_num(cv, round_places));
             }
         } else {
-            pieces.extend_from_slice(&[empty(), empty(), empty()]);
+            pieces.extend_from_slice(&[empty(), empty(), empty(), empty(), empty()]);
         }
 
         // nullcount
