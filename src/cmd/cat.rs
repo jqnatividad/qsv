@@ -81,7 +81,7 @@ use serde::Deserialize;
 use strum_macros::EnumString;
 
 use crate::{
-    config::{Config, Delimiter},
+    config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     util, CliResult,
 };
 
@@ -223,7 +223,8 @@ impl Args {
             if conf.is_stdin() {
                 stdin_tempfilename = temp_dir.path().join("stdin");
                 let tmp_file = std::fs::File::create(&stdin_tempfilename)?;
-                let mut tmp_file = std::io::BufWriter::new(tmp_file);
+                let mut tmp_file =
+                    std::io::BufWriter::with_capacity(DEFAULT_WTR_BUFFER_CAPACITY, tmp_file);
                 std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
             }
             let mut rdr = conf.reader()?;
