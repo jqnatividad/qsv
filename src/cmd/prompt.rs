@@ -45,13 +45,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             wtr.flush()?;
         } else {
-            fail_clierror!(
+            return fail_clierror!(
                 "Error while running qsv prompt. Perhaps the path to the file is not valid \
                  unicode?"
-            )
+            );
         };
     } else {
-        fail_clierror!("Error while running qsv prompt. Perhaps you did not select a file?")
+        return fail_clierror!(
+            "Error while running qsv prompt. Perhaps you did not select a file?"
+        );
     };
     Ok(())
 }
