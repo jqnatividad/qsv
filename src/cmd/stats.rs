@@ -1341,6 +1341,7 @@ impl Stats {
             pieces.extend_from_slice(&[empty(), empty(), empty(), empty(), empty()]);
         } else if let Some(ref v) = self.online {
             let std_dev = v.stddev();
+            #[allow(clippy::cast_precision_loss)]
             let sem = std_dev / (v.len() as f64).sqrt();
             let mean = v.mean();
             let cv = (std_dev / mean) * 100_f64;
@@ -1356,7 +1357,7 @@ impl Stats {
                 // by the time we get here, the type is a TDateTime or TDate
                 pieces.push(timestamp_ms_to_rfc3339(mean as i64, typ));
                 // instead of returning sem, stdev & variance as timestamps, return it in
-                // days as it easier to handle
+                // days as its more human readable and practical for real-world use cases
                 // Round to at least 5 decimal places, so we have millisecond precision
                 pieces.push(util::round_num(
                     sem / MS_IN_DAY,
