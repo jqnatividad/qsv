@@ -144,6 +144,21 @@ fn sqlp_join_cross() {
 }
 
 #[test]
+fn sqlp_join_same_colname_1820() {
+    let wrk = Workdir::new("sqlp_join_same_colname_1820");
+    wrk.create("one.csv", vec![svec!["id", "data"], svec!["1", "open"]]);
+    wrk.create("two.csv", vec![svec!["id", "data"], svec!["1", "closed"]]);
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.args(["one.csv", "two.csv"])
+        .arg("SELECT _t_1.id, _t_2.data FROM _t_1 JOIN _t_2 ON _t_1.id = _t_2.id");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["id", "data"], svec!["1", "closed"]];
+    assert_eq!(got, expected);
+}
+
+#[test]
 // #[ignore = "temporarily disable due to a bug in polars aliasing"]
 fn sqlp_boston311_groupby_orderby() {
     let wrk = Workdir::new("sqlp_boston311_groupby_orderby");
