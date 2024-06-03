@@ -13,7 +13,7 @@ fn setup(name: &str, command_str: &str, args: Vec<&str>) -> (Workdir, process::C
             svec!["fruit", "price"],
             svec!["apple", "2.50"],
             svec!["banana", "3.00"],
-            svec!["carrot", "1.50"],
+            svec!["strawberry", "1.50"],
         ],
     );
 
