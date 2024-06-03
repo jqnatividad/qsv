@@ -1166,6 +1166,66 @@ fn stats_leading_zero_handling() {
     assert_eq!(got, expected);
 }
 
+#[test]
+fn stats_zero_cv() {
+    let wrk = Workdir::new("stats_zero_cv");
+
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["col1", "col2", "col3", "col4"],
+            svec!["1", "-10", "-100.0", "1000"],
+            svec!["2", "-5", "-20.05", "825"],
+            svec!["3", "0", "0.0", "10"],
+            svec!["4", "5", "20.05", "-900"],
+            svec!["5", "10", "100.0", "0"],
+        ],
+    );
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "field",
+            "type",
+            "is_ascii",
+            "sum",
+            "min",
+            "max",
+            "range",
+            "min_length",
+            "max_length",
+            "mean",
+            "sem",
+            "stddev",
+            "variance",
+            "cv",
+            "nullcount",
+            "max_precision",
+            "sparsity"
+        ],
+        svec![
+            "col1", "Integer", "", "15", "1", "5", "4", "1", "1", "3", "0.6325", "1.4142", "2",
+            "47.1405", "0", "", "0"
+        ],
+        svec![
+            "col2", "Integer", "", "0", "-10", "10", "20", "1", "3", "0", "3.1623", "7.0711", "50",
+            "", "0", "", "0"
+        ],
+        svec![
+            "col3", "Float", "", "0", "-100.0", "100.0", "200", "3", "6", "0", "28.8472",
+            "64.5043", "4160.801", "", "0", "2", "0"
+        ],
+        svec![
+            "col4", "Integer", "", "935", "-900", "1000", "1900", "1", "4", "187", "304.3603",
+            "680.5703", "463176", "363.9414", "0", "", "0"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
 mod stats_infer_nothing {
     // Only test CSV data with headers.
     // Empty CSV data with no headers won't produce any statistical analysis.
