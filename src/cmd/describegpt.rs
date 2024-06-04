@@ -195,9 +195,7 @@ fn is_valid_model(
 ) -> CliResult<bool> {
     // Get prompt file if --prompt-file is used, otherwise get default prompt file
     let prompt_file = get_prompt_file(args)?;
-    let models_endpoint = if args.flag_ollama {
-        "/api/tags"
-    } else if prompt_file.ollama {
+    let models_endpoint = if args.flag_ollama || prompt_file.ollama {
         "/api/tags"
     } else {
         "/models"
@@ -233,14 +231,7 @@ fn is_valid_model(
     } else {
         args.flag_model.clone().unwrap()
     };
-    if arg_is_some("--ollama") {
-        let models = response_json["models"].as_array().unwrap();
-        for model in models {
-            if model["name"].as_str().unwrap() == given_model {
-                return Ok(true);
-            }
-        }
-    } else if prompt_file.ollama {
+    if arg_is_some("--ollama") || prompt_file.ollama {
         let models = response_json["models"].as_array().unwrap();
         for model in models {
             if model["name"].as_str().unwrap() == given_model {
