@@ -211,10 +211,10 @@ fn is_valid_model(
         "GET",
         format!(
             "{0}{1}",
-            if !arg_is_some("--prompt-file") {
-                args.flag_base_url.clone().unwrap()
-            } else {
+            if arg_is_some("--prompt-file") {
                 prompt_file.base_url
+            } else {
+                args.flag_base_url.clone().unwrap()
             },
             models_endpoint
         )
