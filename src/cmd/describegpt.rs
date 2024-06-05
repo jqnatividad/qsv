@@ -26,6 +26,8 @@ describegpt options:
                            [default: 50]
     --json                 Return results in JSON format.
     --jsonl                Return results in JSON Lines format.
+    --prompt <prompt>      Custom prompt passed as text (alternative to --description, etc.).
+                           Replaces {stats} & {frequency} in prompt with qsv command outputs.
     --prompt-file <file>   The JSON file containing the prompts to use for inferencing.
                            If not specified, default prompts will be used.
     --base-url <url>       The URL of the API for interacting with LLMs. Supports APIs
@@ -70,6 +72,7 @@ struct Args {
     flag_model:       Option<String>,
     flag_json:        bool,
     flag_jsonl:       bool,
+    flag_prompt:      Option<String>,
     flag_prompt_file: Option<String>,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
@@ -88,6 +91,7 @@ struct PromptFile {
     dictionary_prompt:  String,
     description_prompt: String,
     tags_prompt:        String,
+    prompt:             String,
     json:               bool,
     jsonl:              bool,
     base_url:           String,
@@ -278,6 +282,9 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
             dictionary_prompt:  DEFAULT_DICTIONARY_PROMPT.to_owned(),
             description_prompt: DEFAULT_DESCRIPTION_PROMPT.to_owned(),
             tags_prompt:        DEFAULT_TAGS_PROMPT.to_owned(),
+            prompt:             "Summary statistics: {stats}\n\nFrequency: {frequency}\n\nWhat is \
+                                 this dataset about?"
+                .to_owned(),
             json:               true,
             jsonl:              false,
             base_url:           "https://api.openai.com/v1".to_owned(),
@@ -305,6 +312,13 @@ fn get_prompt(
         "dictionary_prompt" => prompt_file.dictionary_prompt,
         "description_prompt" => prompt_file.description_prompt,
         "tags_prompt" => prompt_file.tags_prompt,
+        "custom" => {
+            if args.flag_prompt.is_some() {
+                args.flag_prompt.clone().unwrap()
+            } else {
+                prompt_file.prompt
+            }
+        },
         _ => {
             return fail_incorrectusage_clierror!("Error: Invalid prompt type: {prompt_type}");
         },
@@ -543,6 +557,21 @@ fn run_inference_options(
     let mut completion: String;
     let mut dictionary_completion = String::new();
 
+    // Generate custom prompt output
+    if args.flag_prompt.is_some() {
+        prompt = get_prompt("custom", stats_str, frequency_str, args)?;
+        print_status(args, "Generating custom prompt output from API...");
+        messages = get_messages(&prompt, &dictionary_completion);
+        dictionary_completion = get_completion(args, &arg_is_some, api_key, &messages)?;
+        print_status(args, "Received custom prompt completion.");
+        process_output(
+            "prompt",
+            &dictionary_completion,
+            &mut total_json_output,
+            args,
+        )?;
+    }
+
     // Generate dictionary output
     if args.flag_dictionary || args.flag_all {
         prompt = get_prompt("dictionary_prompt", stats_str, frequency_str, args)?;
@@ -673,10 +702,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .unwrap();
 
     // If no inference flags specified, print error message.
-    if !args.flag_all && !args.flag_dictionary && !args.flag_description && !args.flag_tags {
+    if !args.flag_all
+        && !args.flag_dictionary
+        && !args.flag_description
+        && !args.flag_tags
+        && args.flag_prompt.is_none()
+    {
         return fail_incorrectusage_clierror!("Error: No inference options specified.");
     // If --all flag is specified, but other inference flags are also set, print error message.
-    } else if args.flag_all && (args.flag_dictionary || args.flag_description || args.flag_tags) {
+    } else if args.flag_all
+        && (args.flag_dictionary
+            || args.flag_description
+            || args.flag_tags
+            || args.flag_prompt.is_some())
+    {
         return fail_incorrectusage_clierror!(
             "Error: --all option cannot be specified with other inference flags."
         );
