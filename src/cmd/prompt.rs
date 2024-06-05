@@ -30,6 +30,8 @@ Common options:
 
 "#;
 
+use std::path::PathBuf;
+
 use rfd::FileDialog;
 
 use crate::{config::Config, util, CliResult, Deserialize};
@@ -38,28 +40,31 @@ use crate::{config::Config, util, CliResult, Deserialize};
 struct Args {
     flag_fd_output:  bool,
     flag_no_headers: bool,
-    flag_output:     Option<String>,
+    flag_output:     Option<PathBuf>,
 }
 
 fn write_to_file(
-    args: &Args,
-    input_path: Option<String>,
-    output_path: Option<String>,
+    flag_no_headers: bool,
+    input_path: Option<PathBuf>,
+    output_path: Option<PathBuf>,
 ) -> CliResult<()> {
-    let rconfig = Config::new(&input_path).no_headers(args.flag_no_headers);
+    let input_path = input_path.map(|pathbuf| pathbuf.to_string_lossy().into_owned());
+    let output_path = output_path.map(|pathbuf| pathbuf.to_string_lossy().into_owned());
+
+    let rconfig = Config::new(&input_path).no_headers(flag_no_headers);
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&output_path).writer()?;
+
     if !rconfig.no_headers {
         rconfig.write_headers(&mut rdr, &mut wtr)?;
     }
-    let mut record = csv::ByteRecord::new();
 
+    let mut record = csv::ByteRecord::new();
     while rdr.read_byte_record(&mut record)? {
         wtr.write_byte_record(&record)?;
     }
 
-    wtr.flush()?;
-    Ok(())
+    Ok(wtr.flush()?)
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -71,14 +76,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     if !args.flag_fd_output && args.flag_output.is_none() {
         if let Some(input_path) = FileDialog::new().set_directory("/").pick_file() {
-            if let Some(input_path_str) = input_path.to_str() {
-                write_to_file(&args, Some(input_path_str.to_string()), None)?;
-            } else {
-                return fail_clierror!(
-                    "Error while running qsv prompt. Perhaps the path to the file is not valid \
-                     unicode?"
-                );
-            };
+            write_to_file(args.flag_no_headers, Some(input_path), None)?;
         } else {
             return fail_clierror!(
                 "Error while running qsv prompt. Perhaps you did not select a file for input?"
@@ -88,14 +86,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // If fd_output then write to output using save file
     else if args.flag_fd_output {
         if let Some(output_path) = FileDialog::new().set_directory("/").save_file() {
-            if let Some(output_path_str) = output_path.to_str() {
-                write_to_file(&args, None, Some(output_path_str.to_string()))?;
-            } else {
-                return fail_clierror!(
-                    "Error while running qsv prompt. Perhaps the path to the file is not valid \
-                     unicode?"
-                );
-            };
+            write_to_file(args.flag_no_headers, None, Some(output_path))?;
         } else {
             return fail_clierror!(
                 "Error while running qsv prompt. Perhaps you did not select a file for output?"
@@ -104,7 +95,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     // If output then write to output and skip input path pick file
     else {
-        write_to_file(&args, None, args.flag_output.clone())?;
+        write_to_file(args.flag_no_headers, None, args.flag_output)?;
     }
     Ok(())
 }
