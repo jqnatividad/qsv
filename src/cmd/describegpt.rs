@@ -414,7 +414,7 @@ fn get_completion(
         Some(api_key),
         Some(&request_data),
         "POST",
-        format!("{0}{1}", base_url, completions_endpoint).as_str(),
+        format!("{base_url}{completions_endpoint}").as_str(),
     )?;
 
     // Parse response as JSON
