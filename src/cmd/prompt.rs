@@ -31,18 +31,21 @@ prompt options:
 
 Common options:
     -h, --help             Display this message
-    -n, --no-headers       When set, does not include headers in output.
     -o, --output <file>    Write output to <file> without showing a save dialog.
                            Mutually exclusive with --fd-output.
     -Q, --quiet            Do not print --fd-output message to stderr.
 
 "#;
 
-use std::path::PathBuf;
+use std::{
+    fs,
+    io::{self, Read, Write},
+    path::PathBuf,
+};
 
 use rfd::FileDialog;
 
-use crate::{config::Config, util, CliResult, Deserialize};
+use crate::{util, CliResult, Deserialize};
 
 #[derive(Deserialize)]
 #[allow(clippy::struct_field_names)]
@@ -51,7 +54,6 @@ struct Args {
     flag_workdir:    PathBuf,
     flag_filters:    String,
     flag_fd_output:  bool,
-    flag_no_headers: bool,
     flag_output:     Option<PathBuf>,
     flag_save_fname: String,
     flag_quiet:      bool,
@@ -67,28 +69,45 @@ enum PromptMode {
     FdOutput,
 }
 
-fn write_to_file(
-    flag_no_headers: bool,
-    input_path: Option<PathBuf>,
-    output_path: Option<PathBuf>,
-) -> CliResult<()> {
-    let input_path = input_path.map(|pathbuf| pathbuf.to_string_lossy().into_owned());
-    let output_path = output_path.map(|pathbuf| pathbuf.to_string_lossy().into_owned());
+fn copy_file_to_output(input_path: Option<PathBuf>, output_path: Option<PathBuf>) -> CliResult<()> {
+    let mut buffer: Vec<u8> = Vec::new();
+    let input_filename = if let Some(input_path) = input_path {
+        if output_path.is_none() {
+            // we are copying from file to stdout
+            // so read the file into buffer
+            let mut file = std::fs::File::open(&input_path)?;
+            file.read_to_end(&mut buffer)?;
+        }
+        input_path
+    } else {
+        // its stdin, copy to buffer
+        io::stdin().read_to_end(&mut buffer)?;
+        PathBuf::new()
+    };
 
-    let rconfig = Config::new(&input_path).no_headers(flag_no_headers);
-    let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&output_path).writer()?;
-
-    if !rconfig.no_headers {
-        rconfig.write_headers(&mut rdr, &mut wtr)?;
+    if let Some(output_path) = output_path {
+        if input_filename.exists() {
+            // both input and output are files
+            // use fs::copy to copy from input file to output file
+            fs::copy(&input_filename, &output_path)?;
+        } else {
+            // we copied stdin into a buffer, write to output file
+            let mut file = std::fs::File::create(&output_path)?;
+            file.write_all(&buffer)?;
+            file.flush()?;
+        }
+    } else if input_filename.exists() {
+        // we copied from file, copy to stdout
+        let mut input_file = std::fs::File::open(input_filename)?;
+        let mut stdout = io::stdout();
+        std::io::copy(&mut input_file, &mut stdout)?;
+    } else {
+        // we copied stdin into a buffer, write buffer to stdout
+        io::stdout().write_all(&buffer)?;
+        io::stdout().flush()?;
     }
 
-    let mut record = csv::ByteRecord::new();
-    while rdr.read_byte_record(&mut record)? {
-        wtr.write_byte_record(&record)?;
-    }
-
-    Ok(wtr.flush()?)
+    Ok(())
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -134,7 +153,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
 
             if let Some(input_path) = fd.pick_file() {
-                write_to_file(args.flag_no_headers, Some(input_path), None)?;
+                copy_file_to_output(Some(input_path), None)?;
             } else {
                 return fail_clierror!(
                     "Error while running qsv prompt. Perhaps you did not select a file for input?"
@@ -143,7 +162,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         },
         PromptMode::Output => {
             // If output then write to output and skip input path pick file
-            write_to_file(args.flag_no_headers, None, args.flag_output)?;
+            copy_file_to_output(None, args.flag_output)?;
         },
         PromptMode::FdOutput => {
             // If fd_output then write to output using save file
@@ -161,7 +180,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
 
             if let Some(output_path) = fd.save_file() {
-                write_to_file(args.flag_no_headers, None, Some(output_path.clone()))?;
+                copy_file_to_output(None, Some(output_path.clone()))?;
                 if !args.flag_quiet {
                     winfo!("Output saved to: {:?}", output_path);
                 }
