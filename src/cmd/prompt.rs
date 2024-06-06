@@ -21,9 +21,6 @@ prompt options:
     -m, --msg <arg>        The prompt message to display in the file dialog title.
                            When not using --fd-output, the default is "Select a File".
                            When using --fd-output, the default is "Save File As".
-                           When using multiple prompts in a pipeline, the prompt messages
-                           can be sequenced with a number prefix to ensure they are
-                           displayed in order.
                            If prompting for input and --fd-output is used, the prompt
                            message is just used for the input dialog.
     -F, --filters <arg>    The filter to use for the file dialog. Set to "None" to
@@ -135,10 +132,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .unwrap_or_else(|| DEFAULT_INPUT_TITLE.to_owned());
 
         // piped commands are actually launched in parallel and not executed sequentially
-        // as commonly thought. So we need to introduce a delay to ensure that the dialogs
-        // are not opened at the same time, which can cause prompts to show out of order
-        // if we have multiple prompts in a pipeline.
-        // e.g. cat file.csv | qsv prompt | qsv stats | qsv prompt --fd-output
+        // from left to right as commonly thought. So we need to introduce a delay to ensure 
+        // that the input dialog is not opened before the save dialog.
+        // e.g. cat file.csv | qsv prompt | qsv stats | qsv prompt --skip-input --fd-output
         // The delay ensures that the prompt for input is shown before the prompt for output.
         std::thread::sleep(std::time::Duration::from_millis(args.flag_base_delay_ms));
 
@@ -168,7 +164,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     if args.flag_fd_output {
-        // If fd_output then write to output using save file
+        // If fd_output then write to output using save file dialog
         let title = if !args.flag_skip_input {
             args.flag_msg
                 .unwrap_or_else(|| DEFAULT_OUTPUT_TITLE.to_owned())
