@@ -26,6 +26,8 @@ prompt options:
                            [default: .]
     -f, --fd-output        Write output to a file by using a save file dialog.
                            Used when piping into qsv prompt. Mutually exclusive with --output.
+    --save-fname <file>    The filename to save the output as when using --fd-output.
+                           [default: output.csv]
 
 Common options:
     -h, --help             Display this message
@@ -51,6 +53,7 @@ struct Args {
     flag_fd_output:  bool,
     flag_no_headers: bool,
     flag_output:     Option<PathBuf>,
+    flag_save_fname: String,
     flag_quiet:      bool,
 }
 
@@ -149,7 +152,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .unwrap_or_else(|| DEFAULT_OUTPUT_TITLE.to_owned());
             let mut fd = FileDialog::new()
                 .set_directory(args.flag_workdir)
-                .set_title(title);
+                .set_title(title)
+                .set_file_name(args.flag_save_fname);
 
             #[cfg(target_os = "macos")]
             {
