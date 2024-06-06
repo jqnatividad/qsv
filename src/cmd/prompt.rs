@@ -4,21 +4,28 @@ Open a file dialog to pick a file as input or save to an output file.
 For example to pick a single file as input to qsv stats using a file dialog, we can
 pipe into qsv stats using qsv prompt:
 
-qsv prompt | qsv stats
+qsv prompt | qsv stats | qsv table
 
 If you want to save the output of a command to a file using a save file dialog, you
 may pipe into qsv prompt but make sure you include the --fd-output (or -f) flag:
 
-qsv prompt | qsv stats | qsv prompt --fd-output
+qsv prompt -m 'Pick a CSV file to describe' | qsv stats | qsv prompt --skip-input --fd-output
 
 Usage:
     qsv prompt [options]
     qsv prompt --help
 
 prompt options:
+    -s, --skip-input       Skip the input prompt and use stdin as input.
+                           Useful when piping input from another command.
     -m, --msg <arg>        The prompt message to display in the file dialog title.
                            When not using --fd-output, the default is "Select a File".
                            When using --fd-output, the default is "Save File As".
+                           When using multiple prompts in a pipeline, the prompt messages
+                           can be sequenced with a number prefix to ensure they are
+                           displayed in order.
+                           If prompting for input and --fd-output is used, the prompt
+                           message is just used for the input dialog.
     -F, --filters <arg>    The filter to use for the file dialog. Set to "None" to
                            disable filters. Filters are comma-delimited file extensions.
                            [default: csv,tsv,tab,xls,xlsx,ods]
@@ -28,6 +35,9 @@ prompt options:
                            Used when piping into qsv prompt. Mutually exclusive with --output.
     --save-fname <file>    The filename to save the output as when using --fd-output.
                            [default: output.csv]
+    --base-delay-ms <ms>   The base delay in milliseconds to use when opening input dialogs.
+                           To disable delay, set to 0.
+                           [default: 100]
 
 Common options:
     -h, --help             Display this message
@@ -50,24 +60,19 @@ use crate::{util, CliResult, Deserialize};
 #[derive(Deserialize)]
 #[allow(clippy::struct_field_names)]
 struct Args {
-    flag_msg:        Option<String>,
-    flag_workdir:    PathBuf,
-    flag_filters:    String,
-    flag_fd_output:  bool,
-    flag_output:     Option<PathBuf>,
-    flag_save_fname: String,
-    flag_quiet:      bool,
+    flag_skip_input:    bool,
+    flag_msg:           Option<String>,
+    flag_workdir:       PathBuf,
+    flag_filters:       String,
+    flag_fd_output:     bool,
+    flag_output:        Option<PathBuf>,
+    flag_save_fname:    String,
+    flag_base_delay_ms: u64,
+    flag_quiet:         bool,
 }
 
 const DEFAULT_INPUT_TITLE: &str = "Select a File";
 const DEFAULT_OUTPUT_TITLE: &str = "Save File As";
-const INPUT_DIALOG_DELAY_MS: u64 = 100;
-
-enum PromptMode {
-    Input,
-    Output,
-    FdOutput,
-}
 
 fn copy_file_to_output(input_path: Option<PathBuf>, output_path: Option<PathBuf>) -> CliResult<()> {
     let mut buffer: Vec<u8> = Vec::new();
@@ -119,77 +124,82 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
     }
 
-    let prompt_mode = if !args.flag_fd_output && args.flag_output.is_none() {
-        PromptMode::Input
-    } else if args.flag_fd_output {
-        PromptMode::FdOutput
+    let input_path = if args.flag_skip_input {
+        // do not prompt for input, use stdin
+        None
     } else {
-        PromptMode::Output
+        // prompt for input
+        let title = args
+            .flag_msg
+            .clone()
+            .unwrap_or_else(|| DEFAULT_INPUT_TITLE.to_owned());
+
+        // piped commands are actually launched in parallel and not executed sequentially
+        // as commonly thought. So we need to introduce a delay to ensure that the dialogs
+        // are not opened at the same time, which can cause prompts to show out of order
+        // if we have multiple prompts in a pipeline.
+        // e.g. cat file.csv | qsv prompt | qsv stats | qsv prompt --fd-output
+        // The delay ensures that the prompt for input is shown before the prompt for output.
+        std::thread::sleep(std::time::Duration::from_millis(args.flag_base_delay_ms));
+
+        let mut fd = FileDialog::new()
+            .set_directory(args.flag_workdir.clone())
+            .set_title(title.clone());
+
+        if args.flag_filters.to_ascii_lowercase() != "none" {
+            let ext_comma_delimited: Vec<&str> = args.flag_filters.split(',').collect();
+            let ext_slice: &[&str] = &ext_comma_delimited;
+            if !ext_slice.is_empty() {
+                fd = fd.add_filter("Filter".to_string(), ext_slice);
+            }
+        }
+
+        let input_path = fd.pick_file();
+        if input_path.is_none() {
+            let err_msg = if title == DEFAULT_INPUT_TITLE {
+                "Prompt error. Perhaps you did not select a file for input?".to_string()
+            } else {
+                format!(r#"Prompt error. Perhaps you did not select a file for input? "{title}""#)
+            };
+            return fail_clierror!("{err_msg}");
+        }
+
+        input_path
     };
 
-    match prompt_mode {
-        PromptMode::Input => {
-            // just in case, sleep for a bit to allow the input dialog to pop over
-            // the output dialog should there be a pipe into qsv prompt in the same pipeline.
-            // e.g. cat file.csv | qsv prompt | qsv stats | qsv prompt --fd-output
-            // this is needed as piped commands are actually launched in parallel and
-            // not executed sequentially as commonly thought. So without this sleep,
-            // the output dialog may pop over the input dialog.
-            std::thread::sleep(std::time::Duration::from_millis(INPUT_DIALOG_DELAY_MS));
+    if args.flag_fd_output {
+        // If fd_output then write to output using save file
+        let title = if !args.flag_skip_input {
+            args.flag_msg
+                .unwrap_or_else(|| DEFAULT_OUTPUT_TITLE.to_owned())
+        } else {
+            DEFAULT_OUTPUT_TITLE.to_owned()
+        };
+        let mut fd = FileDialog::new()
+            .set_directory(args.flag_workdir)
+            .set_title(title)
+            .set_file_name(args.flag_save_fname);
 
-            let title = args
-                .flag_msg
-                .unwrap_or_else(|| DEFAULT_INPUT_TITLE.to_owned());
-            let mut fd = FileDialog::new()
-                .set_directory(args.flag_workdir)
-                .set_title(title);
+        #[cfg(target_os = "macos")]
+        {
+            fd = fd.set_can_create_directories(true);
+        }
 
-            if args.flag_filters.to_ascii_lowercase() != "none" {
-                let ext_comma_delimited: Vec<&str> = args.flag_filters.split(',').collect();
-                let ext_slice: &[&str] = &ext_comma_delimited;
-                if !ext_slice.is_empty() {
-                    fd = fd.add_filter("Filter".to_string(), ext_slice);
-                }
+        // no delay here, we want the save dialog to appear immediately
+        // the delay is only for input dialogs, so they pop over in reverse order
+        if let Some(output_path) = fd.save_file() {
+            copy_file_to_output(input_path, Some(output_path.clone()))?;
+            if !args.flag_quiet {
+                winfo!("Output saved to: {:?}", output_path);
             }
-
-            if let Some(input_path) = fd.pick_file() {
-                copy_file_to_output(Some(input_path), None)?;
-            } else {
-                return fail_clierror!(
-                    "Error while running qsv prompt. Perhaps you did not select a file for input?"
-                );
-            };
-        },
-        PromptMode::Output => {
-            // If output then write to output and skip input path pick file
-            copy_file_to_output(None, args.flag_output)?;
-        },
-        PromptMode::FdOutput => {
-            // If fd_output then write to output using save file
-            let title = args
-                .flag_msg
-                .unwrap_or_else(|| DEFAULT_OUTPUT_TITLE.to_owned());
-            let mut fd = FileDialog::new()
-                .set_directory(args.flag_workdir)
-                .set_title(title)
-                .set_file_name(args.flag_save_fname);
-
-            #[cfg(target_os = "macos")]
-            {
-                fd = fd.set_can_create_directories(true);
-            }
-
-            if let Some(output_path) = fd.save_file() {
-                copy_file_to_output(None, Some(output_path.clone()))?;
-                if !args.flag_quiet {
-                    winfo!("Output saved to: {:?}", output_path);
-                }
-            } else {
-                return fail_clierror!(
-                    "Error while running qsv prompt. Perhaps you did not select a file for output?"
-                );
-            }
-        },
+        } else {
+            return fail_clierror!(
+                "Error while running qsv prompt. Perhaps you did not select a file for output?"
+            );
+        }
+    } else {
+        // If output then write to output and skip input path pick file
+        copy_file_to_output(input_path, args.flag_output)?;
     }
 
     Ok(())
