@@ -16,7 +16,7 @@ stranger on the internet that runs...FOR EACH LINE in your CSV file. GASP!"
 
 Examples:
 
-Delete all files whose filenames are listed in a column:
+Delete all files whose filenames are listed in the filename column:
 
   $ qsv foreach filename 'rm {}' assets.csv
 
