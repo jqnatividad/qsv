@@ -115,8 +115,13 @@ Here is an example of a prompt:
     "dictionary_prompt": "Here are the columns for each field in a data dictionary:\n\n- Type: the data type of this column\n- Label: a human-friendly label for this column\n- Description: a full description for this column (can be multiple sentences)\n\nGenerate a data dictionary as aforementioned{json_add} where each field has Name, Type, Label, and Description (so four columns in total) based on the following summary statistics and frequency data from a CSV file.\n\nSummary Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}",
     "description_prompt": "Generate only a description that is within 8 sentences about the entire dataset{json_add} based on the following summary statistics and frequency data derived from the CSV file it came from.\n\nSummary Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}\n\nDo not output the summary statistics for each field. Do not output the frequency for each field. Do not output data about each field individually, but instead output about the dataset as a whole in one 1-8 sentence description.",
     "tags_prompt": "A tag is a keyword or label that categorizes datasets with other, similar datasets. Using the right tags makes it easier for others to find and use datasets.\n\nGenerate single-word tags{json_add} about the dataset (lowercase only and remove all whitespace) based on the following summary statistics and frequency data from a CSV file.\n\nSummary Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}",
+    "prompt": "Summary Statistics:\n\n{stats}\n\nFrequency:\n\n{frequency}\n\nWhat's the dataset about?",
     "json": true,
-    "jsonl": false
+    "jsonl": false,
+    "base_url": "https://api.openai.com/v1",
+    "ollama": false,
+    "model": "gpt-3.5-turbo-16k",
+    "timeout": 60
 }
 ```
 

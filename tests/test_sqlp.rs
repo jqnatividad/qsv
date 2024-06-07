@@ -47,7 +47,7 @@ fn make_rows(left_only: bool, rows: Vec<Vec<String>>) -> Vec<Vec<String>> {
     if left_only {
         all_rows.push(svec!["city", "state"]);
     } else {
-        all_rows.push(svec!["city", "state", "place"]);
+        all_rows.push(svec!["city", "state", "city:places", "place"]);
     }
     all_rows.extend(rows.into_iter());
     all_rows
@@ -61,9 +61,9 @@ sqlp_test!(
         let expected = make_rows(
             false,
             vec![
-                svec!["Boston", "MA", "Logan Airport"],
-                svec!["Boston", "MA", "Boston Garden"],
-                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+                svec!["Boston", "MA", "Boston", "Logan Airport"],
+                svec!["Boston", "MA", "Boston", "Boston Garden"],
+                svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
             ],
         );
         assert_eq!(got, expected);
@@ -78,11 +78,11 @@ sqlp_test!(
         let expected = make_rows(
             false,
             vec![
-                svec!["Boston", "MA", "Logan Airport"],
-                svec!["Boston", "MA", "Boston Garden"],
-                svec!["New York", "NY", ""],
-                svec!["San Francisco", "CA", ""],
-                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+                svec!["Boston", "MA", "Boston", "Logan Airport"],
+                svec!["Boston", "MA", "Boston", "Boston Garden"],
+                svec!["New York", "NY", "", ""],
+                svec!["San Francisco", "CA", "", ""],
+                svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
             ],
         );
         assert_eq!(got, expected);
@@ -95,22 +95,22 @@ sqlp_test!(
         cmd.arg("select * from cities full outer join places on cities.city = places.city");
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
         let expected1 = vec![
-            svec!["city", "state", "city_right", "place"],
+            svec!["city", "state", "city:places", "place"],
             svec!["Boston", "MA", "Boston", "Logan Airport"],
             svec!["Boston", "MA", "Boston", "Boston Garden"],
             svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
             svec!["", "", "Orlando", "Disney World"],
-            svec!["San Francisco", "CA", "", ""],
             svec!["New York", "NY", "", ""],
+            svec!["San Francisco", "CA", "", ""],
         ];
         let expected2 = vec![
-            svec!["city", "state", "city_right", "place"],
+            svec!["city", "state", "city:places", "place"],
             svec!["Boston", "MA", "Boston", "Logan Airport"],
             svec!["Boston", "MA", "Boston", "Boston Garden"],
             svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
             svec!["", "", "Orlando", "Disney World"],
-            svec!["New York", "NY", "", ""],
             svec!["San Francisco", "CA", "", ""],
+            svec!["New York", "NY", "", ""],
         ];
         assert!(got == expected1 || got == expected2);
     }
@@ -140,6 +140,21 @@ fn sqlp_join_cross() {
         svec!["c", "d", "1", "2"],
         svec!["c", "d", "3", "4"],
     ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_join_same_colname_1820() {
+    let wrk = Workdir::new("sqlp_join_same_colname_1820");
+    wrk.create("one.csv", vec![svec!["id", "data"], svec!["1", "open"]]);
+    wrk.create("two.csv", vec![svec!["id", "data"], svec!["1", "closed"]]);
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.args(["one.csv", "two.csv"])
+        .arg("SELECT _t_1.id, _t_2.data FROM _t_1 JOIN _t_2 ON _t_1.id = _t_2.id");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["id", "data"], svec!["1", "closed"]];
     assert_eq!(got, expected);
 }
 
@@ -1166,9 +1181,9 @@ fn sqlp_sql_join_on_subquery() {
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["idx", "val", "val_right"],
-        svec!["3", "A0C", "A0C"],
-        svec!["4", "a0c", "a0c"],
+        svec!["idx", "val", "idx:t2", "val:t2"],
+        svec!["3", "A0C", "3", "A0C"],
+        svec!["4", "a0c", "4", "a0c"],
     ];
 
     assert_eq!(got, expected);
@@ -1209,9 +1224,9 @@ fn sqlp_sql_from_subquery() {
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["idx", "val", "val_right"],
-        svec!["3", "A0C", "A0C"],
-        svec!["4", "a0c", "a0c"],
+        svec!["idx", "val", "idx:t2", "val:t2"],
+        svec!["3", "A0C", "3", "A0C"],
+        svec!["4", "a0c", "4", "a0c"],
     ];
 
     assert_eq!(got, expected);
@@ -1483,7 +1498,11 @@ fn sqlp_compound_join_basic() {
     wrk.assert_success(&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![svec!["a", "b",], svec!["2", "3"], svec!["3", "4"]];
+    let expected = vec![
+        svec!["a", "b", "a:test2", "b:test2"],
+        svec!["2", "3", "2", "3"],
+        svec!["3", "4", "3", "4"],
+    ];
 
     assert_eq!(got, expected);
 }
@@ -1529,9 +1548,9 @@ fn sqlp_compound_join_diff_colnames() {
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["a", "b", "c"],
-        svec!["2", "2", "8"],
-        svec!["3", "3", "9"],
+        svec!["a", "b", "b:test2", "a:test2", "c"],
+        svec!["2", "2", "2", "2", "8"],
+        svec!["3", "3", "3", "3", "9"],
     ];
 
     assert_eq!(got, expected);
@@ -1593,9 +1612,9 @@ fn sqlp_compound_join_three_tables() {
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["a", "b", "c"],
-        svec!["2", "3", "3"],
-        svec!["3", "4", "4"],
+        svec!["a", "b", "a:test2", "b:test2", "a:test3", "b:test3", "c"],
+        svec!["2", "3", "2", "3", "2", "3", "3"],
+        svec!["3", "4", "3", "4", "3", "4", "4"],
     ];
 
     assert_eq!(got, expected);

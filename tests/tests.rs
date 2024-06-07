@@ -30,6 +30,7 @@ macro_rules! rassert_eq {
 
 mod workdir;
 
+mod test_100;
 #[cfg(feature = "apply")]
 mod test_apply;
 #[cfg(feature = "datapusher_plus")]
@@ -82,6 +83,7 @@ mod test_jsonl;
 mod test_luau;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_partition;
+mod test_prompt;
 mod test_pseudo;
 #[cfg(feature = "python")]
 mod test_py;

@@ -155,6 +155,7 @@ polars = { version = "0.40", features = [
     "cse",
     "avro",
     "dtype-full",
+    "coalesce",
 ], optional = true }
 polars-ops = { version = "0.40", optional = true }
 pyo3 = { version = "0.21", features = [
@@ -220,6 +221,7 @@ url = "2.5"
 vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
 local-encoding = { version = "0.2.0", optional = true }
+rfd = "0.14.1"
 
 [target.'cfg(not(target_arch = "aarch64"))'.dependencies]
 simdutf8    = "0.1"
@@ -247,12 +249,12 @@ serial_test = { version = "3.1", features = ["file_locks"] }
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "0c8ab87" }
-# use our fork of calamine to use latest zip 2.1 crate
-# which has better performance and several bug fixes
-calamine = { git = "https://github.com/jqnatividad/calamine", branch = "bump_zip_from_1_to_2" }
-# polars 0.40.0 with unreleased fixes
-polars     = { git = "https://github.com/pola-rs/polars", rev = "d68d499" }
-polars-ops = { git = "https://github.com/pola-rs/polars", rev = "d68d499" }
+# calamine 0.25.0 with unreleased fixes
+calamine = { git = "https://github.com/tafia/calamine", rev = "6b41309" }
+# latest Rust polars with unreleased fixes
+# we track Python polars which has a much faster release cycle than Rust polars
+polars     = { git = "https://github.com/pola-rs/polars", tag = "py-0.20.31" }
+polars-ops = { git = "https://github.com/pola-rs/polars", tag = "py-0.20.31" }
 
 [features]
 default = ["mimalloc"]

@@ -26,6 +26,8 @@ describegpt options:
                            [default: 50]
     --json                 Return results in JSON format.
     --jsonl                Return results in JSON Lines format.
+    --prompt <prompt>      Custom prompt passed as text (alternative to --description, etc.).
+                           Replaces {stats} & {frequency} in prompt with qsv command outputs.
     --prompt-file <file>   The JSON file containing the prompts to use for inferencing.
                            If not specified, default prompts will be used.
     --base-url <url>       The URL of the API for interacting with LLMs. Supports APIs
@@ -65,11 +67,12 @@ struct Args {
     flag_tags:        bool,
     flag_api_key:     Option<String>,
     flag_max_tokens:  u32,
-    flag_base_url:    String,
+    flag_base_url:    Option<String>,
     flag_ollama:      bool,
     flag_model:       Option<String>,
     flag_json:        bool,
     flag_jsonl:       bool,
+    flag_prompt:      Option<String>,
     flag_prompt_file: Option<String>,
     flag_user_agent:  Option<String>,
     flag_timeout:     u16,
@@ -88,8 +91,13 @@ struct PromptFile {
     dictionary_prompt:  String,
     description_prompt: String,
     tags_prompt:        String,
+    prompt:             String,
     json:               bool,
     jsonl:              bool,
+    base_url:           String,
+    ollama:             bool,
+    model:              String,
+    timeout:            u32,
 }
 
 const LLM_APIKEY_ERROR: &str = "Error: QSV_LLM_APIKEY environment variable not found.\nNote that \
@@ -183,8 +191,15 @@ fn send_request(
 }
 
 // Check if model is valid, including the default model
-fn is_valid_model(client: &Client, api_key: Option<&str>, args: &Args) -> CliResult<bool> {
-    let models_endpoint = if args.flag_ollama {
+fn is_valid_model(
+    client: &Client,
+    arg_is_some: impl Fn(&str) -> bool,
+    api_key: Option<&str>,
+    args: &Args,
+) -> CliResult<bool> {
+    // Get prompt file if --prompt-file is used, otherwise get default prompt file
+    let prompt_file = get_prompt_file(args)?;
+    let models_endpoint = if args.flag_ollama || prompt_file.ollama {
         "/api/tags"
     } else {
         "/models"
@@ -194,7 +209,16 @@ fn is_valid_model(client: &Client, api_key: Option<&str>, args: &Args) -> CliRes
         api_key,
         None,
         "GET",
-        format!("{0}{1}", args.flag_base_url, models_endpoint).as_str(),
+        format!(
+            "{0}{1}",
+            if arg_is_some("--prompt-file") {
+                prompt_file.base_url
+            } else {
+                args.flag_base_url.clone().unwrap()
+            },
+            models_endpoint
+        )
+        .as_str(),
     );
 
     // If response is an error, return the error with fail!
@@ -204,17 +228,24 @@ fn is_valid_model(client: &Client, api_key: Option<&str>, args: &Args) -> CliRes
 
     // Verify model is valid from response {"data": [{"id": "model-id", ...}, ...]
     let response_json: serde_json::Value = response.unwrap().json().unwrap();
-    if args.flag_ollama {
+    let given_model = if arg_is_some("--model") {
+        args.flag_model.clone().unwrap()
+    } else if args.flag_prompt_file.is_some() {
+        prompt_file.model
+    } else {
+        args.flag_model.clone().unwrap()
+    };
+    if arg_is_some("--ollama") || prompt_file.ollama {
         let models = response_json["models"].as_array().unwrap();
         for model in models {
-            if model["name"].as_str().unwrap() == args.flag_model.clone().unwrap() {
+            if model["name"].as_str().unwrap() == given_model {
                 return Ok(true);
             }
         }
     } else {
         let models = response_json["data"].as_array().unwrap();
         for model in models {
-            if model["id"].as_str().unwrap() == args.flag_model.clone().unwrap() {
+            if model["id"].as_str().unwrap() == given_model {
                 return Ok(true);
             }
         }
@@ -251,8 +282,15 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
             dictionary_prompt:  DEFAULT_DICTIONARY_PROMPT.to_owned(),
             description_prompt: DEFAULT_DESCRIPTION_PROMPT.to_owned(),
             tags_prompt:        DEFAULT_TAGS_PROMPT.to_owned(),
+            prompt:             "Summary statistics: {stats}\n\nFrequency: {frequency}\n\nWhat is \
+                                 this dataset about?"
+                .to_owned(),
             json:               true,
             jsonl:              false,
+            base_url:           "https://api.openai.com/v1".to_owned(),
+            ollama:             false,
+            model:              "gpt-3.5-turbo-16k".to_owned(),
+            timeout:            60,
         };
         default_prompt_file
     };
@@ -274,6 +312,13 @@ fn get_prompt(
         "dictionary_prompt" => prompt_file.dictionary_prompt,
         "description_prompt" => prompt_file.description_prompt,
         "tags_prompt" => prompt_file.tags_prompt,
+        "custom" => {
+            if args.flag_prompt.is_some() {
+                args.flag_prompt.clone().unwrap()
+            } else {
+                prompt_file.prompt
+            }
+        },
         _ => {
             return fail_incorrectusage_clierror!("Error: Invalid prompt type: {prompt_type}");
         },
@@ -306,9 +351,10 @@ fn get_completion(
 ) -> CliResult<String> {
     // Create client with timeout
     let client = create_client(args)?;
+    let prompt_file = get_prompt_file(args)?;
 
     // Verify model is valid
-    if !is_valid_model(&client, Some(api_key), args)? {
+    if !is_valid_model(&client, &arg_is_some, Some(api_key), args)? {
         return fail!("Error: Invalid model.");
     }
 
@@ -326,17 +372,40 @@ fn get_completion(
         args.flag_max_tokens
     };
 
+    let model = if arg_is_some("--model") {
+        args.flag_model.clone().unwrap()
+    } else if args.flag_prompt_file.is_some() {
+        let prompt_file = get_prompt_file(args)?;
+        prompt_file.model
+    } else {
+        args.flag_model.clone().unwrap()
+    };
+
+    let base_url = if arg_is_some("--base-url") {
+        args.flag_base_url.clone().unwrap()
+    } else if args.flag_prompt_file.is_some() {
+        prompt_file.base_url
+    } else {
+        args.flag_base_url.clone().unwrap()
+    };
+
     // Create request data
     let request_data = json!({
-        "model": args.flag_model,
+        "model": model,
         "max_tokens": max_tokens,
         "messages": messages,
         "stream": false
     });
 
     // Get response from POST request to chat completions endpoint
-    let completions_endpoint = if args.flag_ollama {
+    let completions_endpoint = if arg_is_some("--ollama") {
         "/api/chat"
+    } else if args.flag_prompt_file.is_some() {
+        if prompt_file.ollama {
+            "/api/chat"
+        } else {
+            "/chat/completions"
+        }
     } else {
         "/chat/completions"
     };
@@ -345,7 +414,7 @@ fn get_completion(
         Some(api_key),
         Some(&request_data),
         "POST",
-        format!("{0}{1}", args.flag_base_url, completions_endpoint).as_str(),
+        format!("{base_url}{completions_endpoint}").as_str(),
     )?;
 
     // Parse response as JSON
@@ -358,9 +427,19 @@ fn get_completion(
     }
 
     // Get completion from response
-    if args.flag_ollama {
+    if arg_is_some("--ollama") {
         let completion = response_json["message"]["content"].as_str().unwrap();
         Ok(completion.to_string())
+    } else if args.flag_prompt_file.is_some() {
+        if prompt_file.ollama {
+            let completion = response_json["message"]["content"].as_str().unwrap();
+            Ok(completion.to_string())
+        } else {
+            let completion = response_json["choices"][0]["message"]["content"]
+                .as_str()
+                .unwrap();
+            Ok(completion.to_string())
+        }
     } else {
         let completion = response_json["choices"][0]["message"]["content"]
             .as_str()
@@ -477,6 +556,21 @@ fn run_inference_options(
     let mut messages: serde_json::Value;
     let mut completion: String;
     let mut dictionary_completion = String::new();
+
+    // Generate custom prompt output
+    if args.flag_prompt.is_some() {
+        prompt = get_prompt("custom", stats_str, frequency_str, args)?;
+        print_status(args, "Generating custom prompt output from API...");
+        messages = get_messages(&prompt, &dictionary_completion);
+        dictionary_completion = get_completion(args, &arg_is_some, api_key, &messages)?;
+        print_status(args, "Received custom prompt completion.");
+        process_output(
+            "prompt",
+            &dictionary_completion,
+            &mut total_json_output,
+            args,
+        )?;
+    }
 
     // Generate dictionary output
     if args.flag_dictionary || args.flag_all {
@@ -608,10 +702,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .unwrap();
 
     // If no inference flags specified, print error message.
-    if !args.flag_all && !args.flag_dictionary && !args.flag_description && !args.flag_tags {
+    if !args.flag_all
+        && !args.flag_dictionary
+        && !args.flag_description
+        && !args.flag_tags
+        && args.flag_prompt.is_none()
+    {
         return fail_incorrectusage_clierror!("Error: No inference options specified.");
     // If --all flag is specified, but other inference flags are also set, print error message.
-    } else if args.flag_all && (args.flag_dictionary || args.flag_description || args.flag_tags) {
+    } else if args.flag_all
+        && (args.flag_dictionary
+            || args.flag_description
+            || args.flag_tags
+            || args.flag_prompt.is_some())
+    {
         return fail_incorrectusage_clierror!(
             "Error: --all option cannot be specified with other inference flags."
         );
