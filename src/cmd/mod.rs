@@ -32,7 +32,7 @@ pub mod fixlengths;
 pub mod flatten;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod fmt;
-#[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
+#[cfg(all(feature = "foreach", not(feature = "lite")))]
 pub mod foreach;
 pub mod frequency;
 #[cfg(all(feature = "geocode", feature = "feature_capable"))]

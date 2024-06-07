@@ -65,7 +65,7 @@ mod test_fixlengths;
 mod test_flatten;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_fmt;
-#[cfg(all(feature = "foreach", target_family = "unix"))]
+#[cfg(all(feature = "foreach"))]
 mod test_foreach;
 mod test_frequency;
 #[cfg(all(feature = "feature_capable", feature = "geocode"))]

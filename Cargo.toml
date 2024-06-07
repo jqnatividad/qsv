@@ -220,6 +220,7 @@ uuid = { version = "1", features = ["v4"] }
 url = "2.5"
 vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
+local-encoding = { version = "0.2.0", optional = true }
 rfd = "0.14.1"
 
 [target.'cfg(not(target_arch = "aarch64"))'.dependencies]
@@ -296,7 +297,7 @@ fetch = [
     "serde_urlencoded",
     "simple-expand-tilde",
 ]
-foreach = []
+foreach = ["local-encoding"]
 geocode = [
     "anyhow",
     "cached",

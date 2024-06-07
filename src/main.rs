@@ -343,7 +343,7 @@ enum Command {
     FixLengths,
     Flatten,
     Fmt,
-    #[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
+    #[cfg(all(feature = "foreach", not(feature = "lite")))]
     ForEach,
     Frequency,
     #[cfg(all(feature = "geocode", feature = "feature_capable"))]
@@ -424,7 +424,7 @@ impl Command {
             Command::Fetch => cmd::fetch::run(argv),
             #[cfg(all(feature = "fetch", feature = "feature_capable"))]
             Command::FetchPost => cmd::fetchpost::run(argv),
-            #[cfg(all(feature = "foreach", target_family = "unix", not(feature = "lite")))]
+            #[cfg(all(feature = "foreach", not(feature = "lite")))]
             Command::ForEach => cmd::foreach::run(argv),
             Command::Fill => cmd::fill::run(argv),
             Command::FixLengths => cmd::fixlengths::run(argv),
