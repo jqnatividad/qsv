@@ -132,8 +132,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut dry_run_fname = String::new();
     let dry_run = match args.flag_dry_run.as_str() {
-        (str) if str.to_ascii_lowercase() == "true" => true,
-        (str) if str.to_ascii_lowercase() == "false" => false,
+        str if str.to_ascii_lowercase() == "true" => true,
+        str if str.to_ascii_lowercase() == "false" => false,
         file_str => {
             // if the value is not "true" or "false" case-insensitive, it's a file name
             // check if we can create the file
