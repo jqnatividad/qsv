@@ -127,6 +127,7 @@ jsonschema = { version = "0.18", features = [
     "resolve-http",
 ], default-features = false }
 jql-runner = { version = "7.1", default-features = false, optional = true }
+local-encoding = { version = "0.2", optional = true }
 localzone = { version = "0.3", features = ["auto_validation"] }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
@@ -189,6 +190,7 @@ reqwest = { version = "0.12", features = [
     "http2",
     "json",
 ], default-features = false }
+rfd = "0.14"
 rust_decimal = { version = "1.35", default-features = false }
 ryu = "1"
 sanitize-filename = { version = "0.5", optional = true }
@@ -220,8 +222,7 @@ uuid = { version = "1", features = ["v4"] }
 url = "2.5"
 vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
-local-encoding = { version = "0.2.0", optional = true }
-rfd = "0.14.1"
+
 
 [target.'cfg(not(target_arch = "aarch64"))'.dependencies]
 simdutf8    = "0.1"
@@ -251,6 +252,8 @@ dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_
 grex = { git = "https://github.com/pemistahl/grex", rev = "0c8ab87" }
 # calamine 0.25.0 with unreleased fixes
 calamine = { git = "https://github.com/tafia/calamine", rev = "6b41309" }
+# use modernized version of local_encoding
+local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
 # latest Rust polars with unreleased fixes
 # we track Python polars which has a much faster release cycle than Rust polars
 polars     = { git = "https://github.com/pola-rs/polars", tag = "py-0.20.31" }
