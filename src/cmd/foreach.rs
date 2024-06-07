@@ -66,6 +66,7 @@ Common options:
 "#;
 
 #[cfg(target_family = "unix")]
+#[allow(unused_imports)]
 use std::os::unix::ffi::OsStrExt;
 use std::{
     ffi::{OsStr, OsString},
