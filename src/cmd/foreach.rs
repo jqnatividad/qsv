@@ -66,8 +66,8 @@ Common options:
 "#;
 
 #[cfg(target_family = "unix")]
-#[allow(unused_imports)]
 use std::os::unix::ffi::OsStrExt;
+#[allow(unused_imports)]
 use std::{
     ffi::{OsStr, OsString},
     io::{self, BufReader, BufWriter, Read, Write},
@@ -132,10 +132,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut dry_run_fname = String::new();
     let dry_run = match args.flag_dry_run.as_str() {
-        "true" => true,
-        "false" => false,
+        (str) if str.to_ascii_lowercase() == "true" => true,
+        (str) if str.to_ascii_lowercase() == "false" => false,
         file_str => {
-            // if the value is not "true" or "false", then it's a file name
+            // if the value is not "true" or "false" case-insensitive, it's a file name
             // check if we can create the file
             let file = std::fs::File::create(file_str);
             match file {
