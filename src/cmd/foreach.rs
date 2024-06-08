@@ -77,6 +77,7 @@ use std::{
     str::FromStr,
 };
 
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 #[cfg(target_family = "windows")]
 use local_encoding::windows::multi_byte_to_wide_char;
@@ -179,10 +180,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut cmd_args_string;
 
     // prep progress bar
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let show_progress =
         (args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR")) && !rconfig.is_stdin();
-
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         util::prep_progress(&progress, util::count_rows(&rconfig)?);
     } else {
@@ -190,6 +193,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     while rdr.read_byte_record(&mut record)? {
+        #[cfg(any(feature = "feature_capable", feature = "lite"))]
         if show_progress {
             progress.inc(1);
         }
@@ -283,6 +287,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             cmd.wait()?;
         }
     }
+    #[cfg(any(feature = "feature_capable", feature = "lite"))]
     if show_progress {
         util::finish_progress(&progress);
     }
