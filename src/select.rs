@@ -322,7 +322,7 @@ impl OneSelector {
                 if first_record.is_empty() {
                     return fail!("Input is empty.");
                 }
-                // 9999 is a sentinel value that means "end of record".
+                // 9999 is a sentinel value that means "last column".
                 if i == 9999 {
                     i = first_record.len();
                 }
