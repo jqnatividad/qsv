@@ -318,9 +318,13 @@ impl OneSelector {
             } else {
                 first_record.len() - 1
             }),
-            OneSelector::Index(i) => {
+            OneSelector::Index(mut i) => {
                 if first_record.is_empty() {
                     return fail!("Input is empty.");
+                }
+                // 9999 is a sentinel value that means "last column".
+                if i == 9999 {
+                    i = first_record.len();
                 }
                 if i < 1 || i > first_record.len() {
                     fail_format!(

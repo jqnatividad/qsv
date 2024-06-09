@@ -178,6 +178,14 @@ select_test!(
     ["a", "b", "d", "e"]
 );
 
+select_test!(
+    select_reverse_sentinel,
+    r#"9999-1"#,
+    "5-1",
+    ["h1", "h4", "h[]3", "h2", "h1"],
+    ["e", "d", "c", "b", "a"]
+);
+
 select_test_err!(select_err_unknown_header, "done");
 select_test_err!(select_err_oob_low, "0");
 select_test_err!(select_err_oob_high, "6");
@@ -193,3 +201,82 @@ select_test_err!(select_err_regex_nomatch, "/nomatch/");
 select_test_err!(select_err_regex_invalid, "/?/");
 select_test_err!(select_err_regex_empty, "//");
 select_test_err!(select_err_regex_triple_slash, "///");
+
+fn unsorted_data(headers: bool) -> Vec<Vec<String>> {
+    let mut rows = vec![
+        svec![
+            "value1", "value2", "value3", "value4", "value5", "value6", "value7", "value8",
+            "value9", "value10"
+        ],
+        svec!["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+        svec![
+            "value10", "value9", "value8", "value7", "value6", "value5", "value4", "value3",
+            "value2", "value1"
+        ],
+    ];
+    if headers {
+        rows.insert(
+            0,
+            svec![
+                "Günther", "Alice", "Çemil", "Đan", "Fátima", "Héctor", "İbrahim", "Bob", "Jürgen",
+                "Élise"
+            ],
+        );
+    }
+    rows
+}
+
+#[test]
+fn test_select_sort() {
+    let wrk = Workdir::new("test_select_sort");
+    wrk.create("data.csv", unsorted_data(true));
+    let mut cmd = wrk.command("select");
+    cmd.arg("1").arg("--sort").arg("data.csv");
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let expected = vec![
+        svec![
+            "Alice", "Bob", "Fátima", "Günther", "Héctor", "Jürgen", "Çemil", "Élise", "Đan",
+            "İbrahim"
+        ],
+        svec![
+            "value2", "value8", "value5", "value1", "value6", "value9", "value3", "value10",
+            "value4", "value7"
+        ],
+        svec!["2", "8", "5", "1", "6", "9", "3", "10", "4", "7"],
+        svec![
+            "value9", "value3", "value6", "value10", "value5", "value2", "value8", "value1",
+            "value7", "value4"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn test_select_random_seeded() {
+    let wrk = Workdir::new("test_select_random_seeded");
+    wrk.create("data.csv", unsorted_data(true));
+    let mut cmd = wrk.command("select");
+    cmd.arg("1")
+        .arg("--random")
+        .args(["--seed", "42"])
+        .arg("data.csv");
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let expected = vec![
+        svec![
+            "Bob", "Đan", "Élise", "Héctor", "Günther", "Jürgen", "İbrahim", "Fátima", "Çemil",
+            "Alice"
+        ],
+        svec![
+            "value8", "value4", "value10", "value6", "value1", "value9", "value7", "value5",
+            "value3", "value2"
+        ],
+        svec!["8", "4", "10", "6", "1", "9", "7", "5", "3", "2"],
+        svec![
+            "value3", "value7", "value1", "value5", "value10", "value2", "value4", "value6",
+            "value8", "value9"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
