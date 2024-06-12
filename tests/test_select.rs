@@ -180,7 +180,7 @@ select_test!(
 
 select_test!(
     select_reverse_sentinel,
-    r#"9999-1"#,
+    r#"_-1"#,
     "5-1",
     ["h1", "h4", "h[]3", "h2", "h1"],
     ["e", "d", "c", "b", "a"]
