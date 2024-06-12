@@ -21,11 +21,11 @@ selected using regular expressions.
   Select the third column named 'Foo':
   $ qsv select 'Foo[2]'
 
-  Select the first and last columns, 9999 is a special index for the last column:
-  $ qsv select 1,9999
+  Select the first and last columns, _ is a special character for the last column:
+  $ qsv select 1,_
 
   Reverse the order of columns:
-  $ qsv select 9999-1
+  $ qsv select _-1
 
   Sort the columns lexicographically. Note that you must provide a dummy selector:
   $ qsv select 1 --sort
