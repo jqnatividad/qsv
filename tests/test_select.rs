@@ -231,7 +231,7 @@ fn test_select_sort() {
     let wrk = Workdir::new("test_select_sort");
     wrk.create("data.csv", unsorted_data(true));
     let mut cmd = wrk.command("select");
-    cmd.arg("1").arg("--sort").arg("data.csv");
+    cmd.arg("1-").arg("--sort").arg("data.csv");
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
 
     let expected = vec![
@@ -253,11 +253,28 @@ fn test_select_sort() {
 }
 
 #[test]
+fn test_select_sort_subset() {
+    let wrk = Workdir::new("test_select_sort_subset");
+    wrk.create("data.csv", unsorted_data(true));
+    let mut cmd = wrk.command("select");
+    cmd.arg("4,7-9").arg("--sort").arg("data.csv");
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let expected = vec![
+        svec!["Bob", "Jürgen", "Đan", "İbrahim"],
+        svec!["value8", "value9", "value4", "value7"],
+        svec!["8", "9", "4", "7"],
+        svec!["value3", "value2", "value7", "value4"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn test_select_random_seeded() {
     let wrk = Workdir::new("test_select_random_seeded");
     wrk.create("data.csv", unsorted_data(true));
     let mut cmd = wrk.command("select");
-    cmd.arg("1")
+    cmd.arg("1-")
         .arg("--random")
         .args(["--seed", "42"])
         .arg("data.csv");
@@ -277,6 +294,26 @@ fn test_select_random_seeded() {
             "value3", "value7", "value1", "value5", "value10", "value2", "value4", "value6",
             "value8", "value9"
         ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn test_select_random_seeded_subset() {
+    let wrk = Workdir::new("test_select_random_seeded_subset");
+    wrk.create("data.csv", unsorted_data(true));
+    let mut cmd = wrk.command("select");
+    cmd.arg("4,7-9")
+        .arg("--random")
+        .args(["--seed", "42"])
+        .arg("data.csv");
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let expected = vec![
+        svec!["Jürgen", "İbrahim", "Đan", "Bob"],
+        svec!["value9", "value7", "value4", "value8"],
+        svec!["9", "7", "4", "8"],
+        svec!["value2", "value4", "value7", "value3"],
     ];
     assert_eq!(got, expected);
 }

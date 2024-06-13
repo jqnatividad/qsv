@@ -27,13 +27,19 @@ selected using regular expressions.
   Reverse the order of columns:
   $ qsv select _-1
 
-  Sort the columns lexicographically. Note that you must provide a dummy selector:
-  $ qsv select 1 --sort
+  Sort the columns lexicographically (i.e. by their byte values)
+  $ qsv select 1- --sort
+
+  Select some columns and then sort them:
+  $ qsv select 1,4,5-7 --sort
 
   Randomly shuffle the columns:
-  $ qsv select 1 --random
+  $ qsv select 1- --random
   # with a seed
-  $ qsv select 1 --random --seed 42
+  $ qsv select 1- --random --seed 42
+
+  Select some columns and then shuffle them with a seed:
+  $ qsv select 1,4,5-7 --random --seed 42
 
   Select columns using a regex using '/<regex>/':
   $ qsv select /^a/
@@ -55,13 +61,12 @@ Usage:
 
 select options:
 These options only apply to the `select` command, not the `--select` flag in other commands.
-Be sure to provide a dummy selector (e.g. '1') to avoid command-line parsing errors.
 
-    -R, --random           Randomly reorder the columns. 
+    -R, --random           Randomly shuffle the columns in the selection.
     --seed <number>        Seed for the random number generator.
 
-    -S, --sort             Sort the columns lexicographically, i.e. by their
-                           byte values.
+    -S, --sort             Sort the selected columns lexicographically,
+                           i.e. by their byte values.
 
 Common options:
     -h, --help             Display this message
@@ -95,66 +100,10 @@ struct Args {
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let mut args: Args = util::get_args(USAGE, argv)?;
+    let args: Args = util::get_args(USAGE, argv)?;
 
     if args.flag_sort && args.flag_random {
         return fail_clierror!("Cannot use both --random and --sort flags.");
-    }
-
-    if args.flag_random {
-        // get the number of columns
-        let num_cols = Config::new(&args.arg_input)
-            .delimiter(args.flag_delimiter)
-            .no_headers(true)
-            .reader()?
-            .byte_headers()?
-            .len();
-
-        // make a vector of the column indices (1-indexed).
-        let mut original_selection: Vec<usize> = (1..=num_cols).collect();
-
-        // Use seed if it is provided.
-        let mut rng = if let Some(seed) = args.flag_seed {
-            rand::rngs::StdRng::seed_from_u64(seed) // DevSkim: ignore DS148264
-        } else {
-            rand::rngs::StdRng::from_entropy()
-        };
-
-        // Shuffle the vector of column indices.
-        original_selection.shuffle(&mut rng);
-
-        // Convert the shuffled indices into a comma-separated string.
-        let randomized_selection = original_selection
-            .into_iter()
-            .map(|i| i.to_string())
-            .collect::<Vec<String>>()
-            .join(",");
-
-        // Parse the shuffled string into a SelectColumns object.
-        args.arg_selection = SelectColumns::parse(&randomized_selection)?;
-    }
-
-    if args.flag_sort {
-        // get the headers
-        let headers = Config::new(&args.arg_input)
-            .delimiter(args.flag_delimiter)
-            .reader()?
-            .byte_headers()?
-            .clone();
-
-        // sort the headers lexicographically
-        let mut sorted_headers = Vec::with_capacity(headers.len());
-        sorted_headers.extend(headers.iter().map(<[u8]>::to_vec));
-        sorted_headers.sort_unstable();
-
-        // make a comma-separated string of the sorted, quoted headers
-        let sorted_selection = sorted_headers
-            .iter()
-            .map(|h| format!("\"{}\"", String::from_utf8_lossy(h)))
-            .collect::<Vec<String>>()
-            .join(",");
-
-        args.arg_selection = SelectColumns::parse(&sorted_selection)?;
     }
 
     let rconfig = Config::new(&args.arg_input)
@@ -166,7 +115,64 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
     let headers = rdr.byte_headers()?.clone();
-    let sel = rconfig.selection(&headers)?;
+    let sel = if args.flag_random {
+        // Use seed if it is provided when initializing the random number generator.
+        let mut rng = if let Some(seed) = args.flag_seed {
+            rand::rngs::StdRng::seed_from_u64(seed) // DevSkim: ignore DS148264
+        } else {
+            rand::rngs::StdRng::from_entropy()
+        };
+
+        let initial_selection = rconfig.selection(&headers)?;
+
+        // make a vector of the column indices (1-indexed).
+        let mut shuffled_selection_vec: Vec<usize> =
+            initial_selection.iter().map(|&i| i + 1).collect();
+
+        shuffled_selection_vec.shuffle(&mut rng);
+
+        // Convert the shuffled indices into a comma-separated string.
+        let shuffled_selection_string = shuffled_selection_vec
+            .into_iter()
+            .map(|i| i.to_string())
+            .collect::<Vec<String>>()
+            .join(",");
+
+        // Parse the shuffled string into a SelectColumns object.
+        let shuffled_selection = SelectColumns::parse(&shuffled_selection_string)?;
+
+        rconfig
+            .clone()
+            .select(shuffled_selection)
+            .selection(&headers)?
+    } else if args.flag_sort {
+        // get the headers from the initial selection
+        let initial_selection = rconfig.selection(&headers)?;
+        let mut initial_headers_vec = initial_selection
+            .iter()
+            .map(|&i| &headers[i])
+            .collect::<Vec<&[u8]>>();
+
+        // sort the headers lexicographically
+        initial_headers_vec.sort_unstable();
+
+        // make a comma-separated string of the sorted, quoted headers
+        let sorted_selection_string = initial_headers_vec
+            .iter()
+            .map(|h| format!("\"{}\"", String::from_utf8_lossy(h)))
+            .collect::<Vec<String>>()
+            .join(",");
+
+        // Parse the sorted selection string into a SelectColumns object.
+        let sorted_selection = SelectColumns::parse(&sorted_selection_string)?;
+
+        rconfig
+            .clone()
+            .select(sorted_selection)
+            .selection(&headers)?
+    } else {
+        rconfig.selection(&headers)?
+    };
 
     if !rconfig.no_headers {
         wtr.write_record(sel.iter().map(|&i| &headers[i]))?;
