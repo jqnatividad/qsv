@@ -321,8 +321,9 @@ static TIMEOUT_SECS: OnceLock<u64> = OnceLock::new();
 const FETCH_REPORT_PREFIX: &str = "qsv_fetch_";
 const FETCH_REPORT_SUFFIX: &str = ".fetch-report.tsv";
 
-// prioritize compression schemes. Brotli first, then gzip, then deflate, and * last
-pub static DEFAULT_ACCEPT_ENCODING: &str = "br;q=1.0, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
+// prioritize compression schemes. Zstd, first, then Brotli, then gzip, then deflate, and * last
+pub static DEFAULT_ACCEPT_ENCODING: &str =
+    "zstd;q=1.0, br;q=0.8, gzip;q=0.6, deflate;q=0.4, *;q=0.2";
 
 // for governor/ratelimiter
 const MINIMUM_WAIT_MS: u64 = 10;
@@ -616,6 +617,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .brotli(true)
         .gzip(true)
         .deflate(true)
+        .zstd(true)
         .use_rustls_tls()
         .http2_adaptive_window(true)
         .connection_verbose(log_enabled!(Debug) || log_enabled!(Trace))

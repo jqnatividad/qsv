@@ -2176,6 +2176,7 @@ fn setup_helpers(
                     .brotli(true)
                     .gzip(true)
                     .deflate(true)
+                    .zstd(true)
                     .use_rustls_tls()
                     .http2_adaptive_window(true)
                     .connection_verbose(log_enabled!(log::Level::Trace))

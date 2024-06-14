@@ -533,6 +533,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .brotli(true)
         .gzip(true)
         .deflate(true)
+        .zstd(true)
         .use_rustls_tls()
         .http2_adaptive_window(true)
         .connection_verbose(log_enabled!(Debug) || log_enabled!(Trace))

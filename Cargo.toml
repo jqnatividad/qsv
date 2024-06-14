@@ -185,6 +185,7 @@ reqwest = { version = "0.12", features = [
     "cookies",
     "deflate",
     "gzip",
+    "zstd",
     "rustls-tls",
     "stream",
     "http2",

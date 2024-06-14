@@ -140,6 +140,7 @@ fn create_client(args: &Args) -> CliResult<Client> {
         .brotli(true)
         .gzip(true)
         .deflate(true)
+        .zstd(true)
         .use_rustls_tls()
         .http2_adaptive_window(true)
         .connection_verbose(log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace))
