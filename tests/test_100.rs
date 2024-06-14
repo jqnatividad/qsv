@@ -6,4 +6,5 @@
 
 // Warning: These tests may contain solutions to the exercises.
 
-mod exercise_0;
+mod lesson_0;
+mod lesson_1;
