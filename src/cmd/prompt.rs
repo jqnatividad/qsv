@@ -159,7 +159,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let title = args
             .flag_msg
             .unwrap_or_else(|| DEFAULT_OUTPUT_TITLE.to_owned());
-        let mut fd = FileDialog::new()
+        let fd = FileDialog::new()
             .set_directory(args.flag_workdir)
             .set_title(title)
             .set_file_name(args.flag_save_fname);
