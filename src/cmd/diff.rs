@@ -187,7 +187,7 @@ struct CsvDiffWriter<W: Write> {
 }
 
 impl<W: Write> CsvDiffWriter<W> {
-    fn new(csv_writer: csv::Writer<W>, no_headers: bool) -> Self {
+    const fn new(csv_writer: csv::Writer<W>, no_headers: bool) -> Self {
         Self {
             csv_writer,
             no_headers,
