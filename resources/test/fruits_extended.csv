@@ -1,0 +1,10 @@
+fruit,price,size,availability
+apple,2.50,medium,available
+banana,3.00,medium,available
+strawberry,1.50,small,available
+orange,2.00,medium,out of stock
+pineapple,3.50,large,available
+grape,4.00,small,out of stock
+mango,1.80,medium,available
+watermelon,6.00,large,available
+pear,2.20,medium,out of stock

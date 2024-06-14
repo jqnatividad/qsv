@@ -1,5 +1,5 @@
 // Lesson 0: Exploring qsv help messages and syntax
-// https://100.dathere.com/lessons/0/notes.html
+// https://100.dathere.com/lessons/0
 
 use std::process;
 
@@ -23,7 +23,7 @@ fn setup(name: &str, command_str: &str, args: Vec<&str>) -> (Workdir, process::C
     (wrk, cmd)
 }
 
-// https://100.dathere.com/lessons/0/notes.html#displaying-headers-of-a-csv
+// https://100.dathere.com/lessons/0/#displaying-headers-of-a-csv
 #[test]
 fn fruits_headers() {
     let name = "fruits_headers";
@@ -37,7 +37,7 @@ fn fruits_headers() {
     assert_eq!(got, expected);
 }
 
-// https://100.dathere.com/lessons/0/notes.html#exercise-0-total-rows
+// https://100.dathere.com/lessons/0/#exercise-0-total-rows
 #[test]
 fn fruits_count_total() {
     let name = "fruits_count";
