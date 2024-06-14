@@ -39,6 +39,7 @@ strawberry,1.50"#;
 
 // https://100.dathere.com/lessons/1/#viewing-raw-file-content-in-the-terminal
 #[test]
+#[cfg(not(feature = "datapusher_plus"))]
 fn fruits_raw_fmt() {
     let wrk = Workdir::new("fruits_raw_fmt");
     let test_file = wrk.load_test_file("fruits.csv");
@@ -70,8 +71,8 @@ strawberry,1.50"#;
 }
 
 // https://100.dathere.com/lessons/1/#viewing-raw-file-content-in-the-terminal
-#[cfg(feature = "polars")]
 #[test]
+#[cfg(feature = "polars")]
 fn fruits_raw_sqlp() {
     let wrk = Workdir::new("fruits_raw_sqlp");
     let test_file = wrk.load_test_file("fruits.csv");
@@ -94,6 +95,7 @@ strawberry,1.50"#;
 
 // https://100.dathere.com/lessons/1/#increasing-readability-with-qsv-table
 #[test]
+#[cfg(not(feature = "datapusher_plus"))]
 fn fruits_table() {
     let wrk = Workdir::new("fruits_table");
     let test_file = wrk.load_test_file("fruits.csv");
@@ -110,6 +112,7 @@ strawberry  1.50"#;
 
 // https://100.dathere.com/lessons/1/#exercise-1-viewing-file-content-with-tables
 #[test]
+#[cfg(not(feature = "datapusher_plus"))]
 fn fruits_table_align_right() {
     let wrk = Workdir::new("fruits_table_align_right");
     let test_file = wrk.load_test_file("fruits.csv");
@@ -126,6 +129,7 @@ strawberry  1.50"#;
 
 // https://100.dathere.com/lessons/1/#exercise-1-viewing-file-content-with-tables
 #[test]
+#[cfg(not(feature = "datapusher_plus"))]
 fn fruits_extended_table() {
     let wrk = Workdir::new("fruits_extended_table");
     let test_file = wrk.load_test_file("fruits_extended.csv");
@@ -148,6 +152,7 @@ pear        2.20   medium  out of stock"#;
 
 // https://100.dathere.com/lessons/1/#exercise-1-viewing-file-content-with-tables
 #[test]
+#[cfg(not(feature = "datapusher_plus"))]
 fn fruits_extended_table_width() {
     let wrk = Workdir::new("fruits_extended_table_width");
     let test_file = wrk.load_test_file("fruits_extended.csv");
@@ -170,6 +175,7 @@ pear                  2.20                  medium                out of stock"#
 
 // https://100.dathere.com/lessons/1/#exercise-1-viewing-file-content-with-tables
 #[test]
+#[cfg(not(feature = "datapusher_plus"))]
 fn fruits_extended_table_pad() {
     let wrk = Workdir::new("fruits_extended_table_pad");
     let test_file = wrk.load_test_file("fruits_extended.csv");
@@ -192,6 +198,7 @@ pear                          2.20                     medium                   
 
 // https://100.dathere.com/lessons/1/#exercise-1-viewing-file-content-with-tables
 #[test]
+#[cfg(not(feature = "datapusher_plus"))]
 fn fruits_extended_table_condense() {
     let wrk = Workdir::new("fruits_extended_table_condense");
     let test_file = wrk.load_test_file("fruits_extended.csv");
