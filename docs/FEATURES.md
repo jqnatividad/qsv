@@ -9,7 +9,7 @@
 * `foreach` - enable `foreach` command (not valid for Windows).
 * `geocode` - enable `geocode` command.
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua.
-* `polars` - enables all [Polars](https://pola.rs)-powered commands (currently, `joinp` and `sqlp`). Note that Polars is a very powerful library, but it has a lot of dependencies that drastically increases both compile time and binary size.
+* `polars` - enables all [Polars](https://pola.rs)-powered commands (currently, `joinp`, `jsonp` and `sqlp`. Also enables polars mode in `count`). Note that Polars is a very powerful library, but it has a lot of dependencies that drastically increases both compile time and binary size.
 * `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.7 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're NOT using the `py` command. Check [Python](#python) section for more info.
 * `to` - enables the `to` command except the parquet option.
 * `to_parquet` - enables the `parquet` option of the `to` command. This is a separate feature as it brings in the `duckdb` dependency, which markedly increases binary size and compile time.
