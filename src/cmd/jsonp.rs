@@ -70,8 +70,6 @@ struct Args {
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
-
     fn df_from_stdin() -> PolarsResult<DataFrame> {
         // Create a buffer in memory for stdin
         let mut buffer: Vec<u8> = Vec::new();
@@ -84,17 +82,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         JsonReader::new(std::fs::File::open(path)?).finish()
     }
 
-    let df = match args.arg_input.clone() {
-        Some(path) => {
-            if path == "-" {
-                df_from_stdin()?
-            } else {
-                df_from_path(path)?
-            }
-        },
-        None => df_from_stdin()?,
-    };
-
     fn df_to_csv<W: Write>(mut writer: W, mut df: DataFrame, args: &Args) -> PolarsResult<()> {
         CsvWriter::new(&mut writer)
             .with_datetime_format(args.flag_datetime_format.clone())
@@ -106,6 +93,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .finish(&mut df)?;
         Ok(())
     }
+
+    // main
+
+    let args: Args = util::get_args(USAGE, argv)?;
+
+    let df = match args.arg_input.clone() {
+        Some(path) => {
+            if path == "-" {
+                df_from_stdin()?
+            } else {
+                df_from_path(path)?
+            }
+        },
+        None => df_from_stdin()?,
+    };
 
     if let Some(output_path) = args.flag_output.clone() {
         let mut output = std::fs::File::create(output_path)?;
