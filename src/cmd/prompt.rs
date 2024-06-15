@@ -159,15 +159,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let title = args
             .flag_msg
             .unwrap_or_else(|| DEFAULT_OUTPUT_TITLE.to_owned());
-        let mut fd = FileDialog::new()
+
+        #[cfg(not(target_os = "macos"))]
+        let fd = FileDialog::new()
             .set_directory(args.flag_workdir)
             .set_title(title)
             .set_file_name(args.flag_save_fname);
 
         #[cfg(target_os = "macos")]
-        {
-            fd = fd.set_can_create_directories(true);
-        }
+        let fd = FileDialog::new()
+            .set_directory(args.flag_workdir)
+            .set_title(title)
+            .set_file_name(args.flag_save_fname)
+            .set_can_create_directories(true);
 
         // no delay here, we want the save dialog to appear immediately
         // the delay is only for input dialogs, so they pop over in reverse order
