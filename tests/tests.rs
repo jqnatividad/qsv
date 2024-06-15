@@ -79,7 +79,7 @@ mod test_join;
 mod test_joinp;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_jsonl;
-#[cfg(feature = "polars")]
+#[cfg(all(feature = "polars", not(feature = "datapusher_plus")))]
 mod test_jsonp;
 #[cfg(feature = "luau")]
 mod test_luau;

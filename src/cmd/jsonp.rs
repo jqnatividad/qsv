@@ -77,11 +77,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut buffer: Vec<u8> = Vec::new();
         let stdin = std::io::stdin();
         stdin.lock().read_to_end(&mut buffer)?;
-        Ok(JsonReader::new(Box::new(std::io::Cursor::new(buffer))).finish()?)
+        JsonReader::new(Box::new(std::io::Cursor::new(buffer))).finish()
     }
 
     fn df_from_path(path: String) -> PolarsResult<DataFrame> {
-        Ok(JsonReader::new(std::fs::File::open(path)?).finish()?)
+        JsonReader::new(std::fs::File::open(path)?).finish()
     }
 
     let df = match args.arg_input.clone() {
@@ -100,7 +100,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .with_datetime_format(args.flag_datetime_format.clone())
             .with_date_format(args.flag_date_format.clone())
             .with_time_format(args.flag_time_format.clone())
-            .with_float_precision(args.flag_float_precision.clone())
+            .with_float_precision(args.flag_float_precision)
             .with_null_value(args.flag_wnull_value.clone().unwrap_or("".to_string()))
             .include_bom(util::get_envvar_flag("QSV_OUTPUT_BOM"))
             .finish(&mut df)?;
