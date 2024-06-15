@@ -52,6 +52,7 @@ pub mod jsonp;
 pub mod luau;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod partition;
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod prompt;
 pub mod pseudo;
 #[cfg(all(feature = "python", feature = "feature_capable"))]
