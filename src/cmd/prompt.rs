@@ -1,15 +1,21 @@
 static USAGE: &str = r#"
 Open a file dialog to pick a file as input or save to an output file.
 
-For example to pick a single file as input to qsv stats using a file dialog, we can
+Examples:
+Pick a single file as input to qsv stats using an INPUT file dialog,
 pipe into qsv stats using qsv prompt:
 
-qsv prompt | qsv stats | qsv table
+  qsv prompt | qsv stats | qsv table
 
-If you want to save the output of a command to a file using a save file dialog, you
-may pipe into qsv prompt but make sure you include the --fd-output (or -f) flag:
+If you want to save the output of a command to a file using a save file OUTPUT dialog,
+pipe into qsv prompt using the --fd-output flag:
 
-qsv prompt -m 'Pick a CSV file to describe' | qsv stats | qsv prompt --fd-output
+  qsv prompt -m 'Pick a CSV file to summarize' | qsv stats | qsv prompt --fd-output
+
+Prompt for a spreadsheet, and export to CSV using a save file dialog:
+
+  qsv prompt -m 'Select a spreadsheet to convert to CSV' -F xlsx,xls,ods | \
+    qsv excel - | qsv prompt -m 'Save exported CSV to...' --fd-output
 
 Usage:
     qsv prompt [options]
@@ -29,8 +35,9 @@ prompt options:
     --save-fname <file>    The filename to save the output as when using --fd-output.
                            [default: output.csv]
     --base-delay-ms <ms>   The base delay in milliseconds to use when opening INPUT dialog.
-                           This is to ensure that the INPUT dialog is shown before the OUTPUT dialog.
-                           To disable delay, set to 0.
+                           This is to ensure that the INPUT dialog is shown before/over the
+                           OUTPUT dialog when using the prompt command is used in both INPUT
+                           and OUTPUT modes in a single pipeline.
                            [default: 200]
 
 Common options:
