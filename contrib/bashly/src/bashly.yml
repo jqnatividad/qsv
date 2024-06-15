@@ -1,6 +1,6 @@
 name: qsv
 # name: qsv.exe # Windows
-version: 0.128.0
+version: 0.129.0
 
 flags:
     - long: --list
@@ -243,6 +243,8 @@ commands:
             arg: value
           - long: --json
           - long: --jsonl
+          - long: --prompt
+            arg: prompt
           - long: --prompt-file
             arg: file
             completions:
@@ -809,6 +811,22 @@ commands:
           - *output
           - *delimiter
 
+    - name: jsonp
+      completions:
+          - <file>
+      flags:
+          - long: --datetime-format
+            arg: <fmt>
+          - long: --date-format
+            arg: <fmt>
+          - long: --time-format
+            arg: <fmt>
+          - long: --float-precision
+            arg: <arg>
+          - long: --wnull-value
+            arg: <arg>
+          - *output
+
     - name: luau
       commands:
           - name: map
@@ -853,6 +871,22 @@ commands:
           - long: --drop
           - *no-headers
           - *delimiter
+
+    - name: prompt
+      flags:
+          - long: --msg
+            arg: arg
+          - long: --filters
+            arg: arg
+          - long: --workdir
+            arg: dir
+          - long: --fd-output
+          - long: --save-fname
+            arg: file
+          - long: --base-delay-ms
+            arg: ms
+          - *output
+          - *quiet
 
     - name: pseudo
       completions:
@@ -1030,6 +1064,10 @@ commands:
       completions:
           - <file>
       flags:
+          - long: --random
+          - long: --seed
+            arg: number
+          - long: --sort
           - *output
           - *no-headers
           - *delimiter
