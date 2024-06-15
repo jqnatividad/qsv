@@ -88,7 +88,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .with_date_format(args.flag_date_format.clone())
             .with_time_format(args.flag_time_format.clone())
             .with_float_precision(args.flag_float_precision)
-            .with_null_value(args.flag_wnull_value.clone().unwrap_or("".to_string()))
+            .with_null_value(args.flag_wnull_value.clone().unwrap_or_default())
             .include_bom(util::get_envvar_flag("QSV_OUTPUT_BOM"))
             .finish(&mut df)?;
         Ok(())
