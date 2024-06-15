@@ -51,6 +51,10 @@ Usage:
     qsv excel [options] [<input>]
     qsv excel --help
 
+Excel argument:
+    <input>                   The spreadsheet file to read. Use "-" to read from stdin.
+                              Supported formats: xls, xlsx, xlsm, xlsb, ods.
+
 Excel options:
     -s, --sheet <name/index>   Name (case-insensitive) or zero-based index of sheet to export.
                                Negative indices start from the end (-1 = last sheet). 
@@ -114,9 +118,10 @@ Common options:
     -Q, --quiet                Do not display export summary message.
 "#;
 
-use std::{cmp, fmt::Write, path::PathBuf};
+use std::{cmp, fmt::Write, io::Read, path::PathBuf};
 
 use calamine::{open_workbook, Data, Error, Range, Reader, SheetType, Sheets};
+use file_format::FileFormat;
 use indicatif::HumanCount;
 use log::info;
 use rayon::prelude::{ParallelIterator, ParallelSlice};
@@ -262,7 +267,29 @@ impl RequestedRange {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let path = &args.arg_input;
+
+    // accept spreadsheets from stdin
+    let tmpdir = tempfile::tempdir()?;
+    let path_string = if args.arg_input == "-" {
+        let mut buffer = Vec::new();
+        std::io::stdin().read_to_end(&mut buffer)?;
+        let fmt = FileFormat::from_bytes(&buffer);
+        let spreadsheet_kind = match fmt {
+            FileFormat::OfficeOpenXmlSpreadsheet => "xlsx",
+            FileFormat::MicrosoftExcelSpreadsheet => "xls",
+            FileFormat::OpendocumentSpreadsheet => "ods",
+            _ => {
+                return fail_clierror!("Unsupported file format detected on stdin: {fmt:?}.");
+            },
+        };
+
+        let tmpfile = tmpdir.path().join(format!("stdin.{spreadsheet_kind}"));
+        std::fs::write(&tmpfile, &buffer)?;
+        tmpfile.to_string_lossy().to_string()
+    } else {
+        args.arg_input
+    };
+    let path = &path_string;
 
     let sce = PathBuf::from(path);
     let filename = sce
