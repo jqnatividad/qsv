@@ -2,7 +2,14 @@
 
 The `contrib/fish/qsv.fish` file is available for fish shell completions.
 
-> Currently the completions are incomplete and can be improved so feel free to contribute.
+## Contributing
+
+Currently the completions are incomplete, may differ per qsv version (e.g., may be outdated), and can be improved so feel free to contribute.
+
+Here are some external docs:
+
+-   https://fishshell.com/docs/current/completions.html#writing-your-own-completions
+-   https://fishshell.com/docs/current/cmds/complete.html#complete-edit-command-specific-tab-completions
 
 ## Usage
 
