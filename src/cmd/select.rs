@@ -60,7 +60,7 @@ Usage:
     qsv select --help
 
 select options:
-These options only apply to the `select` command, not the `--select` flag in other commands.
+These options only apply to the `select` command, not the `--select` option in other commands.
 
     -R, --random           Randomly shuffle the columns in the selection.
     --seed <number>        Seed for the random number generator.
@@ -103,7 +103,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
     if args.flag_sort && args.flag_random {
-        return fail_clierror!("Cannot use both --random and --sort flags.");
+        return fail_clierror!("Cannot use both --random and --sort options.");
     }
 
     let rconfig = Config::new(&args.arg_input)
@@ -118,6 +118,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sel = if args.flag_random {
         // Use seed if it is provided when initializing the random number generator.
         let mut rng = if let Some(seed) = args.flag_seed {
+            // we add the DevSkim ignore comment here because we don't need to worry about
+            // cryptographic security in this context.
             rand::rngs::StdRng::seed_from_u64(seed) // DevSkim: ignore DS148264
         } else {
             rand::rngs::StdRng::from_entropy()
