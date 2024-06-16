@@ -49,36 +49,32 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
-    #[allow(clippy::single_match_else)]
-    match rconfig.indexed()? {
-        Some(mut idx_file) => {
-            // we have an index, no need to check avail mem,
-            // we're reading the file in reverse streaming
-            rconfig.write_headers(&mut rdr, &mut wtr)?;
-            let mut record = csv::ByteRecord::new();
-            let mut pos = idx_file.count().saturating_sub(1);
-            idx_file.seek(pos)?;
-            while idx_file.read_byte_record(&mut record)? {
-                wtr.write_byte_record(&record)?;
-                pos -= 1;
-                idx_file.seek(pos)?; // seek to next pos
-            }
-        },
-        None => {
-            // we don't have an index, we need to read the entire file into memory
-            // we're loading the entire file into memory, we need to check avail mem
-            if let Some(ref path) = rconfig.path {
-                util::mem_file_check(path, false, args.flag_memcheck)?;
-            }
+    if let Some(mut idx_file) = rconfig.indexed()? {
+        // we have an index, no need to check avail mem,
+        // we're reading the file in reverse streaming
+        rconfig.write_headers(&mut rdr, &mut wtr)?;
+        let mut record = csv::ByteRecord::new();
+        let mut pos = idx_file.count().saturating_sub(1);
+        idx_file.seek(pos)?;
+        while idx_file.read_byte_record(&mut record)? {
+            wtr.write_byte_record(&record)?;
+            pos -= 1;
+            idx_file.seek(pos)?; // seek to next pos
+        }
+    } else {
+        // we don't have an index, we need to read the entire file into memory
+        // we're loading the entire file into memory, we need to check avail mem
+        if let Some(ref path) = rconfig.path {
+            util::mem_file_check(path, false, args.flag_memcheck)?;
+        }
 
-            let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
-            all.reverse();
+        let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;
+        all.reverse();
 
-            rconfig.write_headers(&mut rdr, &mut wtr)?;
-            for r in all {
-                wtr.write_byte_record(&r)?;
-            }
-        },
+        rconfig.write_headers(&mut rdr, &mut wtr)?;
+        for r in all {
+            wtr.write_byte_record(&r)?;
+        }
     }
 
     Ok(wtr.flush()?)
