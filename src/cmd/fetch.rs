@@ -330,7 +330,7 @@ const MINIMUM_WAIT_MS: u64 = 10;
 const MIN_WAIT: time::Duration = time::Duration::from_millis(MINIMUM_WAIT_MS);
 
 // for --report option
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum ReportKind {
     Detailed,
     Short,
@@ -379,7 +379,7 @@ impl DiskCacheConfig {
     }
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub enum CacheType {
     #[default]
     None,

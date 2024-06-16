@@ -10,7 +10,6 @@
         clippy::type_complexity,
         clippy::zero_prefixed_literal,
         // correctly used
-        clippy::derive_partial_eq_without_eq,
         clippy::enum_glob_use,
         let_underscore_drop,
         clippy::result_unit_err,
