@@ -45,6 +45,10 @@ Export metadata for all sheets in JSON format:
     # pretty-printed JSON
     qsv excel --metadata J input.xlsx
 
+Prompt for spreadsheets to export and then prompt where to save the CSV:
+    qsv prompt -d ~/Documents -m 'Select a spreadsheet to export to CSV' -F xlsx,xls,ods | \
+     qsv excel - | qsv prompt -m 'Save exported CSV to...' --fd-output
+
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_excel.rs.
 
 Usage:
