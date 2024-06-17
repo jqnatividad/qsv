@@ -1560,11 +1560,11 @@ enum FieldType {
 }
 
 impl FieldType {
-    // infer data type from a given sample & current type inference
-    // infer_dates signals if date inference should be attempted
-    // returns the inferred type and if infer_dates is true,
-    // the date in ms since the epoch if the type is a date or datetime
-    // otherwise, None
+    /// infer data type from a given sample & current type inference
+    /// infer_dates signals if date inference should be attempted
+    /// returns the inferred type and if infer_dates is true,
+    /// the date in ms since the epoch if the type is a date or datetime
+    /// otherwise, None
     #[inline]
     pub fn from_sample(
         infer_dates: bool,
@@ -1574,72 +1574,52 @@ impl FieldType {
     ) -> (FieldType, Option<i64>) {
         // faster than sample.len() == 0 or sample.is_empty() per microbenchmarks
         if b"" == sample {
-            return (TNull, None);
+            return (FieldType::TNull, None);
         }
+
         // no need to do type checking if current_type is already a String
         if current_type == FieldType::TString {
             return (FieldType::TString, None);
         }
 
-        let utf8_string = if current_type == FieldType::TInteger
-            || current_type == FieldType::TFloat
-            || current_type == FieldType::TNull
-        {
-            if let Ok(int_val) = atoi_simd::parse::<i64>(sample) {
-                // safety: we know sample is not empty
-                if int_val != 0 && unsafe { sample.get_unchecked(0) == &b'0' } {
-                    // leading zero, its a string (e.g. zip codes)
-                    return (TString, None);
+        if let Ok(s) = simdutf8::basic::from_utf8(sample) {
+            // Check for integer, with leading zero check for strings like zip codes
+            if let Ok(_int_val) = atoi_simd::parse::<i64>(s.as_bytes()) {
+                if !s.starts_with('0') || s == "0" {
+                    return (FieldType::TInteger, None);
                 }
-                return (TInteger, None);
-            }
-
-            let Ok(string) = from_utf8(sample) else {
-                // if the string is not valid utf8, we assume it is a binary string
-                // and return a string type
+                // If starts with '0' but not "0", it's a string
                 return (FieldType::TString, None);
-            };
-
-            if string.parse::<f64>().is_ok() {
-                return (TFloat, None);
             }
 
-            Some(string)
+            // Check for float
+            if s.parse::<f64>().is_ok() {
+                return (FieldType::TFloat, None);
+            }
+
+            // Check for date/datetime if infer_dates is true
+            if infer_dates {
+                if let Ok(parsed_date) = parse_with_preference(s, prefer_dmy) {
+                    let ts_val = parsed_date.timestamp_millis();
+                    // check if the tstamp (Unix Epoch format) modulo by 86400000 (ms in a day)
+                    // if the remainder is 0, we says its Date type candidate, otherwise, its
+                    // DateTime. this is a performance optimization to avoid
+                    // parsing the date to rfc3339 and then checking if the time
+                    // component is T00:00:00, as was done previously
+                    // see https://stackoverflow.com/questions/40948290/is-it-safe-to-use-modulo-operator-with-unix-epoch-timestamp
+                    if ts_val % MS_IN_DAY_INT == 0 {
+                        return (FieldType::TDate, Some(ts_val));
+                    }
+                    return (FieldType::TDateTime, Some(ts_val));
+                }
+            }
         } else {
-            None
+            // If not valid UTF-8, it's a binary string, return as TString
+            return (FieldType::TString, None);
         };
 
-        if infer_dates
-            && (current_type == FieldType::TDate
-                || current_type == FieldType::TDateTime
-                || current_type == FieldType::TNull)
-        {
-            // if we already have a utf8 string, use it, otherwise, convert sample to utf8
-            // if the sample isn't valid utf8, we assume a binary string & return a string type
-            let date_string = if let Some(s) = utf8_string {
-                s
-            } else if let Ok(s) = from_utf8(sample) {
-                s
-            } else {
-                // the string is not valid utf8, we assume it is a binary string
-                // and return a string type
-                return (FieldType::TString, None);
-            };
-
-            if let Ok(parsed_date) = parse_with_preference(date_string, prefer_dmy) {
-                // check if the tstamp (Unix Epoch format) modulo by 86400000 (ms in a day)
-                // if the remainder is 0, we says its Date type candidate, otherwise, its DateTime.
-                // this is a performance optimization to avoid parsing the date to rfc3339
-                // and then checking if the time component is T00:00:00, as was done previously
-                // see https://stackoverflow.com/questions/40948290/is-it-safe-to-use-modulo-operator-with-unix-epoch-timestamp
-                let ts_val = parsed_date.timestamp_millis();
-                if ts_val % MS_IN_DAY_INT == 0 {
-                    return (TDate, Some(ts_val));
-                }
-                return (TDateTime, Some(ts_val));
-            }
-        }
-        (TString, None)
+        // Default to TString if none of the above conditions are met
+        (FieldType::TString, None)
     }
 }
 
