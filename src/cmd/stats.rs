@@ -77,8 +77,8 @@ Compute all statistics for the "nyc311.csv" file:
 Compute all statistics for the "nyc311.csv", inferring dates using default date column name patterns:
     $ qsv stats -E --infer-dates nyc311.csv
 
-Compute all statistics for the "nyc311.csv", inferring dates only for columns ending with "_date":
-    $ qsv stats -E --infer-dates --dates-whitelist _date nyc311.csv
+Compute all statistics for the "nyc311.csv", inferring dates only for columns with "_date" & "_dte":
+    $ qsv stats -E --infer-dates --dates-whitelist _date,_dte nyc311.csv
 
 In addition, also infer boolean data types for the "nyc311.csv" file:
     $ qsv stats -E --infer-dates --dates-whitelist _date --infer-boolean nyc311.csv
