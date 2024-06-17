@@ -109,6 +109,11 @@ Prompt for CSV/TSV/TAB file to compute stats for:
 Prompt for a file to save the stats to in the ~/Documents directory:
     $ qsv stats -E nyc311.csv | qsv prompt -d ~/Documents --fd-output
 
+Prompt for both INPUT and OUTPUT files in the ~/Documents dir with custom prompts messages:
+    $ qsv prompt -m 'Select a CSV file to summarize' -d ~/Documents -F csv | \
+      qsv stats -E --infer-dates | \
+      qsv prompt -m 'Save summary to...' -d ~/Documents --fd-output --save-fname summarystats.csv
+
 For more examples, see https://github.com/jqnatividad/qsv/tree/master/resources/test
 
 Usage:
