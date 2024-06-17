@@ -1584,8 +1584,8 @@ impl FieldType {
 
         if let Ok(s) = simdutf8::basic::from_utf8(sample) {
             // Check for integer, with leading zero check for strings like zip codes
-            if let Ok(_int_val) = atoi_simd::parse::<i64>(s.as_bytes()) {
-                if !s.starts_with('0') || s == "0" {
+            if atoi_simd::parse::<i64>(s.as_bytes()).is_ok() {
+                if s == "0" || !s.starts_with('0') {
                     return (FieldType::TInteger, None);
                 }
                 // If starts with '0' but not "0", it's a string
