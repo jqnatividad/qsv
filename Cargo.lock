@@ -5834,18 +5834,18 @@ checksum = "f27f6278552951f1f2b8cf9da965d10969b2efdea95a6ec47987ab46edfe263a"
 
 [[package]]
 name = "simple-expand-tilde"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dbb9d417b7990f85426e5de869877a3df07c66d8eb21d9f7ac9dfafa4a9b974a"
+checksum = "b995be66fbc7c98fc3a93620c9a39fdddbd333573c1fd7402a4237adc3781187"
 dependencies = [
  "simple-home-dir",
 ]
 
 [[package]]
 name = "simple-home-dir"
-version = "0.3.4"
+version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c433538e900807402974e89beb88a98bda36e6f70f09a7225cdf11d013b8efe8"
+checksum = "c221cbc8c1ff6bdf949b12cc011456c510ec6840654b444c7374c78e928ce344"
 dependencies = [
  "windows-sys 0.52.0",
 ]
