@@ -61,11 +61,55 @@ hasn't changed, the stats will be loaded from the cache instead of recomputing i
 
 These cached stats are also used by other qsv commands (currently `schema` & `tojsonl`) to
 load the stats into memory faster. If the cached stats are not current (i.e., the input file
-is newer than the cached stats), the cached stats will be ignored and recomputed.
-
-For examples, see the "boston311" test files in 
-https://github.com/jqnatividad/qsv/tree/master/resources/test and
+is newer than the cached stats), the cached stats will be ignored and recomputed. For example,
+see the "boston311" test files in 
 https://github.com/jqnatividad/qsv/blob/4529d51273218347fef6aca15ac24e22b85b2ec4/tests/test_stats.rs#L608.
+
+Examples:
+
+Compute "streaming" statistics for the "nyc311.csv" file:
+   $ qsv stats nyc311.csv
+
+Compute all statistics for the "nyc311.csv" file:
+    $ qsv stats --everything nyc311.csv
+    $ qsv stats -E nyc311.csv
+
+Compute all statistics for the "nyc311.csv", inferring dates using default date column name patterns:
+    $ qsv stats -E --infer-dates nyc311.csv
+
+Compute all statistics for the "nyc311.csv", inferring dates only for columns ending with "_date":
+    $ qsv stats -E --infer-dates --dates-whitelist _date nyc311.csv
+
+In addition, also infer boolean data types for the "nyc311.csv" file:
+    $ qsv stats -E --infer-dates --dates-whitelist _date --infer-boolean nyc311.csv
+
+In addition to basis "streaming" stats, also compute the cardinality for the "nyc311.csv" file:
+    $ qsv stats --cardinality nyc311.csv
+
+Prefer DMY format when inferring dates for the "nyc311.csv" file:
+    $ qsv stats -E --infer-dates --prefer-dmy nyc311.csv    
+
+Infer data types only for the "nyc311.csv" file:
+    $ qsv stats --typesonly nyc311.csv
+
+Infer data types only, including boolean and date types for the "nyc311.csv" file:
+    $ qsv stats --typesonly --infer-boolean --infer-dates nyc311.csv
+
+Automatically create an index for the "nyc311.csv" file if it's larger than 5MB
+and there is no existing index file:
+    $ qsv stats -E --cache-threshold -5000000 nyc311.csv
+
+Auto-create an index for the "nyc311.csv" file if it's larger than 5MB and delete the index
+and the stats cache file after the stats run:
+    $ qsv stats -E --cache-threshold -5000005 nyc311.csv
+
+Prompt for CSV/TSV/TAB file to compute stats for:
+    $ qsv prompt -F tsv,csv,tab | qsv stats -E | qsv table
+
+Prompt for a file to save the stats to in the ~/Documents directory:
+    $ qsv stats -E nyc311.csv | qsv prompt -d ~/Documents --fd-output
+
+For more examples, see https://github.com/jqnatividad/qsv/tree/master/resources/test
 
 Usage:
     qsv stats [options] [<input>]
