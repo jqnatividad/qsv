@@ -122,19 +122,24 @@ use indicatif::HumanCount;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use itertools::Itertools;
-use jsonschema::{output::BasicOutput, paths::PathChunk, JSONSchema};
+use jsonschema::{
+    output::BasicOutput,
+    paths::{JSONPointer, JsonPointerNode, PathChunk},
+    ErrorIterator, JSONSchema, Keyword, ValidationError,
+};
 use log::{debug, info, log_enabled};
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::IntoParallelRefIterator,
 };
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
 use simdutf8::basic::from_utf8;
 
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
-    util, CliResult,
+    regex_oncelock, util, CliResult,
 };
 
 // to save on repeated init/allocs
@@ -179,6 +184,62 @@ struct RFC4180Struct {
     num_records:    u64,
     num_fields:     u64,
     fields:         Vec<String>,
+}
+
+struct IsAsciiValidator;
+impl Keyword for IsAsciiValidator {
+    fn validate<'instance>(
+        &self,
+        instance: &'instance Value,
+        instance_path: &JsonPointerNode,
+    ) -> ErrorIterator<'instance> {
+        let mut errors = vec![];
+        for key in instance.as_object().unwrap().keys() {
+            if !key.is_ascii() {
+                let error = ValidationError::custom(
+                    JSONPointer::default(),
+                    instance_path.into(),
+                    instance,
+                    "Key is not ASCII",
+                );
+                errors.push(error);
+            }
+        }
+        Box::new(errors.into_iter())
+    }
+
+    fn is_valid(&self, instance: &Value) -> bool {
+        for (key, _value) in instance.as_object().unwrap() {
+            if !key.is_ascii() {
+                return false;
+            }
+        }
+        true
+    }
+}
+
+fn custom_object_type_factory<'a>(
+    _: &'a Map<String, Value>,
+    schema: &'a Value,
+    path: JSONPointer,
+) -> Result<Box<dyn Keyword>, ValidationError<'a>> {
+    const EXPECTED: &str = "ascii-keys";
+    if schema.as_str().map_or(true, |key| key != EXPECTED) {
+        Err(ValidationError::custom(
+            JSONPointer::default(),
+            path,
+            schema,
+            "Expected 'ascii-keys'",
+        ))
+    } else {
+        Ok(Box::new(IsAsciiValidator))
+    }
+}
+
+/// Check that a string has some number of digits followed by a dot followed by exactly 2 digits.
+fn currency_format_checker(s: &str) -> bool {
+    let currency_re: &'static Regex = regex_oncelock!("^(0|([1-9]+[0-9]*))(\\.[0-9]{2})$");
+    currency_re.is_match(s)
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -432,7 +493,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 match serde_json::from_str(&s) {
                     Ok(json) => {
                         // compile JSON Schema
-                        match JSONSchema::options().compile(&json) {
+                        match JSONSchema::options()
+                            .with_format("currency", currency_format_checker)
+                            .with_keyword("ascii-keys", custom_object_type_factory)
+                            .compile(&json)
+                        {
                             Ok(schema) => (json, schema),
                             Err(e) => {
                                 return fail_clierror!("Cannot compile schema json. error: {e}");
@@ -1097,6 +1162,84 @@ mod tests_for_schema_validation {
             result.unwrap()
         );
     }
+}
+
+#[test]
+fn test_validate_currency_validator() {
+    fn schema_currency_json() -> Value {
+        serde_json::json!({
+            "$id": "https://example.com/person.schema.json",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "title": "Person",
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "The person's title.",
+                    "minLength": 2
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The person's name.",
+                    "minLength": 2
+                },
+                "fee": {
+                    "description": "The required fee to see the person.",
+                    "type": "string",
+                    "format": "currency",
+                    "minimum": 18
+                }
+            }
+        })
+    }
+
+    let _ = NULL_TYPE.get_or_init(|| Value::String("null".to_string()));
+    let csv = "title,name,fee
+    Professor,Xaviers,60.02123";
+
+    let mut rdr = csv::Reader::from_reader(csv.as_bytes());
+    let headers = rdr.byte_headers().unwrap().clone();
+    let header_types = get_json_types(&headers, &schema_currency_json()).unwrap();
+
+    let record = &rdr.byte_records().next().unwrap().unwrap();
+
+    let instance = to_json_instance(&header_types, headers.len(), record).unwrap();
+
+    let compiled_schema = JSONSchema::options()
+        .with_format("currency", currency_format_checker)
+        .compile(&schema_currency_json())
+        .expect("Invalid schema");
+
+    let result = validate_json_instance(&instance, &compiled_schema);
+
+    assert_eq!(
+        result,
+        Some(vec![(
+            "fee".to_owned(),
+            "\"60.02123\" is not a \"currency\"".to_owned()
+        )])
+    );
+
+    let csv = "title,name,fee
+    Professor,Xaviers,60.02";
+
+    let mut rdr = csv::Reader::from_reader(csv.as_bytes());
+    let headers = rdr.byte_headers().unwrap().clone();
+    let header_types = get_json_types(&headers, &schema_currency_json()).unwrap();
+
+    let record = &rdr.byte_records().next().unwrap().unwrap();
+
+    let instance = to_json_instance(&header_types, headers.len(), record).unwrap();
+
+    let compiled_schema = JSONSchema::options()
+        .with_format("currency", currency_format_checker)
+        .compile(&schema_currency_json())
+        .expect("Invalid schema");
+
+    let result = validate_json_instance(&instance, &compiled_schema);
+
+    // no validation error for currency format
+    assert_eq!(result, None);
 }
 
 fn load_json(uri: &str) -> Result<String, String> {
