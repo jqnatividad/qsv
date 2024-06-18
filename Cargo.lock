@@ -1555,9 +1555,9 @@ dependencies = [
 
 [[package]]
 name = "csvs_convert"
-version = "0.8.10"
+version = "0.8.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0d6580b34f2d1b9da04bcff7c73f9a0e0d78385ed59955563122fdfdeb5c406"
+checksum = "3393a3573887f267781d0b0ffb3d117d549bd1682bbfe236fa802801dbd6c248"
 dependencies = [
  "chrono",
  "counter",
