@@ -33,7 +33,7 @@ use crate::{
 macro_rules! regex_oncelock {
     ($re:literal $(,)?) => {{
         static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
-        RE.get_or_init(|| regex::Regex::new($re).unwrap())
+        RE.get_or_init(|| regex::Regex::new($re).expect("Invalid regex"))
     }};
 }
 
