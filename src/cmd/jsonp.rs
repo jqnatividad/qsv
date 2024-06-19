@@ -118,7 +118,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         res.seek(SeekFrom::Start(0))?;
         let mut out = String::new();
         res.read_to_string(&mut out)?;
-        println!("{out}");
+        print!("{out}");
     }
 
     Ok(())
