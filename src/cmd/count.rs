@@ -250,6 +250,7 @@ pub fn polars_count_input(
             fast_projection:      true,
             eager:                false,
             row_estimate:         true,
+            new_streaming:        false,
         };
         ctx.register("sql_lf", lazy_df.with_optimizations(optimization_state));
         "SELECT COUNT(*) FROM sql_lf".to_string()
