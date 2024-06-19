@@ -84,3 +84,72 @@ fn jsonp_fruits_stats_slice_jsonp() {
 
     assert_eq!(stats_output, jsonp_output);
 }
+
+#[test]
+// Verify that qsv stats House.csv has the same content as
+// qsv stats House.csv | qsv slice --json | qsv jsonp
+fn jsonp_house_stats_slice_jsonp() {
+    let wrk = Workdir::new("jsonp_house_stats_slice_jsonp");
+    let test_file = wrk.load_test_file("House.csv");
+
+    // qsv stats fruits.csv
+    let mut stats_cmd = wrk.command("stats");
+    stats_cmd.arg(test_file);
+    let stats_output: String = wrk.stdout(&mut stats_cmd);
+    wrk.create_from_string("stats.csv", stats_output.as_str());
+
+    // qsv slice --json
+    let mut slice_cmd = wrk.command("slice");
+    slice_cmd.arg("stats.csv");
+    slice_cmd.arg("--json");
+    let slice_output: String = wrk.stdout(&mut slice_cmd);
+    wrk.create_from_string("slice.json", slice_output.as_str());
+
+    // qsv jsonp
+    let mut jsonp_cmd = wrk.command("jsonp");
+    jsonp_cmd.arg("slice.json");
+    let jsonp_output: String = wrk.stdout(&mut jsonp_cmd);
+
+    assert_eq!(stats_output, jsonp_output);
+}
+
+#[test]
+// Verify that House.csv has the same content as
+// qsv slice House.csv --json | qsv jsonp
+// according to qsv diff
+fn jsonp_house_diff() {
+    let wrk = Workdir::new("jsonp_house_diff");
+    let _ = wrk.load_test_file("House.csv");
+
+    // qsv enum House.csv -o House_enum.csv
+    let mut enum1_cmd = wrk.command("enum");
+    enum1_cmd.arg("House.csv");
+    let enum1_output: String = wrk.stdout(&mut enum1_cmd);
+    wrk.create_from_string("House_enum.csv", enum1_output.as_str());
+
+    // qsv slice --json
+    let mut slice_cmd = wrk.command("slice");
+    slice_cmd.arg("House.csv");
+    slice_cmd.arg("--json");
+    let slice_output: String = wrk.stdout(&mut slice_cmd);
+    wrk.create_from_string("slice.json", slice_output.as_str());
+
+    // qsv jsonp
+    let mut jsonp_cmd = wrk.command("jsonp");
+    jsonp_cmd.arg("slice.json");
+    let jsonp_output: String = wrk.stdout(&mut jsonp_cmd);
+    wrk.create_from_string("House2.csv", jsonp_output.as_str());
+
+    // qsv enum House2.csv -o House2_enum.csv
+    let mut enum2_cmd = wrk.command("enum");
+    enum2_cmd.arg("House2.csv");
+    let enum2_output: String = wrk.stdout(&mut enum2_cmd);
+    wrk.create_from_string("House2_enum.csv", enum2_output.as_str());
+
+    // qsv diff House.csv House2.csv -k 2
+    let mut diff_cmd = wrk.command("diff");
+    diff_cmd.args(vec!["House.csv", "House2.csv", "-k", "2"]);
+    let diff_output: String = wrk.stdout(&mut diff_cmd);
+
+    assert!(diff_output.lines().count() == 1);
+}
