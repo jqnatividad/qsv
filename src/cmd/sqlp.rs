@@ -6,8 +6,8 @@ Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame exp
 (see https://docs.pola.rs/user-guide/sql/intro/).
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/rs-0.40.0/crates/polars-sql/src/functions.rs and
-https://github.com/pola-rs/polars/blob/rs-0.40.0/crates/polars-sql/src/keywords.rs.
+https://github.com/pola-rs/polars/blob/py-1.0.0-beta.1/crates/polars-sql/src/functions.rs and
+https://github.com/pola-rs/polars/blob/py-1.0.0-beta.1/crates/polars-sql/src/keywords.rs.
 https://docs.pola.rs/py-polars/html/reference/sql/index.html also provides a more readable
 version of the SQL functions and keywords, though be aware that it's for the Python version
 of Polars, so there will be some minor syntax differences.
@@ -239,7 +239,7 @@ use polars::{
     prelude::{
         CsvWriter, DataFrame, GzipLevel, IpcCompression, IpcWriter, JsonFormat, JsonWriter,
         LazyCsvReader, LazyFileListReader, NullValues, ParquetCompression, ParquetWriter,
-        SerWriter, ZstdLevel,
+        SerWriter, StatisticsOptions, ZstdLevel,
     },
     sql::SQLContext,
 };
@@ -366,9 +366,25 @@ impl OutputMode {
                         },
                     };
 
+                    let statistics_options = if args.flag_statistics {
+                        StatisticsOptions {
+                            min_value:      true,
+                            max_value:      true,
+                            distinct_count: true,
+                            null_count:     true,
+                        }
+                    } else {
+                        StatisticsOptions {
+                            min_value:      false,
+                            max_value:      false,
+                            distinct_count: false,
+                            null_count:     false,
+                        }
+                    };
+
                     ParquetWriter::new(&mut w)
                         .with_row_group_size(Some(768 ^ 2))
-                        .with_statistics(args.flag_statistics)
+                        .with_statistics(statistics_options)
                         .with_compression(parquet_compression)
                         .finish(&mut df)
                         .map(|_| ())
@@ -574,6 +590,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             fast_projection:      true,
             eager:                false,
             row_estimate:         true,
+            new_streaming:        false,
         }
     };
     // gated by log::log_enabled!(log::Level::Debug) to avoid the
