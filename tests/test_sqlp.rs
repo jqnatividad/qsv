@@ -843,6 +843,9 @@ fn sqlp_compress() {
     assert_eq!(got, expected);
 }
 
+// disable this test on windows as it fails as the expected output is different
+// due to the different line endings
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn sqlp_boston311_explain() {
     let wrk = Workdir::new("sqlp_boston311_explain");
