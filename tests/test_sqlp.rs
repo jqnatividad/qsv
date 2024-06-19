@@ -299,7 +299,6 @@ fn sqlp_boston311_wnull_value() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["location_street_name", "location_zipcode"],
-        svec!["Not Specified", "Not Specified"],
         svec!["INTERSECTION Asticou Rd & Washington St", "Not Specified"],
         svec![
             "INTERSECTION Charles River Plz & Cambridge St",
@@ -307,6 +306,10 @@ fn sqlp_boston311_wnull_value() {
         ],
         svec!["INTERSECTION Columbia Rd & E Cottage St", "Not Specified"],
         svec!["INTERSECTION E Canton St & Albany St", "Not Specified"],
+        svec![
+            "INTERSECTION Gallivan Blvd & Washington St",
+            "Not Specified"
+        ],
     ];
     assert_eq!(got, expected);
 }
@@ -856,7 +859,6 @@ fn sqlp_boston311_explain() {
 "SORT BY [col(""avg_tat""), col(""ward"")]"
   AGGREGATE
 "  	[[(col(""closed_dt"")) - (col(""open_dt""))].mean().strict_cast(Float64).alias(""avg_tat"")] BY [col(""ward"")] FROM"
-""
       Csv SCAN"#;
     assert!(got.starts_with(expected_begin));
 
@@ -1848,23 +1850,23 @@ fn sqlp_date_part() {
         .arg(
             r#"
         SELECT 
-            DATE_PART(datecol, 'isoyear') as c1,
-            DATE_PART(datecol, 'month') as c2,
-            DATE_PART(datecol, 'day') as c3,
-            DATE_PART(datecol, 'hour') as c4,
-            DATE_PART(datecol, 'minute') as c5,
-            DATE_PART(datecol, 'second') as c6,
-            DATE_PART(datecol, 'millisecond') as c61,
-            DATE_PART(datecol, 'microsecond') as c62,
-            DATE_PART(datecol, 'nanosecond') as c63,
-            DATE_PART(datecol, 'isoweek') as c7,
-            DATE_PART(datecol, 'dayofyear') as c8,
-            DATE_PART(datecol, 'dayofweek') as c9,
-            DATE_PART(datecol, 'time') as c10,
-            DATE_PART(datecol, 'decade') as c11,
-            DATE_PART(datecol, 'century') as c12,
-            DATE_PART(datecol, 'millennium') as c13,
-            DATE_PART(datecol, 'quarter') as c14,
+            DATE_PART('isoyear', datecol) as c1,
+            DATE_PART('month', datecol) as c2,
+            DATE_PART('day', datecol) as c3,
+            DATE_PART('hour', datecol) as c4,
+            DATE_PART('minute', datecol) as c5,
+            DATE_PART('second', datecol) as c6,
+            DATE_PART('millisecond', datecol) as c61,
+            DATE_PART('microsecond', datecol) as c62,
+            DATE_PART('nanosecond', datecol) as c63,
+            DATE_PART('isoweek', datecol) as c7,
+            DATE_PART('dayofyear', datecol) as c8,
+            DATE_PART('dayofweek', datecol) as c9,
+            DATE_PART('time', datecol) as c10,
+            DATE_PART('decade', datecol) as c11,
+            DATE_PART('century', datecol) as c12,
+            DATE_PART('millennium', datecol) as c13,
+            DATE_PART('quarter', datecol) as c14,
       FROM datestbl
 "#,
         )
