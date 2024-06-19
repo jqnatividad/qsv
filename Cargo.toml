@@ -157,6 +157,7 @@ polars = { version = "0.40", features = [
     "avro",
     "dtype-full",
     "coalesce",
+    "timezones",
 ], optional = true }
 polars-ops = { version = "0.40", optional = true }
 pyo3 = { version = "0.21", features = [
