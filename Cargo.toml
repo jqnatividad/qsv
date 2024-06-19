@@ -140,23 +140,23 @@ num_cpus = "1"
 odht = "0.3"
 phf = { version = "0.11", features = ["macros"], optional = true }
 polars = { version = "0.40", features = [
-    "lazy",
-    "streaming",
-    "object",
     "asof_join",
+    "avro",
+    "binary_encoding",
+    "coalesce",
+    "cse",
     "cross_join",
+    "dtype-full",
+    "extract_jsonpath",
+    "ipc",
+    "json",
+    "lazy",
+    "object",
+    "parquet",
+    "performant",
     "semi_anti_join",
     "sql",
-    "extract_jsonpath",
-    "binary_encoding",
-    "json",
-    "parquet",
-    "ipc",
-    "performant",
-    "cse",
-    "avro",
-    "dtype-full",
-    "coalesce",
+    "streaming",
     "timezones",
 ], optional = true }
 polars-ops = { version = "0.40", optional = true }
@@ -186,11 +186,11 @@ reqwest = { version = "0.12", features = [
     "cookies",
     "deflate",
     "gzip",
-    "zstd",
-    "rustls-tls",
-    "stream",
     "http2",
     "json",
+    "rustls-tls",
+    "stream",
+    "zstd",
 ], default-features = false }
 rfd = "0.14"
 rust_decimal = { version = "1.35", default-features = false }
