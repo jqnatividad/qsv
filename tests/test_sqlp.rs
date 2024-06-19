@@ -1908,6 +1908,77 @@ fn sqlp_date_part() {
 }
 
 #[test]
+fn sqlp_date_part_tz() {
+    let wrk = Workdir::new("sqlp_date_part_tz");
+    wrk.create(
+        "datestbl.csv",
+        vec![svec!["datecol"], svec!["2012-01-20T10:30:20-05:00"]],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("datestbl.csv")
+        .arg(
+            r#"
+        SELECT
+            DATE_PART('isoyear', datecol) as c1,
+            DATE_PART('month', datecol) as c2,
+            DATE_PART('day', datecol) as c3,
+            DATE_PART('hour', datecol) as c4,
+            DATE_PART('minute', datecol) as c5,
+            DATE_PART('second', datecol) as c6,
+            DATE_PART('millisecond', datecol) as c61,
+            DATE_PART('microsecond', datecol) as c62,
+            DATE_PART('nanosecond', datecol) as c63,
+            DATE_PART('isoweek', datecol) as c7,
+            DATE_PART('dayofyear', datecol) as c8,
+            DATE_PART('dayofweek', datecol) as c9,
+            DATE_PART('time', datecol) as c10,
+            DATE_PART('decade', datecol) as c11,
+            DATE_PART('century', datecol) as c12,
+            DATE_PART('millennium', datecol) as c13,
+            DATE_PART('quarter', datecol) as c14,
+            DATE_PART('timezone', datecol) as c15,
+            DATE_PART('epoch', datecol) as c16,
+      FROM datestbl
+"#,
+        )
+        .arg("--try-parsedates");
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "c1", "c2", "c3", "c4", "c5", "c6", "c61", "c62", "c63", "c7", "c8", "c9", "c10",
+            "c11", "c12", "c13", "c14", "c15", "c16"
+        ],
+        svec![
+            "2012",
+            "1",
+            "20",
+            "15",
+            "30",
+            "20",
+            "20000.0",
+            "20000000.0",
+            "20000000000.0",
+            "3",
+            "20",
+            "5",
+            "15:30:20.000000000",
+            "201",
+            "21",
+            "3",
+            "1",
+            "0",
+            "1327073420.0"
+        ],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sqlp_date() {
     let wrk = Workdir::new("sqlp_date");
     wrk.create("dummy.csv", vec![svec!["c1"], svec![""]]);
