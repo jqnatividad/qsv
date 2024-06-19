@@ -88,8 +88,8 @@ fn jsonp_fruits_stats_slice_jsonp() {
 #[test]
 // Verify that qsv stats House.csv has the same content as
 // qsv stats House.csv | qsv slice --json | qsv jsonp
-fn jsonp_house_stats_slice_jsonp2() {
-    let wrk = Workdir::new("jsonp_house_stats_slice_jsonp2");
+fn jsonp_house_stats_slice_jsonp() {
+    let wrk = Workdir::new("jsonp_house_stats_slice_jsonp");
     let test_file = wrk.load_test_file("House.csv");
 
     // qsv stats fruits.csv
