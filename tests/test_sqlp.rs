@@ -1912,7 +1912,13 @@ fn sqlp_date_part_tz() {
     let wrk = Workdir::new("sqlp_date_part_tz");
     wrk.create(
         "datestbl.csv",
-        vec![svec!["datecol"], svec!["2012-01-20T10:30:20-05:00"]],
+        vec![
+            svec!["datecol"],
+            svec!["2012-01-20T10:30:20-05:00"],
+            svec!["2012-11-05T10:30:20.1234Z"],
+            svec!["1999-03-15T15:30:20.1234+01:00"],
+            svec!["1978-08-05T23:30:20.1234-01:00"],
+        ],
     );
 
     let mut cmd = wrk.command("sqlp");
@@ -1973,6 +1979,69 @@ fn sqlp_date_part_tz() {
             "0",
             "1327073420.0"
         ],
+        svec![
+            "2012",
+            "11",
+            "5",
+            "10",
+            "30",
+            "20",
+            "20123.4",
+            "20123400.0",
+            "20123400000.0",
+            "45",
+            "310",
+            "1",
+            "10:30:20.123400000",
+            "201",
+            "21",
+            "3",
+            "4",
+            "0",
+            "1352111420.1234"
+        ],
+        svec![
+            "1999",
+            "3",
+            "15",
+            "14",
+            "30",
+            "20",
+            "20123.4",
+            "20123400.0",
+            "20123400000.0",
+            "11",
+            "74",
+            "1",
+            "14:30:20.123400000",
+            "199",
+            "20",
+            "2",
+            "1",
+            "0",
+            "921508220.1234"
+        ],
+        svec![
+            "1978",
+            "8",
+            "6",
+            "0",
+            "30",
+            "20",
+            "20123.4",
+            "20123400.0",
+            "20123400000.0",
+            "31",
+            "218",
+            "0",
+            "00:30:20.123400000",
+            "197",
+            "20",
+            "2",
+            "3",
+            "0",
+            "271211420.1234"
+        ],
     ];
 
     assert_eq!(got, expected);
@@ -1989,6 +2058,7 @@ fn sqlp_date() {
         SELECT 
             DATE('2021-03-15') as c1,
             DATE('2021-03-15 10:30:20', '%Y-%m-%d %H:%M:%S') as c2,
+            DATE('03-15-2021 10:30:20 AM EST', '%m-%d-%Y %I:%M:%S %p %Z') as c3,
         FROM dummy
 "#,
     );
@@ -1996,7 +2066,12 @@ fn sqlp_date() {
     wrk.assert_success(&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    let expected = vec![svec!["c1", "c2"], svec!["2021-03-15", "2021-03-15"]];
+    // unfortunately, this is the current behavior of the date function
+    // https://github.com/pola-rs/polars/issues/17093
+    let expected = vec![
+        svec!["c1", "c2", "c3"],
+        svec!["2021-03-15", "2021-03-15", "2021-03-15"],
+    ];
 
     assert_eq!(got, expected);
 }
