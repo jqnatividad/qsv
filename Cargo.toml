@@ -155,6 +155,7 @@ polars = { version = "0.40", features = [
     "parquet",
     "performant",
     "semi_anti_join",
+    "serde-lazy",
     "sql",
     "streaming",
     "timezones",

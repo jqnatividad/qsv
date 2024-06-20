@@ -832,6 +832,9 @@ name = "bitflags"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf4b9d6a944f767f8e5e0db018570623c85f3d925ac718db4e06d0187adb21c1"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "bitvec"
@@ -1883,6 +1886,9 @@ name = "either"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3dca9240753cf90908d7e4aac30f630662b02aebaa1b58a3cadabdb23385b58b"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "elapsed"
@@ -2759,6 +2765,7 @@ dependencies = [
  "equivalent",
  "hashbrown 0.14.5",
  "rayon",
+ "serde",
 ]
 
 [[package]]
@@ -4066,6 +4073,7 @@ dependencies = [
  "polars-error",
  "polars-utils",
  "ryu",
+ "serde",
  "simdutf8",
  "streaming-iterator",
  "strength_reduce",
@@ -4123,6 +4131,7 @@ dependencies = [
  "rand_distr",
  "rayon",
  "regex",
+ "serde",
  "serde_json",
  "smartstring",
  "thiserror",
@@ -4191,6 +4200,7 @@ dependencies = [
  "rayon",
  "regex",
  "ryu",
+ "serde",
  "serde_json",
  "simd-json",
  "simdutf8",
@@ -4269,6 +4279,7 @@ dependencies = [
  "polars-utils",
  "rayon",
  "regex",
+ "serde",
  "serde_json",
  "smartstring",
  "unicode-reverse",
@@ -4295,6 +4306,7 @@ dependencies = [
  "polars-error",
  "polars-utils",
  "seq-macro",
+ "serde",
  "simdutf8",
  "snap",
  "streaming-decompression",
@@ -4349,6 +4361,7 @@ dependencies = [
  "rayon",
  "recursive",
  "regex",
+ "serde",
  "smartstring",
  "strum_macros 0.26.4",
  "version_check",
@@ -4402,6 +4415,7 @@ dependencies = [
  "polars-ops",
  "polars-utils",
  "regex",
+ "serde",
  "smartstring",
 ]
 
@@ -5819,6 +5833,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fb72c633efbaa2dd666986505016c32c3044395ceaf881518399d2f4127ee29"
 dependencies = [
  "autocfg",
+ "serde",
  "static_assertions",
  "version_check",
 ]
