@@ -225,7 +225,7 @@ uuid = { version = "1", features = ["v4"] }
 url = "2.5"
 vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
-
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
 
 [target.'cfg(not(target_arch = "aarch64"))'.dependencies]
 simdutf8    = "0.1"
