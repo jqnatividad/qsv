@@ -113,6 +113,37 @@ fn enumerate_hash() {
 }
 
 #[test]
+fn enumerate_hash_intl() {
+    let wrk = Workdir::new("enumerate_hash_intl");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number", "random_text"],
+            svec!["a", "13", "これはテストです"],
+            svec!["b", "24", "el rápido zorro marrón"],
+            svec!["c", "72", "跳过懒狗"],
+            svec!["c", "72", "howdy"],
+            svec!["d", "7", "I thiñk, therefore I am"],
+            svec!["d", "7", "I thiñk, therefore I am"],
+        ],
+    );
+    let mut cmd = wrk.command("enum");
+    cmd.args(&["--hash", "1-"]).arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "random_text", "hash"],
+        svec!["a", "13", "これはテストです", "3824660653605227303"],
+        svec!["b", "24", "el rápido zorro marrón", "1851770582521928574"],
+        svec!["c", "72", "跳过懒狗", "7916590694040213670"],
+        svec!["c", "72", "howdy", "10903434754618017012"],
+        svec!["d", "7", "I thiñk, therefore I am", "7671262618974725285"],
+        svec!["d", "7", "I thiñk, therefore I am", "7671262618974725285"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn enumerate_hash_replace_old_hash() {
     let wrk = Workdir::new("enumerate_replace_old_hash");
     wrk.create(
@@ -196,6 +227,64 @@ fn enumerate_hash_regex() {
         svec!["c", "72", "jumps over the lazy dog", "6378567261782451553"],
         svec!["d", "7", "I think, therefore I am", "14437068658547852882"],
         svec!["d", "7", "I think, therefore I am", "14437068658547852882"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn enumerate_hash_subset() {
+    let wrk = Workdir::new("enumerate_replace_subset");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["hash", "letter", "number", "random_text"],
+            svec!["1", "a", "13", "this is a test"],
+            svec!["2", "b", "24", "the quick brown fox"],
+            svec!["3", "c", "72", "jumps over the lazy dog"],
+            svec!["4", "d", "7", "I think, therefore I am"],
+            svec!["5", "d", "7", "I think, therefore I am"],
+        ],
+    );
+    let mut cmd = wrk.command("enum");
+    cmd.args(&["--hash", "3,4"]).arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "random_text", "hash"],
+        svec!["a", "13", "this is a test", "12940414675143957480"],
+        svec!["b", "24", "the quick brown fox", "13207582625528234781"],
+        svec!["c", "72", "jumps over the lazy dog", "17804052095358758578"],
+        svec!["d", "7", "I think, therefore I am", "3273771710137887128"],
+        svec!["d", "7", "I think, therefore I am", "3273771710137887128"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn enumerate_hash_reverse() {
+    let wrk = Workdir::new("enumerate_replace_reverse");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["hash", "letter", "number", "random_text"],
+            svec!["1", "a", "13", "this is a test"],
+            svec!["2", "b", "24", "the quick brown fox"],
+            svec!["3", "c", "72", "jumps over the lazy dog"],
+            svec!["4", "d", "7", "I think, therefore I am"],
+            svec!["5", "d", "7", "I think, therefore I am"],
+        ],
+    );
+    let mut cmd = wrk.command("enum");
+    cmd.args(&["--hash", "_-1"]).arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "random_text", "hash"],
+        svec!["a", "13", "this is a test", "5686912879674292587"],
+        svec!["b", "24", "the quick brown fox", "10008819158968270026"],
+        svec!["c", "72", "jumps over the lazy dog", "6003217755542851957"],
+        svec!["d", "7", "I think, therefore I am", "17754472455904896405"],
+        svec!["d", "7", "I think, therefore I am", "17754472455904896405"],
     ];
     assert_eq!(got, expected);
 }
