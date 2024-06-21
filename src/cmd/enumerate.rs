@@ -17,6 +17,13 @@ The enum function has four modes of operation:
   4. COPY. Copy the contents of a column to a new one:
     $ qsv enum --copy names
 
+  5. HASH. Create a new column filled with the hash of a given column/s:
+    $ qsv enum --hash 1- // hash all columns
+    $ qsv enum --hash col2,col3,col4 // hash specific columns
+    $ qsv enum --hash col2 // hash a single column
+    $ qsv enum --hash /record_id|name|address/ // hash columns that match a regex
+    $ qsv enum --hash !/record_id/ // hash all columns except the record_id column
+
   Finally, note that you should also be able to shuffle the lines of a CSV file
   by sorting on the generated uuids:
     $ qsv enum --uuid file.csv | qsv sort -s uuid > shuffled.csv
@@ -42,6 +49,16 @@ enum options:
     --uuid                   When set, the column will be populated with
                              uuids (v4) instead of the incremental identifier.
                              Changes the default column name to "uuid".
+    --hash <columns>         Create a new column filled with the hash of the
+                             given column/s. Use "1-" to hash all columns.
+                             Changes the default column name to "hash".
+                             Will remove an existing "hash" column if it exists.
+
+                             The columns argument specify the columns to use
+                             in the hash. Columns can be referenced by name or index,
+                             starting at 1. Specify multiple columns by separating
+                             them with a comma. Specify a range of columns with `-`.
+                             (See 'qsv select --help' for the full syntax.)
 
 Common options:
     -h, --help               Display this message
@@ -54,6 +71,7 @@ Common options:
 
 use serde::Deserialize;
 use uuid::Uuid;
+use xxhash_rust::xxh3::xxh3_64;
 
 use crate::{
     config::{Config, Delimiter},
@@ -72,6 +90,7 @@ struct Args {
     flag_constant:   Option<String>,
     flag_copy:       Option<SelectColumns>,
     flag_uuid:       bool,
+    flag_hash:       Option<SelectColumns>,
     flag_output:     Option<String>,
     flag_no_headers: bool,
     flag_delimiter:  Option<Delimiter>,
@@ -82,6 +101,7 @@ enum EnumOperation {
     Uuid,
     Constant,
     Copy,
+    Hash,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -94,6 +114,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
     let mut headers = rdr.byte_headers()?.clone();
+    let mut hash_index = None;
 
     let mut copy_index = 0;
     let mut copy_operation = false;
@@ -103,6 +124,43 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let sel = rconfig.selection(&headers)?;
         copy_index = *sel.iter().next().unwrap();
         copy_operation = true;
+    }
+
+    let mut hash_sel = None;
+    let mut hash_operation = false;
+
+    if let Some(hash_columns) = &args.flag_hash {
+        // get the index of the column named "hash", if it exists
+        hash_index = headers.iter().position(|col| col == b"hash");
+
+        // get the original selection
+        rconfig = rconfig.select(hash_columns.clone());
+        let original_selection = rconfig
+            .clone()
+            .select(hash_columns.clone())
+            .selection(&headers)?;
+
+        // Filter out the "hash" column from the original selection, if it exists
+        let filtered_selection = original_selection
+            .iter()
+            .filter(|&&index| index != hash_index.unwrap_or(usize::MAX))
+            .collect::<Vec<_>>();
+
+        // Construct selection string without "hash" column
+        let selection_string = filtered_selection
+            .iter()
+            .map(|&&index| (index + 1).to_string())
+            .collect::<Vec<String>>()
+            .join(",");
+
+        // Parse the new selection without "hash" column
+        let no_hash_column_selection = SelectColumns::parse(&selection_string)?;
+
+        // Update the configuration with the new selection
+        rconfig = rconfig.select(no_hash_column_selection);
+        hash_sel = Some(rconfig.selection(&headers)?);
+
+        hash_operation = true;
     }
 
     if !rconfig.no_headers {
@@ -118,6 +176,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 Err(e) => return fail_clierror!("Could not parse cell as utf-8!: {e}"),
             };
             headers.push_field(format!("{current_header}_copy").as_bytes());
+        } else if hash_operation {
+            // Remove an existing "hash" column from the header, if it exists
+            headers = if let Some(hash_index) = hash_index {
+                headers
+                    .into_iter()
+                    .enumerate()
+                    .filter(|(i, _)| *i != hash_index)
+                    .map(|(_, field)| field)
+                    .collect()
+            } else {
+                headers
+            };
+            headers.push_field(b"hash");
         } else {
             headers.push_field(b"index");
         };
@@ -137,6 +208,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         EnumOperation::Uuid
     } else if copy_operation {
         EnumOperation::Copy
+    } else if args.flag_hash.is_some() {
+        EnumOperation::Hash
     } else {
         EnumOperation::Increment
     };
@@ -148,6 +221,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut colcopy: Vec<u8> = Vec::with_capacity(20);
     let increment = args.flag_increment.unwrap_or(1);
+    let mut hash_string = String::new();
+    let mut hash;
 
     while rdr.read_byte_record(&mut record)? {
         match enum_operation {
@@ -169,6 +244,29 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             EnumOperation::Copy => {
                 colcopy = record[copy_index].to_vec();
                 record.push_field(&colcopy);
+            },
+            EnumOperation::Hash => {
+                hash_string.clear();
+
+                // build the hash string from the filtered selection
+                if let Some(ref sel) = hash_sel {
+                    sel.iter()
+                        .for_each(|i| hash_string.push_str(&String::from_utf8_lossy(&record[*i])));
+                }
+                hash = xxh3_64(hash_string.as_bytes());
+
+                // Optionally remove the "hash" column if it already exists from the output
+                record = if let Some(hash_index) = hash_index {
+                    record
+                        .into_iter()
+                        .enumerate()
+                        .filter(|(i, _)| *i != hash_index)
+                        .map(|(_, field)| field)
+                        .collect()
+                } else {
+                    record
+                };
+                record.push_field(hash.to_string().as_bytes());
             },
         }
 
