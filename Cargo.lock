@@ -2887,9 +2887,9 @@ dependencies = [
 
 [[package]]
 name = "jql-parser"
-version = "7.1.11"
+version = "7.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bee2201c6f72d31ae67ddd13edcd48e3f8fedf8d1fb07b447a6ba6255cdeb701"
+checksum = "58c1cd978e213f2d027dec49e37812bc7e5061fc3bf267b6b59e2a5ea8623af4"
 dependencies = [
  "thiserror",
  "winnow 0.6.13",
@@ -2897,9 +2897,9 @@ dependencies = [
 
 [[package]]
 name = "jql-runner"
-version = "7.1.11"
+version = "7.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1596577ebd498e503124a13a78cca86a75564856538b1c44eba4089b208b656"
+checksum = "5d3b9ce7306ee3404547fa3baa87b19082408940a583daf4e4f05354aab2f3bc"
 dependencies = [
  "indexmap",
  "jql-parser",
