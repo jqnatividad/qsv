@@ -17,7 +17,9 @@ The enum function has four modes of operation:
   4. COPY. Copy the contents of a column to a new one:
     $ qsv enum --copy names
 
-  5. HASH. Create a new column filled with the hash of a given column/s:
+  5. HASH. Create a new column with the deterministic hash of the given column/s.
+     The hash uses the xxHash algorithm and is platform-agnostic.
+     (see https://github.com/DoumanAsh/xxhash-rust for more information):
     $ qsv enum --hash 1- // hash all columns
     $ qsv enum --hash col2,col3,col4 // hash specific columns
     $ qsv enum --hash col2 // hash a single column
@@ -171,9 +173,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         } else if args.flag_constant.is_some() {
             headers.push_field(b"constant");
         } else if copy_operation {
-            let current_header = match String::from_utf8(headers[copy_index].to_vec()) {
+            let current_header = match simdutf8::compat::from_utf8(&headers[copy_index]) {
                 Ok(s) => s,
-                Err(e) => return fail_clierror!("Could not parse cell as utf-8!: {e}"),
+                Err(e) => return fail_clierror!("Could not parse header as utf-8!: {e}"),
             };
             headers.push_field(format!("{current_header}_copy").as_bytes());
         } else if hash_operation {
@@ -182,8 +184,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 headers
                     .into_iter()
                     .enumerate()
-                    .filter(|(i, _)| *i != hash_index)
-                    .map(|(_, field)| field)
+                    .filter_map(|(i, field)| if i == hash_index { None } else { Some(field) })
                     .collect()
             } else {
                 headers
@@ -250,8 +251,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                 // build the hash string from the filtered selection
                 if let Some(ref sel) = hash_sel {
-                    sel.iter()
-                        .for_each(|i| hash_string.push_str(&String::from_utf8_lossy(&record[*i])));
+                    sel.iter().for_each(|i| {
+                        hash_string
+                            .push_str(simdutf8::basic::from_utf8(&record[*i]).unwrap_or_default());
+                    });
                 }
                 hash = xxh3_64(hash_string.as_bytes());
 
@@ -260,8 +263,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     record
                         .into_iter()
                         .enumerate()
-                        .filter(|(i, _)| *i != hash_index)
-                        .map(|(_, field)| field)
+                        .filter_map(|(i, field)| if i == hash_index { None } else { Some(field) })
                         .collect()
                 } else {
                     record
