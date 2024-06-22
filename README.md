@@ -99,7 +99,7 @@
 🚀: multithreaded even without an index.  
 ![CKAN](docs/images/ckan.png) : has [CKAN](https://ckan.org)-aware integration options.  
 🌐: has web-aware options.  
-🔣: requires UTF-8 encoded input.
+🔣: requires UTF-8 encoded input.  
 👆: has powerful column selector support. See `select` for syntax.
 
 ## Installation Options
@@ -385,7 +385,7 @@ It can process well-formed CSVs in _any_ language so long as its UTF-8 encoded. 
 Finally, though the default Geonames index of the `geocode` command is English-only, the index can be rebuilt with the `geocode index-update` subcommand with the `--languages` option to return place names in multiple languages ([with support for 253 languages](http://download.geonames.org/export/dump/alternatenames/)).
 
 ## Testing
-qsv has ~1,490 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
+qsv has ~1,500 tests in the [tests](https://github.com/jqnatividad/qsv/tree/master/tests) directory.
 Each command has its own test suite in a separate file with the convention `test_<COMMAND>.rs`.
 Apart from preventing regressions, the tests also serve as good illustrative examples, and are often linked from the usage text of each corresponding command.
 
