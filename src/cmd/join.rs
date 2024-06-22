@@ -8,19 +8,23 @@ Joins are always done by ignoring leading and trailing whitespace. By default,
 joins are done case sensitively, but this can be disabled with the --ignore-case
 flag.
 
-The columns arguments specify the columns to join for each input. Columns can
-be referenced by name or index, starting at 1. Specify multiple columns by
-separating them with a comma. Specify a range of columns with `-`. Both
-columns1 and columns2 must specify exactly the same number of columns.
-(See 'qsv select --help' for the full syntax.)
-
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_join.rs.
 
 Usage:
     qsv join [options] <columns1> <input1> <columns2> <input2>
     qsv join --help
 
-input parameters:
+input arguments:
+    <input1>                is the first CSV data set to join.
+    <input2>                is the second CSV data set to join.
+    <columns1> & <columns2> are the columns to join on for each input.
+
+    The columns arguments specify the columns to join for each input. Columns can
+    be referenced by name or index, starting at 1. Specify multiple columns by
+    separating them with a comma. Specify a range of columns with `-`. Both
+    columns1 and columns2 must specify exactly the same number of columns.
+    (See 'qsv select --help' for the full syntax.)
+
     For <input1> and <input2>, specifying `-` indicates reading from stdin.
     e.g. 'qsv frequency -s Agency nyc311.csv | qsv join value - id nycagencyinfo.csv'
 
