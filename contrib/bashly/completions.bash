@@ -405,7 +405,7 @@ _qsv_completions() {
       ;;
 
     *'enum'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--constant --copy --delimiter --help --increment --new-column --no-headers --output --start --uuid -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--constant --copy --delimiter --hash --help --increment --new-column --no-headers --output --start --uuid -h")" -- "$cur" )
       ;;
 
     *'cat'*)

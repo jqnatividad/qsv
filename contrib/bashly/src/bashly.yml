@@ -301,6 +301,8 @@ commands:
           - long: --copy
             arg: column
           - long: --uuid
+          - long: --hash
+            arg: columns
           - *output
           - *no-headers
           - *delimiter
