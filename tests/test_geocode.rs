@@ -41,6 +41,52 @@ fn geocode_suggest() {
 }
 
 #[test]
+fn geocode_suggest_select() {
+    let wrk = Workdir::new("geocode_suggest_select");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["c1", "c2", "Location"],
+            svec!["1", "2", "Melrose, New York"],
+            svec!["3", "4", "East Flatbush, New York"],
+            svec!["5", "6", "Manhattan, New York"],
+            svec!["7", "8", "Brooklyn, New York"],
+            svec!["9", "10", "East Harlem, New York"],
+            svec![
+                "11",
+                "12",
+                "This is not a Location and it will not be geocoded"
+            ],
+            svec!["13", "14", "Jersey City, New Jersey"],
+            svec!["15", "16", "95.213424, 190,1234565"], // invalid lat, long
+            svec!["17", "18", "Makati, Metro Manila, Philippines"],
+        ],
+    );
+    let mut cmd = wrk.command("geocode");
+    // use select syntax to select the last column
+    cmd.arg("suggest").arg("_").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["c1", "c2", "Location"],
+        svec!["1", "2", "(41.90059, -87.85673)"],
+        svec!["3", "4", "(28.11085, -82.69482)"],
+        svec!["5", "6", "(40.71427, -74.00597)"],
+        svec!["7", "8", "(45.09413, -93.35634)"],
+        svec!["9", "10", "(40.79472, -73.9425)"],
+        svec![
+            "11",
+            "12",
+            "This is not a Location and it will not be geocoded"
+        ],
+        svec!["13", "14", "(40.72816, -74.07764)"],
+        svec!["15", "16", "95.213424, 190,1234565"], // suggest expects a city name, not lat, long
+        svec!["17", "18", "(14.55027, 121.03269)"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn geocode_suggestnow_default() {
     let wrk = Workdir::new("geocode_suggestnow_default");
     let mut cmd = wrk.command("geocode");
