@@ -20,7 +20,7 @@ The enum function has four modes of operation:
   5. HASH. Create a new column with the deterministic hash of the given column/s.
      The hash uses the xxHash algorithm and is platform-agnostic.
      (see https://github.com/DoumanAsh/xxhash-rust for more information):
-    $ qsv enum --hash 1- // hash all columns
+    $ qsv enum --hash 1- // hash all columns, auto-ignores existing "hash" column
     $ qsv enum --hash col2,col3,col4 // hash specific columns
     $ qsv enum --hash col2 // hash a single column
     $ qsv enum --hash /record_id|name|address/ // hash columns that match a regex
