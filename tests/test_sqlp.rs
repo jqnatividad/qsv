@@ -862,12 +862,12 @@ fn sqlp_boston311_explain() {
 "SORT BY [col(""avg_tat""), col(""ward"")]"
   AGGREGATE
 "  	[[(col(""closed_dt"")) - (col(""open_dt""))].mean().strict_cast(Float64).alias(""avg_tat"")] BY [col(""ward"")] FROM"
-      Csv SCAN"#;
+    Csv SCAN"#;
     assert!(got.starts_with(expected_begin));
 
-    let expected_end = r#"boston311-100.csv
-      PROJECT 4/29 COLUMNS
-"      SELECTION: [(col(""case_status"")) == (String(Closed))]""#;
+    let expected_end = r#"boston311-100.csv]
+    PROJECT 4/29 COLUMNS
+"    SELECTION: [(col(""case_status"")) == (String(Closed))]""#;
     assert!(got.ends_with(expected_end));
 }
 
@@ -1553,7 +1553,7 @@ fn sqlp_compound_join_diff_colnames() {
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["a", "b", "b:test2", "a:test2", "c"],
+        svec!["a", "b", "a:test2", "b:test2", "c"],
         svec!["2", "2", "2", "2", "8"],
         svec!["3", "3", "3", "3", "9"],
     ];
