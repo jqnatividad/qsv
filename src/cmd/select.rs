@@ -1,8 +1,8 @@
 static USAGE: &str = r#"
 Select columns from CSV data efficiently.
 
-This command lets you manipulate the columns in CSV data. You can re-order
-them, duplicate them or drop them. Columns can be referenced by index or by
+This command lets you manipulate the columns in CSV data. You can re-order,
+duplicate, reverse or drop them. Columns can be referenced by index or by
 name if there is a header row (duplicate column names can be disambiguated with
 more indexing). Column ranges can also be specified. Finally, columns can be
 selected using regular expressions.

@@ -28,6 +28,10 @@ Usage:
 
 partition arguments:
     <column>                 The column to use as a key for partitioning.
+                             You can use the `--select` option to select
+                             the column by name or index, but only one
+                             column can be used for partitioning.
+                             See `select` command for more details.
     <outdir>                 The directory to write the output files to.
     <input>                  The CSV file to read from. If not specified, then
                              the input will be read from stdin.

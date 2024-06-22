@@ -42,6 +42,13 @@ Usage:
     qsv pseudo [options] <column> [<input>]
     qsv pseudo --help
 
+pseudo arguments:
+    <column>                The column to pseudonymise. You can use the `--select`
+                            option to select the column by name or index.
+                            See `select` command for more details.
+    <input>                 The CSV file to read from. If not specified, then
+                            the input will be read from stdin.
+
 Common options:
     -h, --help              Display this message
     --start <number>        The starting number for the incremental identifier.

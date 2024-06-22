@@ -171,6 +171,8 @@ geocode arguments:
                                 For reverse, it must be a column using WGS 84 coordinates in
                                 "lat, long" or "(lat, long)" format.
                                 For countryinfo, it must be a column with a ISO 3166-1 alpha-2 country code.
+                                Note that you can use column selector syntax to select the column, but only
+                                the first column will be used. See `select --help` for more information.
 
     <location>                  The location to geocode for suggestnow, reversenow & countryinfonow subcommands.
                                 For suggestnow, its a City string pattern.

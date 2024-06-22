@@ -1,7 +1,7 @@
 static USAGE: &str = r#"
 Filters CSV data by whether the given regex matches a row.
 
-The regex is applied to each field in each row, and if any field matches,
+The regex is applied to selected field in each row, and if any field matches,
 then the row is written to the output, and the number of matches to stderr.
 
 The columns to search can be limited with the '--select' flag (but the full row
