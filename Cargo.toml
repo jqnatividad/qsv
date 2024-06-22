@@ -139,7 +139,7 @@ mlua = { version = "0.9", features = [
 num_cpus = "1"
 odht = "0.3"
 phf = { version = "0.11", features = ["macros"], optional = true }
-polars = { version = "0.40", features = [
+polars = { version = "0.41", features = [
     "asof_join",
     "avro",
     "binary_encoding",
@@ -160,7 +160,7 @@ polars = { version = "0.40", features = [
     "streaming",
     "timezones",
 ], optional = true }
-polars-ops = { version = "0.40", optional = true }
+polars-ops = { version = "0.41", optional = true }
 pyo3 = { version = "0.21", features = [
     "auto-initialize",
     "gil-refs",
@@ -257,10 +257,6 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "0c8ab87" }
 calamine = { git = "https://github.com/tafia/calamine", rev = "6b41309" }
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
-# latest Rust polars with unreleased fixes
-# we track Python polars which has a much faster release cycle than Rust polars
-polars     = { git = "https://github.com/pola-rs/polars", tag = "py-1.0.0-beta.1" }
-polars-ops = { git = "https://github.com/pola-rs/polars", tag = "py-1.0.0-beta.1" }
 
 [features]
 default = ["mimalloc"]
