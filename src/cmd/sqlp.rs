@@ -96,14 +96,18 @@ Example queries:
    qsv sqlp data.csv "select * from data join read_ipc('data2.arrow') as t2 ON data.c1 = t2.c1"
 
   # you can also directly load CSVs using the Polars read_csv() SQL function. This is useful when
-  # you want to bypass the regular CSV parser and use Polars' multithreaded, mem-mapped CSV parser
-  # instead - making for dramatically faster queries at the cost of CSV parser configurability.
-  # (i.e. limited to comma delimiter, no CSV comments, etc.)
-   qsv sqlp small_dummy.csv "select * from read_csv('data.csv') order by col1 desc limit 100"
+  # you want to bypass the regular CSV parser (with SKIP_INPUT) and use Polars' multithreaded,
+  # mem-mapped CSV parser instead - making for dramatically faster queries at the cost of CSV parser
+  # configurability (i.e. limited to comma delimiter, no CSV comments, etc.).
+   qsv sqlp SKIP_INPUT "select * from read_csv('data.csv') order by col1 desc limit 100"
 
-  Note that sqlp will automatically use this "fast path" optimization when there is only 
-  one input CSV file, no CSV parsing options are used, its not a SQL script and the
+  Note that sqlp will automatically use this "fast path" read_csv() optimization when there 
+  is only one input CSV file, no CSV parsing options are used, its not a SQL script and the
   `--no-optimizations` flag is not set.
+
+  # apart from using Polar's table functions, you can also use SKIP_INPUT when the SELECT
+  # statement doesn't require an input file
+   qsv sqlp SKIP_INPUT "SELECT 1 AS one, '2' AS two, 3.0 AS three"
 
   # use stdin as input
    cat data.csv | qsv sqlp - 'select * from stdin'
