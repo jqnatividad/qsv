@@ -2050,17 +2050,14 @@ fn sqlp_date_part_tz() {
 #[test]
 fn sqlp_date() {
     let wrk = Workdir::new("sqlp_date");
-    wrk.create("dummy.csv", vec![svec!["c1"], svec![""]]);
 
     let mut cmd = wrk.command("sqlp");
-    cmd.arg("dummy.csv").arg(
+    cmd.arg("SKIP_INPUT").arg(
         r#"
         SELECT 
             DATE('2021-03-15') as c1,
             DATE('2021-03-15 10:30:20', '%Y-%m-%d %H:%M:%S') as c2,
-            DATE('03-15-2021 10:30:20 AM EST', '%m-%d-%Y %I:%M:%S %p %Z') as c3,
-        FROM dummy
-"#,
+            DATE('03-15-2021 10:30:20 AM EST', '%m-%d-%Y %I:%M:%S %p %Z') as c3"#,
     );
 
     wrk.assert_success(&mut cmd);
@@ -2072,6 +2069,22 @@ fn sqlp_date() {
         svec!["c1", "c2", "c3"],
         svec!["2021-03-15", "2021-03-15", "2021-03-15"],
     ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_skip_input() {
+    let wrk = Workdir::new("sqlp_skip_input");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("SKIP_INPUT")
+        .arg("SELECT 1 AS one, '2' AS two, 3.0 AS three");
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["one", "two", "three"], svec!["1", "2", "3.0"]];
 
     assert_eq!(got, expected);
 }
