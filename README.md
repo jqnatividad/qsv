@@ -93,14 +93,14 @@
 😣: uses additional memory proportional to the cardinality of the columns in the CSV.  
 🧠: expensive operations are memoized with available inter-session Redis/Disk caching for fetch commands.  
 🗄️: [Extended input support](#extended-input-support).  
-🐻‍❄️: command powered by [![polars 0.41.0](https://img.shields.io/badge/polars-0.41.0-blue)](https://github.com/pola-rs/polars/releases/tag/rs-0.41.0) engine.  
+🐻‍❄️: command powered by [![polars 0.41.1](https://img.shields.io/badge/polars-0.41.1-blue)](https://github.com/pola-rs/polars/releases/tag/rs-0.41.0) engine.  
 🤖: command uses Natural Language Processing & General AI techniques.  
 🏎️: multithreaded and/or faster when an index (📇) is available.  
 🚀: multithreaded even without an index.  
 ![CKAN](docs/images/ckan.png) : has [CKAN](https://ckan.org)-aware integration options.  
 🌐: has web-aware options.  
 🔣: requires UTF-8 encoded input.  
-👆: has powerful column selector support. See `select` for syntax.
+👆: has powerful column selector support. See [`select`](https://github.com/jqnatividad/qsv/blob/master/src/cmd/select.rs#L2) for syntax.
 
 ## Installation Options
 
