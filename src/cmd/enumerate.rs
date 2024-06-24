@@ -8,8 +8,11 @@ The enum function has four modes of operation:
   1. INCREMENT. Add an incremental identifier to each of the lines:
     $ qsv enum file.csv
 
-  2. UUID. Add a uuid v4 to each of the lines:
-    $ qsv enum --uuid file.csv
+  2. UUID4. Add a uuid v4 to each of the lines:
+    $ qsv enum --uuid4 file.csv
+
+  3. UUID7. Add a uuid v7 to each of the lines:
+    $ qsv enum --uuid7 file.csv
 
   3. CONSTANT. Create a new column filled with a given value:
     $ qsv enum --constant 0
@@ -48,9 +51,14 @@ enum options:
                              To specify a null value, pass the literal "<NULL>".
     --copy <column>          Name of a column to copy.
                              Changes the default column name to "{column}_copy".
-    --uuid                   When set, the column will be populated with
+    --uuid4                  When set, the column will be populated with
                              uuids (v4) instead of the incremental identifier.
-                             Changes the default column name to "uuid".
+                             Changes the default column name to "uuid4".
+    --uuid7                  When set, the column will be populated with
+                             uuids (v7) instead of the incremental identifier.
+                             uuid v7 is a time-based uuid and is monotonically increasing.
+                             See https://buildkite.com/blog/goodbye-integers-hello-uuids
+                             Changes the default column name to "uuid7".
     --hash <columns>         Create a new column filled with the hash of the
                              given column/s. Use "1-" to hash all columns.
                              Changes the default column name to "hash".
@@ -91,7 +99,8 @@ struct Args {
     flag_increment:  Option<u64>,
     flag_constant:   Option<String>,
     flag_copy:       Option<SelectColumns>,
-    flag_uuid:       bool,
+    flag_uuid4:      bool,
+    flag_uuid7:      bool,
     flag_hash:       Option<SelectColumns>,
     flag_output:     Option<String>,
     flag_no_headers: bool,
@@ -100,7 +109,8 @@ struct Args {
 
 enum EnumOperation {
     Increment,
-    Uuid,
+    Uuid4,
+    Uuid7,
     Constant,
     Copy,
     Hash,
@@ -168,8 +178,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if !rconfig.no_headers {
         if let Some(column_name) = &args.flag_new_column {
             headers.push_field(column_name.as_bytes());
-        } else if args.flag_uuid {
-            headers.push_field(b"uuid");
+        } else if args.flag_uuid4 {
+            headers.push_field(b"uuid4");
+        } else if args.flag_uuid7 {
+            headers.push_field(b"uuid7");
         } else if args.flag_constant.is_some() {
             headers.push_field(b"constant");
         } else if copy_operation {
@@ -205,8 +217,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let enum_operation = if args.flag_constant.is_some() {
         EnumOperation::Constant
-    } else if args.flag_uuid {
-        EnumOperation::Uuid
+    } else if args.flag_uuid4 {
+        EnumOperation::Uuid4
+    } else if args.flag_uuid7 {
+        EnumOperation::Uuid7
     } else if copy_operation {
         EnumOperation::Copy
     } else if args.flag_hash.is_some() {
@@ -231,8 +245,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 record.push_field(itoa_buffer.format(counter).as_bytes());
                 counter += increment;
             },
-            EnumOperation::Uuid => {
+            EnumOperation::Uuid4 => {
                 let id = Uuid::new_v4();
+                record.push_field(
+                    id.as_hyphenated()
+                        .encode_lower(&mut Uuid::encode_buffer())
+                        .as_bytes(),
+                );
+            },
+            EnumOperation::Uuid7 => {
+                let id = Uuid::now_v7();
                 record.push_field(
                     id.as_hyphenated()
                         .encode_lower(&mut Uuid::encode_buffer())
