@@ -300,7 +300,8 @@ commands:
             arg: value
           - long: --copy
             arg: column
-          - long: --uuid
+          - long: --uuid4
+          - long: --uuid7
           - long: --hash
             arg: columns
           - *output
