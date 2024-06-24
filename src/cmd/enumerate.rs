@@ -33,6 +33,12 @@ The enum function has four modes of operation:
   by sorting on the generated uuids:
     $ qsv enum --uuid4 file.csv | qsv sort -s uuid > shuffled.csv
 
+  This will shuffle the lines of the file.csv file as uuids generated using the v4
+  specification are random and for practical purposes, are unique (1 in 2^122).
+  See https://en.wikipedia.org/wiki/Universally_unique_identifier#Collisions
+  This will not work with uuids generated using the v7 spec as they are time-based
+  and monotonically increasing, and will not shuffle the lines.
+
 Usage:
     qsv enum [options] [<input>]
     qsv enum --help
