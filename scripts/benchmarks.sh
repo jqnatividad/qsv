@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=4.3.0
+bm_version=4.4.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -315,6 +315,7 @@ if [[ "$arg_pat" == "reset" ]]; then
   rm -f data_sorted.csv
   rm -f benchmark_data.xlsx
   rm -f benchmark_data.jsonl
+  rm -f benchmark_data.json
   rm -f benchmark_data.schema.json
   rm -f searchset_patterns.txt
   rm -f searchset_patterns_unicode.txt
@@ -362,21 +363,23 @@ fi
 if [ ! -r searchset_patterns_unicode.txt ]; then
   echo "> Preparing benchmark support data..."
   # create an index so benchmark data preparation commands can run faster
-  "$qsv_bin" index "$data"
+  "$qsv_benchmarker_bin" index "$data"
   echo "   data_to_exclude.csv..."
-  "$qsv_bin" sample --seed 42 1000 "$data" -o data_to_exclude.csv
+  "$qsv_benchmarker_bin" sample --seed 42 1000 "$data" -o data_to_exclude.csv
   echo "   data_unsorted.csv..."
-  "$qsv_bin" sort --seed 42 --random --faster "$data" -o data_unsorted.csv
+  "$qsv_benchmarker_bin" sort --seed 42 --random --faster "$data" -o data_unsorted.csv
   echo "   data_sorted.csv..."
-  "$qsv_bin" sort "$data" -o data_sorted.csv
+  "$qsv_benchmarker_bin" sort "$data" -o data_sorted.csv
   echo "   benchmark_data.xlsx..."
   "$qsv_benchmarker_bin" to xlsx benchmark_data.xlsx "$data"
   echo "   benchmark_data.jsonl..."
-  "$qsv_bin" tojsonl "$data" --output benchmark_data.jsonl
+  "$qsv_benchmarker_bin" tojsonl "$data" --output benchmark_data.jsonl
+  echo "   benchmark_data.json..."
+  "$qsv_benchmarker_bin" sqlp --format json "$data" -Q 'select * from _t_1' --infer-len 127000 --rnull-values 'N/A' --output benchmark_data.json
   echo "   benchmark_data.schema.json..."
-  "$qsv_bin" schema "$data" --stdout >benchmark_data.csv.schema.json
+  "$qsv_benchmarker_bin" schema "$data" --stdout >benchmark_data.csv.schema.json
   echo "   benchmark_data.snappy..."
-  "$qsv_bin" snappy compress "$data" --output benchmark_data.snappy
+  "$qsv_benchmarker_bin" snappy compress "$data" --output benchmark_data.snappy
   echo "   searchset_patterns.txt..."
   printf "homeless\npark\nNoise\n" >searchset_patterns.txt
   echo "   searchset_patterns_unicode.txt..."
@@ -467,7 +470,9 @@ run dedup "$qsv_bin" dedup "$data"
 run dedup_sorted "$qsv_bin" dedup data_sorted.csv
 run diff "$qsv_bin" diff "$data" data_unsorted.csv
 run enum "$qsv_bin" enum "$data"
-run enum_uuid "$qsv_bin" enum --uuid "$data"
+run enum_hash "$qsv_bin" enum --hash 1- "$data"
+run enum_uuid "$qsv_bin" enum --uuid4 "$data"
+run enum_uuid7 "$qsv_bin" enum --uuid7 "$data"
 run enum_constant "$qsv_bin" enum --constant "NYC" "$data"
 run enum_copy "$qsv_bin" enum --copy Agency "$data"
 run excel "$qsv_bin" excel benchmark_data.xlsx
@@ -509,6 +514,7 @@ run geocode_suggest "$qsv_bin" geocode suggest City --new-column geocoded_city "
 run geocode_reverse "$qsv_bin" geocode reverse Location --new-column geocoded_location "$data"
 run index "$qsv_bin" index "$data"
 run input "$qsv_bin" input "$data"
+run jsonp "$qsv_bin" jsonp benchmark_data.json
 run join "$qsv_bin" join \'Community Board\' "$data" community_board communityboards.csv
 run join_casei "$qsv_bin" join \'Community Board\' "$data" community_board --ignore-case communityboards.csv
 run joinp "$qsv_bin" joinp \'Community Board\' "$data" community_board communityboards.csv
