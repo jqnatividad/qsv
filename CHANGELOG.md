@@ -8,70 +8,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.129.0] - 2024-06-25
 
-## What's Changed
-* build(deps): bump atoi_simd from 0.15.6 to 0.16.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1844
-* build(deps): bump jql-runner from 7.1.9 to 7.1.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1845
-* build(deps): bump redis from 0.25.3 to 0.25.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1846
-* `tests`: add test_100 for 100.dathere.com & tests for lesson/exercise 0 by @rzmk in https://github.com/jqnatividad/qsv/pull/1848
-* `sqlp`: apply latest polars upstream with unreleased fixes by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1849
-* build(deps): bump tokio from 1.37.0 to 1.38.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1850
-* build(deps): bump flexi_logger from 0.28.0 to 0.28.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1853
-* `deps`: we now track py-polars release, instead of rust-polars by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1854
-* build(deps): bump strum_macros from 0.26.2 to 0.26.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1855
-* build(deps): bump jql-runner from 7.1.10 to 7.1.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1856
+### Added
 * `stats`: add Standard Error of the Mean (SEM) & Coefficient of Variation (CV) by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1857
-* `tests`: update `test_100/exercise_0.rs` setup file data by @rzmk in https://github.com/jqnatividad/qsv/pull/1858
 * `prompt`: add `qsv prompt` to pick a file with a file dialog & write to stdout by @rzmk in https://github.com/jqnatividad/qsv/pull/1860
-* `describegpt`: add base_url, model, ollama, & timeout to prompt file by @rzmk in https://github.com/jqnatividad/qsv/pull/1859
 * `prompt`: add `--fd-output` (`-f`) & `--output` (`-o`) options by @rzmk in https://github.com/jqnatividad/qsv/pull/1861
-* build(deps): bump strum_macros from 0.26.3 to 0.26.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1863
 * `describegpt`: add `--prompt` for custom prompt & update prompt file + docs by @rzmk in https://github.com/jqnatividad/qsv/pull/1862
-* foreach: add sample Windows implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1847
-* build(deps): bump regex from 1.10.4 to 1.10.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1865
-* build(deps): bump actix-web from 4.6.0 to 4.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1866
-* `select`: add `--sort`, `--random` & `--seed` options; also add 9999 sentinel value to indicate last column by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1867
-* build(deps): bump flexi_logger from 0.28.1 to 0.28.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1868
-* build(deps): bump url from 2.5.0 to 2.5.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1869
-* build(deps): bump flexi_logger from 0.28.2 to 0.28.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1870
-* `select`: use underscore char (_) to indicate last column, replacing 9999 sentinel value by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1873
-* build(deps): bump cached from 0.51.3 to 0.51.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1874
-* `select`: `--sort` & `--random` options now work with the initial selection, not just the entire CSV by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1875
-* `tests`: add tests for 100.dathere.com/lessons/1 by @rzmk in https://github.com/jqnatividad/qsv/pull/1876
-* `jsonp`: add `jsonp` command allowing non-nested JSON to CSV conversion with Polars by @rzmk in https://github.com/jqnatividad/qsv/pull/1880
-* build(deps): bump flexi_logger from 0.28.3 to 0.28.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1881
-* build(deps): bump geosuggest-core from 0.6.2 to 0.6.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1883
-* build(deps): bump geosuggest-utils from 0.6.2 to 0.6.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1882
-* `contrib(fish)`: add fish completions prototype with `qsv.fish` and docs by @rzmk in https://github.com/jqnatividad/qsv/pull/1884
-* `contrib(bashly)`: update `contrib/bashly/completions.bash` (prep for qsv v0.129.0) by @rzmk in https://github.com/jqnatividad/qsv/pull/1885
-* build(deps): bump simple-expand-tilde from 0.1.6 to 0.1.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1886
-* build(deps): bump reqwest from 0.12.4 to 0.12.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1889
-* build(deps): bump csvs_convert from 0.8.10 to 0.8.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1891
-* build(deps): bump curve25519-dalek from 4.1.2 to 4.1.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1893
-* build(deps): bump mlua from 0.9.8 to 0.9.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1894
-* build(deps): bump url from 2.5.1 to 2.5.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1895
-* update polars engine to use py-polars-1.0.0-beta1 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1896
-* `jsonp`: use `print!` instead of `println!` & add `House.csv` + tests by @rzmk in https://github.com/jqnatividad/qsv/pull/1897
-* `deps`: add polars timezones support by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1898
-* build(deps): bump actix-web from 4.7.0 to 4.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1901
+* `describegpt`: add base_url, model, ollama, & timeout to prompt file by @rzmk in https://github.com/jqnatividad/qsv/pull/1859
 * `enum`: add  `--hash` option to create a platform-independent deterministic id by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1902
-* build(deps): bump jql-runner from 7.1.11 to 7.1.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1903
-* build(deps): bump flexi_logger from 0.28.4 to 0.28.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1904
+* `enum`: add `--uuid7` option to create UUID v7 identifiers by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1914
+* foreach: add sample Windows implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1847
+* `select`: add `--sort`, `--random` & `--seed` options; also add 9999 sentinel value to indicate last column by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1867
+* `select`: use underscore char (_) to indicate last column, replacing 9999 sentinel value by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1873
+* `jsonp`: add `jsonp` command allowing non-nested JSON to CSV conversion with Polars by @rzmk in https://github.com/jqnatividad/qsv/pull/1880
+* `contrib(fish)`: add fish completions prototype with `qsv.fish` and docs by @rzmk in https://github.com/jqnatividad/qsv/pull/1884
+* `tests`: add tests for 100.dathere.com/lessons/1 by @rzmk in https://github.com/jqnatividad/qsv/pull/1876
+
+
+
+### Changed
+* `select`: `--sort` & `--random` options now work with the initial selection, not just the entire CSV by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1875
+* `contrib(bashly)`: update `contrib/bashly/completions.bash` (prep for qsv v0.129.0) by @rzmk in https://github.com/jqnatividad/qsv/pull/1885
+* `jsonp`: use `print!` instead of `println!` & add `House.csv` + tests by @rzmk in https://github.com/jqnatividad/qsv/pull/1897
 * contrib(bashly): add `--hash <columns>` option to `enum` by @rzmk in https://github.com/jqnatividad/qsv/pull/1905
 * `docs`: add column selector emoji - 👆 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1906
 * upgrade to polars 0.41.0 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1907
 * `describegpt`: update `dotenv.template` variable with `QSV_LLM_APIKEY` by @rzmk in https://github.com/jqnatividad/qsv/pull/1908
-* build(deps): bump polars from 0.41.0 to 0.41.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1909
-* build(deps): bump polars-ops from 0.41.0 to 0.41.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1910
-* build(deps): bump mimalloc from 0.1.42 to 0.1.43 by @dependabot in https://github.com/jqnatividad/qsv/pull/1911
-* build(deps): bump uuid from 1.8.0 to 1.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1912
-* build(deps): bump strum from 0.26.2 to 0.26.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1913
-* `enum`: add `--uuid7` option to create UUID v7 identifiers by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1914
 * contrib(bashly): add `--uuid4` & `--uuid4` for `qsv enum` by @rzmk in https://github.com/jqnatividad/qsv/pull/1915
+* `deps`: add polars timezones support by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1898
+* `tests`: add test_100 for 100.dathere.com & tests for lesson/exercise 0 by @rzmk in https://github.com/jqnatividad/qsv/pull/1848
+* `sqlp`: apply latest polars upstream with unreleased fixes by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1849
+* update polars engine to use py-polars-1.0.0-beta1 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1896
+* `deps`: we now track py-polars release, instead of rust-polars by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1854
+* `tests`: update `test_100/exercise_0.rs` setup file data by @rzmk in https://github.com/jqnatividad/qsv/pull/1858
+
+
+* build(deps): bump actix-web from 4.6.0 to 4.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1866
+* build(deps): bump actix-web from 4.7.0 to 4.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1901
+* build(deps): bump atoi_simd from 0.15.6 to 0.16.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1844
+* build(deps): bump cached from 0.51.3 to 0.51.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1874
+* build(deps): bump csvs_convert from 0.8.10 to 0.8.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1891
+* build(deps): bump curve25519-dalek from 4.1.2 to 4.1.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1893
+* build(deps): bump flexi_logger from 0.28.0 to 0.28.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1853
+* build(deps): bump flexi_logger from 0.28.1 to 0.28.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1868
+* build(deps): bump flexi_logger from 0.28.2 to 0.28.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1870
+* build(deps): bump flexi_logger from 0.28.3 to 0.28.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1881
+* build(deps): bump flexi_logger from 0.28.4 to 0.28.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1904
+* build(deps): bump geosuggest-core from 0.6.2 to 0.6.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1883
+* build(deps): bump geosuggest-utils from 0.6.2 to 0.6.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1882
+* build(deps): bump jql-runner from 7.1.9 to 7.1.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1845
+* build(deps): bump jql-runner from 7.1.10 to 7.1.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1856
+* build(deps): bump jql-runner from 7.1.11 to 7.1.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1903
+* build(deps): bump mimalloc from 0.1.42 to 0.1.43 by @dependabot in https://github.com/jqnatividad/qsv/pull/1911
+* build(deps): bump mlua from 0.9.8 to 0.9.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1894
+* build(deps): bump polars from 0.41.0 to 0.41.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1909
 * build(deps): bump polars from 0.41.1 to 0.41.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1916
+* build(deps): bump polars-ops from 0.41.0 to 0.41.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1910
 * build(deps): bump polars-ops from 0.41.1 to 0.41.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1917
-* build(deps): bump serde_json from 1.0.117 to 1.0.118 by @dependabot in https://github.com/jqnatividad/qsv/pull/1920
-* build(deps): bump uuid from 1.9.0 to 1.9.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1919
 * build(deps): bump pyo3 from 0.21.2 to 0.22.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1918
+* build(deps): bump regex from 1.10.4 to 1.10.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1865
+* build(deps): bump redis from 0.25.3 to 0.25.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1846
+* build(deps): bump reqwest from 0.12.4 to 0.12.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1889
+* build(deps): bump serde_json from 1.0.117 to 1.0.118 by @dependabot in https://github.com/jqnatividad/qsv/pull/1920
+* build(deps): bump simple-expand-tilde from 0.1.6 to 0.1.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1886
+* build(deps): bump strum from 0.26.2 to 0.26.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1913
+* build(deps): bump strum_macros from 0.26.2 to 0.26.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1855
+* build(deps): bump strum_macros from 0.26.3 to 0.26.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1863
+* build(deps): bump tokio from 1.37.0 to 1.38.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1850
+* build(deps): bump url from 2.5.0 to 2.5.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1869
+* build(deps): bump url from 2.5.1 to 2.5.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1895
+* build(deps): bump uuid from 1.8.0 to 1.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1912
+* build(deps): bump uuid from 1.9.0 to 1.9.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1919
+
 
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.128.0...0.129.0
