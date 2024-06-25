@@ -29,14 +29,15 @@ The enum function has four modes of operation:
     $ qsv enum --hash /record_id|name|address/ // hash columns that match a regex
     $ qsv enum --hash !/record_id/ // hash all columns except the record_id column
 
-  Finally, note that you should also be able to shuffle the lines of a CSV file
-  by sorting on the generated uuids:
+  Finally, you should also be able to shuffle the lines of a CSV file by sorting
+  on the generated uuid4s:
     $ qsv enum --uuid4 file.csv | qsv sort -s uuid > shuffled.csv
 
   This will shuffle the lines of the file.csv file as uuids generated using the v4
   specification are random and for practical purposes, are unique (1 in 2^122).
   See https://en.wikipedia.org/wiki/Universally_unique_identifier#Collisions
-  This will not work with uuids generated using the v7 spec as they are time-based
+
+  However, sorting on uuid7 identifiers will not work as they are time-based
   and monotonically increasing, and will not shuffle the lines.
 
 Usage:
@@ -70,7 +71,7 @@ enum options:
                              Changes the default column name to "hash".
                              Will remove an existing "hash" column if it exists.
 
-                             The columns argument specify the columns to use
+                             The <columns> argument specify the columns to use
                              in the hash. Columns can be referenced by name or index,
                              starting at 1. Specify multiple columns by separating
                              them with a comma. Specify a range of columns with `-`.
@@ -244,6 +245,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let increment = args.flag_increment.unwrap_or(1);
     let mut hash_string = String::new();
     let mut hash;
+    let uuid7_ctxt = uuid::ContextV7::new();
+    let mut uuid;
 
     while rdr.read_byte_record(&mut record)? {
         match enum_operation {
@@ -252,17 +255,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 counter += increment;
             },
             EnumOperation::Uuid4 => {
-                let id = Uuid::new_v4();
+                uuid = Uuid::new_v4();
                 record.push_field(
-                    id.as_hyphenated()
+                    uuid.as_hyphenated()
                         .encode_lower(&mut Uuid::encode_buffer())
                         .as_bytes(),
                 );
             },
             EnumOperation::Uuid7 => {
-                let id = Uuid::now_v7();
+                uuid = Uuid::new_v7(uuid::Timestamp::now(&uuid7_ctxt));
                 record.push_field(
-                    id.as_hyphenated()
+                    uuid.as_hyphenated()
                         .encode_lower(&mut Uuid::encode_buffer())
                         .as_bytes(),
                 );
