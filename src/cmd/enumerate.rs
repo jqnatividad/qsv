@@ -31,7 +31,7 @@ The enum function has four modes of operation:
 
   Finally, you should also be able to shuffle the lines of a CSV file by sorting
   on the generated uuid4s:
-    $ qsv enum --uuid4 file.csv | qsv sort -s uuid > shuffled.csv
+    $ qsv enum --uuid4 file.csv | qsv sort -s uuid4 > shuffled.csv
 
   This will shuffle the lines of the file.csv file as uuids generated using the v4
   specification are random and for practical purposes, are unique (1 in 2^122).
