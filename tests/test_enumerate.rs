@@ -483,3 +483,28 @@ fn enumerate_copy_name() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn enumerate_uuid7() {
+    let wrk = Workdir::new("enumerate_uuid7");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "93"],
+            svec!["z", "24"],
+            svec!["x", "72"],
+            svec!["d", "7"],
+        ],
+    );
+    let mut cmd = wrk.command("enum");
+    cmd.arg("--uuid7").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    assert_eq!(5, got.len());
+    assert_eq!(3, got[0].len());
+    // assert that the uuid7 column is monitonically increasing
+    assert!(got[1][2] < got[2][2]);
+    assert!(got[2][2] < got[3][2]);
+    assert!(got[3][2] < got[4][2]);
+}
