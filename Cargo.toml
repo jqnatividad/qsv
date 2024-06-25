@@ -161,7 +161,7 @@ polars = { version = "0.41", features = [
     "timezones",
 ], optional = true }
 polars-ops = { version = "0.41", optional = true }
-pyo3 = { version = "0.21", features = [
+pyo3 = { version = "0.22", features = [
     "auto-initialize",
     "gil-refs",
 ], optional = true }
