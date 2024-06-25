@@ -9,39 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.129.0] - 2024-06-25
 
 ### Added
-* `stats`: add Standard Error of the Mean (SEM) & Coefficient of Variation (CV) by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1857
+* `stats`: add Standard Error of the Mean (SEM) & Coefficient of Variation (CV) https://github.com/jqnatividad/qsv/pull/1857
 * `prompt`: add `qsv prompt` to pick a file with a file dialog & write to stdout by @rzmk in https://github.com/jqnatividad/qsv/pull/1860
 * `prompt`: add `--fd-output` (`-f`) & `--output` (`-o`) options by @rzmk in https://github.com/jqnatividad/qsv/pull/1861
 * `describegpt`: add `--prompt` for custom prompt & update prompt file + docs by @rzmk in https://github.com/jqnatividad/qsv/pull/1862
 * `describegpt`: add base_url, model, ollama, & timeout to prompt file by @rzmk in https://github.com/jqnatividad/qsv/pull/1859
-* `enum`: add  `--hash` option to create a platform-independent deterministic id by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1902
-* `enum`: add `--uuid7` option to create UUID v7 identifiers by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1914
-* foreach: add sample Windows implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1847
-* `select`: add `--sort`, `--random` & `--seed` options; also add 9999 sentinel value to indicate last column by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1867
-* `select`: use underscore char (_) to indicate last column, replacing 9999 sentinel value by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1873
+* `enum`: add  `--hash` option to create a platform-independent deterministic id https://github.com/jqnatividad/qsv/pull/1902
+* `enum`: add `--uuid7` option to create UUID v7 identifiers https://github.com/jqnatividad/qsv/pull/1914
+* `foreach`: add sample Windows implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1847
+* `select`: add `--sort`, `--random` & `--seed` options; also add 9999 sentinel value to indicate last column https://github.com/jqnatividad/qsv/pull/1867
+* `select`: use underscore char (_) to indicate last column, replacing 9999 sentinel value https://github.com/jqnatividad/qsv/pull/1873
 * `jsonp`: add `jsonp` command allowing non-nested JSON to CSV conversion with Polars by @rzmk in https://github.com/jqnatividad/qsv/pull/1880
 * `contrib(fish)`: add fish completions prototype with `qsv.fish` and docs by @rzmk in https://github.com/jqnatividad/qsv/pull/1884
+* contrib(bashly): add `--hash <columns>` option to `enum` by @rzmk in https://github.com/jqnatividad/qsv/pull/1905
+* contrib(bashly): add `--uuid4` & `--uuid7` for `qsv enum` by @rzmk in https://github.com/jqnatividad/qsv/pull/1915
 * `tests`: add tests for 100.dathere.com/lessons/1 by @rzmk in https://github.com/jqnatividad/qsv/pull/1876
-
-
+* `tests`: add test_100 for 100.dathere.com & tests for lesson/exercise 0 by @rzmk in https://github.com/jqnatividad/qsv/pull/1848
+* `docs`: add 👆 emoji to indicate commands with column selector support https://github.com/jqnatividad/qsv/commit/40ac8a7602315857ca529f43dd4fc45bec65c703
 
 ### Changed
-* `select`: `--sort` & `--random` options now work with the initial selection, not just the entire CSV by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1875
+* `stats`: made several microoptimizations to Field Data Type inferencing https://github.com/jqnatividad/qsv/commit/35004541d25eb29d564ec60824da63d9f32344dd https://github.com/jqnatividad/qsv/commit/f829e0cfbc8a390570f85371e3d661ec33211405 
+* `select`: `--sort` & `--random` options now work with the initial selection, not just the entire CSV https://github.com/jqnatividad/qsv/pull/1875
 * `contrib(bashly)`: update `contrib/bashly/completions.bash` (prep for qsv v0.129.0) by @rzmk in https://github.com/jqnatividad/qsv/pull/1885
 * `jsonp`: use `print!` instead of `println!` & add `House.csv` + tests by @rzmk in https://github.com/jqnatividad/qsv/pull/1897
-* contrib(bashly): add `--hash <columns>` option to `enum` by @rzmk in https://github.com/jqnatividad/qsv/pull/1905
-* `docs`: add column selector emoji - 👆 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1906
-* upgrade to polars 0.41.0 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1907
+* `docs`: add column selector emoji - 👆 https://github.com/jqnatividad/qsv/pull/1906
+* upgrade to polars 0.41.0 https://github.com/jqnatividad/qsv/pull/1907
 * `describegpt`: update `dotenv.template` variable with `QSV_LLM_APIKEY` by @rzmk in https://github.com/jqnatividad/qsv/pull/1908
-* contrib(bashly): add `--uuid4` & `--uuid4` for `qsv enum` by @rzmk in https://github.com/jqnatividad/qsv/pull/1915
-* `deps`: add polars timezones support by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1898
-* `tests`: add test_100 for 100.dathere.com & tests for lesson/exercise 0 by @rzmk in https://github.com/jqnatividad/qsv/pull/1848
-* `sqlp`: apply latest polars upstream with unreleased fixes by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1849
-* update polars engine to use py-polars-1.0.0-beta1 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1896
-* `deps`: we now track py-polars release, instead of rust-polars by @jqnatividad in https://github.com/jqnatividad/qsv/pull/1854
+* `deps`: add polars timezones support https://github.com/jqnatividad/qsv/pull/1898
 * `tests`: update `test_100/exercise_0.rs` setup file data by @rzmk in https://github.com/jqnatividad/qsv/pull/1858
-
-
 * build(deps): bump actix-web from 4.6.0 to 4.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1866
 * build(deps): bump actix-web from 4.7.0 to 4.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1901
 * build(deps): bump atoi_simd from 0.15.6 to 0.16.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1844
@@ -60,6 +55,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * build(deps): bump jql-runner from 7.1.11 to 7.1.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1903
 * build(deps): bump mimalloc from 0.1.42 to 0.1.43 by @dependabot in https://github.com/jqnatividad/qsv/pull/1911
 * build(deps): bump mlua from 0.9.8 to 0.9.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1894
+* `deps`: apply latest polars upstream with unreleased fixes https://github.com/jqnatividad/qsv/pull/1849
+* `deps`: we now track py-polars release, instead of rust-polars https://github.com/jqnatividad/qsv/pull/1854
+* `deps`: update polars engine to use py-polars-1.0.0-beta1 https://github.com/jqnatividad/qsv/pull/1896
 * build(deps): bump polars from 0.41.0 to 0.41.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1909
 * build(deps): bump polars from 0.41.1 to 0.41.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1916
 * build(deps): bump polars-ops from 0.41.0 to 0.41.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1910
@@ -78,8 +76,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * build(deps): bump url from 2.5.1 to 2.5.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1895
 * build(deps): bump uuid from 1.8.0 to 1.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1912
 * build(deps): bump uuid from 1.9.0 to 1.9.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1919
-
-
+* apply select clippy suggestions
+* updated several indirect dependencies
+* made various usage text improvements
+* pin Rust nightly to 2024-06-23
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.128.0...0.129.0
 
