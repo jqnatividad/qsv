@@ -1720,7 +1720,11 @@ pub fn write_json(
             if no_headers {
                 col_idx.to_string()
             } else {
-                String::from_utf8_lossy(b).to_string()
+                if let Ok(val) = simdutf8::basic::from_utf8(b) {
+                    val.to_owned()
+                } else {
+                    String::from_utf8_lossy(b).to_string()
+                }
             }
         })
         .collect();
