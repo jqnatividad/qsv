@@ -1,5 +1,5 @@
 # Set all available subcommands for qsv
-set -l qsv_commands apply applydp behead cat count datefmt dedup describegpt diff enum excel exclude explode extdedup extsort fetch fetchpost fill fixlengths flatten fmt frequency geocode headers index input join joinp jsonl jsonp luau partition prompt pseudo py rename replace reverse safenames sample schema search searchset select slice snappy sniff sort sortcheck split sqlp stats table to tojsonl transpose validate
+set -l qsv_commands apply applydp behead cat count datefmt dedup describegpt diff enum excel exclude explode extdedup extsort fetch fetchpost fill fixlengths flatten fmt frequency geocode headers index input join joinp jsonl json luau partition prompt pseudo py rename replace reverse safenames sample schema search searchset select slice snappy sniff sort sortcheck split sqlp stats table to tojsonl transpose validate
 
 # Enable completions for qsv
 complete -c qsv

@@ -2127,6 +2127,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "flatten-json-object"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9539d6d8c87acbf7c3189fb4d1c8ce926de16369212e97ba1629b62febb3d512"
+dependencies = [
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "flexi_logger"
 version = "0.28.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2915,6 +2925,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29c15563dc2726973df627357ce0c9ddddbea194836909d655df6a75d2cf296d"
 dependencies = [
  "wasm-bindgen",
+]
+
+[[package]]
+name = "json-objects-to-csv"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af3b789ec1548099bb74f65733e795b2d120f44fa0b34be8bae9fdb34d579b09"
+dependencies = [
+ "csv",
+ "flatten-json-object",
+ "serde_json",
+ "tempfile",
+ "thiserror",
 ]
 
 [[package]]
@@ -4767,6 +4790,7 @@ dependencies = [
  "itoa",
  "jemallocator",
  "jql-runner",
+ "json-objects-to-csv",
  "jsonschema",
  "local-encoding",
  "localzone",

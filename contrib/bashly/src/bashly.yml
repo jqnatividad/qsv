@@ -814,20 +814,10 @@ commands:
           - *output
           - *delimiter
 
-    - name: jsonp
+    - name: json
       completions:
           - <file>
       flags:
-          - long: --datetime-format
-            arg: <fmt>
-          - long: --date-format
-            arg: <fmt>
-          - long: --time-format
-            arg: <fmt>
-          - long: --float-precision
-            arg: <arg>
-          - long: --wnull-value
-            arg: <arg>
           - *output
 
     - name: luau
