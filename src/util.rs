@@ -1719,12 +1719,10 @@ pub fn write_json(
         .map(|(col_idx, b)| {
             if no_headers {
                 col_idx.to_string()
+            } else if let Ok(val) = simdutf8::basic::from_utf8(b) {
+                val.to_owned()
             } else {
-                if let Ok(val) = simdutf8::basic::from_utf8(b) {
-                    val.to_owned()
-                } else {
-                    String::from_utf8_lossy(b).to_string()
-                }
+                String::from_utf8_lossy(b).to_string()
             }
         })
         .collect();
@@ -1747,11 +1745,11 @@ pub fn write_json(
         }
         write!(json_wtr, "{{")?;
         for (idx, b) in record.iter().enumerate() {
-            if let Ok(val) = simdutf8::basic::from_utf8(b) {
-                temp_val = val.to_owned();
+            temp_val = if let Ok(val) = simdutf8::basic::from_utf8(b) {
+                val.to_owned()
             } else {
-                temp_val = String::from_utf8_lossy(b).to_string();
-            }
+                String::from_utf8_lossy(b).to_string()
+            };
             if temp_val.is_empty() {
                 temp_val.clone_from(&null_val);
             } else {
