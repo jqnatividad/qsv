@@ -68,9 +68,10 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    match args.rconfig().indexed()? {
-        None => args.no_index(),
-        Some(idxed) => args.with_index(idxed),
+    if let Some(idxed) = args.rconfig().indexed()? {
+        args.with_index(idxed)
+    } else {
+        args.no_index()
     }
 }
 
