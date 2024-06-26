@@ -74,7 +74,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // Create a buffer in memory for stdin
         let mut buffer: Vec<u8> = Vec::new();
         let stdin = std::io::stdin();
-        stdin.lock().read_to_end(&mut buffer)?;
+        let mut stdin_handle = stdin.lock();
+        stdin_handle.read_to_end(&mut buffer)?;
+        drop(stdin_handle);
         JsonReader::new(Box::new(std::io::Cursor::new(buffer))).finish()
     }
 
