@@ -42,6 +42,7 @@ macro_rules! command_list {
     index       Create CSV index for faster access
     input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
     join        Join CSV files
+    json        Convert non-nested JSON to CSV
     jsonl       Convert newline-delimited JSON files to CSV
     partition   Partition CSV data based on a column value
     prompt      Open a file dialog to pick a file
@@ -246,6 +247,7 @@ enum Command {
     Index,
     Input,
     Join,
+    Json,
     Jsonl,
     Partition,
     Prompt,
@@ -314,6 +316,7 @@ impl Command {
             Command::Index => cmd::index::run(argv),
             Command::Input => cmd::input::run(argv),
             Command::Join => cmd::join::run(argv),
+            Command::Json => cmd::json::run(argv),
             Command::Jsonl => cmd::jsonl::run(argv),
             Command::Partition => cmd::partition::run(argv),
             Command::Prompt => cmd::prompt::run(argv),
