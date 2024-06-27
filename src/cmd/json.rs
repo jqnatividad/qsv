@@ -92,7 +92,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let first_dict = value
         .as_array()
         .unwrap()
-        .get(0)
+        .first()
         .unwrap()
         .as_object()
         .unwrap();
