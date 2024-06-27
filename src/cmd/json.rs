@@ -120,14 +120,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if value.is_null() {
         return fail_clierror!("No JSON data found.");
     }
-    // safety: value is not null
     let first_dict = value
         .as_array()
-        .unwrap()
-        .first()
-        .unwrap()
-        .as_object()
-        .unwrap();
+        .and_then(|arr| arr.first())
+        .and_then(|val| val.as_object())
+        .ok_or_else(|| CliError::Other("Expected an array of objects in JSON".to_string()))?;
     let mut headers: Vec<&str> = Vec::new();
     for key in first_dict.keys() {
         headers.push(key.as_str());
@@ -138,6 +135,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Json2Csv::new(flattener).convert_from_array(values, csv_writer)?;
 
     // Use qsv select to reorder headers to first dict's keys order
+    // TODO: call select helpers directly instead of using a child process
     let mut select_child = std::process::Command::new(env::current_exe()?)
         .arg("select")
         .arg(headers.join(","))
