@@ -85,7 +85,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let flattener = Flattener::new();
     let mut output = Vec::<u8>::new();
     let value = match args.arg_input {
-        Some(path) => get_value_from_path(path.into()),
+        Some(path) => get_value_from_path(path),
         _ => get_value_from_stdin(),
     };
     let csv_writer = csv::WriterBuilder::new().from_writer(&mut output);
