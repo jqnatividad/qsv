@@ -111,11 +111,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let flattener = Flattener::new();
     let mut output = Vec::<u8>::new();
-    let value = match args.arg_input {
-        Some(path) => get_value_from_path(path)?,
-        _ => get_value_from_stdin()?,
+    let value = if let Some(path) = args.arg_input {
+        get_value_from_path(path)?
+    } else {
+        get_value_from_stdin()?
     };
-    let csv_writer = csv::WriterBuilder::new().from_writer(&mut output);
 
     if value.is_null() {
         return fail_clierror!("No JSON data found.");
@@ -132,6 +132,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let empty_values = vec![serde_json::Value::Null; 1];
     let values = value.as_array().unwrap_or(&empty_values);
+
+    let csv_writer = csv::WriterBuilder::new().from_writer(&mut output);
     Json2Csv::new(flattener).convert_from_array(values, csv_writer)?;
 
     // Use qsv select to reorder headers to first dict's keys order
@@ -151,7 +153,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .map_err(|_| CliError::Other("Failed to read stdout".to_string()))?;
 
     if let Some(output_path) = args.flag_output {
-        let mut file = std::fs::File::create(&output_path)?;
+        let mut file = std::fs::File::create(output_path)?;
         let buf = select_output.stdout;
         file.write_all(&buf)?;
         file.flush()?;
