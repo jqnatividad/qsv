@@ -106,7 +106,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .unwrap();
 
     // Use qsv select to reorder headers to first dict's keys order
-    let mut select_child = std::process::Command::new(env::current_exe().unwrap().clone())
+    let mut select_child = std::process::Command::new(env::current_exe().unwrap())
         .arg("select")
         .arg(headers.join(","))
         .stdin(std::process::Stdio::piped())
