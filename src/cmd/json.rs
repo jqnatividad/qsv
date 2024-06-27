@@ -50,7 +50,7 @@ use std::{
 use json_objects_to_csv::{flatten_json_object::Flattener, Json2Csv};
 use serde::Deserialize;
 
-use crate::{util, CliResult};
+use crate::{util, CliError, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
@@ -58,26 +58,53 @@ struct Args {
     flag_output: Option<String>,
 }
 
+impl From<json_objects_to_csv::Error> for CliError {
+    fn from(err: json_objects_to_csv::Error) -> Self {
+        match err {
+            json_objects_to_csv::Error::Flattening(err) => {
+                CliError::Other(format!("Flattening error: {err}"))
+            },
+            json_objects_to_csv::Error::FlattenedKeysCollision => {
+                CliError::Other(format!("Flattening Key Collission error: {err}"))
+            },
+            json_objects_to_csv::Error::WrittingCSV(err) => {
+                CliError::Other(format!("Writing CSV error: {err}"))
+            },
+            json_objects_to_csv::Error::ParsingJson(err) => {
+                CliError::Other(format!("Parsing JSON error: {err}"))
+            },
+            json_objects_to_csv::Error::InputOutput(err) => CliError::Io(err),
+            json_objects_to_csv::Error::IntoFile(err) => CliError::Io(err.into()),
+        }
+    }
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    fn get_value_from_stdin() -> serde_json::Value {
+    fn get_value_from_stdin() -> CliResult<serde_json::Value> {
         // Create a buffer in memory for stdin
         let mut buffer: Vec<u8> = Vec::new();
         let stdin = std::io::stdin();
         let mut stdin_handle = stdin.lock();
-        stdin_handle.read_to_end(&mut buffer).unwrap();
+        stdin_handle.read_to_end(&mut buffer)?;
         drop(stdin_handle);
 
         // Return the JSON contents of the buffer as serde_json::Value
-        serde_json::from_slice(&buffer).unwrap()
+        match serde_json::from_slice(&buffer) {
+            Ok(value) => Ok(value),
+            Err(err) => fail_clierror!("Failed to parse JSON from stdin: {err}"),
+        }
     }
 
-    fn get_value_from_path(path: String) -> serde_json::Value {
+    fn get_value_from_path(path: String) -> CliResult<serde_json::Value> {
         // Open the file in read-only mode with buffer.
-        let file = std::fs::File::open(path).unwrap();
+        let file = std::fs::File::open(path)?;
         let reader = std::io::BufReader::new(file);
 
         // Return the JSON contents of the file as serde_json::Value
-        serde_json::from_reader(reader).unwrap()
+        match serde_json::from_reader(reader) {
+            Ok(value) => Ok(value),
+            Err(err) => fail_clierror!("Failed to parse JSON from file: {err}"),
+        }
     }
 
     let args: Args = util::get_args(USAGE, argv)?;
@@ -85,10 +112,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let flattener = Flattener::new();
     let mut output = Vec::<u8>::new();
     let value = match args.arg_input {
-        Some(path) => get_value_from_path(path),
-        _ => get_value_from_stdin(),
+        Some(path) => get_value_from_path(path)?,
+        _ => get_value_from_stdin()?,
     };
     let csv_writer = csv::WriterBuilder::new().from_writer(&mut output);
+
+    if value.is_null() {
+        return fail_clierror!("No JSON data found.");
+    }
+    // safety: value is not null
     let first_dict = value
         .as_array()
         .unwrap()
@@ -100,13 +132,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     for key in first_dict.keys() {
         headers.push(key.as_str());
     }
-    let values = value.as_array().unwrap();
-    Json2Csv::new(flattener)
-        .convert_from_array(values, csv_writer)
-        .unwrap();
+
+    let empty_values = vec![serde_json::Value::Null; 1];
+    let values = value.as_array().unwrap_or(&empty_values);
+    Json2Csv::new(flattener).convert_from_array(values, csv_writer)?;
 
     // Use qsv select to reorder headers to first dict's keys order
-    let mut select_child = std::process::Command::new(env::current_exe().unwrap())
+    let mut select_child = std::process::Command::new(env::current_exe()?)
         .arg("select")
         .arg(headers.join(","))
         .stdin(std::process::Stdio::piped())
@@ -118,7 +150,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let select_output = select_child
         .wait_with_output()
-        .expect("Failed to read stdout");
+        .map_err(|_| CliError::Other("Failed to read stdout".to_string()))?;
 
     if let Some(output_path) = args.flag_output {
         let mut file = std::fs::File::create(&output_path)?;
