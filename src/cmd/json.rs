@@ -59,8 +59,6 @@ struct Args {
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let args: Args = util::get_args(USAGE, argv)?;
-
     fn get_value_from_stdin() -> serde_json::Value {
         // Create a buffer in memory for stdin
         let mut buffer: Vec<u8> = Vec::new();
@@ -81,6 +79,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // Return the JSON contents of the file as serde_json::Value
         serde_json::from_reader(reader).unwrap()
     }
+
+    let args: Args = util::get_args(USAGE, argv)?;
 
     let flattener = Flattener::new();
     let mut output = Vec::<u8>::new();
