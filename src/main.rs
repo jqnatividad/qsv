@@ -357,8 +357,8 @@ enum Command {
     Join,
     #[cfg(all(feature = "polars", feature = "feature_capable"))]
     JoinP,
-    Jsonl,
     Json,
+    Jsonl,
     #[cfg(all(feature = "luau", feature = "feature_capable"))]
     Luau,
     Partition,
