@@ -226,6 +226,7 @@ url = "2.5"
 vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
+json-objects-to-csv = "0.1.3"
 
 [target.'cfg(not(target_arch = "aarch64"))'.dependencies]
 simdutf8    = "0.1"

@@ -108,16 +108,16 @@ _qsv_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_qsv_completions_filter "--help --k_weight -h")" -- "$cur" )
       ;;
 
-    *'geocode'*'suggest'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_qsv_completions_filter "--admin1 --help --min-score -h")" -- "$cur" )
-      ;;
-
     *'snappy'*'compress'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--help -h")" -- "$cur" )
       ;;
 
     *'snappy'*'validate'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--help -h")" -- "$cur" )
+      ;;
+
+    *'geocode'*'suggest'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_qsv_completions_filter "--admin1 --help --min-score -h")" -- "$cur" )
       ;;
 
     *'fetch'*'--jqlfile')
@@ -340,8 +340,8 @@ _qsv_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--delimiter --end --help --index --json --len --no-headers --output --start -h")" -- "$cur" )
       ;;
 
-    *'jsonl'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--batch --delimiter --help --ignore-errors --jobs --output -h")" -- "$cur" )
+    *'table'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--align --condense --delimiter --help --memcheck --output --pad --width -h")" -- "$cur" )
       ;;
 
     *'count'*)
@@ -364,20 +364,16 @@ _qsv_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--delimiter --harvest-mode --help --json --just-mime --no-infer --prefer-dmy --pretty-json --progressbar --quick --quote --sample --save-urlsample --stats-types --timeout --user-agent -h")" -- "$cur" )
       ;;
 
-    *'table'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--align --condense --delimiter --help --memcheck --output --pad --width -h")" -- "$cur" )
+    *'stats'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--cache-threshold --cardinality --dates-whitelist --delimiter --everything --force --help --infer-boolean --infer-dates --jobs --mad --median --memcheck --mode --no-headers --nulls --output --prefer-dmy --quartiles --round --select --stats-binout --typesonly -h")" -- "$cur" )
       ;;
 
-    *'jsonp'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--date-format --datetime-format --float-precision --help --output --time-format --wnull-value -h")" -- "$cur" )
+    *'jsonl'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--batch --delimiter --help --ignore-errors --jobs --output -h")" -- "$cur" )
       ;;
 
     *'split'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--chunks --delimiter --filename --help --jobs --kb-size --no-headers --pad --quiet --size -h")" -- "$cur" )
-      ;;
-
-    *'stats'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--cache-threshold --cardinality --dates-whitelist --delimiter --everything --force --help --infer-boolean --infer-dates --jobs --mad --median --memcheck --mode --no-headers --nulls --output --prefer-dmy --quartiles --round --select --stats-binout --typesonly -h")" -- "$cur" )
       ;;
 
     *'sqlp'*)
@@ -388,24 +384,28 @@ _qsv_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--delimiter --faster --help --ignore-case --jobs --memcheck --no-headers --numeric --output --random --reverse --rng --seed --select --unique -h")" -- "$cur" )
       ;;
 
-    *'fill'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--backfill --default --delimiter --first --groupby --help --no-headers --output -h")" -- "$cur" )
-      ;;
-
     *'diff'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--delimiter right --delimiter-left --delimiter-output --help --jobs --key --no-headers-left --no-headers-output --no-headers-right --output --sort-columns -h")" -- "$cur" )
+      ;;
+
+    *'enum'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--constant --copy --delimiter --hash --help --increment --new-column --no-headers --output --start --uuid4 --uuid7 -h")" -- "$cur" )
       ;;
 
     *'luau'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_qsv_completions_filter "--begin --cache-dir --ckan-api --ckan-token --colindex --delimiter --end --help --luau-path --max-errors --no-globals --no-headers --output --progressbar --remap --timeout -h filter map")" -- "$cur" )
       ;;
 
+    *'json'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--help --output -h")" -- "$cur" )
+      ;;
+
     *'join'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--cross --delimiter --full --help --ignore-case --left --left-anti --left-semi --no-headers --nulls --output --right -h")" -- "$cur" )
       ;;
 
-    *'enum'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--constant --copy --delimiter --hash --help --increment --new-column --no-headers --output --start --uuid4 --uuid7 -h")" -- "$cur" )
+    *'fill'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--backfill --default --delimiter --first --groupby --help --no-headers --output -h")" -- "$cur" )
       ;;
 
     *'cat'*)
@@ -416,16 +416,16 @@ _qsv_completions() {
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--ascii --crlf --delimiter --escape --help --no-final-newline --out-delimiter --output --quote --quote-always --quote-never -h")" -- "$cur" )
       ;;
 
-    *'to'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_qsv_completions_filter "--delimiter --drop --dump --evolve --help --jobs --pipe --print-package --quiet --schema --separator --stats --stats-csv -h datapackage parquet postgres sqlite xlsx")" -- "$cur" )
-      ;;
-
     *'py'*)
       while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_qsv_completions_filter "--batch --delimiter --help --helper --no-headers --output --progressbar -h filter map")" -- "$cur" )
       ;;
 
+    *'to'*)
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_qsv_completions_filter "--delimiter --drop --dump --evolve --help --jobs --pipe --print-package --quiet --schema --separator --stats --stats-csv -h datapackage parquet postgres sqlite xlsx")" -- "$cur" )
+      ;;
+
     *)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_qsv_completions_filter "--envlist --help --list --update --updatenow --version -h -v apply applydp behead cat count datefmt dedup describegpt diff enum excel exclude explode extdudup extsort fetch fetchpost fill fixlengths flatten fmt foreach frequency generate geocode headers index input join joinp jsonl jsonp luau partition prompt pseudo py rename reverse safenames sample schema search searchset select slice snappy sniff sort sortcheck split sqlp stats table to tojsonl transpose validate")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_qsv_completions_filter "--envlist --help --list --update --updatenow --version -h -v apply applydp behead cat count datefmt dedup describegpt diff enum excel exclude explode extdudup extsort fetch fetchpost fill fixlengths flatten fmt foreach frequency generate geocode headers index input join joinp json jsonl luau partition prompt pseudo py rename reverse safenames sample schema search searchset select slice snappy sniff sort sortcheck split sqlp stats table to tojsonl transpose validate")" -- "$cur" )
       ;;
 
   esac

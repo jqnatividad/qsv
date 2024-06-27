@@ -514,7 +514,7 @@ run geocode_suggest "$qsv_bin" geocode suggest City --new-column geocoded_city "
 run geocode_reverse "$qsv_bin" geocode reverse Location --new-column geocoded_location "$data"
 run index "$qsv_bin" index "$data"
 run input "$qsv_bin" input "$data"
-run jsonp "$qsv_bin" jsonp benchmark_data.json
+run json "$qsv_bin" json benchmark_data.json
 run join "$qsv_bin" join \'Community Board\' "$data" community_board communityboards.csv
 run join_casei "$qsv_bin" join \'Community Board\' "$data" community_board --ignore-case communityboards.csv
 run joinp "$qsv_bin" joinp \'Community Board\' "$data" community_board communityboards.csv

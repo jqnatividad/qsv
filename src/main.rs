@@ -144,8 +144,7 @@ fn main() -> QsvExitCode {
     enabled_commands.push_str("    jsonl       Convert newline-delimited JSON files to CSV\n");
 
     #[cfg(all(feature = "polars", feature = "feature_capable"))]
-    enabled_commands
-        .push_str("    jsonp       Convert non-nested JSON to CSV (polars feature only)\n");
+    enabled_commands.push_str("    json       Convert non-nested JSON to CSV\n");
 
     #[cfg(all(feature = "luau", feature = "feature_capable"))]
     enabled_commands.push_str("    luau        Execute Luau script on CSV data\n");
@@ -359,8 +358,7 @@ enum Command {
     #[cfg(all(feature = "polars", feature = "feature_capable"))]
     JoinP,
     Jsonl,
-    #[cfg(all(feature = "polars", feature = "feature_capable"))]
-    JsonP,
+    Json,
     #[cfg(all(feature = "luau", feature = "feature_capable"))]
     Luau,
     Partition,
@@ -449,9 +447,8 @@ impl Command {
             Command::Join => cmd::join::run(argv),
             #[cfg(all(feature = "polars", feature = "feature_capable"))]
             Command::JoinP => cmd::joinp::run(argv),
+            Command::Json => cmd::json::run(argv),
             Command::Jsonl => cmd::jsonl::run(argv),
-            #[cfg(all(feature = "polars", feature = "feature_capable"))]
-            Command::JsonP => cmd::jsonp::run(argv),
             #[cfg(all(feature = "luau", feature = "feature_capable"))]
             Command::Luau => cmd::luau::run(argv),
             Command::Partition => cmd::partition::run(argv),
