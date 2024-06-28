@@ -159,7 +159,6 @@ fn sqlp_join_same_colname_1820() {
 }
 
 #[test]
-// #[ignore = "temporarily disable due to a bug in polars aliasing"]
 fn sqlp_boston311_groupby_orderby() {
     let wrk = Workdir::new("sqlp_boston311_groupby_orderby");
     let test_file = wrk.load_test_file("boston311-100.csv");
@@ -215,6 +214,65 @@ fn sqlp_boston311_groupby_orderby() {
         svec!["Ward 17", "1"],
         svec!["Ward 2", "1"],
         svec!["Ward 22", "1"],
+        svec!["Ward 9", "1"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_boston311_groupby_orderby_all() {
+    let wrk = Workdir::new("sqlp_boston311_groupby_orderby_all");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("sqlp");
+
+    cmd.arg(&test_file)
+        .arg(r#"select ward, count(*) as cnt from "boston311-100" group by ward order by all"#);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["ward", "cnt"],
+        svec![" ", "1"],
+        svec!["01", "1"],
+        svec!["02", "1"],
+        svec!["03", "2"],
+        svec!["04", "1"],
+        svec!["06", "1"],
+        svec!["07", "1"],
+        svec!["1", "1"],
+        svec!["10", "1"],
+        svec!["14", "4"],
+        svec!["16", "1"],
+        svec!["17", "2"],
+        svec!["18", "1"],
+        svec!["19", "1"],
+        svec!["21", "1"],
+        svec!["22", "2"],
+        svec!["3", "5"],
+        svec!["7", "1"],
+        svec!["8", "1"],
+        svec!["9", "1"],
+        svec!["Ward 1", "6"],
+        svec!["Ward 10", "1"],
+        svec!["Ward 11", "2"],
+        svec!["Ward 12", "1"],
+        svec!["Ward 13", "4"],
+        svec!["Ward 14", "1"],
+        svec!["Ward 15", "1"],
+        svec!["Ward 16", "4"],
+        svec!["Ward 17", "1"],
+        svec!["Ward 18", "3"],
+        svec!["Ward 19", "3"],
+        svec!["Ward 2", "1"],
+        svec!["Ward 20", "5"],
+        svec!["Ward 21", "2"],
+        svec!["Ward 22", "1"],
+        svec!["Ward 3", "10"],
+        svec!["Ward 4", "5"],
+        svec!["Ward 5", "5"],
+        svec!["Ward 6", "7"],
+        svec!["Ward 7", "3"],
+        svec!["Ward 8", "3"],
         svec!["Ward 9", "1"],
     ];
     assert_eq!(got, expected);
@@ -1748,6 +1806,42 @@ fn sqlp_modulo() {
 }
 
 #[test]
+fn sqlp_try_cast() {
+    let wrk = Workdir::new("sqlp_try_cast");
+    wrk.create(
+        "test.csv",
+        vec![
+            svec!["foo", "bar"],
+            svec!["65432", "1999-12-31"],
+            svec!["101010", "N/A"],
+            svec!["-3333", "2024-01-01"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.csv").arg(
+        r#"
+        SELECT
+            try_cast(foo as uint2),
+            try_cast(bar as DATE)
+        FROM test
+"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["foo", "bar"],
+        svec!["65432", "1999-12-31"],
+        svec!["", ""],
+        svec!["", "2024-01-01"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sqlp_stddev_variance() {
     let wrk = Workdir::new("sqlp_stddev_variance");
     wrk.create(
@@ -2063,11 +2157,168 @@ fn sqlp_date() {
     wrk.assert_success(&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    // unfortunately, this is the current behavior of the date function
-    // https://github.com/pola-rs/polars/issues/17093
+    // this is the documented behavior of the date function
+    // use STRFTIME and STRPTIME for more control
     let expected = vec![
         svec!["c1", "c2", "c3"],
         svec!["2021-03-15", "2021-03-15", "2021-03-15"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_date_strftime() {
+    let wrk = Workdir::new("sqlp_date_strftime");
+
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["dtm", "dt", "tm"],
+            svec!["1972-03-06 23:50:03", "1978-07-05", "10:10:10"],
+            svec!["1980-09-30 01:25:50", "1969-12-31", "22:33:55"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("data.csv")
+        .arg(
+            r#"
+        SELECT
+      STRFTIME(dtm,'%m.%d.%Y/%T') AS s_dtm,
+      STRFTIME(dt,'%B %d, %Y') AS s_dt,
+      STRFTIME(tm,'%S.%M.%H') AS s_tm,
+    FROM data"#,
+        )
+        .arg("--try-parsedates");
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["s_dtm", "s_dt", "s_tm"],
+        svec!["03.06.1972/23:50:03", "July 05, 1978", "10.10.10"],
+        svec!["09.30.1980/01:25:50", "December 31, 1969", "55.33.22"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_string_like_ops() {
+    let wrk = Workdir::new("sqlp_string_like_ops");
+
+    wrk.create(
+        "likedata.csv",
+        vec![
+            svec!["x", "y"],
+            svec!["aaa", "abc"],
+            svec!["bbb", "b"],
+            svec!["a", "aa"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("likedata.csv").arg(
+        r#"
+        SELECT
+            x,
+            x ^@ 'a' AS x_starts_with_a,
+            x ~~* '%B' AS x_ends_with_b_case_insensitive,
+            x ^@ y AS x_starts_with_y,
+            x ~~ '%a' AS x_ends_with_a
+        FROM likedata"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "x",
+            "x_starts_with_a",
+            "x_ends_with_b_case_insensitive",
+            "x_starts_with_y",
+            "x_ends_with_a"
+        ],
+        svec!["aaa", "true", "false", "false", "true"],
+        svec!["bbb", "false", "true", "true", "false"],
+        svec!["a", "true", "false", "false", "true"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_star_ilike() {
+    let wrk = Workdir::new("sqlp_star_ilike");
+
+    wrk.create(
+        "starlikedata.csv",
+        vec![
+            svec!["ID", "FirstName", "LastName", "Address", "City"],
+            svec!["333", "Bruce", "Wayne", "The Batcave", "Gotham"],
+            svec!["666", "Diana", "Prince", "Paradise Island", "Themyscira"],
+            svec!["999", "Clark", "Kent", "Fortress of Solitude", "Metropolis"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("starlikedata.csv").arg(
+        r#"
+        SELECT * ILIKE '%a%e%'
+  FROM starlikedata
+  ORDER BY FirstName"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["FirstName", "LastName", "Address"],
+        svec!["Bruce", "Wayne", "The Batcave"],
+        svec!["Clark", "Kent", "Fortress of Solitude"],
+        svec!["Diana", "Prince", "Paradise Island"],
+    ];
+
+    assert_eq!(got, expected);
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("starlikedata.csv").arg(
+        r#"
+        SELECT * ILIKE '%I%' RENAME (FirstName AS Name) 
+  FROM starlikedata
+  ORDER BY 3 DESC"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["ID", "Name", "City"],
+        svec!["666", "Diana", "Themyscira"],
+        svec!["999", "Clark", "Metropolis"],
+        svec!["333", "Bruce", "Gotham"],
+    ];
+
+    assert_eq!(got, expected);
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("starlikedata.csv").arg(
+        r#"
+        SELECT * EXCLUDE (ID, City, LastName) RENAME FirstName AS Name
+  FROM starlikedata
+  ORDER BY Name"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["Name", "Address"],
+        svec!["Bruce", "The Batcave"],
+        svec!["Clark", "Fortress of Solitude"],
+        svec!["Diana", "Paradise Island"],
     ];
 
     assert_eq!(got, expected);
