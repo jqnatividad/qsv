@@ -16,7 +16,7 @@ Returns the shape of the query result (number of rows, number of columns) to std
 
 Example queries:
 
-   qsv sqlp data.csv 'select * from data where col1 > 10 order by col2 desc limit 20'
+   qsv sqlp data.csv 'select * from data where col1 > 10 order by all desc limit 20'
 
    qsv sqlp data.csv 'select col1, col2 as friendlyname from data' --format parquet --output data.parquet
 
@@ -71,6 +71,19 @@ Example queries:
   # https://en.wikipedia.org/wiki/Three-way_comparison#Spaceship_operator
    qsv sqlp data.csv data2.csv "select data.c2 <=> data2.c2 from data join data2 on data.c1 = data2.c1"
 
+  # support ^@ ("starts with"), and ~~ (like) ,~~* (ilike),!~~ (not like),!~~* (not ilike) operators
+    qsv sqlp data.csv "select * from data WHERE col1 ^@ 'foo'"
+    qsv sqlp data.csv "select c1 ^@ 'a' AS c1_starts_with_a from data"
+    qsv sqlp data.csv "select c1 ~~* '%B' AS c1_ends_with_b_caseinsensitive from data"
+
+  # support SELECT * ILIKE wildcard syntax
+    # select all columns from customers where the column contains 'a' followed by an 'e'
+    # with any characters (or no characters), in between, case-insensitive
+    # if customers.csv has columns LastName, FirstName, Address, City, State, Zip
+    # this query will return all columns for all rows except the columns that don't
+    # contain 'a' followed by an 'e' - i.e. except City and Zip
+    qsv sqlp customers.csv "SELECT * ILIKE '%a%e%' FROM customers ORDER BY LastName, FirstName"
+
   # regex operators: "~" (contains pattern, case-sensitive); "~*" (contains pattern, case-insensitive)
   #   "!~" (does not contain pattern, case-sensitive); "!~*" (does not contain pattern, case-insensitive)
    qsv sqlp data.csv "select * from data WHERE col1 ~ '^foo' AND col2 > 10"
@@ -94,6 +107,8 @@ Example queries:
    qsv sqlp data.csv "select * from data join read_parquet('data2.parquet') as t2 ON data.c1 = t2.c1"
    qsv sqlp data.csv "select * from data join read_ndjson('data2.jsonl') as t2 on data.c1 = t2.c1"
    qsv sqlp data.csv "select * from data join read_ipc('data2.arrow') as t2 ON data.c1 = t2.c1"
+   qsv sqlp SKIP_INPUT "select * from read_parquet('data.parquet') order by col1 desc limit 100"
+   qsv sqlp SKIP_INPUT "select * from read_ndjson('data.jsonl') as t1 join read_ipc('data.arrow') as t2 on t1.c1 = t2.c1" 
 
   # you can also directly load CSVs using the Polars read_csv() SQL function. This is useful when
   # you want to bypass the regular CSV parser (with SKIP_INPUT) and use Polars' multithreaded,
