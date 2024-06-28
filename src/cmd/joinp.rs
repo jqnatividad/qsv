@@ -186,12 +186,11 @@ use std::{
 use polars::{
     datatypes::AnyValue,
     prelude::{
-        AsOfOptions, AsofStrategy, CsvWriter, IntoLazy, JoinType, JoinValidation, LazyCsvReader,
-        LazyFileListReader, LazyFrame, SerWriter, SortMultipleOptions,
+        AsOfOptions, AsofStrategy, CsvWriter, IntoLazy, JoinCoalesce, JoinType, JoinValidation,
+        LazyCsvReader, LazyFileListReader, LazyFrame, SerWriter, SortMultipleOptions,
     },
     sql::SQLContext,
 };
-use polars_ops::frame::JoinCoalesce;
 use serde::Deserialize;
 use smartstring::SmartString;
 use tempfile::tempdir;

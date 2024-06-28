@@ -146,6 +146,7 @@ polars = { version = "0.41", features = [
     "coalesce",
     "cse",
     "cross_join",
+    "dtype-categorical",
     "dtype-full",
     "extract_jsonpath",
     "ipc",
@@ -158,9 +159,9 @@ polars = { version = "0.41", features = [
     "serde-lazy",
     "sql",
     "streaming",
+    "temporal",
     "timezones",
 ], optional = true }
-polars-ops = { version = "0.41", optional = true }
 pyo3 = { version = "0.22", features = [
     "auto-initialize",
     "gil-refs",
@@ -258,6 +259,9 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "0c8ab87" }
 calamine = { git = "https://github.com/tafia/calamine", rev = "6b41309" }
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
+# use latest upstream version of polars with additional unreleased features/fixes
+polars = { git = "https://github.com/pola-rs/polars", rev = "bcc8a92" }
+
 
 [features]
 default = ["mimalloc"]
@@ -315,7 +319,7 @@ to = ["csvs_convert"]
 to_parquet = ["csvs_convert/parquet"]
 lite = []
 datapusher_plus = ["self_update"]
-polars = ["dep:polars", "polars-ops", "smartstring"]
+polars = ["dep:polars", "smartstring"]
 feature_capable = []
 nightly = [
     "regex/unstable",
