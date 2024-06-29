@@ -20,7 +20,8 @@ jsonl options:
                            When not set, the number of jobs is set to the 
                            number of CPUs detected.
     -b, --batch <size>     The number of rows per batch to load into memory,
-                           before running in parallel. [default: 50000]
+                           before running in parallel. Set to 0 to load all
+                           rows at once. [default: 50000]
 
 Common options:
     -h, --help             Display this message
@@ -53,7 +54,7 @@ struct Args {
     flag_delimiter:     Option<Delimiter>,
     flag_ignore_errors: bool,
     flag_jobs:          Option<usize>,
-    flag_batch:         u32,
+    flag_batch:         usize,
 }
 
 fn recurse_to_infer_headers(value: &Value, headers: &mut Vec<Vec<String>>, path: &[String]) {
@@ -152,8 +153,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .delimiter(args.flag_delimiter)
         .writer()?;
 
+    let mut is_stdin = false;
     let mut rdr: Box<dyn BufRead> = match args.arg_input {
-        None => Box::new(BufReader::new(io::stdin())),
+        None => {
+            is_stdin = true;
+            Box::new(BufReader::new(io::stdin()))
+        },
         Some(p) => Box::new(BufReader::with_capacity(
             DEFAULT_RDR_BUFFER_CAPACITY,
             fs::File::open(p)?,
@@ -167,7 +172,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut batch_line = String::new();
 
     // reuse batch buffers
-    let batchsize: usize = args.flag_batch as usize;
+    let batchsize: usize = if args.flag_batch == 0 {
+        if is_stdin {
+            // if stdin, we don't know how many lines there are
+            // so just make a reasonably big batch size
+            1_000_000
+        } else {
+            // safety: we know flag_output is Some coz of the std_in check above
+            util::count_lines_in_file(&args.flag_output.unwrap())? as usize
+        }
+    } else {
+        args.flag_batch
+    };
     let mut batch = Vec::with_capacity(batchsize);
     let mut batch_results = Vec::with_capacity(batchsize);
 

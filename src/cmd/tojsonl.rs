@@ -27,7 +27,8 @@ Tojsonl options:
                            When not set, the number of jobs is set to the
                            number of CPUs detected.
     -b, --batch <size>     The number of rows per batch to load into memory,
-                           before running in parallel. [default: 50000]                           
+                           before running in parallel. Set to 0 to load all
+                           rows at once. [default: 50000]                           
 
 Common options:
     -h, --help             Display this message
@@ -60,7 +61,7 @@ struct Args {
     flag_trim:       bool,
     flag_no_boolean: bool,
     flag_jobs:       Option<usize>,
-    flag_batch:      u32,
+    flag_batch:      usize,
     flag_delimiter:  Option<Delimiter>,
     flag_output:     Option<String>,
     flag_memcheck:   bool,
@@ -255,7 +256,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut batch_record = csv::StringRecord::new();
 
     // reuse batch buffers
-    let batchsize: usize = args.flag_batch as usize;
+    let batchsize: usize = if args.flag_batch == 0 {
+        record_count as usize
+    } else {
+        args.flag_batch
+    };
     let mut batch = Vec::with_capacity(batchsize);
     let mut batch_results = Vec::with_capacity(batchsize);
 

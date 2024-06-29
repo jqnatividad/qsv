@@ -89,7 +89,7 @@ Validate options:
                                When not set, the number of jobs is set to the
                                number of CPUs detected.
     -b, --batch <size>         The number of rows per batch to load into memory,
-                               before running in parallel.
+                               before running in parallel. Set to 0 to load all rows at once.
                                [default: 50000]
     --timeout <seconds>        Timeout for downloading json-schemas on URLs.
                                [default: 30]
@@ -158,7 +158,7 @@ struct Args {
     flag_pretty_json:  bool,
     flag_valid_output: Option<String>,
     flag_jobs:         Option<usize>,
-    flag_batch:        u32,
+    flag_batch:        usize,
     flag_no_headers:   bool,
     flag_delimiter:    Option<Delimiter>,
     flag_progressbar:  bool,
@@ -534,7 +534,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // amortize memory allocation by reusing record
     let mut record = csv::ByteRecord::new();
     // reuse batch buffer
-    let batch_size = args.flag_batch as usize;
+    let batch_size = if args.flag_batch == 0 {
+        util::count_rows(&rconfig)? as usize
+    } else {
+        args.flag_batch
+    };
     let mut batch = Vec::with_capacity(batch_size);
     let mut validation_results = Vec::with_capacity(batch_size);
     let mut valid_flags: Vec<bool> = Vec::with_capacity(batch_size);

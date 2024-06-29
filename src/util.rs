@@ -4,7 +4,7 @@ use std::{
     cmp::min,
     env, fs,
     fs::File,
-    io::{BufReader, BufWriter, Read, Write},
+    io::{BufRead, BufReader, BufWriter, Read, Write},
     path::{Path, PathBuf},
     str,
     sync::OnceLock,
@@ -370,6 +370,14 @@ pub fn count_rows_regular(conf: &Config) -> Result<u64, CliError> {
             None => Err(CliError::Other("Unable to get row count".to_string())),
         }
     }
+}
+
+pub fn count_lines_in_file(file: &str) -> Result<u64, CliError> {
+    let file = File::open(file)?;
+    let reader = BufReader::new(file);
+
+    let line_count = reader.lines().count() as u64;
+    Ok(line_count)
 }
 
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
