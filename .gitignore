@@ -22,7 +22,6 @@ perf.data*
 *.json
 *.log
 *.log.gz
-*.jsonl
 *.bak
 *.code-workspace
 tmp/*
@@ -30,7 +29,6 @@ tmp/*
 *.parquet
 *.rsbak
 *.luau
-*.png
 *.sql
 .history
 *.rswip
