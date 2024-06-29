@@ -322,6 +322,7 @@ geocode options:
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number of CPUs detected.
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
+                                Set to 0 to load all rows at once.
                                 [default: 50000]
     --timeout <seconds>         Timeout for downloading Geonames cities index.
                                 [default: 120]
@@ -424,7 +425,7 @@ struct Args {
     flag_formatstr:      String,
     flag_language:       String,
     flag_invalid_result: Option<String>,
-    flag_batch:          u32,
+    flag_batch:          usize,
     flag_timeout:        u16,
     flag_cache_dir:      String,
     flag_languages:      String,
@@ -1102,7 +1103,11 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     let mut batch_record = csv::StringRecord::new();
 
     // reuse batch buffers
-    let batchsize: usize = args.flag_batch as usize;
+    let batchsize: usize = if args.flag_batch == 0 {
+        util::count_rows(&rconfig)? as usize
+    } else {
+        args.flag_batch
+    };
     let mut batch = Vec::with_capacity(batchsize);
     let mut batch_results = Vec::with_capacity(batchsize);
 
