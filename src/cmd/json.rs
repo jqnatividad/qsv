@@ -137,7 +137,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Json2Csv::new(flattener).convert_from_array(values, csv_writer)?;
 
     // Use qsv select to reorder headers to first dict's keys order
-    // TODO: call select helpers directly instead of using a child process
     let mut select_child = std::process::Command::new(env::current_exe()?)
         .arg("select")
         .arg(headers.join(","))
