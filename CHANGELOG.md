@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.129.0] - 2024-06-25
+## [0.129.0] - 2024-06-29
 
 ### Added
 * `stats`: add Standard Error of the Mean (SEM) & Coefficient of Variation (CV) https://github.com/jqnatividad/qsv/pull/1857
@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `select`: add `--sort`, `--random` & `--seed` options; also add 9999 sentinel value to indicate last column https://github.com/jqnatividad/qsv/pull/1867
 * `select`: use underscore char (_) to indicate last column, replacing 9999 sentinel value https://github.com/jqnatividad/qsv/pull/1873
 * `jsonp`: add `jsonp` command allowing non-nested JSON to CSV conversion with Polars by @rzmk in https://github.com/jqnatividad/qsv/pull/1880
+* `json`: change jsonp to json using new implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1924
 * `contrib(fish)`: add fish completions prototype with `qsv.fish` and docs by @rzmk in https://github.com/jqnatividad/qsv/pull/1884
 * contrib(bashly): add `--hash <columns>` option to `enum` by @rzmk in https://github.com/jqnatividad/qsv/pull/1905
 * contrib(bashly): add `--uuid4` & `--uuid7` for `qsv enum` by @rzmk in https://github.com/jqnatividad/qsv/pull/1915
@@ -53,9 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * build(deps): bump jql-runner from 7.1.9 to 7.1.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1845
 * build(deps): bump jql-runner from 7.1.10 to 7.1.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1856
 * build(deps): bump jql-runner from 7.1.11 to 7.1.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1903
+* build(deps): bump log from 0.4.21 to 0.4.22 by @dependabot in https://github.com/jqnatividad/qsv/pull/1925
 * build(deps): bump mimalloc from 0.1.42 to 0.1.43 by @dependabot in https://github.com/jqnatividad/qsv/pull/1911
 * build(deps): bump mlua from 0.9.8 to 0.9.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1894
-* `deps`: apply latest polars upstream with unreleased fixes https://github.com/jqnatividad/qsv/pull/1849
+* `deps`: apply latest polars upstream with unreleased fixes https://github.com/jqnatividad/qsv/commit/261ede59058a123c4cba62c0945a1fc4e1c77861
 * `deps`: we now track py-polars release, instead of rust-polars https://github.com/jqnatividad/qsv/pull/1854
 * `deps`: update polars engine to use py-polars-1.0.0-beta1 https://github.com/jqnatividad/qsv/pull/1896
 * build(deps): bump polars from 0.41.0 to 0.41.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1909
@@ -80,6 +82,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * updated several indirect dependencies
 * made various usage text improvements
 * pin Rust nightly to 2024-06-23
+
+### Removed
+* `jsonp`: remove `jsonp` command in favor of `json` by @rzmk in https://github.com/jqnatividad/qsv/pull/1924
+* `deps`: fine tune polars features and remove polars-ops dependency https://github.com/jqnatividad/qsv/commit/ccfd000d129799f5a106a7d4c8edab88af37367b
+
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.128.0...0.129.0
 
