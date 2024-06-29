@@ -2205,6 +2205,154 @@ fn sqlp_date_strftime() {
 }
 
 #[test]
+fn sqlp_read_jsonl() {
+    let wrk = Workdir::new("sqlp_read_jsonl");
+
+    let test_jsonl = wrk.load_test_file("boston311-10.jsonl");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("SKIP_INPUT").arg(
+        format!(
+            "SELECT * FROM read_json('{}') WHERE source = 'City Worker App'",
+            test_jsonl
+        )
+        .as_str(),
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "case_enquiry_id",
+            "open_dt",
+            "target_dt",
+            "closed_dt",
+            "ontime",
+            "case_status",
+            "closure_reason",
+            "case_title",
+            "subject",
+            "reason",
+            "type",
+            "queue",
+            "department",
+            "submittedphoto",
+            "closedphoto",
+            "location",
+            "fire_district",
+            "pwd_district",
+            "city_council_district",
+            "police_district",
+            "neighborhood",
+            "neighborhood_services_district",
+            "ward",
+            "precinct",
+            "location_street_name",
+            "location_zipcode",
+            "latitude",
+            "longitude",
+            "source"
+        ],
+        svec![
+            "101004120108",
+            "2022-01-08 12:54:49",
+            "2022-01-11 08:30:00",
+            "2022-01-09 06:43:06",
+            "ONTIME",
+            "Closed",
+            "Case Closed. Closed date : Sun Jan 09 06:43:06 EST 2022 Noted ",
+            "CE Collection",
+            "Public Works Department",
+            "Street Cleaning",
+            "CE Collection",
+            "PWDx_District 1C: Downtown",
+            "PWDx",
+            "",
+            "",
+            "198 W Springfield St  Roxbury  MA  02118",
+            "4",
+            "1C",
+            "7",
+            "D4",
+            "South End",
+            "6",
+            "Ward 9",
+            "0902",
+            "198 W Springfield St",
+            "2118",
+            "42.3401",
+            "-71.0803",
+            "City Worker App"
+        ],
+        svec![
+            "101004141354",
+            "2022-01-20 08:07:49",
+            "2022-01-21 08:30:00",
+            "2022-01-20 08:45:03",
+            "ONTIME",
+            "Closed",
+            "Case Closed. Closed date : Thu Jan 20 08:45:03 EST 2022 Noted ",
+            "CE Collection",
+            "Public Works Department",
+            "Street Cleaning",
+            "CE Collection",
+            "PWDx_District 1B: North End",
+            "PWDx",
+            "",
+            "",
+            "21-23 Temple St  Boston  MA  02114",
+            "3",
+            "1B",
+            "1",
+            "A1",
+            "Beacon Hill",
+            "3",
+            "Ward 3",
+            "0306",
+            "21-23 Temple St",
+            "2114",
+            "42.3606",
+            "-71.0638",
+            "City Worker App"
+        ],
+        svec![
+            "101004141367",
+            "2022-01-20 08:15:45",
+            "2022-01-21 08:30:00",
+            "2022-01-20 08:45:12",
+            "ONTIME",
+            "Closed",
+            "Case Closed. Closed date : Thu Jan 20 08:45:12 EST 2022 Noted ",
+            "CE Collection",
+            "Public Works Department",
+            "Street Cleaning",
+            "CE Collection",
+            "PWDx_District 1B: North End",
+            "PWDx",
+            "",
+            "",
+            "12 Derne St  Boston  MA  02114",
+            "3",
+            "1B",
+            "1",
+            "A1",
+            "Beacon Hill",
+            "3",
+            "Ward 3",
+            "0306",
+            "12 Derne St",
+            "2114",
+            "42.3596",
+            "-71.0634",
+            "City Worker App"
+        ],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sqlp_string_like_ops() {
     let wrk = Workdir::new("sqlp_string_like_ops");
 
