@@ -376,8 +376,7 @@ joinp_test!(
         let got: String = wrk.output_stderr(&mut cmd);
         assert_eq!(
             got,
-            "Polars error: ComputeError(ErrString(\"the join keys did not fulfil m:1 \
-             validation\"))\n"
+            "Polars error: ComputeError(ErrString(\"join keys did not fulfill m:1 validation\"))\n"
         );
         wrk.assert_err(&mut cmd);
     }
@@ -400,8 +399,7 @@ joinp_test!(
         let got: String = wrk.output_stderr(&mut cmd);
         assert_eq!(
             got,
-            "Polars error: ComputeError(ErrString(\"the join keys did not fulfil 1:1 \
-             validation\"))\n"
+            "Polars error: ComputeError(ErrString(\"join keys did not fulfill 1:1 validation\"))\n"
         );
         wrk.assert_err(&mut cmd);
     }
