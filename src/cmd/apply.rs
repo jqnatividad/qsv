@@ -284,6 +284,7 @@ apply options:
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number of CPUs detected.
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
+                                Set to 0 to load all rows at once.
                                 [default: 50000]
 
 Common options:
@@ -390,7 +391,7 @@ struct Args {
     flag_comparand:   String,
     flag_replacement: String,
     flag_formatstr:   String,
-    flag_batch:       u32,
+    flag_batch:       usize,
     flag_jobs:        Option<usize>,
     flag_new_column:  Option<String>,
     flag_output:      Option<String>,
@@ -558,7 +559,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut batch_record = csv::StringRecord::new();
 
     // reuse batch buffers
-    let batchsize: usize = args.flag_batch as usize;
+    let batchsize: usize = if args.flag_batch == 0 {
+        util::count_rows(&rconfig)? as usize
+    } else {
+        args.flag_batch
+    };
     let mut batch = Vec::with_capacity(batchsize);
     let mut batch_results = Vec::with_capacity(batchsize);
 
