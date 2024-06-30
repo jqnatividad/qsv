@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=4.4.0
+bm_version=4.5.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -449,6 +449,7 @@ run apply_emptyreplace "$qsv_bin" apply emptyreplace \"Bridge Highway Name\" --r
 run apply_op_eudex "$qsv_bin apply operations lower,eudex Agency --comparand Queens --new-column Agency_queens_soundex $data"
 run apply_op_string "$qsv_bin apply operations lower Agency $data"
 run apply_op_similarity "$qsv_bin apply operations lower,simdln Agency --comparand brooklyn --new-column Agency_sim-brooklyn_score $data"
+run apply_op_similarity_batchall "$qsv_bin apply operations lower,simdln Agency --comparand brooklyn --batch 0 --new-column Agency_sim-brooklyn_score $data"
 run behead "$qsv_bin" behead "$data"
 run behead_flexible "$qsv_bin" behead --flexible "$data"
 run cat_columns "$qsv_bin" cat columns "$data" data_unsorted.csv
@@ -464,6 +465,7 @@ run count_width "$qsv_bin" count --width "$data"
 run --index count_width_index "$qsv_bin" count --width "$data"
 run datefmt "$qsv_bin datefmt \"Created Date\" $data"
 run datefmt_multi "$qsv_bin datefmt \"Created Date,Closed Date,Due Date\" $data"
+run datefmt_multi_batchall "$qsv_bin datefmt \"Created Date,Closed Date,Due Date\" --batch 0 $data"
 run datefmt_multi_select "$qsv_bin datefmt '/(?i) date$/' $data"
 run datefmt_formatstr_newcol "$qsv_bin datefmt --formatstr '%V' \"Created Date\" --new-column week_number $data"
 run dedup "$qsv_bin" dedup "$data"
@@ -511,7 +513,9 @@ run --index frequency_ignorecase_index "$qsv_bin" frequency -i "$data"
 run frequency_selregex_ignorecase "$qsv_bin" frequency -s /^R/ -i "$data"
 run frequency_j1_ignorecase "$qsv_bin" frequency -j 1 -i "$data"
 run geocode_suggest "$qsv_bin" geocode suggest City --new-column geocoded_city "$data"
+run geocode_suggest_batchall "$qsv_bin" geocode suggest City --new-column geocoded_city --batch 0 "$data"
 run geocode_reverse "$qsv_bin" geocode reverse Location --new-column geocoded_location "$data"
+run geocode_reverse_batchall "$qsv_bin" geocode reverse Location --new-column geocoded_location --batch 0 "$data"
 run index "$qsv_bin" index "$data"
 run input "$qsv_bin" input "$data"
 run json "$qsv_bin" json benchmark_data.json
@@ -519,6 +523,7 @@ run join "$qsv_bin" join \'Community Board\' "$data" community_board communitybo
 run join_casei "$qsv_bin" join \'Community Board\' "$data" community_board --ignore-case communityboards.csv
 run joinp "$qsv_bin" joinp \'Community Board\' "$data" community_board communityboards.csv
 run jsonl "$qsv_bin" jsonl benchmark_data.jsonl
+run jsonl_batchall "$qsv_bin" jsonl benchmark_data.jsonl --batch 0
 run jsonl_j1 "$qsv_bin" jsonl -j 1 benchmark_data.jsonl
 run luau_filter "$qsv_bin" luau filter \"Location == \'\'\" "$data"
 run luau_filter_colidx "$qsv_bin" luau filter --colindex \"Location == \'\'\" "$data"
@@ -631,6 +636,7 @@ run to_sqlite "$qsv_bin" to sqlite benchmark_work.db "$data"
 run to_parquet "$qsv_bin" to parquet benchmark_work "$data"
 run to_datapackage "$qsv_bin" to datapackage benchmark_work.json "$data"
 run tojsonl "$qsv_bin" tojsonl "$data"
+run tojsonl_batchall "$qsv_bin" tojsonl --batch 0 "$data"
 run tojsonl_j1 "$qsv_bin" tojsonl -j 1 "$data"
 run tojsonl_trim "$qsv_bin" tojsonl --trim "$data"
 run tojsonl_trim_j1 "$qsv_bin" tojsonl --trim -j 1 "$data"
@@ -639,9 +645,11 @@ run --index tojsonl_index_j1 "$qsv_bin" tojsonl --jobs 1 "$data"
 run transpose "$qsv_bin" transpose "$data"
 run transpose_multipass "$qsv_bin" transpose --multipass "$data"
 run validate "$qsv_bin" validate "$data" "$schema"
+run validate_batchall "$qsv_bin" validate --batch 0 "$data" "$schema"
 run validate_no_schema "$qsv_bin" validate "$data"
 run validate_valid_output "$qsv_bin" validate "$data" "$schema" --valid-output -
 run --index validate_index "$qsv_bin" validate "$data" "$schema"
+run --index validate_batchall_index "$qsv_bin" validate --batch 0 "$data" "$schema"
 run --index validate_no_schema_index "$qsv_bin" validate "$data"
 run --index validate_valid_output_index "$qsv_bin" validate "$data" "$schema" --valid-output -
 
