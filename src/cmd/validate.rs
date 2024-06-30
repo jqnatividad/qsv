@@ -97,9 +97,12 @@ Validate options:
 Common options:
     -h, --help                 Display this message
     -n, --no-headers           When set, the first row will not be interpreted
-                               as headers. Namely, it will be sorted with the rest
+                               as headers. It will be validated with the rest
                                of the rows. Otherwise, the first row will always
                                appear as the header row in the output.
+                               Note that this option is only valid when running
+                               in RFC 4180 validation mode as JSON Schema validation
+                               requires headers.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
                                Must be a single character. [default: ,]
     -p, --progressbar          Show progress bars. Not valid for stdin.
@@ -461,6 +464,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         // we're done when validating without a schema
         return Ok(());
+    }
+
+    // if we're here, we're validating with a JSON Schema
+    // JSONSchema validation requires headers
+    if args.flag_no_headers {
+        return fail_clierror!("Cannot validate CSV without headers against a JSON Schema.");
     }
 
     // prep progress bar
