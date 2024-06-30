@@ -38,10 +38,10 @@ frequency options:
                             of indexing.
     -l, --limit <arg>       Limit the frequency table to the N most common
                             items. Set to '0' to disable a limit.
-                            If negative, only return values with an occurence
+                            If negative, only return values with an occurrence
                             count >= absolute value of the negative limit.
                             e.g. --limit -2 will only return values with an
-                            occurence count >= 2.
+                            occurrence count >= 2.
                             [default: 10]
     -u, --unq-limit <arg>   If a column has all unique values, limit the
                             frequency table to a sample of N unique items.
@@ -256,7 +256,7 @@ impl Args {
             if self.flag_limit > 0 {
                 counts.truncate(abs_limit);
             } else if self.flag_limit < 0 && !unique_limited {
-                // if limit is negative, only return values with an occurence count >= absolute
+                // if limit is negative, only return values with an occurrence count >= absolute
                 // value of the negative limit. We only do this if we haven't
                 // already unique limited the values
                 let count_limit = abs_limit as u64;
