@@ -65,7 +65,7 @@ impl From<json_objects_to_csv::Error> for CliError {
                 CliError::Other(format!("Flattening error: {err}"))
             },
             json_objects_to_csv::Error::FlattenedKeysCollision => {
-                CliError::Other(format!("Flattening Key Collission error: {err}"))
+                CliError::Other(format!("Flattening Key Collision error: {err}"))
             },
             json_objects_to_csv::Error::WrittingCSV(err) => {
                 CliError::Other(format!("Writing CSV error: {err}"))
