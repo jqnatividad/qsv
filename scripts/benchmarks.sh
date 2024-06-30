@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=4.5.0
+bm_version=4.6.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -478,6 +478,9 @@ run enum_uuid7 "$qsv_bin" enum --uuid7 "$data"
 run enum_constant "$qsv_bin" enum --constant "NYC" "$data"
 run enum_copy "$qsv_bin" enum --copy Agency "$data"
 run excel "$qsv_bin" excel benchmark_data.xlsx
+run excel_j1 "$qsv_bin" excel -j 1 benchmark_data.xlsx
+run excel_trim "$qsv_bin" excel --trim benchmark_data.xlsx
+run excel_trim_j1 "$qsv_bin" excel --trim -j 1 benchmark_data.xlsx
 run excel_error_format_formula "$qsv_bin" excel --error-format both benchmark_data.xlsx
 run excel_metadata "$qsv_bin" excel --metadata c benchmark_data.xlsx
 run excel_metadata_short "$qsv_bin" excel --metadata s benchmark_data.xlsx
