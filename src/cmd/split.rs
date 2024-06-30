@@ -97,7 +97,7 @@ Common options:
                            appear in all chunks as the header row.
     -d, --delimiter <arg>  The field delimiter for reading CSV data.
                            Must be a single character. (default: ,)
-    -Q, --quiet            Do not display an output summmary to stderr.
+    -Q, --quiet            Do not display an output summary to stderr.
 "#;
 
 use std::{fs, io, path::Path};

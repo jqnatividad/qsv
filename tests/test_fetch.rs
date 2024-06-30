@@ -830,8 +830,8 @@ macro_rules! test_server {
 }
 
 macro_rules! test_url {
-    ($api_parm:expr) => {
-        concat!("http://", test_server!(), "/", $api_parm)
+    ($api_param:expr) => {
+        concat!("http://", test_server!(), "/", $api_param)
     };
 }
 

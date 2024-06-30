@@ -1,0 +1,18 @@
+[default]
+extend-ignore-identifiers-re = ["wrk", "flate", "ND"]
+
+[default.extend-identifiers]
+# typos in third-party code
+WrittingCSV = "WrittingCSV"
+seperator   = "seperator"
+
+[default.extend-words]
+# these are false positives in data/examples
+ba     = "ba"
+fo     = "fo"
+hel    = "hel"
+UE     = "UE"
+seeked = "seeked"
+
+[files]
+extend-exclude = ["*.pynb", "*.ipynb", "*.lua"]

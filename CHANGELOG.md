@@ -427,7 +427,7 @@ which was causing dependency bloat
 
 This release is all about speed, speed, speed! We've made qsv even faster by leveraging Polars' multithreaded, mem-mapped CSV reader to get near-instant row counts of large CSV files, and near instant SQL queries and aggregations with Datapusher+ - automagically inferring metadata and giving you quick insights into your data in seconds!
 
-We're demoing our qsv-powered Datapusher+ at the [March 2024 installment of CKAN Montly Live](https://ckan.org/events/ckan-datapusher-plus-automagical-metadata) on March 20, 2024, 13:00-14:00 UTC. [Join us](https://ckan.us4.list-manage.com/subscribe?u=91e21b1d5004f15a8fb3d3276&id=0b261bc4ca)!
+We're demoing our qsv-powered Datapusher+ at the [March 2024 installment of CKAN Monthly Live](https://ckan.org/events/ckan-datapusher-plus-automagical-metadata) on March 20, 2024, 13:00-14:00 UTC. [Join us](https://ckan.us4.list-manage.com/subscribe?u=91e21b1d5004f15a8fb3d3276&id=0b261bc4ca)!
 
 Beyond pushing data reliably at speed into your CKAN Datastore ([it pushes real good! 😉](https://github.com/dathere/datapusher-plus/discussions/23)), DP+ does some extended analysis, processing and enrichment of the data so it can be readily Used.
 
@@ -912,7 +912,7 @@ Users can manually verify the signatures by downloading the zipsign public key a
 * `frequency`: added `--ignore-case` option https://github.com/jqnatividad/qsv/pull/1386
 * `geocode`: added 500, 1000, 5000, 15000 Geonames cities convenience shortcuts to `index` subcommands https://github.com/jqnatividad/qsv/commit/bd9f4c34b0a88cc6a446872ed4cda41e8a1ca102
 * `schema`: added `--ignore-case` option when compiling enum constraints; replaced Hashset with faster AHashset https://github.com/jqnatividad/qsv/commit/a16a1ca25f93699a5ee27327f4257e8e559bc5e8
-* `snappy`: added `buf_size` parm to compress helper fn https://github.com/jqnatividad/qsv/commit/e0c0d1f7eb22917d43f638121babe23e366c9dd8
+* `snappy`: added `buf_size` param to compress helper fn https://github.com/jqnatividad/qsv/commit/e0c0d1f7eb22917d43f638121babe23e366c9dd8
 * `sniff` added `--just-mime` option https://github.com/jqnatividad/qsv/pull/1372
 * added zipsign signature verification to self-update https://github.com/jqnatividad/qsv/pull/1389
 
