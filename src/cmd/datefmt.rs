@@ -84,7 +84,7 @@ datefmt options:
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number of CPUs detected.
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
-                                Set to 0 to load all rows at once.
+                                Set to 0 to load all rows in one batch.
                                 [default: 50000]
 
 Common options:

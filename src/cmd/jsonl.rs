@@ -21,7 +21,7 @@ jsonl options:
                            number of CPUs detected.
     -b, --batch <size>     The number of rows per batch to load into memory,
                            before running in parallel. Set to 0 to load all
-                           rows at once. [default: 50000]
+                           rows in one batch. [default: 50000]
 
 Common options:
     -h, --help             Display this message
