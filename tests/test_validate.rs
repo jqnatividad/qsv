@@ -305,6 +305,32 @@ fn validate_adur_public_toilets_dataset_with_json_schema_valid_output() {
 }
 
 #[test]
+fn validate_with_schema_noheader() {
+    let wrk = Workdir::new("validate_with_schema_noheader").flexible(true);
+
+    // copy schema file to workdir
+    let schema: String = wrk.load_test_resource("public-toilets-schema.json");
+    wrk.create_from_string("schema.json", &schema);
+
+    // copy csv file to workdir
+    let csv: String = wrk.load_test_resource("adur-public-toilets-valid.csv");
+    wrk.create_from_string("data.csv", &csv);
+
+    // run validate command
+    let mut cmd = wrk.command("validate");
+    cmd.arg("data.csv")
+        .arg("schema.json")
+        .arg("--no-headers")
+        .args(["--valid-output", "-"]);
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "Cannot validate CSV without headers against a JSON Schema.\n".to_string();
+    assert_eq!(got, expected);
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
 fn validate_adur_public_toilets_dataset_with_json_schema_url() {
     let wrk = Workdir::new("validate").flexible(true);
 
