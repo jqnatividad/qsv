@@ -246,11 +246,11 @@ pub fn polars_count_input(
             slice_pushdown:       true,
             comm_subplan_elim:    false,
             comm_subexpr_elim:    true,
-            streaming:            true,
+            streaming:            false,
             fast_projection:      true,
             eager:                false,
             row_estimate:         true,
-            new_streaming:        false,
+            new_streaming:        true,
         };
         ctx.register("sql_lf", lazy_df.with_optimizations(optimization_state));
         "SELECT COUNT(*) FROM sql_lf".to_string()
