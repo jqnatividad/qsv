@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=4.6.0
+bm_version=4.7.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -525,6 +525,7 @@ run json "$qsv_bin" json benchmark_data.json
 run join "$qsv_bin" join \'Community Board\' "$data" community_board communityboards.csv
 run join_casei "$qsv_bin" join \'Community Board\' "$data" community_board --ignore-case communityboards.csv
 run joinp "$qsv_bin" joinp \'Community Board\' "$data" community_board communityboards.csv
+run joinp_streaming "$qsv_bin" joinp \'Community Board\' "$data" community_board communityboards.csv --streaming
 run jsonl "$qsv_bin" jsonl benchmark_data.jsonl
 run jsonl_batchall "$qsv_bin" jsonl benchmark_data.jsonl --batch 0
 run jsonl_j1 "$qsv_bin" jsonl -j 1 benchmark_data.jsonl
@@ -606,6 +607,7 @@ run sqlp "$qsv_bin" sqlp "$data" -Q '"select * from _t_1 where \"Complaint Type\
 run sqlp_aggregations "$qsv_bin" sqlp "$data" -Q '"select Borough, count(*) from _t_1 where \"Complaint Type\"='\''Noise'\'' group by Borough"'
 run sqlp_aggregations_vs_duckdb duckdb :memory: '"select Borough, count(*) from read_csv_auto('\'''$data''\'') where \"Complaint Type\"='\''Noise'\'' group by Borough"'
 run sqlp_aggregations_expensive "$qsv_bin" sqlp SKIP_INPUT -Q expensive.sql
+run sqlp_aggregations_expensive_streaming "$qsv_bin" sqlp SKIP_INPUT -Q --streaming expensive.sql
 run sqlp_aggregations_expensive_vs_duckdb duckdb :memory: -c \".read expensiveduckdb.sql\"
 run sqlp_format_arrow "$qsv_bin" sqlp --format arrow "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_format_avro "$qsv_bin" sqlp --format avro "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
