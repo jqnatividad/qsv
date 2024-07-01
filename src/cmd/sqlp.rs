@@ -180,6 +180,8 @@ sqlp options:
     --infer-len <arg>         The number of rows to scan when inferring the schema of the CSV.
                               Set to 0 to do a full table scan (warning: very slow).
                               [default: 1000]
+    --streaming               Use streaming mode when parsing CSVs. This will use less memory
+                              but will be slower. Only use this when you get out of memory errors.
     --low-memory              Use low memory mode when parsing CSVs. This will use less memory
                               but will be slower. It will also process LazyFrames in streaming mode.
                               Only use this when you get out of memory errors.
@@ -283,6 +285,7 @@ struct Args {
     flag_format:                String,
     flag_try_parsedates:        bool,
     flag_infer_len:             usize,
+    flag_streaming:             bool,
     flag_low_memory:            bool,
     flag_no_optimizations:      bool,
     flag_ignore_errors:         bool,
@@ -591,7 +594,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // use default optimization state
         polars::lazy::frame::OptState {
             file_caching: !args.flag_low_memory,
-            streaming: args.flag_low_memory,
+            new_streaming: args.flag_low_memory || args.flag_streaming,
             ..Default::default()
         }
     } else {
@@ -605,11 +608,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             slice_pushdown:       true,
             comm_subplan_elim:    !args.flag_low_memory,
             comm_subexpr_elim:    true,
-            streaming:            args.flag_low_memory,
+            streaming:            false,
             fast_projection:      true,
             eager:                false,
             row_estimate:         true,
-            new_streaming:        false,
+            new_streaming:        args.flag_low_memory || args.flag_streaming,
         }
     };
     // gated by log::log_enabled!(log::Level::Debug) to avoid the
@@ -657,6 +660,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         && !args.flag_no_optimizations
         && !args.flag_try_parsedates
         && args.flag_infer_len != 1000
+        && !args.flag_streaming
         && !args.flag_low_memory
         && !args.flag_truncate_ragged_lines
         && !args.flag_ignore_errors
