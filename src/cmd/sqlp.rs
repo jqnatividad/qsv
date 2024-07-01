@@ -27,6 +27,7 @@ Example queries:
 
    qsv sqlp data.csv data2.csv 'SELECT col1 FROM data WHERE col1 IN (SELECT col2 FROM data2)'
 
+  # Unions and Joins are supported.
    qsv sqlp data1.csv data2.csv 'SELECT * FROM data1 UNION ALL BY NAME SELECT * FROM data2'
 
    qsv sqlp tbl_a.csv tbl_b.csv tbl_c.csv "SELECT * FROM tbl_a \
@@ -45,6 +46,10 @@ Example queries:
    qsv sqlp data.csv "select COALESCE(NULLIF(col2, ''), 'foo') from data"
 
    qsv sqlp tbl1.csv "SELECT x FROM tbl1 WHERE x IN (SELECT y FROM tbl1)"
+
+  # Natural Joins are supported too! (https://www.w3resource.com/sql/joins/natural-join.php)
+   qsv sqlp data1.csv data2.csv data3.csv \
+    "SELECT COLUMNS('^[^:]+$') FROM data1 NATURAL JOIN data2 NATURAL JOIN data3 ORDER BY COMPANY_ID",
 
   # Use a SQL script to run a long, complex SQL query or to run SEVERAL SQL queries.
   # When running several queries, each query needs to be separated by a semicolon,

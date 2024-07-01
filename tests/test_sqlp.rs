@@ -2440,6 +2440,68 @@ fn sqlp_string_like_ops() {
 }
 
 #[test]
+fn sqlp_natural_join() {
+    let wrk = Workdir::new("sqlp_natural_join");
+
+    wrk.create(
+        "data1.csv",
+        vec![
+            svec!["CharacterID", "FirstName", "LastName"],
+            svec!["1", "Jerna Morat", "Gurgeh"],
+            svec!["2", "Cheradenine", "Zakalwe"],
+            svec!["3", "Byr", "Genar-Hofoen"],
+        ],
+    );
+
+    wrk.create(
+        "data2.csv",
+        vec![
+            svec!["CharacterID", "Book"],
+            svec!["1", "Player of Games"],
+            svec!["2", "Use of Weapons"],
+            svec!["3", "Excession"],
+        ],
+    );
+
+    wrk.create(
+        "data3.csv",
+        vec![
+            svec!["CharacterID", "Ship"],
+            svec!["1", "Limiting Factor"],
+            svec!["2", "Xenophobe"],
+            svec!["3", "Grey Area"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.args(["data1.csv", "data2.csv", "data3.csv"]).arg(
+        r#"SELECT COLUMNS('^[^:]+$')
+  FROM data1
+    NATURAL JOIN data2
+    NATURAL JOIN data3
+  ORDER BY CharacterID"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["CharacterID", "FirstName", "LastName", "Book", "Ship"],
+        svec![
+            "1",
+            "Jerna Morat",
+            "Gurgeh",
+            "Player of Games",
+            "Limiting Factor"
+        ],
+        svec!["2", "Cheradenine", "Zakalwe", "Use of Weapons", "Xenophobe"],
+        svec!["3", "Byr", "Genar-Hofoen", "Excession", "Grey Area"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sqlp_star_ilike() {
     let wrk = Workdir::new("sqlp_star_ilike");
 
