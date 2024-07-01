@@ -1116,6 +1116,48 @@ fn sqlp_boston311_case_expression() {
 }
 
 #[test]
+fn sqlp_boston311_case_expression_streaming() {
+    let wrk = Workdir::new("sqlp_boston311_case_expression_streaming");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file)
+        .arg(
+            r#"SELECT case_enquiry_id, 
+           CASE closed_dt is null and case_title ~* 'graffiti' 
+              WHEN True THEN 'Yes' 
+              WHEN False THEN 'No' 
+              ELSE 'N/A'
+           END as graffiti_related
+           from _t_1
+           where case_status = 'Open'"#,
+        )
+        .arg("--streaming");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["case_enquiry_id", "graffiti_related"],
+        svec!["101004143000", "No"],
+        svec!["101004155594", "No"],
+        svec!["101004154423", "No"],
+        svec!["101004141848", "No"],
+        svec!["101004113313", "No"],
+        svec!["101004113751", "Yes"],
+        svec!["101004113902", "Yes"],
+        svec!["101004113473", "No"],
+        svec!["101004113604", "No"],
+        svec!["101004114154", "Yes"],
+        svec!["101004114383", "No"],
+        svec!["101004114795", "Yes"],
+        svec!["101004118346", "Yes"],
+        svec!["101004115302", "No"],
+        svec!["101004115066", "No"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sqlp_boston311_case() {
     let wrk = Workdir::new("sqlp_boston311_case");
     let test_file = wrk.load_test_file("boston311-100.csv");
