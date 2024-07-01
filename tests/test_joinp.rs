@@ -350,6 +350,27 @@ joinp_test!(
     }
 );
 
+joinp_test!(
+    joinp_outer_left_validate_none_streaming,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("--left")
+            .args(["--validate", "none"])
+            .arg("--streaming");
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["New York", "NY", ""],
+                svec!["San Francisco", "CA", ""],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+            ],
+        );
+        assert_eq!(got, expected);
+    }
+);
+
 joinp_test_comments!(
     joinp_outer_left_validate_none_comments,
     |wrk: Workdir, mut cmd: process::Command| {
