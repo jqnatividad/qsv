@@ -6,7 +6,7 @@ intersection of rows on the keys specified.
 
 Unlike the join command, joinp can process files larger than RAM, is multithreaded,
 has join key validation, pre-join filtering, supports asof joins & its output doesn't
-have duplicate columns.
+have can be coalesced.
 
 However, joinp doesn't have an --ignore-case option & it doesn't support right outer joins.
 
@@ -69,11 +69,12 @@ joinp options:
                              manytoone - join keys are unique in the right data set.
                              onetoone - join keys are unique in both left & right data sets.
                            [default: none]
+
+                           JOIN OPTIONS:
     --nulls                When set, joins will work on empty fields.
                            Otherwise, empty fields are completely ignored.
     --streaming            When set, the join will be done in a streaming fashion.
-                           Note that this will make the join slower. Only use this
-                           when you get out of memory errors.
+                           Only use this when you get out of memory errors.
 
                            POLARS CSV PARSING OPTIONS:
     --try-parsedates       When set, will attempt to parse the columns as dates.
@@ -84,7 +85,7 @@ joinp options:
                            enabled when using asof joins.
     --infer-len <arg>      The number of rows to scan when inferring the schema of the CSV.
                            Set to 0 to do a full table scan (warning: very slow).
-                           (default: 250)
+                           [default: 1000]
     --low-memory           Use low memory mode when parsing CSVs. This will use less memory
                            but will be slower. It will also process the join in streaming mode.
                            Only use this when you get out of memory errors.
@@ -183,14 +184,7 @@ use std::{
     str,
 };
 
-use polars::{
-    datatypes::AnyValue,
-    prelude::{
-        AsOfOptions, AsofStrategy, CsvWriter, IntoLazy, JoinCoalesce, JoinType, JoinValidation,
-        LazyCsvReader, LazyFileListReader, LazyFrame, SerWriter, SortMultipleOptions,
-    },
-    sql::SQLContext,
-};
+use polars::{datatypes::AnyValue, prelude::*, sql::SQLContext};
 use serde::Deserialize;
 use smartstring::SmartString;
 use tempfile::tempdir;
@@ -391,7 +385,7 @@ impl JoinStruct {
         let optimization_state = if self.no_optimizations {
             // use default optimization state
             polars::lazy::frame::OptState {
-                streaming: self.streaming,
+                new_streaming: self.streaming,
                 ..Default::default()
             }
         } else {
@@ -405,16 +399,17 @@ impl JoinStruct {
                 slice_pushdown:       true,
                 comm_subplan_elim:    true,
                 comm_subexpr_elim:    true,
-                streaming:            self.streaming,
+                streaming:            false,
                 fast_projection:      true,
                 eager:                false,
                 row_estimate:         true,
-                new_streaming:        false,
+                new_streaming:        self.streaming,
             }
         };
         log::debug!("Optimization state: {optimization_state:?}");
 
         let join_results = if jointype == JoinType::Cross {
+            // cross join doesn't need join columns
             self.left_lf
                 .with_optimizations(optimization_state)
                 .join_builder()
