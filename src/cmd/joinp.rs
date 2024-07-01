@@ -5,8 +5,8 @@ The default join operation is an 'inner' join. This corresponds to the
 intersection of rows on the keys specified.
 
 Unlike the join command, joinp can process files larger than RAM, is multithreaded,
-has join key validation, pre-join filtering, supports asof joins & its output doesn't
-have can be coalesced.
+has join key validation, pre-join filtering, supports asof joins & its output columns
+can be coalesced (no duplicate columns).
 
 However, joinp doesn't have an --ignore-case option & it doesn't support right outer joins.
 
