@@ -164,7 +164,7 @@ jobs:
         is-executable: false
         working-directory: "."
     - name: Download latest release zip
-      uses: robinraju/release-downloader@v1.10
+      uses: robinraju/release-downloader@v1.11
       with:
         repository: "jqnatividad/qsv"
         latest: true
