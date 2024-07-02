@@ -143,8 +143,8 @@ fn main() -> QsvExitCode {
 
     enabled_commands.push_str("    jsonl       Convert newline-delimited JSON files to CSV\n");
 
-    #[cfg(all(feature = "polars", feature = "feature_capable"))]
-    enabled_commands.push_str("    json       Convert non-nested JSON to CSV\n");
+    #[cfg(feature = "feature_capable")]
+    enabled_commands.push_str("    json        Convert non-nested JSON to CSV\n");
 
     #[cfg(all(feature = "luau", feature = "feature_capable"))]
     enabled_commands.push_str("    luau        Execute Luau script on CSV data\n");
