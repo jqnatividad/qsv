@@ -8,6 +8,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.129.0] - 2024-07-03
 
+This release is the biggest one ever! It's packed with new features, improvements, and previews of upcoming qsv pro features. Here are some highlights:
+
+## 📌 Highlights (click each dropdown for more info)
+
+<details><summary><strong>Meet @rzmk - qsv-pro's product owner and maintainer now also co-maintains qsv!</strong></summary>
+@rzmk - the main force behind qsv-pro; author of qsv's `describegpt`, `prompt` and the `json` commands; of qsv's tab completion support; of [qsv.dathere.com](https://qsv.dathere.com) online configurator and [100.dathere.com](https://100.dathere.com); and overall architect/coder/data engineer extraordinare - now also co-maintains qsv!
+
+With @rzmk now also co-maintaining qsv, our data-wrangling portfolio's roadmap should get more interesting - especially in the areas of AI; "[automagical](https://dathere.com/2023/11/automagical-metadata/)" metadata inferencing; DCAT 3; and expanded recipe support with the accelerated evolution of qsv-pro as an enterprise-grade Data-Wrangling/Data Curation Workbench. </details>
+
+<details><summary><strong>Polars v0.41.3</strong> - numerous <a href="https://github.com/jqnatividad/qsv/tree/master/src/cmd/sqlp.rs"><code>sqlp</code></a> and <a href="https://github.com/jqnatividad/qsv/tree/master/src/cmd/joinp.rs"><code>joinp</code></a> improvements</summary>
+* `sqlp`: expanded SQL support 
+  - Natural Join support
+  - DuckDB-like `COLUMNS` SQL function to select columns that match a pattern
+  - ORDER BY ALL support
+  - Support POSTGRESQL `^@` ("starts with"), `~~`,`~~*`,`!~~`,`!~~*` ("like", "ilike") string-matching operators
+  - Support for SQL `SELECT * ILIKE` wildcard syntax
+  - Support SQL temporal functions `STRFTIME` and `STRPTIME`
+* `sqlp`: added `--streaming` option
+</details>
+
+<details style="margin-bottom: 0;"><summary><strong>New command <code><a href="https://github.com/jqnatividad/qsv/tree/master/src/cmd/prompt.rs">qsv prompt</a></code></strong> - Use a file dialog for qsv file input and output</summary>
+Be more interactive with qsv by using a file dialog to select a file for input and output. This will allow you to create qsv pipelines that are more "user-friendly" and distribute them to non-technical users. It's not as flexible as qsv pro's full-blown GUI, but it's a start!
+</details>
+
+<details><summary><strong>New command <a href="https://github.com/jqnatividad/qsv/tree/master/src/cmd/json.rs"><code>qsv json</code></a></strong> - Convert non-nested JSON data to CSV</summary>
+The new `json` command allows you to convert non-nested JSON data to CSV. This is useful for data that is not nested, but still in JSON format.
+Along with the `jsonl` command, we now have more options to convert JSON to CSV with qsv!
+</details>
+
+<details><summary><strong><a href="https://100.dathere.com">100.dathere.com</a></strong> - Try out lessons and exercises with qsv from your browser!</summary>
+
+</details>
+
+<details><summary><strong><a href="https://github.com/jqnatividad/qsv/tree/master/contrib/bashly">Bash completions for v0.129.0</a> and new <a href="https://github.com/jqnatividad/qsv/tree/master/contrib/fish">fish shell completions draft</a></strong></summary>
+https://100.dathere.com/exercises-setup.html#optional-set-up-qsv-completions
+</details>
+<details><summary><strong><a href="https://qsvpro.dathere.com">qsvpro.dathere.com</a></strong> - Preview: Download spreadsheets from a compatible CKAN instance into the qsv pro Workflow</summary>
+
+</details>
+<details><summary><strong><a href="https://qsvpro.dathere.com">qsvpro.dathere.com</a></strong> - Preview: Attempt SQL query generation from natural language with a compatible LLM API instance</summary>
+
+</details>
+---
+
+## 🔁 Changelog
+
 ### Added
 * `stats`: add Standard Error of the Mean (SEM) & Coefficient of Variation (CV) https://github.com/jqnatividad/qsv/pull/1857
 * `prompt`: add `qsv prompt` to pick a file with a file dialog & write to stdout by @rzmk in https://github.com/jqnatividad/qsv/pull/1860
