@@ -1,10 +1,12 @@
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use std::borrow::Cow;
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
+use std::io::BufRead;
 use std::{
     cmp::min,
     env, fs,
     fs::File,
-    io::{BufRead, BufReader, BufWriter, Read, Write},
+    io::{BufReader, BufWriter, Read, Write},
     path::{Path, PathBuf},
     str,
     sync::OnceLock,
@@ -372,6 +374,7 @@ pub fn count_rows_regular(conf: &Config) -> Result<u64, CliError> {
     }
 }
 
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub fn count_lines_in_file(file: &str) -> Result<u64, CliError> {
     let file = File::open(file)?;
     let reader = BufReader::new(file);

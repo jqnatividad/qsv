@@ -44,6 +44,7 @@ pub mod input;
 pub mod join;
 #[cfg(feature = "polars")]
 pub mod joinp;
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod json;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod jsonl;
