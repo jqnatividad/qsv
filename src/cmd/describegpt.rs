@@ -303,6 +303,7 @@ fn get_prompt(
     prompt_type: &str,
     stats: Option<&str>,
     frequency: Option<&str>,
+    headers: Option<&str>,
     args: &Args,
 ) -> CliResult<String> {
     // Get prompt file if --prompt-file is used, otherwise get default prompt file
@@ -328,6 +329,7 @@ fn get_prompt(
     let prompt = prompt
         .replace("{stats}", stats.unwrap_or(""))
         .replace("{frequency}", frequency.unwrap_or(""))
+        .replace("{headers}", headers.unwrap_or(""))
         .replace(
             "{json_add}",
             if prompt_file.json
@@ -491,6 +493,7 @@ fn run_inference_options(
     api_key: &str,
     stats_str: Option<&str>,
     frequency_str: Option<&str>,
+    headers_str: Option<&str>,
 ) -> CliResult<()> {
     // Add --dictionary output as context if it is not empty
     fn get_messages(prompt: &str, dictionary_completion: &str) -> serde_json::Value {
@@ -560,7 +563,7 @@ fn run_inference_options(
 
     // Generate custom prompt output
     if args.flag_prompt.is_some() {
-        prompt = get_prompt("custom", stats_str, frequency_str, args)?;
+        prompt = get_prompt("custom", stats_str, frequency_str, headers_str, args)?;
         print_status(args, "Generating custom prompt output from API...");
         messages = get_messages(&prompt, &dictionary_completion);
         dictionary_completion = get_completion(args, &arg_is_some, api_key, &messages)?;
@@ -575,7 +578,13 @@ fn run_inference_options(
 
     // Generate dictionary output
     if args.flag_dictionary || args.flag_all {
-        prompt = get_prompt("dictionary_prompt", stats_str, frequency_str, args)?;
+        prompt = get_prompt(
+            "dictionary_prompt",
+            stats_str,
+            frequency_str,
+            headers_str,
+            args,
+        )?;
         print_status(args, "Generating data dictionary from API...");
         messages = get_messages(&prompt, &dictionary_completion);
         dictionary_completion = get_completion(args, &arg_is_some, api_key, &messages)?;
@@ -591,9 +600,15 @@ fn run_inference_options(
     // Generate description output
     if args.flag_description || args.flag_all {
         prompt = if args.flag_dictionary {
-            get_prompt("description_prompt", None, None, args)?
+            get_prompt("description_prompt", None, None, None, args)?
         } else {
-            get_prompt("description_prompt", stats_str, frequency_str, args)?
+            get_prompt(
+                "description_prompt",
+                stats_str,
+                frequency_str,
+                headers_str,
+                args,
+            )?
         };
         messages = get_messages(&prompt, &dictionary_completion);
         print_status(args, "Generating description from API...");
@@ -605,9 +620,9 @@ fn run_inference_options(
     // Generate tags output
     if args.flag_tags || args.flag_all {
         prompt = if args.flag_dictionary {
-            get_prompt("tags_prompt", None, None, args)?
+            get_prompt("tags_prompt", None, None, None, args)?
         } else {
-            get_prompt("tags_prompt", stats_str, frequency_str, args)?
+            get_prompt("tags_prompt", stats_str, frequency_str, headers_str, args)?
         };
         messages = get_messages(&prompt, &dictionary_completion);
         print_status(args, "Generating tags from API...");
@@ -765,11 +780,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &args,
         format!("Generating frequency from {input_filename} using qsv frequency...").as_str(),
     );
-    let Ok(frequency) = Command::new(qsv_path)
+    let Ok(frequency) = Command::new(qsv_path.clone())
         .arg("frequency")
         .args(["--limit", "50"])
         .args(["--lmt-threshold", "10"])
-        .arg(input_path)
+        .arg(input_path.clone())
         .output()
     else {
         return fail!("Error: Error while generating frequency.");
@@ -780,6 +795,26 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("Error: Unable to parse frequency as &str.");
     };
 
+    // Get headers from qsv slice on input file
+    print_status(
+        &args,
+        format!("Getting headers from {input_filename} using qsv slice...").as_str(),
+    );
+    let Ok(headers) = Command::new(qsv_path)
+        .arg("slice")
+        .arg(input_path)
+        .args(["--len", "1"])
+        .arg("--no-headers")
+        .output()
+    else {
+        return fail!("Error: Error while getting headers.");
+    };
+
+    // Parse the headers as &str
+    let Ok(headers_str) = std::str::from_utf8(&headers.stdout) else {
+        return fail!("Error: Unable to parse headers as &str.");
+    };
+
     // Run inference options
     run_inference_options(
         &args,
@@ -787,6 +822,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &api_key,
         Some(stats_str),
         Some(frequency_str),
+        Some(headers_str),
     )?;
 
     Ok(())
