@@ -27,7 +27,7 @@ describegpt options:
     --json                 Return results in JSON format.
     --jsonl                Return results in JSON Lines format.
     --prompt <prompt>      Custom prompt passed as text (alternative to --description, etc.).
-                           Replaces {stats} & {frequency} in prompt with qsv command outputs.
+                           Replaces {stats}, {frequency}, & {headers} in prompt with qsv command outputs.
     --prompt-file <file>   The JSON file containing the prompts to use for inferencing.
                            If not specified, default prompts will be used.
     --base-url <url>       The URL of the API for interacting with LLMs. Supports APIs
