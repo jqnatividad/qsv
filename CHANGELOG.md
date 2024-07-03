@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.129.0] - 2024-06-29
+## [0.129.0] - 2024-07-03
 
 ### Added
 * `stats`: add Standard Error of the Mean (SEM) & Coefficient of Variation (CV) https://github.com/jqnatividad/qsv/pull/1857
@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `select`: use underscore char (_) to indicate last column, replacing 9999 sentinel value https://github.com/jqnatividad/qsv/pull/1873
 * `jsonp`: add `jsonp` command allowing non-nested JSON to CSV conversion with Polars by @rzmk in https://github.com/jqnatividad/qsv/pull/1880
 * `json`: change jsonp to json using new implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1924
+* `sqlp`: add `--streaming` option https://github.com/jqnatividad/qsv/commit/e8bee9a60dccc6ec5b5a43b91cb6f558915faa0e
+* added `--batch` zero option to all commands with batch processing. This sentinel value is used to indicate that the entire input should be processed in one batch https://github.com/jqnatividad/qsv/commit/feedbda4a3be9f8835eba0626e5fe01147831186
+* added typos check to CI https://github.com/jqnatividad/qsv/commit/9fdf0662b6dc4fa6ebfed592a177d8539f264041
 * `contrib(fish)`: add fish completions prototype with `qsv.fish` and docs by @rzmk in https://github.com/jqnatividad/qsv/pull/1884
 * contrib(bashly): add `--hash <columns>` option to `enum` by @rzmk in https://github.com/jqnatividad/qsv/pull/1905
 * contrib(bashly): add `--uuid4` & `--uuid7` for `qsv enum` by @rzmk in https://github.com/jqnatividad/qsv/pull/1915
@@ -62,8 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `deps`: update polars engine to use py-polars-1.0.0-beta1 https://github.com/jqnatividad/qsv/pull/1896
 * build(deps): bump polars from 0.41.0 to 0.41.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1909
 * build(deps): bump polars from 0.41.1 to 0.41.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1916
-* build(deps): bump polars-ops from 0.41.0 to 0.41.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1910
-* build(deps): bump polars-ops from 0.41.1 to 0.41.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1917
+* deps: bump polars from 0.41.2 to 0.41.3 https://github.com/jqnatividad/qsv/commit/dc0492ffe2669ddf8a7ff3f82fcd2db8daad83f9
 * build(deps): bump pyo3 from 0.21.2 to 0.22.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1918
 * build(deps): bump regex from 1.10.4 to 1.10.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1865
 * build(deps): bump redis from 0.25.3 to 0.25.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1846
@@ -81,11 +83,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * apply select clippy suggestions
 * updated several indirect dependencies
 * made various usage text improvements
+* added several benchmarks
 * pin Rust nightly to 2024-06-23
+
+### Fixed
+
+* `validate`: validating with a JSONSchema requires headers https://github.com/jqnatividad/qsv/commit/616438213de44e4377a98ea81a676a7900bd4ae9
+* Fixed several typos https://github.com/jqnatividad/qsv/commit/9fdf0662b6dc4fa6ebfed592a177d8539f264041
 
 ### Removed
 * `jsonp`: remove `jsonp` command in favor of `json` by @rzmk in https://github.com/jqnatividad/qsv/pull/1924
-* `deps`: fine tune polars features and remove polars-ops dependency https://github.com/jqnatividad/qsv/commit/ccfd000d129799f5a106a7d4c8edab88af37367b
+* `deps`: fine tune polars features and remove explicit polars-ops dependency https://github.com/jqnatividad/qsv/commit/ccfd000d129799f5a106a7d4c8edab88af37367b
 
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.128.0...0.129.0
