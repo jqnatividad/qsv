@@ -1,5 +1,9 @@
 use crate::{qcheck, workdir::Workdir, Csv, CsvData};
 
+// note that these tests sometimes fail because of the property-based testing
+// strategy, not because the implementation is incorrect
+// The failures are usually because the randomly generated CSV data sometimes
+// have BOMs, which are not handled by the reverse command
 fn prop_reverse(name: &str, rows: CsvData, headers: bool) -> bool {
     let wrk = Workdir::new(name);
     wrk.create("in.csv", rows.clone());
