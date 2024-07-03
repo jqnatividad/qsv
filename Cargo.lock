@@ -5597,9 +5597,9 @@ dependencies = [
 
 [[package]]
 name = "self_update"
-version = "0.40.0"
+version = "0.41.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e4997484b55df069a4773d822715695b2cc27b23829eca2a4b41690e948bdeb"
+checksum = "469a3970061380c19852269f393e74c0fe607a4e23d85267382cf25486aa8de5"
 dependencies = [
  "hyper",
  "indicatif",
@@ -5612,7 +5612,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "urlencoding",
- "zip 0.6.6",
+ "zip 2.1.3",
  "zipsign-api",
 ]
 
@@ -7286,7 +7286,6 @@ dependencies = [
  "crc32fast",
  "crossbeam-utils",
  "flate2",
- "time",
 ]
 
 [[package]]
