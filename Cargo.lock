@@ -1040,9 +1040,9 @@ dependencies = [
 
 [[package]]
 name = "cached"
-version = "0.51.4"
+version = "0.52.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0feb64151eed3da6107fddd2d717a6ca4b9dbd74e43784c55c841d1abfe5a295"
+checksum = "a8466736fe5dbcaf8b8ee24f9bbefe43c884dc3e9ff7178da70f55bffca1133c"
 dependencies = [
  "ahash 0.8.11",
  "cached_proc_macro",
@@ -1062,9 +1062,9 @@ dependencies = [
 
 [[package]]
 name = "cached_proc_macro"
-version = "0.21.0"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "771aa57f3b17da6c8bcacb187bb9ec9bc81c8160e72342e67c329e0e1651a669"
+checksum = "575f32e012222055211b70f5b0601f951f84523410a0e65c81f2744a6042450d"
 dependencies = [
  "darling",
  "proc-macro2",
