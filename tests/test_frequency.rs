@@ -83,6 +83,94 @@ fn frequency_ignorecase() {
 }
 
 #[test]
+fn frequency_trim() {
+    let wrk = Workdir::new("frequency_trim");
+
+    let rows = vec![
+        svec!["h1", "h2"],
+        svec!["a", "z"],
+        svec!["a", "y"],
+        svec!["a", "y"],
+        svec!["b", "z"],
+        svec!["a", "Y"],
+        svec!["", "z"],
+        svec!["(NULL)", "x"],
+        svec!["a ", " z"],
+        svec!["     A", "  Z   "],
+        svec!["  a  ", " Y "],
+        svec![" A     ", "y "],
+        svec!["a", "y "],
+        svec!["b", "y "],
+        svec!["b", "  Z   "],
+    ];
+
+    wrk.create("in.csv", rows);
+
+    let mut cmd = wrk.command("frequency");
+    cmd.arg("in.csv")
+        .args(["--limit", "0"])
+        .args(["--select", "h2"]);
+
+    let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    got.sort();
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["h2", "Y", "2", "14.28571"],
+        svec!["h2", "Z", "2", "14.28571"],
+        svec!["h2", "x", "1", "7.14286"],
+        svec!["h2", "y", "5", "35.71429"],
+        svec!["h2", "z", "4", "28.57143"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn frequency_no_trim() {
+    let wrk = Workdir::new("frequency_no_trim");
+
+    let rows = vec![
+        svec!["h1", "h2"],
+        svec!["a", "z"],
+        svec!["a", "y"],
+        svec!["a", "y"],
+        svec!["b", "z"],
+        svec!["a", "Y"],
+        svec!["", "z"],
+        svec!["(NULL)", "x"],
+        svec!["a ", " z"],
+        svec!["     A", "  Z   "],
+        svec!["  a  ", " Y "],
+        svec![" A     ", "y "],
+        svec!["a", "y "],
+        svec!["b", "y "],
+        svec!["b", "  Z   "],
+    ];
+
+    wrk.create("in.csv", rows);
+
+    let mut cmd = wrk.command("frequency");
+    cmd.arg("in.csv")
+        .args(["--limit", "0"])
+        .args(["--select", "h2"])
+        .arg("--no-trim");
+
+    let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    got.sort();
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["h2", "  Z   ", "2", "14.28571"],
+        svec!["h2", " Y ", "1", "7.14286"],
+        svec!["h2", " z", "1", "7.14286"],
+        svec!["h2", "Y", "1", "7.14286"],
+        svec!["h2", "x", "1", "7.14286"],
+        svec!["h2", "y", "2", "14.28571"],
+        svec!["h2", "y ", "3", "21.42857"],
+        svec!["h2", "z", "3", "21.42857"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn frequency_no_nulls() {
     let (wrk, mut cmd) = setup("frequency_no_nulls");
     cmd.arg("--no-nulls")

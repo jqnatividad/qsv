@@ -649,6 +649,7 @@ fn get_unique_values(
         flag_other_text:     "Other".to_string(),
         flag_asc:            false,
         flag_no_nulls:       true,
+        flag_no_trim:        false,
         flag_ignore_case:    args.flag_ignore_case,
         flag_jobs:           Some(util::njobs(args.flag_jobs)),
         flag_output:         None,
