@@ -8,7 +8,7 @@ Unlike the join command, joinp can process files larger than RAM, is multithread
 has join key validation, pre-join filtering, supports asof joins & its output columns
 can be coalesced (no duplicate columns).
 
-However, joinp doesn't have an --ignore-case option & it doesn't support right outer joins.
+However, joinp doesn't have an --ignore-case option.
 
 Returns the shape of the join result (number of rows, number of columns) to stderr.
 
@@ -41,6 +41,11 @@ joinp options:
     --left-semi            This returns only the rows in the first CSV data set
                            that have a corresponding row in the second data set.
                            The output schema is the same as the first data set.
+    --right                Do a 'right outer' join. This returns all rows in
+                           second CSV data set, including rows with no
+                           corresponding row in the first data set. When no
+                           corresponding row exists, it is padded out with
+                           empty fields. (This is the reverse of 'outer left'.)
     --full                 Do a 'full outer' join. This returns all rows in
                            both data sets with matching records joined. If
                            there is no match, the missing side will be padded
@@ -200,6 +205,7 @@ struct Args {
     flag_left:             bool,
     flag_left_anti:        bool,
     flag_left_semi:        bool,
+    flag_right:            bool,
     flag_full:             bool,
     flag_cross:            bool,
     flag_coalesce:         bool,
@@ -263,17 +269,33 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_left,
         args.flag_left_anti,
         args.flag_left_semi,
+        args.flag_right,
         args.flag_full,
         args.flag_cross,
         args.flag_asof,
     ) {
-        (false, false, false, false, false, false) => join.run(JoinType::Inner, validation, false),
-        (true, false, false, false, false, false) => join.run(JoinType::Left, validation, false),
-        (false, true, false, false, false, false) => join.run(JoinType::Anti, validation, false),
-        (false, false, true, false, false, false) => join.run(JoinType::Semi, validation, false),
-        (false, false, false, true, false, false) => join.run(JoinType::Full, validation, false),
-        (false, false, false, false, true, false) => join.run(JoinType::Cross, validation, false),
-        (false, false, false, false, false, true) => {
+        (false, false, false, false, false, false, false) => {
+            join.run(JoinType::Inner, validation, false)
+        },
+        (true, false, false, false, false, false, false) => {
+            join.run(JoinType::Left, validation, false)
+        },
+        (false, true, false, false, false, false, false) => {
+            join.run(JoinType::Anti, validation, false)
+        },
+        (false, false, false, true, false, false, false) => {
+            join.run(JoinType::Right, validation, false)
+        },
+        (false, false, true, false, false, false, false) => {
+            join.run(JoinType::Semi, validation, false)
+        },
+        (false, false, false, false, true, false, false) => {
+            join.run(JoinType::Full, validation, false)
+        },
+        (false, false, false, false, false, true, false) => {
+            join.run(JoinType::Cross, validation, false)
+        },
+        (false, false, false, false, false, false, true) => {
             // safety: flag_strategy is always is_some() as it has a default value
             args.flag_strategy = Some(args.flag_strategy.unwrap().to_lowercase());
             let strategy = match args.flag_strategy.as_deref() {
