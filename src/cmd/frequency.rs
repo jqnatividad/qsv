@@ -65,8 +65,10 @@ frequency options:
     --other-text <arg>      The text to use for the "Other" category. If set to "<NONE>",
                             the "Other" category will not be included in the frequency table.
                             [default: Other]
-    -a, --asc               Sort the frequency tables in ascending order by
-                            count. The default is descending order.
+    -a, --asc               Sort the frequency tables in ascending order by count.
+                            The default is descending order.
+    --no-trim               Don't trim whitespace from values when computing frequencies.
+                            The default is to trim leading and trailing whitespaces.
     --no-nulls              Don't include NULLs in the frequency table.
     -i, --ignore-case       Ignore case when computing frequencies.
     -j, --jobs <arg>        The number of jobs to run in parallel.
@@ -118,6 +120,7 @@ pub struct Args {
     pub flag_other_sorted:   bool,
     pub flag_other_text:     String,
     pub flag_asc:            bool,
+    pub flag_no_trim:        bool,
     pub flag_no_nulls:       bool,
     pub flag_ignore_case:    bool,
     pub flag_jobs:           Option<usize>,
@@ -361,52 +364,116 @@ impl Args {
 
         let flag_no_nulls = self.flag_no_nulls;
         if self.flag_ignore_case {
+            // case insensitive when computing frequencies
             let mut buf = String::new();
-            // safety: we do get_unchecked_mut on freq_tables
-            // as we know that nsel_len is the same as freq_tables.len()
-            // so we can skip the bounds check
-            for row in it {
-                // safety: we know the row is not empty
-                row_buffer.clone_from(&row.unwrap());
-                for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
-                    field_buffer = {
-                        if let Ok(s) = simdutf8::basic::from_utf8(field) {
-                            util::to_lowercase_into(s.trim(), &mut buf);
-                            buf.as_bytes().to_vec()
-                        } else {
-                            field.to_vec()
+
+            if self.flag_no_trim {
+                // case-insensitive, don't trim whitespace
+                for row in it {
+                    // safety: we know the row is not empty
+                    row_buffer.clone_from(&row.unwrap());
+                    for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
+                        field_buffer = {
+                            if let Ok(s) = simdutf8::basic::from_utf8(field) {
+                                util::to_lowercase_into(s, &mut buf);
+                                buf.as_bytes().to_vec()
+                            } else {
+                                field.to_vec()
+                            }
+                        };
+
+                        // safety: we do get_unchecked_mut on freq_tables
+                        // as we know that nsel_len is the same as freq_tables.len()
+                        // so we can skip the bounds check
+                        if !field_buffer.is_empty() {
+                            unsafe {
+                                freq_tables.get_unchecked_mut(i).add(field_buffer);
+                            }
+                        } else if !flag_no_nulls {
+                            unsafe {
+                                freq_tables.get_unchecked_mut(i).add(null.clone());
+                            }
                         }
-                    };
-                    if !field_buffer.is_empty() {
-                        unsafe {
-                            freq_tables.get_unchecked_mut(i).add(field_buffer);
-                        }
-                    } else if !flag_no_nulls {
-                        unsafe {
-                            freq_tables.get_unchecked_mut(i).add(null.clone());
+                    }
+                }
+            } else {
+                // case-insensitive, trim whitespace
+                for row in it {
+                    // safety: we know the row is not empty
+                    row_buffer.clone_from(&row.unwrap());
+                    for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
+                        field_buffer = {
+                            if let Ok(s) = simdutf8::basic::from_utf8(field) {
+                                util::to_lowercase_into(s.trim(), &mut buf);
+                                buf.as_bytes().to_vec()
+                            } else {
+                                field.to_vec()
+                            }
+                        };
+
+                        // safety: we do get_unchecked_mut on freq_tables
+                        // as we know that nsel_len is the same as freq_tables.len()
+                        // so we can skip the bounds check
+                        if !field_buffer.is_empty() {
+                            unsafe {
+                                freq_tables.get_unchecked_mut(i).add(field_buffer);
+                            }
+                        } else if !flag_no_nulls {
+                            unsafe {
+                                freq_tables.get_unchecked_mut(i).add(null.clone());
+                            }
                         }
                     }
                 }
             }
         } else {
+            // case sensitive by default when computing frequencies
             for row in it {
                 // safety: we know the row is not empty
                 row_buffer.clone_from(&row.unwrap());
-                for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
-                    field_buffer = {
-                        if let Ok(s) = simdutf8::basic::from_utf8(field) {
-                            s.trim().as_bytes().to_vec()
-                        } else {
-                            field.to_vec()
+
+                if self.flag_no_trim {
+                    // case-sensitive, don't trim whitespace
+                    for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
+                        field_buffer = {
+                            if let Ok(s) = simdutf8::basic::from_utf8(field) {
+                                s.as_bytes().to_vec()
+                            } else {
+                                field.to_vec()
+                            }
+                        };
+
+                        // safety: we do get_unchecked_mut on freq_tables for the same reason above
+                        if !field_buffer.is_empty() {
+                            unsafe {
+                                freq_tables.get_unchecked_mut(i).add(field_buffer);
+                            }
+                        } else if !flag_no_nulls {
+                            unsafe {
+                                freq_tables.get_unchecked_mut(i).add(null.clone());
+                            }
                         }
-                    };
-                    if !field_buffer.is_empty() {
-                        unsafe {
-                            freq_tables.get_unchecked_mut(i).add(field_buffer);
-                        }
-                    } else if !flag_no_nulls {
-                        unsafe {
-                            freq_tables.get_unchecked_mut(i).add(null.clone());
+                    }
+                } else {
+                    // case-sensitive, trim whitespace
+                    for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
+                        field_buffer = {
+                            if let Ok(s) = simdutf8::basic::from_utf8(field) {
+                                s.trim().as_bytes().to_vec()
+                            } else {
+                                field.to_vec()
+                            }
+                        };
+
+                        // safety: we do get_unchecked_mut on freq_tables for the same reason above
+                        if !field_buffer.is_empty() {
+                            unsafe {
+                                freq_tables.get_unchecked_mut(i).add(field_buffer);
+                            }
+                        } else if !flag_no_nulls {
+                            unsafe {
+                                freq_tables.get_unchecked_mut(i).add(null.clone());
+                            }
                         }
                     }
                 }
