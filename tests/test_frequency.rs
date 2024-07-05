@@ -36,7 +36,7 @@ fn frequency_no_headers() {
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got = got.into_iter().skip(1).collect();
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["1", "(NULL)", "1", "12.5"],
         svec!["1", "(NULL)", "1", "12.5"],
@@ -53,7 +53,7 @@ fn frequency_casesensitive() {
     cmd.args(["--limit", "0"]).args(["--select", "h2"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h2", "Y", "1", "14.28571"],
@@ -72,7 +72,7 @@ fn frequency_ignorecase() {
         .args(["--select", "h2"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h2", "x", "1", "14.28571"],
@@ -112,7 +112,7 @@ fn frequency_trim() {
         .args(["--select", "h2"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h2", "Y", "2", "14.28571"],
@@ -155,7 +155,7 @@ fn frequency_no_trim() {
         .arg("--no-trim");
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h2", "  Z   ", "2", "14.28571"],
@@ -178,7 +178,7 @@ fn frequency_no_nulls() {
         .args(["--select", "h1"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "(NULL)", "1", "16.66667"],
@@ -194,7 +194,7 @@ fn frequency_nulls() {
     cmd.args(["--limit", "0"]).args(["--select", "h1"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "(NULL)", "1", "14.28571"],
@@ -211,7 +211,7 @@ fn frequency_limit() {
     cmd.args(["--limit", "1"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "Other (3)", "3", "42.85714"],
@@ -228,7 +228,7 @@ fn frequency_pct_dec_places() {
     cmd.args(["--limit", "1"]).args(["--pct-dec-places", "3"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "Other (3)", "3", "42.857"],
@@ -245,7 +245,7 @@ fn frequency_neg_pct_dec_places() {
     cmd.args(["--limit", "1"]).args(["--pct-dec-places", "-4"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "Other (3)", "3", "42.8571"],
@@ -262,7 +262,7 @@ fn frequency_limit_no_other() {
     cmd.args(["--limit", "1"]).args(["--other-text", "<NONE>"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "a", "4", "57.14286"],
@@ -277,7 +277,7 @@ fn frequency_negative_limit() {
     cmd.args(["--limit", "-4"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "Other (3)", "3", "42.85714"],
@@ -293,7 +293,7 @@ fn frequency_limit_threshold() {
     cmd.args(["--limit", "-4"]).args(["--lmt-threshold", "4"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "Other (3)", "3", "42.85714"],
@@ -309,7 +309,7 @@ fn frequency_limit_threshold_notmet() {
     cmd.args(["--limit", "-2"]).args(["--lmt-threshold", "3"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "(NULL)", "1", "14.28571"],
@@ -329,7 +329,7 @@ fn frequency_asc() {
     cmd.args(["--select", "h2"]).arg("--asc");
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h2", "Y", "1", "14.28571"],
@@ -348,7 +348,7 @@ fn frequency_asc_ignorecase() {
         .arg("--asc");
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h2", "x", "1", "14.28571"],
@@ -366,7 +366,7 @@ fn frequency_custom_other_text() {
         .args(["--other-text", "其他"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "a", "4", "57.14286"],
@@ -385,7 +385,7 @@ fn frequency_custom_other_text_sorted() {
         .arg("--other-sorted");
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "Ibang halaga (3)", "3", "42.85714"],
@@ -403,7 +403,7 @@ fn frequency_other_sorted() {
         .arg("--other-sorted");
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "Other (3)", "3", "42.85714"],
@@ -421,7 +421,7 @@ fn frequency_other_text_none() {
         .args(["--other-text", "<NONE>"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h1", "a", "4", "57.14286"],
@@ -435,7 +435,7 @@ fn frequency_select() {
     cmd.args(["--limit", "0"]).args(["--select", "h2"]);
 
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-    got.sort();
+    got.sort_unstable();
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
         svec!["h2", "Y", "1", "14.28571"],
@@ -573,7 +573,7 @@ where
     T: ::std::hash::Hash + Ord + Clone,
 {
     let (mut freqs, _) = ftable.most_frequent();
-    freqs.sort();
+    freqs.sort_unstable();
     freqs
 }
 
