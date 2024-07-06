@@ -4,7 +4,7 @@ Infers extended metadata about a CSV using a large language model.
 Note that this command uses LLMs for inferencing and is therefore prone to
 inaccurate information being produced. Verify output results before using them.
 
-Let's say you have Ollama installed (must be v0.149.0 or above) to run LLMs locally.
+Let's say you have Ollama installed (must be v0.1.49 or above) to use LLMs locally with qsv describegpt.
 To attempt generating a data dictionary of a spreadsheet file you may run (replace <> values):
 
 qsv describegpt <filepath> --base-url http://localhost:11434/v1 --api-key ollama --model <model> --max-tokens <number> --dictionary
