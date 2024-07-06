@@ -536,7 +536,7 @@ async fn get_file_to_sniff(args: &Args, tmpdir: &tempfile::TempDir) -> CliResult
                     let config = Config::new(&Some(retrieved_name))
                         .delimiter(args.flag_delimiter)
                         // we say no_headers so we can just copy the downloaded file over
-                        // including headers, to the exact sanple size file
+                        // including headers, to the exact sample size file
                         .no_headers(true)
                         .flexible(true);
 
