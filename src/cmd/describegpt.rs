@@ -4,7 +4,12 @@ Infers extended metadata about a CSV using a large language model.
 Note that this command uses LLMs for inferencing and is therefore prone to
 inaccurate information being produced. Verify output results before using them.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_describegpt.rs.
+Let's say you have Ollama installed (must be v0.149.0 or above) to run LLMs locally.
+To attempt generating a data dictionary of a spreadsheet file you may run (replace <> values):
+
+qsv describegpt <filepath> --base-url http://localhost:11434/v1 --api-key ollama --model <model> --max-tokens <number> --dictionary
+
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_describegpt.rs.
 
 For more detailed info on how describegpt works and how to prepare a prompt file, 
 see https://github.com/jqnatividad/qsv/blob/master/docs/Describegpt.md
@@ -20,7 +25,7 @@ describegpt options:
                            human-readable label, a description, and stats.
     --tags                 Prints tags that categorize the dataset. Useful
                            for grouping datasets and filtering.
-    --api-key <key>        The API key to use. If using Ollama, set the key to ollama.
+    --api-key <key>        The API key to use. The default API key for Ollama is ollama.
                            If the QSV_LLM_APIKEY envvar is set, it will be used instead.                           
     --max-tokens <value>   Limits the number of generated tokens in the output.
                            [default: 50]
@@ -32,8 +37,8 @@ describegpt options:
                            If not specified, default prompts will be used.
     --base-url <url>       The URL of the API for interacting with LLMs. Supports APIs
                            compatible with the OpenAI API specification (Ollama, Jan, etc.).
+                           The default base URL for Ollama is http://localhost:11434/v1.
                            [default: https://api.openai.com/v1]
-    --ollama               Required flag when using Ollama.
     --model <model>        The model to use for inferencing.
                            [default: gpt-3.5-turbo-16k]
     --timeout <secs>       Timeout for completions in seconds.
@@ -68,7 +73,6 @@ struct Args {
     flag_api_key:     Option<String>,
     flag_max_tokens:  u32,
     flag_base_url:    Option<String>,
-    flag_ollama:      bool,
     flag_model:       Option<String>,
     flag_json:        bool,
     flag_jsonl:       bool,
@@ -95,7 +99,6 @@ struct PromptFile {
     json:               bool,
     jsonl:              bool,
     base_url:           String,
-    ollama:             bool,
     model:              String,
     timeout:            u32,
 }
@@ -200,11 +203,7 @@ fn is_valid_model(
 ) -> CliResult<bool> {
     // Get prompt file if --prompt-file is used, otherwise get default prompt file
     let prompt_file = get_prompt_file(args)?;
-    let models_endpoint = if args.flag_ollama || prompt_file.ollama {
-        "/api/tags"
-    } else {
-        "/models"
-    };
+    let models_endpoint = "/models";
     let response = send_request(
         client,
         api_key,
@@ -236,19 +235,10 @@ fn is_valid_model(
     } else {
         args.flag_model.clone().unwrap()
     };
-    if arg_is_some("--ollama") || prompt_file.ollama {
-        let models = response_json["models"].as_array().unwrap();
-        for model in models {
-            if model["name"].as_str().unwrap() == given_model {
-                return Ok(true);
-            }
-        }
-    } else {
-        let models = response_json["data"].as_array().unwrap();
-        for model in models {
-            if model["id"].as_str().unwrap() == given_model {
-                return Ok(true);
-            }
+    let models = response_json["data"].as_array().unwrap();
+    for model in models {
+        if model["id"].as_str().unwrap() == given_model {
+            return Ok(true);
         }
     }
 
@@ -289,7 +279,6 @@ fn get_prompt_file(args: &Args) -> CliResult<PromptFile> {
             json:               true,
             jsonl:              false,
             base_url:           "https://api.openai.com/v1".to_owned(),
-            ollama:             false,
             model:              "gpt-3.5-turbo-16k".to_owned(),
             timeout:            60,
         };
@@ -401,17 +390,7 @@ fn get_completion(
     });
 
     // Get response from POST request to chat completions endpoint
-    let completions_endpoint = if arg_is_some("--ollama") {
-        "/api/chat"
-    } else if args.flag_prompt_file.is_some() {
-        if prompt_file.ollama {
-            "/api/chat"
-        } else {
-            "/chat/completions"
-        }
-    } else {
-        "/chat/completions"
-    };
+    let completions_endpoint = "/chat/completions";
     let response = send_request(
         &client,
         Some(api_key),
@@ -430,25 +409,10 @@ fn get_completion(
     }
 
     // Get completion from response
-    if arg_is_some("--ollama") {
-        let completion = response_json["message"]["content"].as_str().unwrap();
-        Ok(completion.to_string())
-    } else if args.flag_prompt_file.is_some() {
-        if prompt_file.ollama {
-            let completion = response_json["message"]["content"].as_str().unwrap();
-            Ok(completion.to_string())
-        } else {
-            let completion = response_json["choices"][0]["message"]["content"]
-                .as_str()
-                .unwrap();
-            Ok(completion.to_string())
-        }
-    } else {
-        let completion = response_json["choices"][0]["message"]["content"]
-            .as_str()
-            .unwrap();
-        Ok(completion.to_string())
-    }
+    let completion = response_json["choices"][0]["message"]["content"]
+        .as_str()
+        .unwrap();
+    Ok(completion.to_string())
 }
 
 // Check if JSON output is expected
