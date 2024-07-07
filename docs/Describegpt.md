@@ -119,7 +119,6 @@ Here is an example of a prompt:
     "json": true,
     "jsonl": false,
     "base_url": "https://api.openai.com/v1",
-    "ollama": false,
     "model": "gpt-3.5-turbo-16k",
     "timeout": 60
 }
@@ -127,16 +126,14 @@ Here is an example of a prompt:
 
 Note that this example has `tokens` set to `50` by default but you may want to increase this value to not result in errors as mentioned in the [`--json`](#json) & [`--max-tokens`](#max-tokens-value) section.
 
-## `--ollama`
+## Running LLMs locally with Ollama
 
-This is a required flag for when you're using the Ollama API, so make sure you pass it when using Ollama as your server. This is due to Ollama's API not being 1-1 compatible with the OpenAI API specification (particularly the `/models` endpoint may not be implemented yet, see https://github.com/ollama/ollama/issues/2430).
-
-You may find the Ollama OpenAI compatibility documentation here: https://github.com/ollama/ollama/blob/main/docs/openai.md.
+Since the release of Ollama v0.1.49, Ollama provides the necessary OpenAI compatible endpoints to work with describegpt. You may find the Ollama OpenAI compatibility documentation here: https://github.com/ollama/ollama/blob/main/docs/openai.md.
 
 An example command for getting an inferred description is as follows:
 
 ```bash
-qsv describegpt <filepath> --ollama --base-url http://localhost:11434 --api-key ollama --model <model> --max-tokens <number> --description
+qsv describegpt <filepath> --base-url http://localhost:11434/v1 --api-key ollama --model <model> --max-tokens <number> --description
 ```
 
 Remove the arrow brackets `<>` and replace `filepath` with your file's path, `<model>` with the model you want to use, and `number` with the max tokens you want to set based on your model's context size.
