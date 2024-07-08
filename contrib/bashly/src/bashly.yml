@@ -592,6 +592,7 @@ commands:
           - long: --other-text
             arg: arg
           - long: --asc
+          - long: --no-trim
           - long: --no-nulls
           - long: --ignore-case
           - *jobs
@@ -759,6 +760,7 @@ commands:
           - long: --left
           - long: --left-anti
           - long: --left-semi
+          - long: --right
           - long: --full
           - long: --cross
           - long: --coalesce

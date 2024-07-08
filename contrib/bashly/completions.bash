@@ -185,7 +185,7 @@ _qsv_completions() {
       ;;
 
     *'frequency'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--asc --delimiter --help --ignore-case --jobs --limit --lmt-threshold --memcheck --no-headers --no-nulls --other-sorted --other-text --output --pct-dec-places --select --unq-limit -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--asc --delimiter --help --ignore-case --jobs --limit --lmt-threshold --memcheck --no-headers --no-nulls --no-trim --other-sorted --other-text --output --pct-dec-places --select --unq-limit -h")" -- "$cur" )
       ;;
 
     *'searchset'*)
@@ -333,7 +333,7 @@ _qsv_completions() {
       ;;
 
     *'joinp'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--asof --coalesce --cross --date-format --datetime-format --decimal-comma --delimiter --filter-left --filter-right --float-precision --full --help --ignore-errors --infer-len --left --left-anti --left-semi --left_by --low-memory --no-optimizations --null-value --nulls --output --quiet --right_by --sql-filter --strategy --streaming --time-format --tolerance --try-parsedates --validate -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -A file -W "$(_qsv_completions_filter "--asof --coalesce --cross --date-format --datetime-format --decimal-comma --delimiter --filter-left --filter-right --float-precision --full --help --ignore-errors --infer-len --left --left-anti --left-semi --left_by --low-memory --no-optimizations --null-value --nulls --output --quiet --right --right_by --sql-filter --strategy --streaming --time-format --tolerance --try-parsedates --validate -h")" -- "$cur" )
       ;;
 
     *'slice'*)
