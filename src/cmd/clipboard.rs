@@ -5,18 +5,18 @@ Note when saving to clipboard on Windows, line breaks may be represented as \r\n
 Meanwhile on Linux and macOS, they may be represented as \n (LF).
 
 Examples:
-Pipe into qsv stats using qsv clip and render it as a table:
+Pipe into qsv stats using qsv clipboard and render it as a table:
 
-  qsv clip | qsv stats | qsv table
+  qsv clipboard | qsv stats | qsv table
 
 If you want to save the output of a command to the clipboard,
-pipe into qsv clip using the --save or -s flag:
+pipe into qsv clipboard using the --save or -s flag:
 
-  qsv clip | qsv stats | qsv clip -s
+  qsv clipboard | qsv stats | qsv clipboard -s
 
 Usage:
-    qsv clip [options]
-    qsv clip --help
+    qsv clipboard [options]
+    qsv clipboard --help
 
 clip options:
     -s, --save             Save output to clipboard.

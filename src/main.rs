@@ -94,7 +94,7 @@ fn main() -> QsvExitCode {
     enabled_commands.push_str(
         "    behead      Drop header from CSV file
     cat         Concatenate by row or column
-    clip        Provide input from clipboard or output to clipboard
+    clipboard   Provide input from clipboard or output to clipboard
     count       Count records
     datefmt     Format date/datetime strings
     dedup       Remove redundant rows
@@ -327,7 +327,7 @@ enum Command {
     Apply,
     Behead,
     Cat,
-    Clip,
+    Clipboard,
     Count,
     Datefmt,
     Dedup,
@@ -414,7 +414,7 @@ impl Command {
             #[cfg(all(feature = "apply", feature = "feature_capable"))]
             Command::Apply => cmd::apply::run(argv),
             Command::Cat => cmd::cat::run(argv),
-            Command::Clip => cmd::clip::run(argv),
+            Command::Clipboard => cmd::clipboard::run(argv),
             Command::Count => cmd::count::run(argv),
             Command::Datefmt => cmd::datefmt::run(argv),
             Command::Dedup => cmd::dedup::run(argv),

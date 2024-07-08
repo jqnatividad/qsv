@@ -4,10 +4,10 @@ use crate::workdir::Workdir;
 // This test compares the stats output of fruits.csv to the clipboard output.
 #[test]
 #[ignore = "Requires clipboard to test."]
-fn clip_success() {
-    let wrk = Workdir::new("stats_clip_equality");
-    let mut clip_cmd = wrk.command("clip");
-    let clip_output: String = wrk.stdout(&mut clip_cmd);
+fn clipboard_success() {
+    let wrk = Workdir::new("stats_clipboard_equality");
+    let mut clipboard_cmd = wrk.command("clipboard");
+    let clipboard_output: String = wrk.stdout(&mut clipboard_cmd);
 
     #[cfg(not(windows))]
     let expected = "field,type,is_ascii,sum,min,max,range,min_length,max_length,mean,sem,stddev,\
@@ -20,5 +20,5 @@ fn clip_success() {
                     strawberry,,5,10,,,,,,0,,0\r\nprice,Float,,7,1.5,3.0,1.5,4,4,2.3333,0.36,0.\
                     6236,0.3889,26.7261,0,1,0";
 
-    assert_eq!(clip_output, expected);
+    assert_eq!(clipboard_output, expected);
 }
