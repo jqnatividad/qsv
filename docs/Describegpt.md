@@ -128,7 +128,7 @@ Note that this example has `tokens` set to `50` by default but you may want to i
 
 ## Running LLMs locally with Ollama
 
-Since the release of Ollama v0.1.49, Ollama provides the necessary OpenAI compatible endpoints to work with describegpt. You may find the Ollama OpenAI compatibility documentation here: https://github.com/ollama/ollama/blob/main/docs/openai.md.
+Since the release of Ollama v0.2.0, Ollama provides the necessary OpenAI compatible endpoints to work with describegpt. You may find the Ollama OpenAI compatibility documentation here: https://github.com/ollama/ollama/blob/main/docs/openai.md.
 
 An example command for getting an inferred description is as follows:
 
