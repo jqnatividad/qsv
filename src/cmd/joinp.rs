@@ -255,14 +255,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &tmpdir,
     )?;
 
-    // safety: flag_validate is always is_some() as it has a default value
-    args.flag_validate = Some(args.flag_validate.unwrap().to_lowercase());
-    let validation = match args.flag_validate.as_deref() {
-        Some("manytomany" | "none") | None => JoinValidation::ManyToMany,
-        Some("onetomany") => JoinValidation::OneToMany,
-        Some("manytoone") => JoinValidation::ManyToOne,
-        Some("onetoone") => JoinValidation::OneToOne,
-        Some(s) => return fail_incorrectusage_clierror!("Invalid join validation: {s}"),
+    let flag_validate = args
+        .flag_validate
+        .unwrap_or("none".to_string())
+        .to_lowercase();
+    let validation = match flag_validate.as_str() {
+        // no unique checks
+        "manytomany" | "none" => JoinValidation::ManyToMany,
+        // join keys are unique in the left data set
+        "onetomany" => JoinValidation::OneToMany,
+        // join keys are unique in the right data set
+        "manytoone" => JoinValidation::ManyToOne,
+        // join keys are unique in both left & right data sets
+        "onetoone" => JoinValidation::OneToOne,
+        s => return fail_incorrectusage_clierror!("Invalid join validation: {s}"),
     };
 
     let join_shape: (usize, usize) = match (
@@ -283,11 +289,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         (false, true, false, false, false, false, false) => {
             join.run(JoinType::Anti, validation, false)
         },
-        (false, false, false, true, false, false, false) => {
-            join.run(JoinType::Right, validation, false)
-        },
         (false, false, true, false, false, false, false) => {
             join.run(JoinType::Semi, validation, false)
+        },
+        (false, false, false, true, false, false, false) => {
+            join.run(JoinType::Right, validation, false)
         },
         (false, false, false, false, true, false, false) => {
             join.run(JoinType::Full, validation, false)
