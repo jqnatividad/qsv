@@ -156,6 +156,10 @@ commands:
           - *no-headers
           - *delimiter
 
+    - name: clip
+      flags:
+          - long: --save
+
     - name: count
       completions:
           - <file>
