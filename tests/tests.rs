@@ -39,6 +39,8 @@ mod test_applydp;
 mod test_behead;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_cat;
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
+mod test_clipboard;
 mod test_combos;
 mod test_comments;
 mod test_count;

@@ -6,6 +6,8 @@ pub mod applydp;
 pub mod behead;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod cat;
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
+pub mod clipboard;
 pub mod count;
 pub mod datefmt;
 pub mod dedup;

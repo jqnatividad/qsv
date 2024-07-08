@@ -21,6 +21,7 @@ macro_rules! command_list {
         "
     behead      Drop header from CSV file
     cat         Concatenate by row or column
+    clipboard   Provide input from clipboard or output to clipboard
     count       Count records
     datefmt     Format date/datetime columns
     dedup       Remove redundant rows
@@ -226,6 +227,7 @@ Please choose one of the following commands:",
 enum Command {
     Behead,
     Cat,
+    Clipboard,
     Count,
     Datefmt,
     Dedup,
@@ -291,6 +293,7 @@ impl Command {
         match self {
             Command::Behead => cmd::behead::run(argv),
             Command::Cat => cmd::cat::run(argv),
+            Command::Clipboard => cmd::clipboard::run(argv),
             Command::Count => cmd::count::run(argv),
             Command::Datefmt => cmd::datefmt::run(argv),
             Command::Dedup => cmd::dedup::run(argv),
