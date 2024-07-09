@@ -120,18 +120,28 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if value.is_null() {
         return fail_clierror!("No JSON data found.");
     }
-    let first_dict = value
-        .as_array()
-        .and_then(|arr| arr.first())
-        .and_then(|val| val.as_object())
-        .ok_or_else(|| CliError::Other("Expected an array of objects in JSON".to_string()))?;
+    let first_dict = if value.is_array() {
+        value
+            .as_array()
+            .and_then(|arr| arr.first())
+            .and_then(|val| val.as_object())
+            .ok_or_else(|| CliError::Other("Expected an array of objects in JSON".to_string()))?
+    } else {
+        value
+            .as_object()
+            .ok_or_else(|| CliError::Other("Expected a JSON object".to_string()))?
+    };
     let mut headers: Vec<&str> = Vec::new();
     for key in first_dict.keys() {
         headers.push(key.as_str());
     }
 
     let empty_values = vec![serde_json::Value::Null; 1];
-    let values = value.as_array().unwrap_or(&empty_values);
+    let values = if value.is_array() {
+        value.as_array().unwrap_or(&empty_values)
+    } else {
+        &vec![value.clone()]
+    };
 
     let csv_writer = csv::WriterBuilder::new().from_writer(&mut output);
     Json2Csv::new(flattener).convert_from_array(values, csv_writer)?;

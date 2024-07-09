@@ -1,8 +1,8 @@
 use crate::workdir::Workdir;
 
 #[test]
-fn json_simple() {
-    let wrk = Workdir::new("json_simple");
+fn json_array_simple() {
+    let wrk = Workdir::new("json_array_simple");
     wrk.create_from_string(
         "data.json",
         r#"[{"id":1,"father":"Mark","mother":"Charlotte","oldest_child":"Tom","boy":true},
@@ -18,6 +18,24 @@ fn json_simple() {
         svec!["1", "Mark", "Charlotte", "Tom", "true"],
         svec!["2", "John", "Ann", "Jessika", "false"],
         svec!["3", "Bob", "Monika", "Jerry", "true"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn json_object_simple() {
+    let wrk = Workdir::new("json_object_simple");
+    wrk.create_from_string(
+        "data.json",
+        r#"{"id":1,"father":"Mark","mother":"Charlotte","oldest_child":"Tom","boy":true}"#,
+    );
+    let mut cmd = wrk.command("json");
+    cmd.arg("data.json");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["id", "father", "mother", "oldest_child", "boy"],
+        svec!["1", "Mark", "Charlotte", "Tom", "true"],
     ];
     assert_eq!(got, expected);
 }
