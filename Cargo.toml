@@ -70,6 +70,7 @@ panic    = "abort"
 [dependencies]
 ahash = "0.8"
 anyhow = { version = "1.0", optional = true }
+arboard = "3.4.0"
 atoi_simd = "0.16"
 bincode = "1.3"
 byteorder = "1.5"
@@ -122,6 +123,7 @@ indicatif = "0.17"
 itertools = "0.13"
 itoa = "1"
 jemallocator = { version = "0.5", optional = true }
+json-objects-to-csv = "0.1.3"
 jsonschema = { version = "0.18", features = [
     "resolve-file",
     "resolve-http",
@@ -227,8 +229,6 @@ url = "2.5"
 vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
-json-objects-to-csv = "0.1.3"
-arboard = "3.4.0"
 
 [target.'cfg(not(target_arch = "aarch64"))'.dependencies]
 simdutf8    = "0.1"
