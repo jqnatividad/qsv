@@ -49,6 +49,20 @@ fn json_array_first_object_empty() {
 }
 
 #[test]
+fn json_random() {
+    let wrk = Workdir::new("json_random");
+    wrk.create_from_string("data.json", "some random text");
+    let mut cmd = wrk.command("json");
+    cmd.arg("data.json");
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected =
+        "Failed to parse JSON from file: expected value at line 1 column 1\n".to_string();
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn json_object_simple() {
     let wrk = Workdir::new("json_object_simple");
     wrk.create_from_string(
