@@ -131,6 +131,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .as_object()
             .ok_or_else(|| CliError::Other("Expected a JSON object".to_string()))?
     };
+    if first_dict.is_empty() {
+        return Err(CliError::Other(
+            "Expected a non-empty JSON object".to_string(),
+        ));
+    }
     let mut headers: Vec<&str> = Vec::new();
     for key in first_dict.keys() {
         headers.push(key.as_str());

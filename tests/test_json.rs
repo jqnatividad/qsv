@@ -23,6 +23,46 @@ fn json_array_simple() {
 }
 
 #[test]
+fn json_array_empty() {
+    let wrk = Workdir::new("json_array_empty");
+    wrk.create_from_string("data.json", r#"[]"#);
+    let mut cmd = wrk.command("json");
+    cmd.arg("data.json");
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "Expected an array of objects in JSON\n".to_string();
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn json_array_first_object_empty() {
+    let wrk = Workdir::new("json_array_first_object_empty");
+    wrk.create_from_string("data.json", r#"[{}]"#);
+    let mut cmd = wrk.command("json");
+    cmd.arg("data.json");
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "Expected a non-empty JSON object\n".to_string();
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn json_random() {
+    let wrk = Workdir::new("json_random");
+    wrk.create_from_string("data.json", "some random text");
+    let mut cmd = wrk.command("json");
+    cmd.arg("data.json");
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected =
+        "Failed to parse JSON from file: expected value at line 1 column 1\n".to_string();
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn json_object_simple() {
     let wrk = Workdir::new("json_object_simple");
     wrk.create_from_string(
@@ -37,6 +77,19 @@ fn json_object_simple() {
         svec!["id", "father", "mother", "oldest_child", "boy"],
         svec!["1", "Mark", "Charlotte", "Tom", "true"],
     ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn json_object_empty() {
+    let wrk = Workdir::new("json_object_empty");
+    wrk.create_from_string("data.json", r#"{}"#);
+    let mut cmd = wrk.command("json");
+    cmd.arg("data.json");
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "Expected a non-empty JSON object\n".to_string();
+
     assert_eq!(got, expected);
 }
 
