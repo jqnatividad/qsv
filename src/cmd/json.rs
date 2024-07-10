@@ -1,23 +1,30 @@
 static USAGE: &str = r#"
-Convert non-nested JSON to CSV.
+Convert JSON to CSV.
 
-You may provide JSON data either from stdin or a file path.
-This command may not work with nested JSON data.
+The JSON data is expected to be non-empty and non-nested as either:
 
-As a basic example, say we have a file fruits.json with contents:
+1. An array of objects where:
+   A. All objects are non-empty and have the same keys.
+   B. Values are not objects or arrays.
+2. An object where values are not objects or arrays.
+
+If your JSON data is not in the expected format and/or is nested or complex, try using
+the --jaq option to pass a jq-like filter before parsing with the above constraints.
+
+As an example, say we have the following JSON data in a file fruits.json:
 
 [
     {
         "fruit": "apple",
-        "price": 2.5
+        "price": 2.50
     },
     {
         "fruit": "banana",
-        "price": 3.0
+        "price": 3.00
     }
 ]
 
-To convert it to CSV format, run:
+To convert it to CSV format run:
 
 qsv json fruits.json
 
@@ -27,15 +34,34 @@ fruit,price
 apple,2.5
 banana,3.0
 
-If fruits.json was provided using stdin then either use - or do not provide a file path. For example:
+Note: Trailing zeroes in decimal numbers after the decimal are truncated (2.50 becomes 2.5).
 
-cat fruits.json | qsv json -
+If the JSON data was provided using stdin then either use - or do not provide a file path.
+For example you may copy the JSON data above to your clipboard then run:
+
+qsv clipboard | qsv json
+
+When JSON data is nested or complex, try using the --jaq option and provide a filter value.
+The --jaq option uses jaq (like jq). You may learn more here: https://github.com/01mf02/jaq
+
+For example we have a .json file with a "data" key and the value being the same array as before:
+
+{
+    "data": [...]
+}
+
+We may run the following to select the JSON file and convert the nested array to CSV:
+
+qsv prompt -F json | qsv json --jaq .data
 
 For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_json.rs.
 
 Usage:
     qsv json [options] [<input>]
     qsv json --help
+
+json options:
+    --jaq <filter>         Filter JSON data using jaq syntax (https://github.com/01mf02/jaq).
 
 Common options:
     -h, --help             Display this message
@@ -47,6 +73,7 @@ use std::{
     io::{Read, Write},
 };
 
+use jaq_interpret::{Ctx, FilterT, ParseCtx, RcIter, Val};
 use json_objects_to_csv::{flatten_json_object::Flattener, Json2Csv};
 use serde::Deserialize;
 
@@ -55,6 +82,7 @@ use crate::{util, CliError, CliResult};
 #[derive(Deserialize)]
 struct Args {
     arg_input:   Option<String>,
+    flag_jaq:    Option<String>,
     flag_output: Option<String>,
 }
 
@@ -111,7 +139,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let flattener = Flattener::new();
     let mut output = Vec::<u8>::new();
-    let value = if let Some(path) = args.arg_input {
+    let mut value = if let Some(path) = args.arg_input {
         get_value_from_path(path)?
     } else {
         get_value_from_stdin()?
@@ -120,6 +148,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if value.is_null() {
         return fail_clierror!("No JSON data found.");
     }
+
+    if let Some(filter) = args.flag_jaq {
+        // Parse jaq filter based on JSON input
+        let mut defs = ParseCtx::new(Vec::new());
+        let (f, _errs) = jaq_parse::parse(filter.as_str(), jaq_parse::main());
+        let f = defs.compile(f.unwrap());
+        let inputs = RcIter::new(core::iter::empty());
+        let out = f
+            .run((Ctx::new([], &inputs), Val::from(value.clone())))
+            .filter_map(|val| val.ok());
+
+        let jaq_value = serde_json::Value::from_iter(out);
+
+        // from_iter creates a Value::Array even if the JSON data is an array,
+        // so we unwrap this generated Value::Array to get the actual filtered output.
+        // This allows the user to filter with '.data' for {"data": [...]} instead of not being able
+        // to use '.data'. Both '.data' and '.data[]' should work with this implementation.
+        value = if jaq_value
+            .as_array()
+            .is_some_and(|arr| arr.first().is_some_and(|f| f.is_array()))
+        {
+            jaq_value.as_array().unwrap().first().unwrap().to_owned()
+        } else {
+            jaq_value
+        };
+    }
+
+    if value.is_null() {
+        return fail_clierror!("No JSON data found.");
+    }
+
     let first_dict = if value.is_array() {
         value
             .as_array()

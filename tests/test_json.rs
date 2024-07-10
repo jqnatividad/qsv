@@ -206,3 +206,35 @@ fn json_house_diff() {
 
     assert!(diff_output.lines().count() == 1);
 }
+
+#[test]
+fn json_nested() {
+    let wrk = Workdir::new("json_nested");
+    let json_data = serde_json::json!({
+        "data": [
+            {
+                "fruit": "apple",
+                "price": 0.50
+            },
+            {
+                "fruit": "banana",
+                "price": 1.00
+            }
+        ]
+    });
+    let filter = ".data";
+
+    wrk.create_from_string("data.json", json_data.to_string().as_str());
+    let mut cmd = wrk.command("json");
+    cmd.arg("data.json");
+    cmd.args(vec!["--jaq", filter]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["fruit", "price"],
+        svec!["apple", "0.5"],
+        svec!["banana", "1.0"],
+    ];
+
+    assert_eq!(got, expected);
+}
