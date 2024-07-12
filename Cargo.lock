@@ -6523,12 +6523,11 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "titlecase"
-version = "3.2.0"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "acc5e312c2e5385c8d3d31487041ca8ceaec09a8a1174bdfa9c6418c5f6b36fa"
+checksum = "e0e20e744fbec1913fa168f3ffbef64324bbcb152c6cda8394baa79fa5ec9142"
 dependencies = [
  "regex",
- "wasm-bindgen",
 ]
 
 [[package]]
