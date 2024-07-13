@@ -242,12 +242,20 @@ impl Args {
         let unique_counts_len = counts.len();
         if self.flag_lmt_threshold == 0 || self.flag_lmt_threshold >= unique_counts_len {
             // check if the column has all unique values
-            // by checking if counts length is equal to ftable length
+            // do this by looking at the counts vec
+            // and see if it has a count of 1, indicating all unique values
+            let all_unique = counts[if self.flag_asc {
+                unique_counts_len - 1
+            } else {
+                0
+            }]
+            .1 == 1;
+
             let abs_limit = self.flag_limit.unsigned_abs();
-            let unique_limited = if self.flag_limit > 0
+            let unique_limited = if all_unique
+                && self.flag_limit > 0
                 && self.flag_unq_limit != abs_limit
                 && self.flag_unq_limit > 0
-                && unique_counts_len == ftab.len()
             {
                 counts.truncate(self.flag_unq_limit);
                 true
@@ -435,13 +443,9 @@ impl Args {
                 if self.flag_no_trim {
                     // case-sensitive, don't trim whitespace
                     for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
-                        field_buffer = {
-                            if let Ok(s) = simdutf8::basic::from_utf8(field) {
-                                s.as_bytes().to_vec()
-                            } else {
-                                field.to_vec()
-                            }
-                        };
+                        // no need to convert to string and back to bytes for a "case-sensitive"
+                        // comparison we can just use the field directly
+                        field_buffer = field.to_vec();
 
                         // safety: we do get_unchecked_mut on freq_tables for the same reason above
                         if !field_buffer.is_empty() {
