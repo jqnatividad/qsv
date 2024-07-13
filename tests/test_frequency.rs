@@ -446,6 +446,76 @@ fn frequency_select() {
     assert_eq!(got, expected);
 }
 
+#[test]
+fn frequency_all_unique() {
+    let wrk = Workdir::new("frequency_all_unique");
+    let testdata = wrk.load_test_file("boston311-100.csv");
+    let mut cmd = wrk.command("frequency");
+    cmd.args(["--select", "1"]).arg(testdata);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["case_enquiry_id", "101004113298", "1", "1"],
+        svec!["case_enquiry_id", "101004113313", "1", "1"],
+        svec!["case_enquiry_id", "101004113348", "1", "1"],
+        svec!["case_enquiry_id", "101004113363", "1", "1"],
+        svec!["case_enquiry_id", "101004113371", "1", "1"],
+        svec!["case_enquiry_id", "101004113385", "1", "1"],
+        svec!["case_enquiry_id", "101004113386", "1", "1"],
+        svec!["case_enquiry_id", "101004113391", "1", "1"],
+        svec!["case_enquiry_id", "101004113394", "1", "1"],
+        svec!["case_enquiry_id", "101004113403", "1", "1"],
+        svec!["case_enquiry_id", "Other (90)", "90", "90"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn frequency_issue1962() {
+    let wrk = Workdir::new("frequency_1962");
+    let testdata = wrk.load_test_file("data1962.csv");
+    let mut cmd = wrk.command("frequency");
+    cmd.args(["--limit", "15"]).arg(testdata.clone());
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["year", "2024", "24", "8"],
+        svec!["year", "2023", "23", "7.66667"],
+        svec!["year", "2022", "22", "7.33333"],
+        svec!["year", "2021", "21", "7"],
+        svec!["year", "2020", "20", "6.66667"],
+        svec!["year", "2019", "19", "6.33333"],
+        svec!["year", "2018", "18", "6"],
+        svec!["year", "2017", "17", "5.66667"],
+        svec!["year", "2016", "16", "5.33333"],
+        svec!["year", "2015", "15", "5"],
+        svec!["year", "2014", "14", "4.66667"],
+        svec!["year", "2013", "13", "4.33333"],
+        svec!["year", "2012", "12", "4"],
+        svec!["year", "2011", "11", "3.66667"],
+        svec!["year", "2010", "10", "3.33333"],
+        svec!["year", "Other (9)", "45", "15"],
+    ];
+    assert_eq!(got, expected);
+
+    let mut cmd = wrk.command("frequency");
+    cmd.args(["--limit", "5"]).arg(testdata);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["year", "2024", "24", "8"],
+        svec!["year", "2023", "23", "7.66667"],
+        svec!["year", "2022", "22", "7.33333"],
+        svec!["year", "2021", "21", "7"],
+        svec!["year", "2020", "20", "6.66667"],
+        svec!["year", "Other (19)", "190", "63.33333"],
+    ];
+    assert_eq!(got, expected);
+}
+
 // This tests that a frequency table computed by `qsv` is always the same
 // as the frequency table computed in memory.
 #[test]
