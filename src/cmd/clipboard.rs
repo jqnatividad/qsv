@@ -40,28 +40,26 @@ struct Args {
 impl From<arboard::Error> for CliError {
     fn from(err: arboard::Error) -> Self {
         match err {
-            arboard::Error::ClipboardNotSupported => CliError::Other(format!(
-                "The clipboard may not be supported for the current environment."
-            )),
-            arboard::Error::ConversionFailure => CliError::Other(format!(
+            arboard::Error::ClipboardNotSupported => {
+                CliError::Other("The clipboard may not be supported for the current environment.")
+            },
+            arboard::Error::ConversionFailure => CliError::Other(
                 "The content that was about the be transferred to/from the clipboard could not be \
-                 converted to the appropriate format."
-            )),
-            arboard::Error::ClipboardOccupied => CliError::Other(format!(
+                 converted to the appropriate format.",
+            ),
+            arboard::Error::ClipboardOccupied => CliError::Other(
                 "The clipboard was unaccessible when attempting to access/use it. It may have \
-                 been held by another process/thread."
-            )),
-            arboard::Error::ContentNotAvailable => CliError::Other(format!(
+                 been held by another process/thread.",
+            ),
+            arboard::Error::ContentNotAvailable => CliError::Other(
                 "The clipboard contents were not available in the requested format. This could \
                  either be due to the clipboard being empty or the clipboard contents having an \
-                 incompatible format to the requested one."
-            )),
-            arboard::Error::Unknown { description: _ } => CliError::Other(format!(
-                "An unknown error occurred while attempting to use the clipboard."
-            )),
-            _ => CliError::Other(format!(
-                "An unexpected error occurred while using the clipboard."
-            )),
+                 incompatible format to the requested one.",
+            ),
+            arboard::Error::Unknown { description: _ } => {
+                CliError::Other("An unknown error occurred while attempting to use the clipboard.")
+            },
+            _ => CliError::Other("An unexpected error occurred while using the clipboard."),
         }
     }
 }
