@@ -1,0 +1,84 @@
+const completion: Fig.Spec = {
+  name: "qsv",
+  description: "",
+  subcommands: [
+    {
+      name: "clipboard",
+      options: [
+        {
+          name: "--save",
+        },
+        {
+          name: ["-h", "--help"],
+          description: "Print help",
+        },
+      ],
+    },
+    {
+      name: "count",
+      options: [
+        {
+          name: "--human-readable",
+        },
+        {
+          name: "--width",
+        },
+        {
+          name: "--no-polars",
+        },
+        {
+          name: "--low-memory",
+        },
+        {
+          name: "--flexible",
+        },
+        {
+          name: "--no-headers",
+        },
+        {
+          name: ["-h", "--help"],
+          description: "Print help",
+        },
+      ],
+    },
+    {
+      name: "help",
+      description: "Print this message or the help of the given subcommand(s)",
+      subcommands: [
+        {
+          name: "clipboard",
+        },
+        {
+          name: "count",
+        },
+        {
+          name: "help",
+          description: "Print this message or the help of the given subcommand(s)",
+        },
+      ],
+    },
+  ],
+  options: [
+    {
+      name: "--list",
+    },
+    {
+      name: "--envlist",
+    },
+    {
+      name: "--update",
+    },
+    {
+      name: "--updatenow",
+    },
+    {
+      name: "--version",
+    },
+    {
+      name: ["-h", "--help"],
+      description: "Print help",
+    },
+  ],
+};
+
+export default completion;
