@@ -157,7 +157,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let inputs = RcIter::new(core::iter::empty());
         let out = f
             .run((Ctx::new([], &inputs), Val::from(value.clone())))
-            .filter_map(|val| val.ok());
+            .filter_map(std::result::Result::ok);
 
         let jaq_value = serde_json::Value::from_iter(out);
 
@@ -167,7 +167,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // to use '.data'. Both '.data' and '.data[]' should work with this implementation.
         value = if jaq_value
             .as_array()
-            .is_some_and(|arr| arr.first().is_some_and(|f| f.is_array()))
+            .is_some_and(|arr| arr.first().is_some_and(serde_json::Value::is_array))
         {
             jaq_value.as_array().unwrap().first().unwrap().to_owned()
         } else {
