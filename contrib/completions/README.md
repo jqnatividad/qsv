@@ -4,8 +4,8 @@ Generate shell completions for qsv including the following shells:
 
 -   bash
 -   zsh
--   fish
 -   powershell
+-   fish
 -   nushell
 -   fig
 -   elvish
