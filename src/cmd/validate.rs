@@ -764,7 +764,7 @@ fn write_error_report(input_path: &str, validation_error_messages: Vec<String>) 
         output_writer.write_all(error_msg.as_bytes())?;
         // since writer is buffered, it's more efficient to do additional write than append Newline
         // to message
-        output_writer.write_all(&[b'\n'])?;
+        output_writer.write_all(b"\n")?;
     }
 
     // flush error report; file gets closed automagically when out-of-scope
