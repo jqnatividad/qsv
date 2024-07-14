@@ -130,27 +130,36 @@ We mention ***attempt*** since LLMs can produce incorrect output, even output th
 <details><summary><h2>🔁 Changelog</h2></summary>
 
 ### Added
-* `stats`: add Standard Error of the Mean (SEM) & Coefficient of Variation (CV) https://github.com/jqnatividad/qsv/pull/1857
-* `prompt`: add `qsv prompt` to pick a file with a file dialog & write to stdout by @rzmk in https://github.com/jqnatividad/qsv/pull/1860
-* `prompt`: add `--fd-output` (`-f`) & `--output` (`-o`) options by @rzmk in https://github.com/jqnatividad/qsv/pull/1861
+
+* `clipboard`: add `qsv clipboard` command for clipboard input/output by @rzmk in https://github.com/jqnatividad/qsv/pull/1953
 * `describegpt`: add `--prompt` for custom prompt & update prompt file + docs by @rzmk in https://github.com/jqnatividad/qsv/pull/1862
 * `describegpt`: add base_url, model, ollama, & timeout to prompt file by @rzmk in https://github.com/jqnatividad/qsv/pull/1859
 * `enum`: add  `--hash` option to create a platform-independent deterministic id https://github.com/jqnatividad/qsv/pull/1902
 * `enum`: add `--uuid7` option to create UUID v7 identifiers https://github.com/jqnatividad/qsv/pull/1914
+* `freq`: add  `--no-trim` option  https://github.com/jqnatividad/qsv/pull/1944
 * `foreach`: add sample Windows implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1847
+* `joinp`: add `--right` outer join option https://github.com/jqnatividad/qsv/pull/1945
+* `json`: change jsonp to json using new implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1924
+* `json`: add `--jaq` option to allow jq-like filtering & test by @rzmk in https://github.com/jqnatividad/qsv/pull/1959
+* `jsonp`: add `jsonp` command allowing non-nested JSON to CSV conversion with Polars by @rzmk in https://github.com/jqnatividad/qsv/pull/1880
+* `prompt`: add `qsv prompt` to pick a file with a file dialog & write to stdout by @rzmk in https://github.com/jqnatividad/qsv/pull/1860
+* `prompt`: add `--fd-output` (`-f`) & `--output` (`-o`) options by @rzmk in https://github.com/jqnatividad/qsv/pull/1861
 * `select`: add `--sort`, `--random` & `--seed` options; also add 9999 sentinel value to indicate last column https://github.com/jqnatividad/qsv/pull/1867
 * `select`: use underscore char (_) to indicate last column, replacing 9999 sentinel value https://github.com/jqnatividad/qsv/pull/1873
-* `jsonp`: add `jsonp` command allowing non-nested JSON to CSV conversion with Polars by @rzmk in https://github.com/jqnatividad/qsv/pull/1880
-* `json`: change jsonp to json using new implementation by @rzmk in https://github.com/jqnatividad/qsv/pull/1924
 * `sqlp`: add `--streaming` option https://github.com/jqnatividad/qsv/commit/e8bee9a60dccc6ec5b5a43b91cb6f558915faa0e
+* `stats`: add Standard Error of the Mean (SEM) & Coefficient of Variation (CV) https://github.com/jqnatividad/qsv/pull/1857
+* `validate`: added custom JSONschema format "currency" (decimal with 2 decimal places). Also, added check that only ascii characters are allowed in keys in JSONschema files.
 * added `--batch` zero option to all commands with batch processing. This sentinel value is used to indicate that the entire input should be processed in one batch https://github.com/jqnatividad/qsv/commit/feedbda4a3be9f8835eba0626e5fe01147831186
 * added typos check to CI https://github.com/jqnatividad/qsv/commit/9fdf0662b6dc4fa6ebfed592a177d8539f264041
 * `contrib(fish)`: add fish completions prototype with `qsv.fish` and docs by @rzmk in https://github.com/jqnatividad/qsv/pull/1884
 * contrib(bashly): add `--hash <columns>` option to `enum` by @rzmk in https://github.com/jqnatividad/qsv/pull/1905
 * contrib(bashly): add `--uuid4` & `--uuid7` for `qsv enum` by @rzmk in https://github.com/jqnatividad/qsv/pull/1915
+* `contrib(bashly)`: remove `--ollama` from `qsv describegpt` by @rzmk in https://github.com/jqnatividad/qsv/pull/1951
+* `contrib(bashly)`: add `--no-trim` to `frequency` & `--right` to `joinp` by @rzmk in https://github.com/jqnatividad/qsv/pull/1952
 * `tests`: add tests for 100.dathere.com/lessons/1 by @rzmk in https://github.com/jqnatividad/qsv/pull/1876
 * `tests`: add test_100 for 100.dathere.com & tests for lesson/exercise 0 by @rzmk in https://github.com/jqnatividad/qsv/pull/1848
 * `docs`: add 👆 emoji to indicate commands with column selector support https://github.com/jqnatividad/qsv/commit/40ac8a7602315857ca529f43dd4fc45bec65c703
+* Incorporate typos check in CI https://github.com/jqnatividad/qsv/pull/1930
 
 ### Changed
 * `stats`: made several microoptimizations to Field Data Type inferencing https://github.com/jqnatividad/qsv/commit/35004541d25eb29d564ec60824da63d9f32344dd https://github.com/jqnatividad/qsv/commit/f829e0cfbc8a390570f85371e3d661ec33211405 
@@ -160,13 +169,20 @@ We mention ***attempt*** since LLMs can produce incorrect output, even output th
 * `docs`: add column selector emoji - 👆 https://github.com/jqnatividad/qsv/pull/1906
 * upgrade to polars 0.41.0 https://github.com/jqnatividad/qsv/pull/1907
 * `describegpt`: update `dotenv.template` variable with `QSV_LLM_APIKEY` by @rzmk in https://github.com/jqnatividad/qsv/pull/1908
+* `describegpt`: change min Ollama version from 0.1.49 to 0.2.0 by @rzmk in https://github.com/jqnatividad/qsv/pull/1954
+* `describegpt`: add `{headers}` replaced by `qsv slice ... --len 1 -n` by @rzmk in https://github.com/jqnatividad/qsv/pull/1941
+* `validate`: validating against a JSONschema requires headers https://github.com/jqnatividad/qsv/pull/1931
+* setting `--batch` to 0 loads all rows at once before parallel processing https://github.com/jqnatividad/qsv/pull/1928
 * `deps`: add polars timezones support https://github.com/jqnatividad/qsv/pull/1898
 * `tests`: update `test_100/exercise_0.rs` setup file data by @rzmk in https://github.com/jqnatividad/qsv/pull/1858
+* build(deps): bump actions/setup-python from 5.1.0 to 5.1.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1961
 * build(deps): bump actix-web from 4.6.0 to 4.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1866
 * build(deps): bump actix-web from 4.7.0 to 4.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1901
 * build(deps): bump atoi_simd from 0.15.6 to 0.16.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1844
 * build(deps): bump cached from 0.51.3 to 0.51.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1874
+* build(deps): bump cached from 0.51.4 to 0.52.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1938
 * build(deps): bump csvs_convert from 0.8.10 to 0.8.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1891
+* build(deps): bump csvs_convert from 0.8.11 to 0.8.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1948
 * build(deps): bump curve25519-dalek from 4.1.2 to 4.1.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1893
 * build(deps): bump flexi_logger from 0.28.0 to 0.28.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1853
 * build(deps): bump flexi_logger from 0.28.1 to 0.28.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1868
@@ -178,6 +194,7 @@ We mention ***attempt*** since LLMs can produce incorrect output, even output th
 * build(deps): bump jql-runner from 7.1.9 to 7.1.10 by @dependabot in https://github.com/jqnatividad/qsv/pull/1845
 * build(deps): bump jql-runner from 7.1.10 to 7.1.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1856
 * build(deps): bump jql-runner from 7.1.11 to 7.1.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1903
+* build(deps): bump jql-runner from 7.1.12 to 7.1.13 by @dependabot in https://github.com/jqnatividad/qsv/pull/1960
 * build(deps): bump log from 0.4.21 to 0.4.22 by @dependabot in https://github.com/jqnatividad/qsv/pull/1925
 * build(deps): bump mimalloc from 0.1.42 to 0.1.43 by @dependabot in https://github.com/jqnatividad/qsv/pull/1911
 * build(deps): bump mlua from 0.9.8 to 0.9.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/1894
@@ -188,19 +205,31 @@ We mention ***attempt*** since LLMs can produce incorrect output, even output th
 * build(deps): bump polars from 0.41.1 to 0.41.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1916
 * deps: bump polars from 0.41.2 to 0.41.3 https://github.com/jqnatividad/qsv/commit/dc0492ffe2669ddf8a7ff3f82fcd2db8daad83f9
 * build(deps): bump pyo3 from 0.21.2 to 0.22.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1918
+* build(deps): bump pyo3 from 0.22.0 to 0.22.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1950
 * build(deps): bump regex from 1.10.4 to 1.10.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1865
 * build(deps): bump redis from 0.25.3 to 0.25.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1846
 * build(deps): bump reqwest from 0.12.4 to 0.12.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/1889
+* build(deps): bump self_update from 0.40.0 to 0.41.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1939
+
+* build(deps): bump serde from 1.0.203 to 1.0.204 by @dependabot in https://github.com/jqnatividad/qsv/pull/1949
 * build(deps): bump serde_json from 1.0.117 to 1.0.118 by @dependabot in https://github.com/jqnatividad/qsv/pull/1920
+* build(deps): bump serde_json from 1.0.118 to 1.0.119 by @dependabot in https://github.com/jqnatividad/qsv/pull/1932
+* build(deps): bump serde_json from 1.0.119 to 1.0.120 by @dependabot in https://github.com/jqnatividad/qsv/pull/1935
 * build(deps): bump simple-expand-tilde from 0.1.6 to 0.1.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/1886
 * build(deps): bump strum from 0.26.2 to 0.26.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1913
 * build(deps): bump strum_macros from 0.26.2 to 0.26.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/1855
 * build(deps): bump strum_macros from 0.26.3 to 0.26.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/1863
+* build(deps): bump sysinfo from 0.30.12 to 0.30.13 by @dependabot in https://github.com/jqnatividad/qsv/pull/1957
+* build(deps): bump sysinfo from 0.30.12 to 0.30.13 by @dependabot in https://github.com/jqnatividad/qsv/pull/1965
+* build(deps): bump titlecase from 3.2.0 to 3.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1963
 * build(deps): bump tokio from 1.37.0 to 1.38.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1850
 * build(deps): bump url from 2.5.0 to 2.5.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1869
 * build(deps): bump url from 2.5.1 to 2.5.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1895
 * build(deps): bump uuid from 1.8.0 to 1.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1912
 * build(deps): bump uuid from 1.9.0 to 1.9.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1919
+* build(deps): bump uuid from 1.9.1 to 1.10.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1964
+* build(deps): bump xxhash-rust from 0.8.10 to 0.8.11 by @dependabot in https://github.com/jqnatividad/qsv/pull/1942
+
 * apply select clippy suggestions
 * updated several indirect dependencies
 * made various usage text improvements
@@ -209,10 +238,16 @@ We mention ***attempt*** since LLMs can produce incorrect output, even output th
 
 ### Fixed
 
+* `frequency`: fix unique identifiers column detection https://github.com/jqnatividad/qsv/pull/1966
+* `json`: add empty single JSON object logic & empty tests by @rzmk in https://github.com/jqnatividad/qsv/pull/1958
+* `json`: fix typo in error message by @rzmk in https://github.com/jqnatividad/qsv/pull/1929
+* `sniff`: fix doc typo `sanple` -> `sample` by @rzmk in https://github.com/jqnatividad/qsv/pull/1947
 * `validate`: validating with a JSONSchema requires headers https://github.com/jqnatividad/qsv/commit/616438213de44e4377a98ea81a676a7900bd4ae9
 * Fixed several typos https://github.com/jqnatividad/qsv/commit/9fdf0662b6dc4fa6ebfed592a177d8539f264041
 
 ### Removed
+* `describegpt`: remove `--ollama` since Ollama v0.1.49 has endpoints by @rzmk in https://github.com/jqnatividad/qsv/pull/1946
+* `json`: remove necessity for `polars` feature & fix `--list` formatting by @rzmk in https://github.com/jqnatividad/qsv/pull/1936
 * `jsonp`: remove `jsonp` command in favor of `json` by @rzmk in https://github.com/jqnatividad/qsv/pull/1924
 * `deps`: fine tune polars features and remove explicit polars-ops dependency https://github.com/jqnatividad/qsv/commit/ccfd000d129799f5a106a7d4c8edab88af37367b
 
