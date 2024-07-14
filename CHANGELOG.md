@@ -6,18 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.129.0] - 2024-07-03
+## [0.129.0] - 2024-07-13
 
-This release is the biggest one ever! It's packed with new features, improvements, and previews of upcoming qsv pro features. Here are some highlights:
+This release is the biggest one ever!
+
+Packed with new features, improvements, and previews of upcoming qsv pro features, here are a few highlights:
 
 ## 📌 Highlights (click each dropdown for more info)
 
-<details><summary><strong>Meet @rzmk - qsv-pro's product owner and maintainer now also co-maintains qsv!</strong></summary>
-@rzmk - the main force behind qsv-pro; author of qsv's `describegpt`, `prompt` and the `json` commands; of qsv's tab completion support; of [qsv.dathere.com](https://qsv.dathere.com) online configurator and [100.dathere.com](https://100.dathere.com); and overall architect/coder/data engineer extraordinare - now also co-maintains qsv!
+<details><summary><strong>Meet @rzmk - qsv pro's software engineer now also co-maintains qsv!</strong></summary>
 
-With @rzmk now also co-maintaining qsv, our data-wrangling portfolio's roadmap should get more interesting - especially in the areas of AI; "[automagical](https://dathere.com/2023/11/automagical-metadata/)" metadata inferencing; DCAT 3; and expanded recipe support with the accelerated evolution of qsv-pro as an enterprise-grade Data-Wrangling/Data Curation Workbench. </details>
+@rzmk has contributed to projects in the qsv ecosystem including qsv's [`describegpt`](https://github.com/jqnatividad/qsv/tree/master/src/main/describegpt.rs), [`prompt`](https://github.com/jqnatividad/qsv/tree/master/src/main/prompt.rs), [`json`](https://github.com/jqnatividad/qsv/tree/master/src/main/json.rs), and [`clipboard`](https://github.com/jqnatividad/qsv/tree/master/src/main/clipboard.rs) commands; qsv's tab completion support; [qsv.dathere.com](https://qsv.dathere.com) including its online configurator and benchmarks page; [100.dathere.com](https://100.dathere.com) with its qsv lessons and exercises; and [qsv pro](https://qsvpro.dathere.com) the spreadsheet data wrangling desktop app (along with its promo site). @rzmk now also co-maintains qsv!
+
+With @rzmk now also co-maintaining qsv, our data-wrangling portfolio's roadmap may get more intriguing as @rzmk's work on qsv pro, 100.dathere.com, and other initiatives can result in contributions to qsv as we've seen in this release. Perhaps some aims may be put towards AI; "[automagical](https://dathere.com/2023/11/automagical-metadata/)" metadata inferencing; DCAT 3; and expanded recipe support with the accelerated evolution of qsv pro as an enterprise-grade Data-Wrangling/Data Curation Workbench.
+
+</details>
 
 <details><summary><strong>Polars v0.41.3</strong> - numerous <a href="https://github.com/jqnatividad/qsv/tree/master/src/cmd/sqlp.rs"><code>sqlp</code></a> and <a href="https://github.com/jqnatividad/qsv/tree/master/src/cmd/joinp.rs"><code>joinp</code></a> improvements</summary>
+
 * `sqlp`: expanded SQL support 
   - Natural Join support
   - DuckDB-like `COLUMNS` SQL function to select columns that match a pattern
@@ -26,33 +32,102 @@ With @rzmk now also co-maintaining qsv, our data-wrangling portfolio's roadmap s
   - Support for SQL `SELECT * ILIKE` wildcard syntax
   - Support SQL temporal functions `STRFTIME` and `STRPTIME`
 * `sqlp`: added `--streaming` option
+
 </details>
 
 <details style="margin-bottom: 0;"><summary><strong>New command <code><a href="https://github.com/jqnatividad/qsv/tree/master/src/cmd/prompt.rs">qsv prompt</a></code></strong> - Use a file dialog for qsv file input and output</summary>
-Be more interactive with qsv by using a file dialog to select a file for input and output. This will allow you to create qsv pipelines that are more "user-friendly" and distribute them to non-technical users. It's not as flexible as qsv pro's full-blown GUI, but it's a start!
+
+Be more interactive with qsv by using a file dialog to select a file for input and output.
+
+![qsv-prompt-0.129.0-demo](https://github.com/jqnatividad/qsv/assets/30333942/4ec1f6ef-3a82-41fb-91ab-a0ab15360d21)
+
+Here are a few key highlights:
+
+- Start with `qsv prompt` when piping commands to provide a file as input from an open file dialog and pipe it into another command, for example: `qsv prompt | qsv stats`.
+- End with `qsv prompt -f` when piping commands to save the output to a file you choose with a save file dialog.
+
+There are other options too, so feel free to explore more with `qsv prompt --help`.
+
+This will allow you to create qsv pipelines that are more "user-friendly" and distribute them to non-technical users. It's not as flexible as qsv pro's full-blown GUI, but it's a start!
+
 </details>
 
-<details><summary><strong>New command <a href="https://github.com/jqnatividad/qsv/tree/master/src/cmd/json.rs"><code>qsv json</code></a></strong> - Convert non-nested JSON data to CSV</summary>
-The new `json` command allows you to convert non-nested JSON data to CSV. This is useful for data that is not nested, but still in JSON format.
+<details><summary><strong>New command <a href="https://github.com/jqnatividad/qsv/tree/master/src/cmd/json.rs"><code>qsv json</code></a></strong> - Convert JSON data to CSV and optionally provide a jq-like filter</summary>
+
+The new `json` command allows you to convert non-nested JSON data to CSV. If your data is not in the expected format, try using the `--jaq` option to provide a jq-like filter. See `qsv json --help` for more information and examples.
+
+![qsv-json-demo](https://github.com/jqnatividad/qsv/assets/30333942/e8e5e39d-dc2a-45a5-895a-5ec4ec5b6e01)
+
+Here are a few key highlights:
+
+- Specify the path to a JSON file to attempt conversion to CSV with `qsv json <filepath>`.
+- Attempt conversion of JSON to CSV data from `stdin`, for example: `qsv slice <filepath.csv> --json | qsv json`.
+- Write the output to a file with the `--output <filepath>` (or `-o` for short) option.
+- Use the `--jaq <filter>` option to try converting nested or complex JSON data into the intended format before parsing to CSV.
+
+You may learn more by running `qsv json --help`.
+
 Along with the `jsonl` command, we now have more options to convert JSON to CSV with qsv!
+
+</details>
+
+<details style="margin-bottom: 0;"><summary><strong>New command <code><a href="https://github.com/jqnatividad/qsv/tree/master/src/cmd/prompt.rs">qsv clipboard</a></code></strong> - Provide input from your clipboard and save output to your clipboard</summary>
+
+Provide your clipboard content using `qsv clipboard` and save output to your clipboard by piping into `qsv clipboard --save` (or `-s` for short).
+
+![qsv-clipboard-demo](https://github.com/jqnatividad/qsv/assets/30333942/c3e3754a-8db0-4a28-84bd-ba88054cf9a6)
+
 </details>
 
 <details><summary><strong><a href="https://100.dathere.com">100.dathere.com</a></strong> - Try out lessons and exercises with qsv from your browser!</summary>
 
+You may run qsv commands from your browser without having to install it locally at [100.dathere.com](https://100.dathere.com).
+
+| Within the lesson (in-page) using Thebe                            | In a Jupyter Lab environment                            |
+| ----------------------------------- | ----------------------------------- |
+| ![qsv Thebe demo](https://github.com/jqnatividad/qsv/assets/30333942/f5315ad4-e73a-4fe1-b868-b2f950412ecc) | ![qsv Jupyter Lab demo](https://github.com/jqnatividad/qsv/assets/30333942/9acca4b1-3117-4222-8198-c751a74e6378) |
+
+Thanks to [Jupyter Book](https://jupyterbook.org), [datHere](https://dathere.com) has released a website available at [100.dathere.com](https://100.dathere.com) where you may explore lessons and exercises with qsv by running them within the web page, in a Jupyter Lab environment, or locally after following the provided installation instructions. There are multiple exercises planned, but feel free to try out the first few available lessons/exercises by visiting [100.dathere.com](https://100.dathere.com) and star the source code's repository [here](https://github.com/dathere/100.dathere.com).
+
 </details>
 
 <details><summary><strong><a href="https://github.com/jqnatividad/qsv/tree/master/contrib/bashly">Bash completions for v0.129.0</a> and new <a href="https://github.com/jqnatividad/qsv/tree/master/contrib/fish">fish shell completions draft</a></strong></summary>
-https://100.dathere.com/exercises-setup.html#optional-set-up-qsv-completions
+
+Bash shell completions for qsv v0.129.0 are available along with a draft of fish shell completions.
+
+| Bash completions demo                            | Fish completions demo                            |
+| ----------------------------------- | ----------------------------------- |
+| ![qsv Bash completions demo](https://github.com/jqnatividad/qsv/assets/30333942/bec4b9ae-584a-49ad-8ced-c765174e8113) | ![qsv Fish completions demo](https://github.com/jqnatividad/qsv/assets/30333942/fafbf40b-9ea3-4ec4-ae22-9ae3319ce400) |
+
+With shell completions enabled, you may identify qsv commands more easily when pressing the `tab` key on your keyboard in certain positions using the relevant Bash or fish shell from your terminal. You may follow the instructions from 100.dathere.com [here](https://100.dathere.com/exercises-setup.html#bash) to learn how to install the Bash completions and under the Usage section [here](https://github.com/jqnatividad/qsv/tree/master/contrib/fish#usage) for fish shell completions. The fish shell completions are incomplete so feel free to contribute to them along with maintaining the Bash shell completions per release of qsv.
+
 </details>
 <details><summary><strong><a href="https://qsvpro.dathere.com">qsvpro.dathere.com</a></strong> - Preview: Download spreadsheets from a compatible CKAN instance into the qsv pro Workflow</summary>
+
+> This is a preview of a feature, meaning it is planned for an upcoming release but may change by the time it is released.
+
+![qsv-pro-ckan-download-demo](https://github.com/jqnatividad/qsv/assets/30333942/9f4931ce-f51e-4266-9c22-e568d10ed811)
+
+In addition to importing local spreadsheet files and uploading to a CKAN instance, this new feature allows users to select a locally registered CKAN instance where they have the `create_dataset` permission to download a spreadsheet file from their CKAN instance and load the new local spreadsheet file into the Workflow. qsv pro's Workflow would therefore have both upload and download capability to and from a compatible CKAN instance.
 
 </details>
 <details><summary><strong><a href="https://qsvpro.dathere.com">qsvpro.dathere.com</a></strong> - Preview: Attempt SQL query generation from natural language with a compatible LLM API instance</summary>
 
-</details>
----
+> This is a preview of a feature, meaning it is planned for an upcoming release but may change by the time it is released.
+> Also note that this video is sped up as you may see by the notes that pop up (you may pause the video to read them).
 
-## 🔁 Changelog
+https://github.com/jqnatividad/qsv/assets/30333942/e90893e6-3196-4fa6-bce0-f69a9f6347f2
+
+Leveraging [`qsv describegpt`](https://github.com/jqnatividad/qsv/tree/master/src/cmd/describegpt.rs)'s AI integration capabilities along with multiple other qsv commands, qsv pro's Workflow's existing SQL query tab now has a generator that may ***attempt*** to generate a SQL query natural language using an LLM API compatible with OpenAI's API specification  such as running an [Ollama](https://ollama.com/) (v0.2.0 or above) server locally and  ***attempt*** to generate a SQL query by asking a question related to your spreadsheet data. Results may vary depending on your configuration and you may need to fix the generated output. For example in the demo we asked for ***who*** has the highest salary but extra information and only the highest salary was provided, though this does give a query we can modify and work with.
+
+<details><summary>Note on Ask and <code>qsv describegpt</code></summary>
+
+We mention ***attempt*** since LLMs can produce incorrect output, even output that *seems* correct but is not. We mention that "inaccurate information" may be produced within `qsv describegpt`'s usage text too along with AI-generated output potentially being incorrect within qsv pro, so make sure the output is fixed and verified before using it in production use cases.
+
+</details>
+</details>
+
+<details><summary><h2>🔁 Changelog</h2></summary>
 
 ### Added
 * `stats`: add Standard Error of the Mean (SEM) & Coefficient of Variation (CV) https://github.com/jqnatividad/qsv/pull/1857
@@ -143,6 +218,12 @@ https://100.dathere.com/exercises-setup.html#optional-set-up-qsv-completions
 
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.128.0...0.129.0
+</details>
+
+---
+
+To stay updated with datHere's latest news and updates (including [qsv pro](https://qsvpro.dathere.com), [datHere's CKAN DMS](https://dathere.com/ckan-dms/), and [analyze.dathere.com](https://analyze.dathere.com)), subscribe to the newsletter here: [dathere.com/newsletter](https://dathere.com/newsletter/)
+
 
 ## [0.128.0] - 2024-05-25
 
