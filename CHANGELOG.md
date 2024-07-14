@@ -95,7 +95,7 @@ Thanks to [Jupyter Book](https://jupyterbook.org), [datHere](https://dathere.com
 
 There's a draft of more qsv shell completion support including 7 different shells! The plan is to add the rest of the commands in this implementation since we can use one codebase to generate the 7 shell completion script files. Feel free to try out the various shell completions in the `examples` folder from [`contrib/completions`](https://github.com/jqnatividad/qsv/tree/master/contrib/completions) to verify if the examples work (as of today's release date only `qsv count` and `qsv clipboard` may be available) and also contribute to adding the rest of the completions if you know a bit of Rust.
 
-The existing <a href="https://github.com/jqnatividad/qsv/tree/master/contrib/bashly">Bash shell completions for v0.129.0</a> are and <a href="https://github.com/jqnatividad/qsv/tree/master/contrib/fish">fish shell completions draft</a> are available for now as the multi-shell completions draft is being developed.
+The existing <a href="https://github.com/jqnatividad/qsv/tree/master/contrib/bashly">Bash shell completions for v0.129.0</a> and <a href="https://github.com/jqnatividad/qsv/tree/master/contrib/fish">fish shell completions draft</a> are available for now as the multi-shell completions draft is being developed.
 
 | Bash completions demo                            | Fish completions demo                            |
 | ----------------------------------- | ----------------------------------- |
