@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.129.0] - 2024-07-13
+## [0.129.0] - 2024-07-14
 
 This release is the biggest one ever!
 
