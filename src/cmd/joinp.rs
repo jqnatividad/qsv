@@ -257,7 +257,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let flag_validate = args
         .flag_validate
-        .unwrap_or("none".to_string())
+        .unwrap_or_else(|| "none".to_string())
         .to_lowercase();
     let validation = match flag_validate.as_str() {
         // no unique checks
