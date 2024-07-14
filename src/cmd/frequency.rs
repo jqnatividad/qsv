@@ -370,12 +370,16 @@ impl Args {
         let mut field_buffer: Vec<u8> = Vec::with_capacity(nsel_len);
         let mut row_buffer: csv::ByteRecord = csv::ByteRecord::with_capacity(200, nsel_len);
 
+        // assign flags to local variables for faster access
         let flag_no_nulls = self.flag_no_nulls;
-        if self.flag_ignore_case {
+        let flag_ignore_case = self.flag_ignore_case;
+        let flag_no_trim = self.flag_no_trim;
+
+        if flag_ignore_case {
             // case insensitive when computing frequencies
             let mut buf = String::new();
 
-            if self.flag_no_trim {
+            if flag_no_trim {
                 // case-insensitive, don't trim whitespace
                 for row in it {
                     // safety: we know the row is not empty
@@ -415,7 +419,7 @@ impl Args {
                                 util::to_lowercase_into(s.trim(), &mut buf);
                                 buf.as_bytes().to_vec()
                             } else {
-                                field.to_vec()
+                                util::trim_bs_whitespace(field).to_vec()
                             }
                         };
 
@@ -440,7 +444,7 @@ impl Args {
                 // safety: we know the row is not empty
                 row_buffer.clone_from(&row.unwrap());
 
-                if self.flag_no_trim {
+                if flag_no_trim {
                     // case-sensitive, don't trim whitespace
                     for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
                         // no need to convert to string and back to bytes for a "case-sensitive"
@@ -465,7 +469,7 @@ impl Args {
                             if let Ok(s) = simdutf8::basic::from_utf8(field) {
                                 s.trim().as_bytes().to_vec()
                             } else {
-                                field.to_vec()
+                                util::trim_bs_whitespace(field).to_vec()
                             }
                         };
 

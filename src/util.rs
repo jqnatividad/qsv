@@ -1873,6 +1873,20 @@ pub fn write_json_record<W: std::io::Write>(
     Ok(write!(json_wtr, "}}")?)
 }
 
+/// trim leading and trailing whitespace from a byte slice
+pub fn trim_bs_whitespace(bytes: &[u8]) -> &[u8] {
+    let start = bytes
+        .iter()
+        .position(|&b| !b.is_ascii_whitespace())
+        .unwrap_or_else(|| bytes.len());
+    let end = bytes
+        .iter()
+        .rposition(|&b| !b.is_ascii_whitespace())
+        .map_or_else(|| start, |pos| pos + 1);
+
+    &bytes[start..end]
+}
+
 // comment out for now as this is still WIP
 // pub fn create_json_record(
 //     no_headers: bool,
