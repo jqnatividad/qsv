@@ -16,7 +16,7 @@ fn main() {
         println!("{args_error}");
         exit(1);
     }
-    // generate(Bash, &mut cli::build_cli(), "qsv", &mut io::stdout());
+
     let first_arg = args[1].as_str();
     match first_arg {
         "bash" => generate(Bash, &mut cli::build_cli(), "qsv", &mut io::stdout()),
