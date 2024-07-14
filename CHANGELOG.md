@@ -91,17 +91,20 @@ Thanks to [Jupyter Book](https://jupyterbook.org), [datHere](https://dathere.com
 
 </details>
 
-<details><summary><strong><a href="https://github.com/jqnatividad/qsv/tree/master/contrib/bashly">Bash completions for v0.129.0</a> and new <a href="https://github.com/jqnatividad/qsv/tree/master/contrib/fish">fish shell completions draft</a></strong></summary>
+<details><summary><strong>New <a href="https://github.com/jqnatividad/qsv/tree/master/contrib/completions">multi-shell completions draft</a></strong> (bash, zsh, powershell, fish, nushell, fig, elvish)</summary>
 
-Bash shell completions for qsv v0.129.0 are available along with a draft of fish shell completions.
+There's a draft of more qsv shell completion support including 7 different shells! The plan is to add the rest of the commands in this implementation since we can use one codebase to generate the 7 shell completion script files. Feel free to try out the various shell completions in the `examples` folder from [`contrib/completions`](https://github.com/jqnatividad/qsv/tree/master/contrib/completions) to verify if the examples work (as of today's release date only `qsv count` and `qsv clipboard` may be available) and also contribute to adding the rest of the completions if you know a bit of Rust.
+
+The existing <a href="https://github.com/jqnatividad/qsv/tree/master/contrib/bashly">Bash shell completions for v0.129.0</a> and <a href="https://github.com/jqnatividad/qsv/tree/master/contrib/fish">fish shell completions draft</a> are available for now as the multi-shell completions draft is being developed.
 
 | Bash completions demo                            | Fish completions demo                            |
 | ----------------------------------- | ----------------------------------- |
 | ![qsv Bash completions demo](https://github.com/jqnatividad/qsv/assets/30333942/bec4b9ae-584a-49ad-8ced-c765174e8113) | ![qsv Fish completions demo](https://github.com/jqnatividad/qsv/assets/30333942/fafbf40b-9ea3-4ec4-ae22-9ae3319ce400) |
 
-With shell completions enabled, you may identify qsv commands more easily when pressing the `tab` key on your keyboard in certain positions using the relevant Bash or fish shell from your terminal. You may follow the instructions from 100.dathere.com [here](https://100.dathere.com/exercises-setup.html#bash) to learn how to install the Bash completions and under the Usage section [here](https://github.com/jqnatividad/qsv/tree/master/contrib/fish#usage) for fish shell completions. The fish shell completions are incomplete so feel free to contribute to them along with maintaining the Bash shell completions per release of qsv.
+With shell completions enabled, you may identify qsv commands more easily when pressing the `tab` key on your keyboard in certain positions using the relevant Bash or fish shell from your terminal. You may follow the instructions from 100.dathere.com [here](https://100.dathere.com/exercises-setup.html#bash) to learn how to install the Bash completions and under the Usage section [here](https://github.com/jqnatividad/qsv/tree/master/contrib/fish#usage) for fish shell completions. Note that the fish shell completions are incomplete and both of the implementations may be replaced by the multi-shell completions implementation once complete.
 
 </details>
+
 <details><summary><strong><a href="https://qsvpro.dathere.com">qsvpro.dathere.com</a></strong> - Preview: Download spreadsheets from a compatible CKAN instance into the qsv pro Workflow</summary>
 
 > This is a preview of a feature, meaning it is planned for an upcoming release but may change by the time it is released.
