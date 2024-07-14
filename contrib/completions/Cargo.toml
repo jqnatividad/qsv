@@ -1,0 +1,10 @@
+[package]
+name = "qsv-clap-completions"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = "4.5.9"
+clap_complete = "4.5.8"
+clap_complete_fig = "4.5.1"
+clap_complete_nushell = "4.5.2"
