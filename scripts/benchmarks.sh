@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=4.7.0
+bm_version=4.8.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -515,6 +515,10 @@ run frequency_ignorecase "$qsv_bin" frequency -i "$data"
 run --index frequency_ignorecase_index "$qsv_bin" frequency -i "$data"
 run frequency_selregex_ignorecase "$qsv_bin" frequency -s /^R/ -i "$data"
 run frequency_j1_ignorecase "$qsv_bin" frequency -j 1 -i "$data"
+run frequency_notrim "$qsv_bin" frequency --no-trim "$data"
+run --index frequency_notrim_index "$qsv_bin" frequency --no-trim "$data"
+run frequency_limit20 "$qsv_bin" frequency --limit 20 "$data"
+run --index frequency_limit20_index "$qsv_bin" frequency --limit 20 "$data"
 run geocode_suggest "$qsv_bin" geocode suggest City --new-column geocoded_city "$data"
 run geocode_suggest_batchall "$qsv_bin" geocode suggest City --new-column geocoded_city --batch 0 "$data"
 run geocode_reverse "$qsv_bin" geocode reverse Location --new-column geocoded_location "$data"
