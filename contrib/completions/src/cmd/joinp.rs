@@ -1,0 +1,38 @@
+use clap::{arg, Command};
+
+pub fn joinp_cmd() -> Command {
+    Command::new("joinp").args([
+        arg!(--left),
+        arg!(--"left-anti"),
+        arg!(--"left-semi"),
+        arg!(--right),
+        arg!(--full),
+        arg!(--cross),
+        arg!(--coalesce),
+        arg!(--"filter-left"),
+        arg!(--"filter-right"),
+        arg!(--validate),
+        arg!(--nulls),
+        arg!(--streaming),
+        arg!(--"try-parsedates"),
+        arg!(--"infer-len"),
+        arg!(--"low-memory"),
+        arg!(--"no-optimizations"),
+        arg!(--"ignore-errors"),
+        arg!(--"decimal-comma"),
+        arg!(--asof),
+        arg!(--"left_by"),
+        arg!(--"right_by"),
+        arg!(--strategy),
+        arg!(--tolerance),
+        arg!(--"sql-filter"),
+        arg!(--"datetime-format"),
+        arg!(--"date-format"),
+        arg!(--"time-format"),
+        arg!(--"float-precision"),
+        arg!(--"null-value"),
+        arg!(--output),
+        arg!(--delimiter),
+        arg!(--quiet),
+    ])
+}
