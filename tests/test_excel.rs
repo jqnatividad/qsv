@@ -44,13 +44,8 @@ fn excel_cellerrors() {
     assert_eq!(got, expected);
 }
 
-// for now, only run this test on macos on aarch64
-// since we have self-hosted runners on macos on aarch64
-// For some reason, The test doesn't work on GitHub's Action Runners
-// but works when run locally on native hardware. Could be an
-// issue with the GitHub's Action Runners running on Azure VMs
-#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 #[test]
+#[ignore = "skip this for now as its flaky retrieving the formula defn"]
 fn excel_cellerrors_formula() {
     let wrk = Workdir::new("excel_cellerrors_formula");
 
@@ -81,9 +76,8 @@ fn excel_cellerrors_formula() {
     assert_eq!(got, expected);
 }
 
-// same as above, only run this test on macos/Apple Silicon
-#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 #[test]
+#[ignore = "skip this for now as its flaky retrieving the formula defn"]
 fn excel_cellerrors_both() {
     let wrk = Workdir::new("excel_cellerrors_both");
 
