@@ -29,7 +29,7 @@ use std::io::Read;
 use arboard::Clipboard;
 use serde::Deserialize;
 
-use crate::{util, CliResult};
+use crate::{util, CliError, CliResult};
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
@@ -37,9 +37,41 @@ struct Args {
     flag_save: bool,
 }
 
+impl From<arboard::Error> for CliError {
+    fn from(err: arboard::Error) -> Self {
+        match err {
+            arboard::Error::ClipboardNotSupported => CliError::Other(
+                "The clipboard may not be supported for the current environment.".to_string(),
+            ),
+            arboard::Error::ConversionFailure => CliError::Other(
+                "The content that was about the be transferred to/from the clipboard could not be \
+                 converted to the appropriate format."
+                    .to_string(),
+            ),
+            arboard::Error::ClipboardOccupied => CliError::Other(
+                "The clipboard was unaccessible when attempting to access/use it. It may have \
+                 been held by another process/thread."
+                    .to_string(),
+            ),
+            arboard::Error::ContentNotAvailable => CliError::Other(
+                "The clipboard contents were not available in the requested format. This could \
+                 either be due to the clipboard being empty or the clipboard contents having an \
+                 incompatible format to the requested one."
+                    .to_string(),
+            ),
+            arboard::Error::Unknown { description: _ } => CliError::Other(
+                "An unknown error occurred while attempting to use the clipboard.".to_string(),
+            ),
+            _ => CliError::Other(
+                "An unexpected error occurred while using the clipboard.".to_string(),
+            ),
+        }
+    }
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let mut clipboard = Clipboard::new().unwrap();
+    let mut clipboard = Clipboard::new()?;
     if args.flag_save {
         let mut buffer = String::new();
         std::io::stdin().read_to_string(&mut buffer)?;
