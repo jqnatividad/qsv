@@ -24,7 +24,8 @@ jobs:
   publish:
     name: Publish for ${{ matrix.job.target }}
     needs: analyze-tags
-    runs-on: self-hosted
+    # runs-on: self-hosted
+    runs-on: macos-latest
     strategy:
       matrix:
         rust: [nightly-2024-06-23]
