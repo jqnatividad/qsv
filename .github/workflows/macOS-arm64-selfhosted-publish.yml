@@ -93,6 +93,8 @@ jobs:
       shell: bash
       run: |
         cat docs/publishing_assets/README.txt docs/publishing_assets/qsv-${{ matrix.job.target }}.txt > qsv-${{ needs.analyze-tags.outputs.previous-tag }}/README
+    - name: install 7zip
+      run: brew install sevenzip
     - name: zip up binaries
       run: 7zz a -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/* -mx=9 -mmt=on
     - name: install zipsign

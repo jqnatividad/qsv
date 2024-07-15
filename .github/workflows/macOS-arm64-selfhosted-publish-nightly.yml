@@ -118,6 +118,8 @@ jobs:
     - name: remove zipsign signature from zip archive
       run: |
         zipsign unsign zip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+    - name: install 7zip
+      run: brew install sevenzip
     - name: add/update nightly files to zip
       run: 7zz u -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/* -mx=9 -mmt=on
     - name: re-zipsign zip archive
