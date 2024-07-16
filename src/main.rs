@@ -123,7 +123,7 @@ fn main() -> QsvExitCode {
 
     #[cfg(all(feature = "foreach", feature = "feature_capable"))]
     enabled_commands
-        .push_str("    foreach     Loop over a CSV file to execute bash commands (*nix only)\n");
+        .push_str("    foreach     Loop over a CSV file to execute bash commands\n");
 
     enabled_commands.push_str("    frequency   Show frequency tables\n");
 
