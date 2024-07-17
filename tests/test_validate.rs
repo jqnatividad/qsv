@@ -15,7 +15,27 @@ fn validate_good_csv() {
     let mut cmd = wrk.command("validate");
     cmd.arg("data.csv");
 
-    wrk.output(&mut cmd);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn validate_good_tab() {
+    let wrk = Workdir::new("validate_good_tab").flexible(true);
+    let tabfile = wrk.load_test_file("boston311-100.tab");
+    let mut cmd = wrk.command("validate");
+    cmd.arg(tabfile);
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn validate_bad_tsv() {
+    let wrk = Workdir::new("validate_bad_tsv").flexible(true);
+    let tabfile = wrk.load_test_file("boston311-100-bad.tsv");
+    let mut cmd = wrk.command("validate");
+    cmd.arg(tabfile);
+
+    wrk.assert_err(&mut cmd);
 }
 
 #[test]
