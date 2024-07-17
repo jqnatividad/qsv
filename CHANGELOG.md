@@ -244,7 +244,7 @@ We mention ***attempt*** since LLMs can produce incorrect output, even output th
 * `frequency`: fix unique identifiers column detection https://github.com/jqnatividad/qsv/pull/1966
 * `json`: add empty single JSON object logic & empty tests by @rzmk in https://github.com/jqnatividad/qsv/pull/1958
 * `json`: fix typo in error message by @rzmk in https://github.com/jqnatividad/qsv/pull/1929
-* `sniff`: fix doc typo `sanple` -> `sample` by @rzmk in https://github.com/jqnatividad/qsv/pull/1947
+* `sniff`: fix doc typo by @rzmk in https://github.com/jqnatividad/qsv/pull/1947
 * `validate`: validating with a JSONSchema requires headers https://github.com/jqnatividad/qsv/commit/616438213de44e4377a98ea81a676a7900bd4ae9
 * Fixed several typos https://github.com/jqnatividad/qsv/commit/9fdf0662b6dc4fa6ebfed592a177d8539f264041
 
