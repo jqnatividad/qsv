@@ -104,7 +104,7 @@ Common options:
                                in RFC 4180 validation mode as JSON Schema validation
                                requires headers.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
-                               Must be a single character. [default: ,]
+                               Must be a single character.
     -p, --progressbar          Show progress bars. Not valid for stdin.
     -Q, --quiet                Do not display validation summary message.
 "#;
@@ -253,14 +253,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Ordering::Relaxed,
     );
 
-    #[cfg(any(feature = "feature_capable", feature = "lite"))]
-    let mut rconfig = Config::new(&args.arg_input)
-        .delimiter(args.flag_delimiter)
-        .no_headers(args.flag_no_headers);
-    #[cfg(feature = "datapusher_plus")]
-    let rconfig = Config::new(&args.arg_input)
-        .delimiter(args.flag_delimiter)
-        .no_headers(args.flag_no_headers);
+    let mut rconfig = Config::new(&args.arg_input).no_headers(args.flag_no_headers);
+
+    if args.flag_delimiter.is_some() {
+        rconfig = rconfig.delimiter(args.flag_delimiter);
+    }
 
     let mut rdr = rconfig.reader()?;
 
