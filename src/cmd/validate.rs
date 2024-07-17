@@ -284,7 +284,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                     let field_list = field_vec.join(r#"", ""#);
                     header_msg = format!(
-                        "{} columns (\"{field_list}\") and ",
+                        "{} Columns: (\"{field_list}\");",
                         HumanCount(header_len as u64)
                     );
                 },
@@ -450,8 +450,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 serde_json::to_string(&rfc4180).unwrap()
             }
         } else {
+            let delim_display = if rconfig.get_delimiter() == b'\t' {
+                "TAB".to_string()
+            } else {
+                (rconfig.get_delimiter() as char).to_string()
+            };
             format!(
-                "Valid: {header_msg}{} records detected.",
+                "Valid: {header_msg} Records: {}; Delimiter: {delim_display}",
                 HumanCount(record_idx)
             )
         };

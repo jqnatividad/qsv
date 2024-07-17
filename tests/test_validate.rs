@@ -26,6 +26,11 @@ fn validate_good_tab() {
     cmd.arg(tabfile);
 
     wrk.assert_success(&mut cmd);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected =
+        r#"Valid: 29 Columns: ("case_enquiry_id", "open_dt", "target_dt", "closed_dt", "ontime", "case_status", "closure_reason", "case_title", "subject", "reason", "type", "queue", "department", "submittedphoto", "closedphoto", "location", "fire_district", "pwd_district", "city_council_district", "police_district", "neighborhood", "neighborhood_services_district", "ward", "precinct", "location_street_name", "location_zipcode", "latitude", "longitude", "source"); Records: 100; Delimiter: TAB"#;
+    assert_eq!(got, expected);
 }
 
 #[test]
@@ -55,7 +60,7 @@ fn validate_good_csv_msg() {
 
     let got: String = wrk.stdout(&mut cmd);
     let expected =
-        r#"Valid: 3 columns ("title", "name", "real age (earth years)") and 3 records detected."#;
+        r#"Valid: 3 Columns: ("title", "name", "real age (earth years)"); Records: 3; Delimiter: ,"#;
     assert_eq!(got, expected);
 }
 
@@ -71,7 +76,7 @@ fn validate_empty_csv_msg() {
 
     let got: String = wrk.stdout(&mut cmd);
     let expected =
-        r#"Valid: 3 columns ("title", "name", "real age (earth years)") and 0 records detected."#;
+        r#"Valid: 3 Columns: ("title", "name", "real age (earth years)"); Records: 0; Delimiter: ,"#;
     assert_eq!(got, expected);
 }
 
