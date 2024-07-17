@@ -179,6 +179,8 @@ cargo install qsv --locked --bin qsvlite -F lite
 cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau,polars
 ```
 
+Note: if you get a compilation error when running `cargo install`, use Option 4 to compile from source using `cargo build`.
+
 ### Option 4: Compile from Source
 
 Compiling from source also works similarly[^1]:
