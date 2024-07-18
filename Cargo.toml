@@ -263,7 +263,8 @@ calamine = { git = "https://github.com/tafia/calamine", rev = "6b41309" }
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
 # use latest upstream version of polars with additional unreleased features/fixes
-polars = { git = "https://github.com/pola-rs/polars", rev = "aa682db" }
+# polars = { git = "https://github.com/pola-rs/polars", rev = "aa682db" }
+polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.2.0" }
 
 
 [features]
