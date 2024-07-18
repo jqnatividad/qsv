@@ -138,7 +138,6 @@ use rayon::{
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
-use simdutf8::basic::from_utf8;
 
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
@@ -783,8 +782,9 @@ fn do_json_validation(
     record: &ByteRecord,
     schema_compiled: &JSONSchema,
 ) -> Option<String> {
-    // row number was added as last column. We use can do unwrap safely since we know its there
-    let row_number_string = from_utf8(record.get(header_len).unwrap()).unwrap();
+    // safety: row number was added as last column. We use can do unwrap safely since we know its
+    // there
+    let row_number_string = simdutf8::basic::from_utf8(record.get(header_len).unwrap()).unwrap();
 
     validate_json_instance(
         &(match to_json_instance(header_types, header_len, record) {
@@ -828,7 +828,7 @@ fn to_json_instance(
             continue;
         }
 
-        let value_str = match from_utf8(value) {
+        let value_str = match simdutf8::basic::from_utf8(value) {
             Ok(v) => v,
             Err(e) => {
                 let s = String::from_utf8_lossy(value);
@@ -899,7 +899,7 @@ fn get_json_types(headers: &ByteRecord, schema: &Value) -> CliResult<Vec<(String
     // iterate over each CSV field and convert to JSON type
     for header in headers {
         // convert csv header to string. It's the key in the JSON object
-        key_string = if let Ok(s) = from_utf8(header) {
+        key_string = if let Ok(s) = simdutf8::basic::from_utf8(header) {
             s.to_owned()
         } else {
             let s = String::from_utf8_lossy(header);
