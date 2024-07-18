@@ -1097,7 +1097,7 @@ checksum = "ade8366b8bd5ba243f0a58f036cc0ca8a2f069cff1a2351ef1cac6b083e16fc0"
 [[package]]
 name = "calamine"
 version = "0.25.0"
-source = "git+https://github.com/tafia/calamine?rev=6b41309#6b4130992bdfc0f06914d84b53fe3ec6b0cd8fc4"
+source = "git+https://github.com/tafia/calamine?rev=59fd7a6#59fd7a619e7b06fee1f73b0616b02c4de651f1f5"
 dependencies = [
  "byteorder",
  "chrono",
