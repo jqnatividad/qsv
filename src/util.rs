@@ -1542,16 +1542,19 @@ pub fn process_input(
 
     // if the input is empty or "-", its stdin. try to copy stdin to a file named
     // "stdin" in the passed temp directory
-    if arg_input.is_empty() || arg_input[0] == PathBuf::from("-") {
+    if arg_input.len() > 0 {
+        if arg_input[0] == PathBuf::from("-") {
+            // remove the "-" from the input
+            arg_input.remove(0);
+        }
+    }
+    if arg_input.is_empty() {
         // copy stdin to a file named stdin in a temp directory
         let tmp_filename = tmpdir.path().join("stdin");
         let mut tmp_file = std::fs::File::create(&tmp_filename)?;
         std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
         tmp_file.flush()?;
         processed_input.push(tmp_filename);
-        // remove the "-" from the input
-        // if the input was empty, this does nothing
-        arg_input.remove(0);
     }
 
     let work_input = if arg_input.len() == 1 {
