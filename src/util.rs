@@ -1542,11 +1542,9 @@ pub fn process_input(
 
     // if the input is empty or "-", its stdin. try to copy stdin to a file named
     // "stdin" in the passed temp directory
-    if arg_input.len() > 0 {
-        if arg_input[0] == PathBuf::from("-") {
-            // remove the "-" from the input
-            arg_input.remove(0);
-        }
+    if arg_input.len() == 1 && arg_input[0] == PathBuf::from("-") {
+        // its "-", remove the "-" from the input so its empty
+        arg_input.remove(0);
     }
     if arg_input.is_empty() {
         // copy stdin to a file named stdin in a temp directory
