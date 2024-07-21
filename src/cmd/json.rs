@@ -159,6 +159,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .run((Ctx::new([], &inputs), Val::from(value.clone())))
             .filter_map(std::result::Result::ok);
 
+        #[allow(clippy::from_iter_instead_of_collect)]
         let jaq_value = serde_json::Value::from_iter(out);
 
         // from_iter creates a Value::Array even if the JSON data is an array,

@@ -1876,6 +1876,7 @@ pub fn write_json_record<W: std::io::Write>(
 
 /// trim leading and trailing whitespace from a byte slice
 pub fn trim_bs_whitespace(bytes: &[u8]) -> &[u8] {
+    #[allow(clippy::unnecessary_lazy_evaluations)]
     let start = bytes
         .iter()
         .position(|&b| !b.is_ascii_whitespace())
