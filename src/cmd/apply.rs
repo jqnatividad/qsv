@@ -484,7 +484,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         dynfmt_fields.sort_unstable();
 
         // now, get the indices of the columns for the lookup vec
-        let (safe_headers, _) = util::safe_header_names(&headers, false, false, None, "", true);
+        let (safe_headers, _) = util::safe_header_names(&headers, false, false, &None, "", true);
         for (i, field) in safe_headers.iter().enumerate() {
             if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
                 let field_with_curly = format!("{{{field}}}");

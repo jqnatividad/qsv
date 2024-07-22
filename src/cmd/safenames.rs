@@ -180,7 +180,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &noquote_headers,
         true,
         safenames_mode == SafeNameMode::Conditional,
-        Some(reserved_names_vec),
+        &Some(reserved_names_vec),
         &args.flag_prefix,
         false,
     );

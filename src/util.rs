@@ -1012,12 +1012,11 @@ fn send_hwsurvey(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
 pub fn safe_header_names(
     headers: &csv::StringRecord,
     check_first_char: bool,
     conditional: bool,
-    reserved_names: Option<Vec<String>>,
+    reserved_names: &Option<Vec<String>>,
     unsafe_prefix: &str,
     keep_case: bool,
 ) -> (Vec<String>, u16) {
