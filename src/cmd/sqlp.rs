@@ -183,8 +183,8 @@ sqlp options:
                               that you may want to try to set `--ignore-errors` to relax
                               the CSV parsing of dates.
     --infer-len <arg>         The number of rows to scan when inferring the schema of the CSV.
-                              Set to 0 to do a full table scan (warning: very slow).
-                              [default: 1000]
+                              Set to 0 to do a full table scan (warning: can be slow).
+                              [default: 100000]
     --streaming               Use streaming mode when parsing CSVs. This will use less memory
                               but will be slower. Only use this when you get out of memory errors.
     --low-memory              Use low memory mode when parsing CSVs. This will use less memory
