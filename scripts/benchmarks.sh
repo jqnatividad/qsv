@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=4.8.0
+bm_version=4.8.1
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -607,21 +607,21 @@ run --index split_index "$qsv_bin" split --size 50000 split_tempdir_idx "$data"
 run --index split_index_j1 "$qsv_bin" split --size 50000 -j 1 split_tempdir_idx_j1 "$data"
 run --index split_chunks_index "$qsv_bin" split --chunks 20 split_tempdir_chunks_idx "$data"
 run --index split_chunks_index_j1 "$qsv_bin" split --chunks 20 -j 1 split_tempdir_chunks_idx_j1
-run sqlp "$qsv_bin" sqlp "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_aggregations "$qsv_bin" sqlp "$data" -Q '"select Borough, count(*) from _t_1 where \"Complaint Type\"='\''Noise'\'' group by Borough"'
+run sqlp "$qsv_bin" sqlp "$data" -Q --infer-len 100000 '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_aggregations "$qsv_bin" sqlp "$data" -Q --infer-len 100000 '"select Borough, count(*) from _t_1 where \"Complaint Type\"='\''Noise'\'' group by Borough"'
 run sqlp_aggregations_vs_duckdb duckdb :memory: '"select Borough, count(*) from read_csv_auto('\'''$data''\'') where \"Complaint Type\"='\''Noise'\'' group by Borough"'
-run sqlp_aggregations_expensive "$qsv_bin" sqlp SKIP_INPUT -Q expensive.sql
-run sqlp_aggregations_expensive_streaming "$qsv_bin" sqlp SKIP_INPUT -Q --streaming expensive.sql
+run sqlp_aggregations_expensive "$qsv_bin" sqlp SKIP_INPUT -Q --infer-len 100000 expensive.sql
+run sqlp_aggregations_expensive_streaming "$qsv_bin" sqlp SKIP_INPUT -Q --infer-len 100000 --streaming expensive.sql
 run sqlp_aggregations_expensive_vs_duckdb duckdb :memory: -c \".read expensiveduckdb.sql\"
-run sqlp_format_arrow "$qsv_bin" sqlp --format arrow "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_format_avro "$qsv_bin" sqlp --format avro "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_format_json "$qsv_bin" sqlp --format json "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_format_jsonl "$qsv_bin" sqlp --format jsonl "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_format_parquet "$qsv_bin" sqlp --format parquet "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_format_parquet_statistics "$qsv_bin" sqlp --format parquet --statistics "$data" -Q '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_lowmemory "$qsv_bin" sqlp "$data" -Q --low-memory '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_nooptimizations "$qsv_bin" sqlp "$data" -Q --no-optimizations '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
-run sqlp_tryparsedates "$qsv_bin" sqlp "$data" -Q --try-parsedates '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_format_arrow "$qsv_bin" sqlp --format arrow "$data" -Q --infer-len 100000 '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_format_avro "$qsv_bin" sqlp --format avro "$data" -Q --infer-len 100000 '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_format_json "$qsv_bin" sqlp --format json "$data" -Q --infer-len 100000 '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_format_jsonl "$qsv_bin" sqlp --format jsonl "$data" -Q --infer-len 100000 '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_format_parquet "$qsv_bin" sqlp --format parquet "$data" -Q --infer-len 100000 '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_format_parquet_statistics "$qsv_bin" sqlp --format parquet --statistics "$data" -Q --infer-len 100000 '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_lowmemory "$qsv_bin" sqlp "$data" -Q --low-memory --infer-len 100000 '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_nooptimizations "$qsv_bin" sqlp "$data" -Q --no-optimizations --infer-len 100000 '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
+run sqlp_tryparsedates "$qsv_bin" sqlp "$data" -Q --try-parsedates --infer-len 100000 '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_tryparsedates_inferlen "$qsv_bin" sqlp "$data" -Q --infer-len 10000 --try-parsedates '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run stats "$qsv_bin" stats --force "$data"
 run stats_create_cache "$qsv_bin" stats --force "$data"
