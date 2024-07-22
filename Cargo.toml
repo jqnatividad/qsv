@@ -146,10 +146,8 @@ polars = { version = "0.41", features = [
     "avro",
     "binary_encoding",
     "coalesce",
-    "cse",
     "cross_join",
     "dtype-categorical",
-    "dtype-full",
     "extract_jsonpath",
     "ipc",
     "json",
@@ -160,8 +158,6 @@ polars = { version = "0.41", features = [
     "semi_anti_join",
     "serde-lazy",
     "sql",
-    "streaming",
-    "temporal",
     "timezones",
 ], optional = true }
 pyo3 = { version = "0.22", features = [
