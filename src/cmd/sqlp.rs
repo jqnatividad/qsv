@@ -273,7 +273,7 @@ use regex::Regex;
 use serde::Deserialize;
 
 use crate::{
-    cmd::joinp::tsvtab_delim,
+    cmd::joinp::tsvssv_delim,
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     util,
     util::process_input,
@@ -345,7 +345,7 @@ impl OutputMode {
 
             let w = match args.flag_output {
                 Some(path) => {
-                    delim = tsvtab_delim(path.clone(), delim);
+                    delim = tsvssv_delim(path.clone(), delim);
                     Box::new(File::create(path)?) as Box<dyn Write>
                 },
                 None => Box::new(io::stdout()) as Box<dyn Write>,
@@ -745,7 +745,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .with_missing_is_null(true)
                 .with_comment_prefix(comment_char.as_deref())
                 .with_null_values(Some(NullValues::AllColumns(rnull_values.clone())))
-                .with_separator(tsvtab_delim(table, delim))
+                .with_separator(tsvssv_delim(table, delim))
                 .with_infer_schema_length(Some(args.flag_infer_len))
                 .with_try_parse_dates(args.flag_try_parsedates)
                 .with_ignore_errors(args.flag_ignore_errors)
