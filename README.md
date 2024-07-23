@@ -179,7 +179,7 @@ cargo install qsv --locked --bin qsvlite -F lite
 cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau,polars
 ```
 
-Note: if you get a compilation error when running `cargo install`, use Option 4 to compile from source using `cargo build`.
+> **_NOTE:_** if you get compilation errors when running `cargo install`, use Option 4 to compile from source using `cargo build`. The errors are usually due to `cargo install` only using the latest release version of the dependencies, and ignoring `patch.crates-io`.
 
 ### Option 4: Compile from Source
 
