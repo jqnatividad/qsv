@@ -121,6 +121,59 @@ fn cat_rowskey() {
 }
 
 #[test]
+fn cat_rowskey_ssv_tsv() {
+    let wrk = Workdir::new("cat_rowskey_ssv_tsv");
+    wrk.create_with_delim(
+        "in1.tsv",
+        vec![
+            svec!["a", "b", "c"],
+            svec!["1", "2", "3"],
+            svec!["2", "3", "4"],
+        ],
+        b'\t',
+    );
+
+    wrk.create(
+        "in2.csv",
+        vec![
+            svec!["c", "a", "b"],
+            svec!["3", "1", "2"],
+            svec!["4", "2", "3"],
+        ],
+    );
+
+    wrk.create_with_delim(
+        "in3.ssv",
+        vec![
+            svec!["a", "b", "d", "c"],
+            svec!["1", "2", "4", "3"],
+            svec!["2", "3", "5", "4"],
+            svec!["z", "y", "w", "x"],
+        ],
+        b';',
+    );
+
+    let mut cmd = wrk.command("cat");
+    cmd.arg("rowskey")
+        .arg("in1.tsv")
+        .arg("in2.csv")
+        .arg("in3.ssv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["a", "b", "c", "d"],
+        svec!["1", "2", "3", ""],
+        svec!["2", "3", "4", ""],
+        svec!["1", "2", "3", ""],
+        svec!["2", "3", "4", ""],
+        svec!["1", "2", "3", "4"],
+        svec!["2", "3", "4", "5"],
+        svec!["z", "y", "x", "w"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn cat_rows_flexible() {
     let wrk = Workdir::new("cat_rows_flexible");
     wrk.create(

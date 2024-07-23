@@ -33,7 +33,7 @@ macro_rules! joinp_test_tab {
             fn headers() {
                 let wrk = setup(stringify!($name0));
                 let mut cmd = wrk.command("joinp");
-                cmd.args(&["city", "cities.tsv", "city", "places.tab"]);
+                cmd.args(&["city", "cities.ssv", "city", "places.tab"]);
                 $fun(wrk, cmd);
             }
         }
@@ -111,9 +111,10 @@ fn setup(name: &str) -> Workdir {
     wrk.create("cities_comments.csv", cities_comments);
     wrk.create("places.csv", places.clone());
 
-    // create TSV/TAB versions
+    // create TSV/TAB/SSV versions
     wrk.create_with_delim("cities.tsv", cities, b'\t');
-    wrk.create_with_delim("places.tab", places, b'\t');
+    wrk.create_with_delim("places.tab", places.clone(), b'\t');
+    wrk.create_with_delim("cities.ssv", places, b';');
 
     // create snappy compressed versions
     let out_file = wrk.path("cities.csv.sz").to_string_lossy().to_string();
