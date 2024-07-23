@@ -236,11 +236,11 @@ If you want to test your regular expressions, [regex101](https://regex101.com) s
 
 ## File formats
 
-qsv recognizes UTF-8/ASCII encoded, CSV (`.csv`) & TSV files (`.tsv` & `.tab`). CSV files are assumed to have "," (comma) as a delimiter,
+qsv recognizes UTF-8/ASCII encoded, CSV (`.csv`), SSV (`.ssv`) and TSV files (`.tsv` & `.tab`). CSV files are assumed to have "," (comma) as a delimiter, SSV files have ";" (semicolon) as a delimiter
 and TSV files, "\t" (tab) as a delimiter. The delimiter is a single ascii character that can be set either by the `--delimiter` command-line option or
 with the `QSV_DEFAULT_DELIMITER` environment variable or automatically detected when `QSV_SNIFF_DELIMITER` is set.
 
-When using the `--output` option, qsv will UTF-8 encode the file & automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, tab for `.tsv` & `.tab` files.
+When using the `--output` option, qsv will UTF-8 encode the file & automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, semicolon for `.ssv`, tab for `.tsv` & `.tab` files.
 
 [JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized & converted to/from CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) and [`tojsonl`](/src/cmd/tojsonl.rs#L12) commands respectively.
 
