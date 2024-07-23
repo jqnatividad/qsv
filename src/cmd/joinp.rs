@@ -590,7 +590,18 @@ impl Args {
             if input2_path.extension().and_then(std::ffi::OsStr::to_str) == Some("sz") {
                 let decompressed_path =
                     util::decompress_snappy_file(&input2_path.to_path_buf(), tmpdir)?;
-                self.arg_input2 = decompressed_path;
+                let decomp_path = if decompressed_path.ends_with("__qsv_temp_decompressed") {
+                    // use a regular expression to extract the original file name
+                    // the original file name is between "qsv__" and "__qsv_temp_decompressed"
+                    let re =
+                        regex::Regex::new(r"qsv__(?P<filename>.*)__qsv_temp_decompressed").unwrap();
+                    let caps = re.captures(&decompressed_path).unwrap();
+                    let filename = caps.name("filename").unwrap().as_str();
+                    filename.to_string()
+                } else {
+                    decompressed_path.clone()
+                };
+                self.arg_input2 = decomp_path;
             }
 
             LazyCsvReader::new(&self.arg_input2)
@@ -635,22 +646,30 @@ impl Args {
     }
 }
 
-/// if the file has a TSV or TAB extension, we automatically use tab as the delimiter
+/// if the file has a TSV/TAB or SSV extension, we automatically use
+/// tab or semicolon as the delimiter
 /// otherwise, we use the delimiter specified by the user
 pub fn tsvssv_delim<P: AsRef<Path>>(file: P, orig_delim: u8) -> u8 {
     let inputfile_extension = file
         .as_ref()
         .extension()
         .and_then(std::ffi::OsStr::to_str)
-        .unwrap_or_default();
+        .unwrap_or_default()
+        .to_ascii_lowercase();
 
-    if inputfile_extension.eq_ignore_ascii_case("tsv")
-        || inputfile_extension.eq_ignore_ascii_case("tab")
-    {
-        b'\t'
-    } else if inputfile_extension.eq_ignore_ascii_case("ssv") {
-        b';'
-    } else {
-        orig_delim
+    match inputfile_extension.as_str() {
+        "tsv" | "tab" => b'\t',
+        "ssv" => b';',
+        _ => orig_delim,
     }
+
+    // if inputfile_extension.eq_ignore_ascii_case("tsv")
+    //     || inputfile_extension.eq_ignore_ascii_case("tab")
+    // {
+    //     b'\t'
+    // } else if inputfile_extension.eq_ignore_ascii_case("ssv") {
+    //     b';'
+    // } else {
+    //     orig_delim
+    // }
 }

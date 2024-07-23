@@ -54,7 +54,7 @@ macro_rules! joinp_test_comments {
                 let wrk = setup(stringify!($name2));
                 let mut cmd = wrk.command("joinp");
                 cmd.env("QSV_COMMENT_CHAR", "#");
-                cmd.args(&["city", "cities_comments.csv", "city", "places.csv"]);
+                cmd.args(&["city", "cities_comments.csv", "city", "places.ssv"]);
                 $fun(wrk, cmd);
             }
         }
@@ -74,7 +74,7 @@ macro_rules! joinp_test_compressed {
             fn headers() {
                 let wrk = setup(stringify!($name3));
                 let mut cmd = wrk.command("joinp");
-                cmd.args(&["city", "cities.csv.sz", "city", "places.csv.sz"]);
+                cmd.args(&["city", "cities.csv.sz", "city", "places.ssv.sz"]);
                 $fun(wrk, cmd);
             }
         }
@@ -130,6 +130,13 @@ fn setup(name: &str) -> Workdir {
         .arg("places.csv")
         .args(["--output", &out_file2]);
     wrk.assert_success(&mut cmd2);
+
+    let out_file3 = wrk.path("places.ssv.sz").to_string_lossy().to_string();
+    let mut cmd3 = wrk.command("snappy");
+    cmd3.arg("compress")
+        .arg("places.ssv")
+        .args(["--output", &out_file3]);
+    wrk.assert_success(&mut cmd3);
 
     wrk
 }
