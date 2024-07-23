@@ -40,6 +40,19 @@ fn table_tsv() {
 }
 
 #[test]
+fn table_ssv() {
+    let wrk = Workdir::new("table");
+    wrk.create_with_delim("in.ssv", data(), b';');
+
+    let mut cmd = wrk.command("table");
+    cmd.env("QSV_DEFAULT_DELIMITER", ";");
+    cmd.arg("in.ssv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(&*got, EXPECTED_TABLE)
+}
+
+#[test]
 fn table_default() {
     let wrk = Workdir::new("table");
     wrk.create_with_delim("in.file", data(), b'\t');

@@ -1369,6 +1369,37 @@ fn sqlp_sql_tsv() {
 }
 
 #[test]
+fn sqlp_sql_ssv() {
+    let wrk = Workdir::new("sqlp_sql_ssv");
+    wrk.create(
+        "test.csv",
+        vec![
+            svec!["idx", "val"],
+            svec!["0", "ABC"],
+            svec!["1", "abc"],
+            svec!["2", "000"],
+            svec!["3", "A0C"],
+            svec!["4", "a0c"],
+        ],
+    );
+
+    let output_file = wrk.path("output.ssv").to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.csv")
+        .arg("SELECT * FROM test")
+        .args(["--output", &output_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let got = wrk.read_to_string(&output_file);
+
+    let expected = "idx;val\n0;ABC\n1;abc\n2;000\n3;A0C\n4;a0c\n";
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sqlp_binary_functions() {
     let wrk = Workdir::new("sqlp_sql_binary_functions");
     wrk.create("dummy.csv", vec![svec!["dummy"], svec!["0"]]);

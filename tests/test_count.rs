@@ -56,6 +56,29 @@ fn count_simple_tsv() {
 }
 
 #[test]
+fn count_simple_ssv() {
+    let wrk = Workdir::new("count_simple_ssv");
+    wrk.create_with_delim(
+        "in.ssv",
+        vec![
+            svec!["letter", "number"],
+            svec!["alpha", "13"],
+            svec!["beta", "24"],
+            svec!["gamma", "37"],
+        ],
+        b';',
+    );
+
+    let mut cmd = wrk.command("count");
+    cmd.arg("in.ssv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "3";
+
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
 fn count_simple_custom_delimiter() {
     let wrk = Workdir::new("count_simple_custom_delimiter");
     wrk.create_with_delim(
