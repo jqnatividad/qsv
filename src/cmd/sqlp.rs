@@ -184,7 +184,7 @@ sqlp options:
                               the CSV parsing of dates.
     --infer-len <arg>         The number of rows to scan when inferring the schema of the CSV.
                               Set to 0 to do a full table scan (warning: can be slow).
-                              [default: 100000]
+                              [default: 10000]
     --streaming               Use streaming mode when parsing CSVs. This will use less memory
                               but will be slower. Only use this when you get out of memory errors.
     --low-memory              Use low memory mode when parsing CSVs. This will use less memory
@@ -274,7 +274,7 @@ use serde::Deserialize;
 
 use crate::{
     cmd::joinp::tsvtab_delim,
-    config::{Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
+    config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     util,
     util::process_input,
     CliResult,
@@ -620,6 +620,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             new_streaming:        args.flag_low_memory || args.flag_streaming,
         }
     };
+
+    // check if the input is a SQL script (ends with .sql)
+    let is_sql_script = std::path::Path::new(&args.arg_sql)
+        .extension()
+        .map_or(false, |ext| ext.eq_ignore_ascii_case("sql"));
+
+    // if infer_len is 0, its not a SQL script, and there is only one input CSV, we can infer the
+    // schema of the CSV more intelligently by counting the number of rows in the file instead of
+    // scanning the entire file with a 0 infer_len which triggers a full table scan.
+    args.flag_infer_len =
+        if args.flag_infer_len == 0 && !is_sql_script && !skip_input && args.arg_input.len() == 1 {
+            let rconfig = Config::new(&Some(args.arg_input[0].to_string_lossy().to_string()))
+                .delimiter(args.flag_delimiter)
+                .no_headers(false);
+            util::count_rows(&rconfig).unwrap_or(0) as usize
+        } else {
+            args.flag_infer_len
+        };
+
     // gated by log::log_enabled!(log::Level::Debug) to avoid the
     // relatively expensive overhead of generating the debug string
     // for the optimization state struct
@@ -629,7 +648,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         log::debug!(
             "Delimiter: {delim} Infer_schema_len: {infer_len} try_parse_dates: {parse_dates} \
              ignore_errors: {ignore_errors}, low_memory: {low_memory}, float_precision: \
-             {float_precision:?}, skip_input: {skip_input}",
+             {float_precision:?}, skip_input: {skip_input}, is_sql_script: {is_sql_script}",
             infer_len = args.flag_infer_len,
             parse_dates = args.flag_try_parsedates,
             ignore_errors = args.flag_ignore_errors,
@@ -637,11 +656,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             float_precision = args.flag_float_precision,
         );
     }
-
-    // check if the input is a SQL script (ends with .sql)
-    let is_sql_script = std::path::Path::new(&args.arg_sql)
-        .extension()
-        .map_or(false, |ext| ext.eq_ignore_ascii_case("sql"));
 
     let mut ctx = SQLContext::new();
     let mut table_aliases = HashMap::with_capacity(args.arg_input.len());
@@ -664,7 +678,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         && delim == b','
         && !args.flag_no_optimizations
         && !args.flag_try_parsedates
-        && args.flag_infer_len != 1000
+        && args.flag_infer_len != 10_000
         && !args.flag_streaming
         && !args.flag_low_memory
         && !args.flag_truncate_ragged_lines
