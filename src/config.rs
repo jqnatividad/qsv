@@ -134,6 +134,8 @@ impl Config {
                 let mut snappy = false;
                 let delim = if file_extension == "tsv" || file_extension == "tab" {
                     b'\t'
+                } else if file_extension == "ssv" {
+                    b';'
                 } else if file_extension == "csv" {
                     b','
                 } else {
@@ -144,6 +146,9 @@ impl Config {
                     } else if filename.ends_with(".tsv.sz") || filename.ends_with(".tab.sz") {
                         snappy = true;
                         b'\t'
+                    } else if filename.ends_with(".ssv.sz") {
+                        snappy = true;
+                        b';'
                     } else {
                         default_delim
                     }

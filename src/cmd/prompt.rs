@@ -27,7 +27,7 @@ prompt options:
                            When using --fd-output, the default is "Save File As".
     -F, --filters <arg>    The filter to use for the INPUT file dialog. Set to "None" to
                            disable filters. Filters are comma-delimited file extensions.
-                           [default: csv,tsv,tab,xls,xlsx,ods]
+                           [default: csv,tsv,tab,ssv,xls,xlsx,ods]
     -d, --workdir <dir>    The directory to start the file dialog in.
                            [default: .]
     -f, --fd-output        Write output to a file by using a save file dialog.

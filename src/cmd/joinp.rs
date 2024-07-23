@@ -492,7 +492,7 @@ impl JoinStruct {
         let mut out_delim = self.delim;
         let mut out_writer = match self.output {
             Some(ref output_file) => {
-                out_delim = tsvtab_delim(output_file, self.delim);
+                out_delim = tsvssv_delim(output_file, self.delim);
 
                 // no need to use buffered writer here, as CsvWriter already does that
                 let path = Path::new(&output_file);
@@ -571,7 +571,7 @@ impl Args {
                 .with_has_header(true)
                 .with_missing_is_null(self.flag_nulls)
                 .with_comment_prefix(comment_char.as_deref())
-                .with_separator(tsvtab_delim(&self.arg_input1, delim))
+                .with_separator(tsvssv_delim(&self.arg_input1, delim))
                 .with_infer_schema_length(num_rows)
                 .with_try_parse_dates(try_parsedates)
                 .with_decimal_comma(self.flag_decimal_comma)
@@ -597,7 +597,7 @@ impl Args {
                 .with_has_header(true)
                 .with_missing_is_null(self.flag_nulls)
                 .with_comment_prefix(comment_char.as_deref())
-                .with_separator(tsvtab_delim(&self.arg_input2, delim))
+                .with_separator(tsvssv_delim(&self.arg_input2, delim))
                 .with_infer_schema_length(num_rows)
                 .with_try_parse_dates(try_parsedates)
                 .with_decimal_comma(self.flag_decimal_comma)
@@ -637,7 +637,7 @@ impl Args {
 
 /// if the file has a TSV or TAB extension, we automatically use tab as the delimiter
 /// otherwise, we use the delimiter specified by the user
-pub fn tsvtab_delim<P: AsRef<Path>>(file: P, orig_delim: u8) -> u8 {
+pub fn tsvssv_delim<P: AsRef<Path>>(file: P, orig_delim: u8) -> u8 {
     let inputfile_extension = file
         .as_ref()
         .extension()
@@ -648,6 +648,8 @@ pub fn tsvtab_delim<P: AsRef<Path>>(file: P, orig_delim: u8) -> u8 {
         || inputfile_extension.eq_ignore_ascii_case("tab")
     {
         b'\t'
+    } else if inputfile_extension.eq_ignore_ascii_case("ssv") {
+        b';'
     } else {
         orig_delim
     }
