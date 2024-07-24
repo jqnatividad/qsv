@@ -242,7 +242,8 @@ with the `QSV_DEFAULT_DELIMITER` environment variable or automatically detected 
 
 When using the `--output` option, qsv will UTF-8 encode the file & automatically change the delimiter used in the generated file based on the file extension - i.e. comma for `.csv`, semicolon for `.ssv`, tab for `.tsv` & `.tab` files.
 
-[JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized & converted to/from CSV with the [`jsonl`](/src/cmd/jsonl.rs#L11) and [`tojsonl`](/src/cmd/tojsonl.rs#L12) commands respectively.
+JSON files are recognized & converted to CSV with the [`json`](/src/cmd/json.rs#L2) command.
+[JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/) files are also recognized & converted to/from CSV with the [`jsonl`](/src/cmd/jsonl.rs#L2) and [`tojsonl`](/src/cmd/tojsonl.rs#L2) commands respectively.
 
 The `fetch` & `fetchpost` commands also produces JSONL files when its invoked without the `--new-column` option & TSV files with the `--report` option.
 
@@ -256,7 +257,7 @@ Speaking of Excel, if you're having trouble opening qsv-generated CSV files in E
 
 The `to` command converts CSVs to `.xlsx`, [Parquet](https://parquet.apache.org) & [Data Package](https://datahub.io/docs/data-packages/tabular) files, and populates [PostgreSQL](https://www.postgresql.org) and [SQLite](https://www.sqlite.org/index.html) databases.
 
-The `sqlp` command returns query results in CSV, JSON, JSONL, Parquet, [Apache Arrow IPC](https://arrow.apache.org/docs/format/Columnar.html#ipc-file-format) & [Apache AVRO](https://avro.apache.org) formats. Polars SQL also supports reading external files directly in various formats with its `read_csv`, `read_ndjson`, `read_parquet` & `read_ipc` [table functions](https://github.com/pola-rs/polars/blob/a199ed57898343dc033e52132e8dfbc6f5ab09e0/crates/polars-sql/src/table_functions.rs#L18-L43).
+The `sqlp` command returns query results in CSV, JSON, JSONL, Parquet, [Apache Arrow IPC](https://arrow.apache.org/docs/format/Columnar.html#ipc-file-format) & [Apache AVRO](https://avro.apache.org) formats. Polars SQL also supports reading external files directly in various formats with its `read_csv`, `read_ndjson`, `read_parquet` & `read_ipc` [table functions](https://github.com/pola-rs/polars/blob/91a423fea2dc067837db65c3608e3cbc1112a6fc/crates/polars-sql/src/table_functions.rs#L18-L43).
 
 The `sniff` command can also detect the mime type of any file with the `--no-infer` or `--just-mime` options, may it be local or remote (http and https schemes supported).
 It can detect more than 130 file formats, including MS Office/Open Document files, JSON, XML, PDF, PNG, JPEG and specialized geospatial formats like GPX, GML, KML, TML, TMX, TSX, TTML.
