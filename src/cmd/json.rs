@@ -217,8 +217,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .arg(headers.join(","))
         .stdin(std::process::Stdio::piped())
         .spawn()?;
-    let mut stdin = select_child.stdin.take().expect("Failed to open stdin");
+    let mut stdin = select_child
+        .stdin
+        .take()
+        .ok_or(CliError::Other("Failed to open stdin".to_string()))?;
     std::thread::spawn(move || {
+        // safety: stdin is not shared with other threads so expect is safe here.
+        // We can't propagate the error as we are in a thread closure.
         stdin.write_all(&output).expect("Failed to write to stdin");
     });
 
