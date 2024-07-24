@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
 Create multiple new computed columns, filter rows or compute aggregations by 
-executing a Luau 0.630 script for every row (SEQUENTIAL MODE) or for
+executing a Luau 0.635 script for every row (SEQUENTIAL MODE) or for
 specified rows (RANDOM ACCESS MODE) of a CSV file.
 
 Luau is not just another qsv command. It is qsv's Domain-Specific Language (DSL)
