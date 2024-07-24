@@ -182,11 +182,10 @@ impl fmt::Display for SniffStruct {
             // when sniffing a snappy compressed file, it is first decompressed
             // to a temporary file. The original file name is stored in the
             // temporary file name, so we extract the original file name
-            if self.path.ends_with("__qsv_temp_decompressed") {
+            if self.path.contains("qsv_temp_decompressed__") {
                 // use a regular expression to extract the original file name
-                // the original file name is between "qsv__" and "__qsv_temp_decompressed"
-                let re =
-                    regex::Regex::new(r"qsv__(?P<filename>.*)__qsv_temp_decompressed").unwrap();
+                // the original file name after "qsv_temp_decompressed__"
+                let re = regex::Regex::new(r"qsv_temp_decompressed__(?P<filename>.*)$").unwrap();
                 let caps = re.captures(&self.path).unwrap();
                 let filename = caps.name("filename").unwrap().as_str();
                 filename.to_string()

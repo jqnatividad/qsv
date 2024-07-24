@@ -1375,7 +1375,7 @@ pub fn decompress_snappy_file(
     let file_stem = Path::new(&path).file_stem().unwrap().to_str().unwrap();
     let decompressed_filepath = tmpdir
         .path()
-        .join(format!("qsv__{file_stem}__qsv_temp_decompressed"));
+        .join(format!("qsv_temp_decompressed__{file_stem}"));
     let mut decompressed_file = std::fs::File::create(decompressed_filepath.clone())?;
     std::io::copy(&mut snappy_reader, &mut decompressed_file)?;
     decompressed_file.flush()?;
