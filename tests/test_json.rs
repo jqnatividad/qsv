@@ -103,6 +103,8 @@ fn json_fruits_stats() {
     let mut cmd = wrk.command("json");
     cmd.arg("data.json");
 
+    wrk.assert_success(&mut cmd);
+
     let got: String = wrk.stdout(&mut cmd);
     let expected = r#"field,type,is_ascii,sum,min,max,range,min_length,max_length,mean,stddev,variance,nullcount,max_precision,sparsity
 fruit,String,true,,apple,strawberry,,5,10,,,,0,,0
