@@ -96,7 +96,10 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
 "#;
 
-use std::{env, io::Read, io::Write};
+use std::{
+    env,
+    io::{Read, Write},
+};
 
 use jaq_interpret::{Ctx, FilterT, ParseCtx, RcIter, Val};
 use json_objects_to_csv::{flatten_json_object::Flattener, Json2Csv};
