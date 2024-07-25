@@ -61,7 +61,19 @@ Usage:
     qsv json --help
 
 json options:
-    --jaq <filter>         Filter JSON data using jaq syntax (https://github.com/01mf02/jaq).
+    --jaq <filter>         Filter JSON data using jaq syntax (https://github.com/01mf02/jaq),
+                           which is identical to the popular JSON command-line tool - jq.
+                           https://jqlang.github.io/jq/
+                           Note that the filter is applied BEFORE converting JSON to a
+                           temporary intermediate CSV file.
+    -s, --select <cols>    Select columns in the temporary intermediate CSV file in the order 
+                           provided for final output. Otherwise, the order of the columns
+                           will be the same as the first object's keys in the JSON data.
+                           Columns are comma-delimited and NEED to be column names and
+                           NOT column indices as the order of the columns in the intermediate
+                           CSV file is not guaranteed to be the same as the order of the
+                           keys in the JSON object.
+                           See 'qsv select --help' for the format details.
 
 Common options:
     -h, --help             Display this message
@@ -80,6 +92,7 @@ use crate::{config, select::SelectColumns, util, CliError, CliResult};
 struct Args {
     arg_input:   Option<String>,
     flag_jaq:    Option<String>,
+    flag_select: Option<SelectColumns>,
     flag_output: Option<String>,
 }
 
@@ -192,9 +205,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             "Expected a non-empty JSON object".to_string(),
         ));
     }
-    let mut headers: Vec<&str> = Vec::new();
+    let mut first_dict_headers: Vec<&str> = Vec::new();
     for key in first_dict.keys() {
-        headers.push(key.as_str());
+        first_dict_headers.push(key.as_str());
     }
 
     let empty_values = vec![serde_json::Value::Null; 1];
@@ -222,8 +235,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Json2Csv::new(flattener).convert_from_array(values, intermediate_csv_writer)?;
     }
 
-    // STEP 2: select the columns in the order of the first dict's keys
-    let sel_cols = SelectColumns::parse(&headers.join(","))?;
+    // STEP 2: select the columns to use in the final output
+    // if --select is not specified, select in the order of the first dict's keys
+    // safety: we checked that first_dict is not empty so headers is not empty
+    let sel_cols = args
+        .flag_select
+        .unwrap_or_else(|| SelectColumns::parse(&first_dict_headers.join(",")).unwrap());
 
     let sel_rconfig = config::Config::new(&Some(intermediate_csv.to_string_lossy().into_owned()));
     let mut intermediate_csv_rdr = sel_rconfig.reader()?;
