@@ -68,16 +68,13 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
 "#;
 
-use std::{
-    env,
-    io::{Read, Write},
-};
+use std::{env, io::Read};
 
 use jaq_interpret::{Ctx, FilterT, ParseCtx, RcIter, Val};
 use json_objects_to_csv::{flatten_json_object::Flattener, Json2Csv};
 use serde::Deserialize;
 
-use crate::{util, CliError, CliResult};
+use crate::{config::Config, select::SelectColumns, util, CliError, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
@@ -138,7 +135,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
     let flattener = Flattener::new();
-    let mut output = Vec::<u8>::new();
     let mut value = if let Some(path) = args.arg_input {
         get_value_from_path(path)?
     } else {
@@ -208,37 +204,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         &vec![value.clone()]
     };
 
-    let csv_writer = csv::WriterBuilder::new().from_writer(&mut output);
-    Json2Csv::new(flattener).convert_from_array(values, csv_writer)?;
+    // STEP 1: create an intermediate CSV tempfile from the JSON data
+    // we need to do this so we can use qsv select to reorder headers to first dict's keys order
+    // as the order of the headers in the CSV file is not guaranteed to be the same as the order of
+    // the keys in the JSON object
+    let temp_dir = env::temp_dir();
+    let intermediate_csv = temp_dir.join("intermediate.csv");
 
-    // Use qsv select to reorder headers to first dict's keys order
-    let mut select_child = std::process::Command::new(env::current_exe()?)
-        .arg("select")
-        .arg(headers.join(","))
-        .stdin(std::process::Stdio::piped())
-        .spawn()?;
-    let mut stdin = select_child
-        .stdin
-        .take()
-        .ok_or(CliError::Other("Failed to open stdin".to_string()))?;
-    std::thread::spawn(move || {
-        // safety: stdin is not shared with other threads so expect is safe here.
-        // We can't propagate the error as we are in a thread closure.
-        stdin.write_all(&output).expect("Failed to write to stdin");
-    });
-
-    let select_output = select_child
-        .wait_with_output()
-        .map_err(|_| CliError::Other("Failed to read stdout".to_string()))?;
-
-    if let Some(output_path) = args.flag_output {
-        let mut file = std::fs::File::create(output_path)?;
-        let buf = select_output.stdout;
-        file.write_all(&buf)?;
-        file.flush()?;
-    } else {
-        print!("{}", String::from_utf8_lossy(&select_output.stdout));
+    // this is in a block so that the intermediate_csv_writer is automatically dropped
+    // and flushed before without triggering the borrow checker for intermediate_csv variable
+    {
+        let intermediate_csv_writer =
+            csv::WriterBuilder::new().from_path(intermediate_csv.as_path())?;
+        Json2Csv::new(flattener).convert_from_array(values, intermediate_csv_writer)?;
     }
 
-    Ok(())
+    // STEP 2: select the columns in the order of the first dict's keys
+    let sel_cols = SelectColumns::parse(&headers.join(","))?;
+
+    let sel_rconfig = Config::new(&Some(intermediate_csv.to_string_lossy().into_owned()));
+    let mut rdr = sel_rconfig.reader()?;
+    let byteheaders = rdr.byte_headers()?.clone();
+    let mut final_csv_wtr = Config::new(&args.flag_output).writer()?;
+
+    // and write the selected columns to the final CSV file
+    let sel = sel_rconfig.select(sel_cols).selection(&byteheaders)?;
+
+    let mut record = csv::ByteRecord::new();
+    final_csv_wtr.write_record(sel.iter().map(|&i| &byteheaders[i]))?;
+    while rdr.read_byte_record(&mut record)? {
+        final_csv_wtr.write_record(sel.iter().map(|&i| &record[i]))?;
+    }
+
+    Ok(final_csv_wtr.flush()?)
 }
