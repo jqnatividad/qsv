@@ -224,16 +224,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let temp_dir = env::temp_dir();
     let intermediate_csv = temp_dir.join("intermediate.csv");
 
-    // this is in a block so that the intermediate_csv_writer is automatically flushed
-    // w/o triggering the borrow checker for the intermediate_csv variable when it goes out of scope
-    {
-        let intermediate_csv_file = std::io::BufWriter::with_capacity(
-            config::DEFAULT_WTR_BUFFER_CAPACITY,
-            std::fs::File::create(&intermediate_csv)?,
-        );
-        let intermediate_csv_writer = csv::WriterBuilder::new().from_writer(intermediate_csv_file);
-        Json2Csv::new(flattener).convert_from_array(values, intermediate_csv_writer)?;
-    }
+    // convert JSON to CSV and store it in output_buf
+    let mut output_buf = Vec::<u8>::new();
+    let csv_buf_writer = csv::WriterBuilder::new().from_writer(&mut output_buf);
+    Json2Csv::new(flattener).convert_from_array(values, csv_buf_writer)?;
+
+    // now write output_buf to intermediate_csv
+    std::fs::write(&intermediate_csv, &output_buf)?;
 
     // STEP 2: select the columns to use in the final output
     // if --select is not specified, select in the order of the first dict's keys
