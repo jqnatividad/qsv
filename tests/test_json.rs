@@ -81,6 +81,49 @@ fn json_object_simple() {
 }
 
 #[test]
+fn json_object_select_column_output() {
+    let wrk = Workdir::new("json_object_select_column_output");
+    wrk.create_from_string(
+        "data.json",
+        r#"{"id":1,"father":"Mark","mother":"Charlotte","oldest_child":"Tom","boy":true}"#,
+    );
+    let mut cmd = wrk.command("json");
+    cmd.args(["--select", "id,mother,oldest_child,father"])
+        .arg("data.json");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["id", "mother", "oldest_child", "father"],
+        svec!["1", "Charlotte", "Tom", "Mark"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn json_object_select_column_output_reverse() {
+    let wrk = Workdir::new("json_object_select_column_output_reverse");
+    wrk.create_from_string(
+        "data.json",
+        r#"{"id":1,"father":"Mark","mother":"Charlotte","oldest_child":"Tom","boy":true}"#,
+    );
+
+    // Select columns in reverse order
+    // note that the --select uses column names, not column indexes
+    // as the order of the columns in the intermediate CSV file is not guaranteed
+    // so we cannot use the convenient "_-1" shorthand normally used in qsv to reverse column order
+    let mut cmd = wrk.command("json");
+    cmd.args(["--select", "boy,oldest_child,mother,father,id"])
+        .arg("data.json");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["boy", "oldest_child", "mother", "father", "id"],
+        svec!["true", "Tom", "Charlotte", "Mark", "1"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn json_object_empty() {
     let wrk = Workdir::new("json_object_empty");
     wrk.create_from_string("data.json", r#"{}"#);
