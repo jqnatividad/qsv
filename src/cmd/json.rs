@@ -74,7 +74,7 @@ use jaq_interpret::{Ctx, FilterT, ParseCtx, RcIter, Val};
 use json_objects_to_csv::{flatten_json_object::Flattener, Json2Csv};
 use serde::Deserialize;
 
-use crate::{config::Config, select::SelectColumns, util, CliError, CliResult};
+use crate::{config, select::SelectColumns, util, CliError, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
@@ -211,28 +211,30 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let temp_dir = env::temp_dir();
     let intermediate_csv = temp_dir.join("intermediate.csv");
 
-    // this is in a block so that the intermediate_csv_writer is automatically dropped
-    // and flushed before without triggering the borrow checker for intermediate_csv variable
+    // this is in a block so that the intermediate_csv_writer is automatically flushed
+    // w/o triggering the borrow checker for the intermediate_csv variable when it goes out of scope
     {
-        let intermediate_csv_writer =
-            csv::WriterBuilder::new().from_path(intermediate_csv.as_path())?;
+        let intermediate_csv_file = std::io::BufWriter::with_capacity(
+            config::DEFAULT_WTR_BUFFER_CAPACITY,
+            std::fs::File::create(&intermediate_csv)?,
+        );
+        let intermediate_csv_writer = csv::WriterBuilder::new().from_writer(intermediate_csv_file);
         Json2Csv::new(flattener).convert_from_array(values, intermediate_csv_writer)?;
     }
 
     // STEP 2: select the columns in the order of the first dict's keys
     let sel_cols = SelectColumns::parse(&headers.join(","))?;
 
-    let sel_rconfig = Config::new(&Some(intermediate_csv.to_string_lossy().into_owned()));
-    let mut rdr = sel_rconfig.reader()?;
-    let byteheaders = rdr.byte_headers()?.clone();
-    let mut final_csv_wtr = Config::new(&args.flag_output).writer()?;
+    let sel_rconfig = config::Config::new(&Some(intermediate_csv.to_string_lossy().into_owned()));
+    let mut intermediate_csv_rdr = sel_rconfig.reader()?;
+    let byteheaders = intermediate_csv_rdr.byte_headers()?.clone();
 
     // and write the selected columns to the final CSV file
     let sel = sel_rconfig.select(sel_cols).selection(&byteheaders)?;
-
     let mut record = csv::ByteRecord::new();
+    let mut final_csv_wtr = config::Config::new(&args.flag_output).writer()?;
     final_csv_wtr.write_record(sel.iter().map(|&i| &byteheaders[i]))?;
-    while rdr.read_byte_record(&mut record)? {
+    while intermediate_csv_rdr.read_byte_record(&mut record)? {
         final_csv_wtr.write_record(sel.iter().map(|&i| &record[i]))?;
     }
 
