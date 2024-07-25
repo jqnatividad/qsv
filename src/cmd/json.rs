@@ -16,11 +16,13 @@ As an example, say we have the following JSON data in a file fruits.json:
 [
     {
         "fruit": "apple",
-        "price": 2.50
+        "price": 2.50,
+        "calories": 95
     },
     {
         "fruit": "banana",
-        "price": 3.00
+        "price": 3.00,
+        "calories": 105
     }
 ]
 
@@ -30,9 +32,22 @@ qsv json fruits.json
 
 And the following is printed to the terminal:
 
-fruit,price
-apple,2.5
-banana,3.0
+fruit,price,calories
+apple,2.5,95
+banana,3.0,105
+
+The order of the columns in the CSV file will be the same as the order of the keys in the first JSON object.
+The order of the rows in the CSV file will be the same as the order of the objects in the JSON array.
+
+If you want to select specific columns in the final output, use the --select option, for example:
+
+qsv json fruits.json --select price,fruit
+
+And the following is printed to the terminal:
+
+price,fruit
+2.5,apple
+3.0,banana
 
 Note: Trailing zeroes in decimal numbers after the decimal are truncated (2.50 becomes 2.5).
 
@@ -69,18 +84,19 @@ json options:
     -s, --select <cols>    Select columns in the temporary intermediate CSV file in the order 
                            provided for final output. Otherwise, the order of the columns
                            will be the same as the first object's keys in the JSON data.
-                           Columns are comma-delimited and NEED to be column names and
-                           NOT column indices as the order of the columns in the intermediate
+                           See 'qsv select --help' for the full syntax.
+
+                           Note however that <cols> NEED to be a comma-delimited list of column NAMES
+                           and NOT column INDICES as the order of the columns in the intermediate
                            CSV file is not guaranteed to be the same as the order of the
                            keys in the JSON object.
-                           See 'qsv select --help' for the format details.
 
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
 "#;
 
-use std::{env, io::Read};
+use std::{env, io::Read, io::Write};
 
 use jaq_interpret::{Ctx, FilterT, ParseCtx, RcIter, Val};
 use json_objects_to_csv::{flatten_json_object::Flattener, Json2Csv};
@@ -230,7 +246,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Json2Csv::new(flattener).convert_from_array(values, csv_buf_writer)?;
 
     // now write output_buf to intermediate_csv
-    std::fs::write(&intermediate_csv, &output_buf)?;
+    let mut intermediate_csv_file = std::fs::File::create(&intermediate_csv)?;
+    intermediate_csv_file.write_all(&output_buf)?;
+    intermediate_csv_file.flush()?;
     drop(output_buf);
 
     // STEP 2: select the columns to use in the final output
@@ -242,10 +260,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let sel_rconfig = config::Config::new(&Some(intermediate_csv.to_string_lossy().into_owned()));
     let mut intermediate_csv_rdr = sel_rconfig.reader()?;
-    let byteheaders = intermediate_csv_rdr.byte_headers()?.clone();
+    let byteheaders = intermediate_csv_rdr.byte_headers()?;
 
     // and write the selected columns to the final CSV file
-    let sel = sel_rconfig.select(sel_cols).selection(&byteheaders)?;
+    let sel = sel_rconfig.select(sel_cols).selection(byteheaders)?;
     let mut record = csv::ByteRecord::new();
     let mut final_csv_wtr = config::Config::new(&args.flag_output).writer()?;
     final_csv_wtr.write_record(sel.iter().map(|&i| &byteheaders[i]))?;
