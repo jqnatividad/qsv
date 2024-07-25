@@ -264,7 +264,7 @@ polars = { git = "https://github.com/pola-rs/polars", rev = "7888d3b" }
 
 
 [features]
-default = ["mimalloc"]
+default = ["mimalloc", "feature_capable"]
 distrib_features = [
     "feature_capable",
     "apply",
@@ -328,4 +328,15 @@ nightly = [
     "hashbrown/nightly",
     "polars/nightly",
     "polars/simd",
+]
+
+[package.metadata.deb]
+maintainer = "Konstantin Sivakov <konstantin@datHere.com>"
+copyright = "2024, datHere Inc. <www.dathere.com>"
+extended-description = """A high performance CSV data-wrangling toolkit."""
+depends = "$auto"
+section = "utility"
+priority = "optional"
+assets = [
+ ["target/release/qsv", "usr/bin/", "755"],
 ]
