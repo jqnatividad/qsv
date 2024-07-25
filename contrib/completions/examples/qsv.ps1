@@ -621,6 +621,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         }
         'qsv;json' {
             [CompletionResult]::new('--jaq', 'jaq', [CompletionResultType]::ParameterName, 'jaq')
+            [CompletionResult]::new('--select', 'select', [CompletionResultType]::ParameterName, 'select')
             [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')

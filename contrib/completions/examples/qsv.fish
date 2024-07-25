@@ -443,6 +443,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand joinp" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand joinp" -l quiet
 complete -c qsv -n "__fish_qsv_using_subcommand joinp" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand json" -l jaq
+complete -c qsv -n "__fish_qsv_using_subcommand json" -l select
 complete -c qsv -n "__fish_qsv_using_subcommand json" -l output
 complete -c qsv -n "__fish_qsv_using_subcommand json" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand jsonl" -l ignore-errors

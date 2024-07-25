@@ -491,6 +491,7 @@ module completions {
 
   export extern "qsv json" [
     --jaq
+    --select
     --output
     --help(-h)                # Print help
   ]

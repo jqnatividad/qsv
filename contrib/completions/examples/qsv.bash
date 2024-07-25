@@ -2156,7 +2156,7 @@ _qsv() {
             return 0
             ;;
         qsv__json)
-            opts="-h --jaq --output --help"
+            opts="-h --jaq --select --output --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

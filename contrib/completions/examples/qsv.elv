@@ -570,6 +570,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
         }
         &'qsv;json'= {
             cand --jaq 'jaq'
+            cand --select 'select'
             cand --output 'output'
             cand -h 'Print help'
             cand --help 'Print help'
