@@ -231,6 +231,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // now write output_buf to intermediate_csv
     std::fs::write(&intermediate_csv, &output_buf)?;
+    drop(output_buf);
 
     // STEP 2: select the columns to use in the final output
     // if --select is not specified, select in the order of the first dict's keys
