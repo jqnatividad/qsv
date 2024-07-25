@@ -249,9 +249,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Json2Csv::new(flattener).convert_from_array(values, csv_buf_writer)?;
 
     // now write output_buf to intermediate_csv
-    let mut intermediate_csv_file = std::fs::File::create(&intermediate_csv)?;
-    intermediate_csv_file.write_all(&output_buf)?;
-    intermediate_csv_file.flush()?;
+    let intermediate_csv_file = std::fs::File::create(&intermediate_csv)?;
+    let mut intermediate_csv_writer = std::io::BufWriter::new(intermediate_csv_file);
+    intermediate_csv_writer.write_all(&output_buf)?;
+    intermediate_csv_writer.flush()?;
     drop(output_buf);
 
     // STEP 2: select the columns to use in the final output
