@@ -264,7 +264,7 @@ polars = { git = "https://github.com/pola-rs/polars", rev = "7888d3b" }
 
 
 [features]
-default = ["mimalloc", "feature_capable"]
+default = ["mimalloc"]
 distrib_features = [
     "feature_capable",
     "apply",
