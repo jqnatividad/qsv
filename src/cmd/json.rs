@@ -155,7 +155,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     fn get_value_from_path(path: String) -> CliResult<serde_json::Value> {
         // Open the file in read-only mode with buffer.
         let file = std::fs::File::open(path)?;
-        let reader = std::io::BufReader::new(file);
+        let reader = std::io::BufReader::with_capacity(config::DEFAULT_RDR_BUFFER_CAPACITY, file);
 
         // Return the JSON contents of the file as serde_json::Value
         match serde_json::from_reader(reader) {
@@ -250,7 +250,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // now write output_buf to intermediate_csv
     let intermediate_csv_file = std::fs::File::create(&intermediate_csv)?;
-    let mut intermediate_csv_writer = std::io::BufWriter::new(intermediate_csv_file);
+    let mut intermediate_csv_writer = std::io::BufWriter::with_capacity(
+        config::DEFAULT_WTR_BUFFER_CAPACITY,
+        intermediate_csv_file,
+    );
     intermediate_csv_writer.write_all(&output_buf)?;
     intermediate_csv_writer.flush()?;
     drop(output_buf);
