@@ -1275,6 +1275,9 @@ const completion: Fig.Spec = {
           name: "--jaq",
         },
         {
+          name: "--select",
+        },
+        {
           name: "--output",
         },
         {

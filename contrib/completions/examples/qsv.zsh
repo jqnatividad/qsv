@@ -641,6 +641,7 @@ _arguments "${_arguments_options[@]}" : \
 (json)
 _arguments "${_arguments_options[@]}" : \
 '--jaq[]' \
+'--select[]' \
 '--output[]' \
 '-h[Print help]' \
 '--help[Print help]' \
