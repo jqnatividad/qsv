@@ -476,7 +476,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         if args.flag_flush_cache {
-            redis::cmd("FLUSHDB").execute(&mut redis_conn);
+            redis::cmd("FLUSHDB")
+                .exec(&mut redis_conn)
+                .map_err(|_| "Cannot flush Redis cache")?;
             info!("flushed Redis database.");
         }
         CacheType::Redis
