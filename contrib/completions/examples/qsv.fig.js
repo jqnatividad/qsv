@@ -1740,6 +1740,9 @@ const completion: Fig.Spec = {
           name: "--json",
         },
         {
+          name: "--not-one",
+        },
+        {
           name: "--size-limit",
         },
         {

@@ -660,6 +660,7 @@ module completions {
     --quick
     --count
     --json
+    --not-one
     --size-limit
     --dfa-size-limit
     --output

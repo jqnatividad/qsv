@@ -570,6 +570,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l unmatched-output
 complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l quick
 complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l count
 complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l json
+complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l not-one
 complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l size-limit
 complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l dfa-size-limit
 complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l output

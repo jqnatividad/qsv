@@ -838,6 +838,7 @@ _arguments "${_arguments_options[@]}" : \
 '--quick[]' \
 '--count[]' \
 '--json[]' \
+'--not-one[]' \
 '--size-limit[]' \
 '--dfa-size-limit[]' \
 '--output[]' \

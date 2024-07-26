@@ -12,6 +12,7 @@ pub fn searchset_cmd() -> Command {
         arg!(--quick),
         arg!(--count),
         arg!(--json),
+        arg!(--"not-one"),
         arg!(--"size-limit"),
         arg!(--"dfa-size-limit"),
         arg!(--output),
