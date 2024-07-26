@@ -79,17 +79,13 @@ json options:
     --jaq <filter>         Filter JSON data using jaq syntax (https://github.com/01mf02/jaq),
                            which is identical to the popular JSON command-line tool - jq.
                            https://jqlang.github.io/jq/
-                           Note that the filter is applied BEFORE converting JSON to a
-                           temporary intermediate CSV file.
-    -s, --select <cols>    Select columns in the temporary intermediate CSV file in the order 
-                           provided for final output. Otherwise, the order of the columns
-                           will be the same as the first object's keys in the JSON data.
+                           Note that the filter is applied BEFORE converting JSON to CSV
+    -s, --select <cols>    Select columns in the order provided for final output. 
+                           Otherwise, the order of the columns will be the same as the 
+                           first object's keys in the JSON data.
                            See 'qsv select --help' for the full syntax.
-
-                           Note however that <cols> NEED to be a comma-delimited list of column NAMES
-                           and NOT column INDICES as the order of the columns in the intermediate
-                           CSV file is not guaranteed to be the same as the order of the
-                           keys in the JSON object.
+                           Note however that <cols> NEED to be a comma-delimited list
+                           of column NAMES and NOT column INDICES.
 
 Common options:
     -h, --help             Display this message
