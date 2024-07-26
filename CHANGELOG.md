@@ -6,6 +6,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.130.0] - 2024-07-24
+
+### Added
+* `json`: add `--select` option https://github.com/jqnatividad/qsv/pull/1990
+* `searchset`: add `--not-one` flag by @rzmk in https://github.com/jqnatividad/qsv/pull/1994
+* Added`.ssv` (semicolon separated values) automatic support https://github.com/jqnatividad/qsv/pull/1987
+* Added cargo deb compatibility by @tino097 in https://github.com/jqnatividad/qsv/pull/1991
+* `contrib(completions)`: add `--select` for `json` by @rzmk in https://github.com/jqnatividad/qsv/pull/1992
+
+### Changed
+* `validate`: return delimiter detected upon successful CSV validation https://github.com/jqnatividad/qsv/pull/1977
+* build(deps): bump tokio from 1.38.0 to 1.38.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1973
+* build(deps): bump pyo3 from 0.22.1 to 0.22.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1979
+* build(deps): bump simple-expand-tilde from 0.1.7 to 0.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1984
+* build(deps): bump cached from 0.52.0 to 0.53.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1983
+* build(deps): bump postgres from 0.19.7 to 0.19.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1985
+* build(deps): bump cached from 0.53.0 to 0.53.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1986
+* build(deps): bump tokio from 1.38.1 to 1.39.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1988
+* build(deps): bump redis from 0.25.4 to 0.26.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1995
+
+### Fixed
+* `validate`: properly auto-detect tab delimiter when file extension is TSV or TAB https://github.com/jqnatividad/qsv/pull/1975
+
+### Removed
+* `docs`: remove *nix only message for `foreach` by @rzmk in https://github.com/jqnatividad/qsv/pull/1972
+
+## New Contributors
+* @tino097 made their first contribution in https://github.com/jqnatividad/qsv/pull/1991
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.129.1...0.130.0
+
 ## [0.129.0] - 2024-07-14
 
 This release is the biggest one ever!
