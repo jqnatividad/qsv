@@ -304,6 +304,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arc-swap"
+version = "1.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69f7f8c3906b62b754cd5326047894316021dcfe5a194c8ea52bdd94934a3457"
+
+[[package]]
 name = "argminmax"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1069,7 +1075,7 @@ dependencies = [
  "hashbrown 0.14.5",
  "once_cell",
  "r2d2",
- "redis",
+ "redis 0.25.4",
  "rmp-serde",
  "serde",
  "serde_json",
@@ -5112,7 +5118,7 @@ dependencies = [
  "rand_hc",
  "rand_xoshiro",
  "rayon",
- "redis",
+ "redis 0.26.0",
  "regex",
  "reqwest",
  "rfd",
@@ -5459,6 +5465,22 @@ dependencies = [
  "ryu",
  "sha1_smol",
  "socket2",
+ "url",
+]
+
+[[package]]
+name = "redis"
+version = "0.26.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8cc5b667390cb038bc65fc4b18c06e2550469f7e06a02d886f1a018a11f63563"
+dependencies = [
+ "ahash 0.8.11",
+ "arc-swap",
+ "combine",
+ "itoa",
+ "num-bigint",
+ "percent-encoding",
+ "ryu",
  "url",
 ]
 
