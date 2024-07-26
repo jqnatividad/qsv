@@ -739,6 +739,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --quick 'quick'
             cand --count 'count'
             cand --json 'json'
+            cand --not-one 'not-one'
             cand --size-limit 'size-limit'
             cand --dfa-size-limit 'dfa-size-limit'
             cand --output 'output'

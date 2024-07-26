@@ -804,6 +804,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--quick', 'quick', [CompletionResultType]::ParameterName, 'quick')
             [CompletionResult]::new('--count', 'count', [CompletionResultType]::ParameterName, 'count')
             [CompletionResult]::new('--json', 'json', [CompletionResultType]::ParameterName, 'json')
+            [CompletionResult]::new('--not-one', 'not-one', [CompletionResultType]::ParameterName, 'not-one')
             [CompletionResult]::new('--size-limit', 'size-limit', [CompletionResultType]::ParameterName, 'size-limit')
             [CompletionResult]::new('--dfa-size-limit', 'dfa-size-limit', [CompletionResultType]::ParameterName, 'dfa-size-limit')
             [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
