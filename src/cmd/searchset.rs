@@ -14,7 +14,7 @@ The columns to search can be limited with the '--select' flag (but the full row
 is still written to the output if there is a match).
 
 Returns exitcode 0 when matches are found, returning number of matches to stderr.
-Returns exitcode 1 when no match is found.
+Returns exitcode 1 when no match is found, unless the '--not-one' flag is used.
 
 When --quick is enabled, no output is produced and exitcode 0 is returned on 
 the first match.
@@ -62,6 +62,7 @@ search options:
                                expression engine's Discrete Finite Automata.
                                Modify this only if you're getting regular expression
                                compilation errors. [default: 10]
+    --not-one                  Use exit code 0 instead of 1 for no match found.
 
 Common options:
     -h, --help                 Display this message
@@ -113,6 +114,7 @@ struct Args {
     flag_quick:             bool,
     flag_count:             bool,
     flag_json:              bool,
+    flag_not_one:           bool,
     flag_progressbar:       bool,
     flag_quiet:             bool,
 }
@@ -129,6 +131,7 @@ fn read_regexset(filename: &String) -> io::Result<Vec<String>> {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
+    let flag_not_one = args.flag_not_one;
 
     if args.flag_flag.is_none() && args.flag_flag_matches_only {
         return fail_incorrectusage_clierror!("Cannot use --flag-matches-only without --flag",);
@@ -318,7 +321,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             info!("matches: {match_row_ctr}");
         }
 
-        if match_row_ctr == 0 {
+        if match_row_ctr == 0 && !flag_not_one {
             return Err(CliError::NoMatch());
         } else if args.flag_quick {
             if !args.flag_quiet {
