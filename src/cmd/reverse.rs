@@ -56,10 +56,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut record = csv::ByteRecord::new();
         let mut pos = idx_file.count().saturating_sub(1);
         idx_file.seek(pos)?;
-        while idx_file.read_byte_record(&mut record)? {
+        let mut more_data = true;
+        while more_data {
+            idx_file.read_byte_record(&mut record)?;
             wtr.write_byte_record(&record)?;
             pos -= 1;
-            idx_file.seek(pos)?; // seek to next pos
+            more_data = idx_file.seek(pos).is_ok();
         }
     } else {
         // we don't have an index, we need to read the entire file into memory
