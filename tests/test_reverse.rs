@@ -44,7 +44,6 @@ fn prop_reverse_no_headers() {
     qcheck(p as fn(CsvData) -> bool);
 }
 
-#[cfg(not(target_os = "macos"))]
 fn prop_reverse_indexed(name: &str, rows: CsvData, headers: bool) -> bool {
     let wrk = Workdir::new(name);
     wrk.create_indexed("in.csv", rows.clone());
@@ -69,10 +68,7 @@ fn prop_reverse_indexed(name: &str, rows: CsvData, headers: bool) -> bool {
     rassert_eq!(got, expected)
 }
 
-// skip on macOS for now because this fails on GH action runner
-// but runs successfully on macOS locally
 #[test]
-#[cfg(not(target_os = "macos"))]
 fn prop_reverse_headers_indexed() {
     fn p(rows: CsvData) -> bool {
         prop_reverse_indexed("prop_reverse_headers_indexed", rows, true)
@@ -80,9 +76,7 @@ fn prop_reverse_headers_indexed() {
     qcheck(p as fn(CsvData) -> bool);
 }
 
-// same as above
 #[test]
-#[cfg(not(target_os = "macos"))]
 fn prop_reverse_no_headers_indexed() {
     fn p(rows: CsvData) -> bool {
         prop_reverse_indexed("prop_reverse_no_headers_indexed", rows, false)
