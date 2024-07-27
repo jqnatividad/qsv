@@ -40,6 +40,16 @@ h2";
 }
 
 #[test]
+fn headers_just_count() {
+    let (wrk, mut cmd) = setup("headers_just_count");
+    cmd.arg("--just-count");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "2";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
 fn headers_notrim() {
     let wrk = Workdir::new("headers_notrim");
 
@@ -160,6 +170,16 @@ h3";
 }
 
 #[test]
+fn headers_multiple_just_count() {
+    let (wrk, mut cmd) = setup("headers_multiple_just_count");
+    cmd.arg("in2.csv").arg("--just-count");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "4";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
 fn headers_intersect() {
     let (wrk, mut cmd) = setup("headers_intersect");
     cmd.arg("in2.csv").arg("--intersect");
@@ -186,7 +206,7 @@ fn headers_infile() {
 
     wrk.create_from_string("testdata.infile-list", "in1.csv\nin2.csv\nin3.csv\n");
 
-    let mut cmd = wrk.command("headers");
+    let mut cmd: process::Command = wrk.command("headers");
     cmd.arg("testdata.infile-list");
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
@@ -203,6 +223,13 @@ fn headers_infile() {
         ["g"],
     ];
     assert_eq!(got, expected);
+
+    let mut cmd: process::Command = wrk.command("headers");
+    cmd.arg("testdata.infile-list").arg("--just-count");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "10";
+    assert_eq!(got, expected.to_string());
 }
 
 #[test]
