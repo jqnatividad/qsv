@@ -22,11 +22,12 @@ and is written to a file:
     # or ';' as the delimiter
     qsv diff -o diff-semicolon.csv --delimiter-output ';' left.csv right.csv
 
-Find the difference between two CSVs, but only for the first two columns:
+Find the difference between two CSVs, comparing records that have the same values
+in the first two columns:
     qsv diff --key 0,1 left.csv right.csv
 
-Find the difference between two CSVs, but only for the first two columns and
-sort the result by the first and second column:
+Find the difference between two CSVs, comparing records that have the same values
+in the first two columns and sort the result by the first two columns:
     qsv diff -k 0,1 --sort-columns 0,1 left.csv right.csv
 
 Find the difference between two CSVs, but do not output headers in the result:
