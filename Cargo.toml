@@ -322,7 +322,6 @@ datapusher_plus = ["self_update"]
 polars = ["dep:polars", "smartstring"]
 feature_capable = []
 nightly = [
-    "regex/unstable",
     "rand/nightly",
     "pyo3/nightly",
     "hashbrown/nightly",
