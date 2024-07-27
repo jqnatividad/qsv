@@ -55,13 +55,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         rconfig.write_headers(&mut rdr, &mut wtr)?;
         let mut record = csv::ByteRecord::new();
         let mut pos = idx_file.count().saturating_sub(1);
-        idx_file.seek(pos)?;
-        let mut more_data = true;
-        while more_data {
+
+        while idx_file.seek(pos).is_ok() {
             idx_file.read_byte_record(&mut record)?;
             wtr.write_byte_record(&record)?;
             pos -= 1;
-            more_data = idx_file.seek(pos).is_ok();
         }
     } else {
         // we don't have an index, we need to read the entire file into memory
