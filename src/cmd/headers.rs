@@ -77,7 +77,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Box::new(TabWriter::new(io::stdout()))
     };
     if args.flag_just_count {
-        write!(wtr, "{}\n", headers.len())?;
+        writeln!(wtr, "{}", headers.len())?;
     } else {
         for (i, header) in headers.iter().enumerate() {
             if num_inputs == 1 && !args.flag_just_names {
