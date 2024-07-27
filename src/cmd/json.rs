@@ -39,7 +39,7 @@ banana,3.0,105
 The order of the columns in the CSV file will be the same as the order of the keys in the first JSON object.
 The order of the rows in the CSV file will be the same as the order of the objects in the JSON array.
 
-If you want to select specific columns in the final output, use the --select option, for example:
+If you want to select/reorder/drop columns in the output CSV, use the --select option, for example:
 
 qsv json fruits.json --select price,fruit
 
@@ -80,9 +80,9 @@ json options:
                            which is identical to the popular JSON command-line tool - jq.
                            https://jqlang.github.io/jq/
                            Note that the filter is applied BEFORE converting JSON to CSV
-    -s, --select <cols>    Select columns in the order provided for final output. 
-                           Otherwise, the order of the columns will be the same as the 
-                           first object's keys in the JSON data.
+    -s, --select <cols>    Select, reorder or drop columns for output. 
+                           Otherwise, all the columns will be output in the same order as 
+                           the first object's keys in the JSON data.
                            See 'qsv select --help' for the full syntax.
                            Note however that <cols> NEED to be a comma-delimited list
                            of column NAMES and NOT column INDICES.
@@ -163,10 +163,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
     let flattener = Flattener::new();
-    let mut value = if let Some(path) = args.arg_input {
-        get_value_from_path(path)?
-    } else {
-        get_value_from_stdin()?
+    let mut value = match args.arg_input {
+        Some(path) => {
+            if path == "-" {
+                get_value_from_stdin()?
+            } else {
+                get_value_from_path(path)?
+            }
+        },
+        None => get_value_from_stdin()?,
     };
 
     if value.is_null() {
@@ -201,7 +206,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if value.is_null() {
-        return fail_clierror!("No JSON data found.");
+        return fail_clierror!("All JSON data filtered.");
     }
 
     let first_dict = if value.is_array() {
