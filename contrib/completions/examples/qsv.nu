@@ -411,6 +411,7 @@ module completions {
 
   export extern "qsv headers" [
     --just-names
+    --just-count
     --intersect
     --trim
     --delimiter

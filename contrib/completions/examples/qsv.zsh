@@ -551,6 +551,7 @@ _arguments "${_arguments_options[@]}" : \
 (headers)
 _arguments "${_arguments_options[@]}" : \
 '--just-names[]' \
+'--just-count[]' \
 '--intersect[]' \
 '--trim[]' \
 '--delimiter[]' \

@@ -378,6 +378,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand geocode" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand geocode" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand geocode" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand headers" -l just-names
+complete -c qsv -n "__fish_qsv_using_subcommand headers" -l just-count
 complete -c qsv -n "__fish_qsv_using_subcommand headers" -l intersect
 complete -c qsv -n "__fish_qsv_using_subcommand headers" -l trim
 complete -c qsv -n "__fish_qsv_using_subcommand headers" -l delimiter

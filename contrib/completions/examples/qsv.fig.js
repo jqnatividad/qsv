@@ -1050,6 +1050,9 @@ const completion: Fig.Spec = {
           name: "--just-names",
         },
         {
+          name: "--just-count",
+        },
+        {
           name: "--intersect",
         },
         {
