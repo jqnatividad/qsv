@@ -536,6 +536,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         }
         'qsv;headers' {
             [CompletionResult]::new('--just-names', 'just-names', [CompletionResultType]::ParameterName, 'just-names')
+            [CompletionResult]::new('--just-count', 'just-count', [CompletionResultType]::ParameterName, 'just-count')
             [CompletionResult]::new('--intersect', 'intersect', [CompletionResultType]::ParameterName, 'intersect')
             [CompletionResult]::new('--trim', 'trim', [CompletionResultType]::ParameterName, 'trim')
             [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')

@@ -490,6 +490,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
         }
         &'qsv;headers'= {
             cand --just-names 'just-names'
+            cand --just-count 'just-count'
             cand --intersect 'intersect'
             cand --trim 'trim'
             cand --delimiter 'delimiter'

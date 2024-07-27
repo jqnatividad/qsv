@@ -1092,7 +1092,7 @@ _qsv() {
             return 0
             ;;
         qsv__headers)
-            opts="-h --just-names --intersect --trim --delimiter --help"
+            opts="-h --just-names --just-count --intersect --trim --delimiter --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
