@@ -26,6 +26,7 @@ headers options:
     -j, --just-names       Only show the header names (hide column index).
                            This is automatically enabled if more than one
                            input is given.
+    -J, --just-count       Only show the number of headers.
     --intersect            Shows the intersection of all headers in all of
                            the inputs given.
     --trim                 Trim space & quote characters from header name.
@@ -47,6 +48,7 @@ use crate::{config::Delimiter, util, CliResult};
 struct Args {
     arg_input:       Vec<PathBuf>,
     flag_just_names: bool,
+    flag_just_count: bool,
     flag_intersect:  bool,
     flag_trim:       bool,
     flag_delimiter:  Option<Delimiter>,
@@ -69,25 +71,29 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    let mut wtr: Box<dyn io::Write> = if args.flag_just_names {
+    let mut wtr: Box<dyn io::Write> = if args.flag_just_names || args.flag_just_count {
         Box::new(io::stdout())
     } else {
         Box::new(TabWriter::new(io::stdout()))
     };
-    for (i, header) in headers.iter().enumerate() {
-        if num_inputs == 1 && !args.flag_just_names {
-            write!(&mut wtr, "{}\t", i + 1)?;
+    if args.flag_just_count {
+        write!(wtr, "{}\n", headers.len())?;
+    } else {
+        for (i, header) in headers.iter().enumerate() {
+            if num_inputs == 1 && !args.flag_just_names {
+                write!(&mut wtr, "{}\t", i + 1)?;
+            }
+            if args.flag_trim {
+                wtr.write_all(
+                    std::string::String::from_utf8_lossy(header)
+                        .trim_matches(|c| c == '"' || c == ' ')
+                        .as_bytes(),
+                )?;
+            } else {
+                wtr.write_all(header)?;
+            }
+            wtr.write_all(b"\n")?;
         }
-        if args.flag_trim {
-            wtr.write_all(
-                std::string::String::from_utf8_lossy(header)
-                    .trim_matches(|c| c == '"' || c == ' ')
-                    .as_bytes(),
-            )?;
-        } else {
-            wtr.write_all(header)?;
-        }
-        wtr.write_all(b"\n")?;
     }
     Ok(wtr.flush()?)
 }
