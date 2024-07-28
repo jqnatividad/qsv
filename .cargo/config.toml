@@ -24,8 +24,5 @@ rustflags = ["-C", "link-args=-Wl,-rpath,$ORIGIN"]
 [target.x86_64-apple-darwin]
 rustflags = ["-C", "link-args=-Wl,-rpath,@loader_path", "-C", "target-cpu=native"]
 
-# sadly, we can't do the same for Apple Silicon, since GitHub's macOS action runners
-# are still x86_64, and the Apple Silicon binary is cross-compiled using the
-# macOS Intel runner 
 [target.aarch64-apple-darwin]
 rustflags = ["-C", "link-args=-Wl,-rpath,@loader_path", "-C", "target-cpu=native"]
