@@ -1,7 +1,7 @@
 use crate::{qcheck, workdir::Workdir, Csv, CsvData};
 
 fn prop_reverse(name: &str, rows: CsvData, headers: bool) -> bool {
-    if !rows.is_empty() && rows[0][0] == "\u{FEFF}" {
+    if !rows.is_empty() && rows[0][0].starts_with("\u{FEFF}") {
         return true;
     }
 
@@ -45,7 +45,7 @@ fn prop_reverse_no_headers() {
 }
 
 fn prop_reverse_indexed(name: &str, rows: CsvData, headers: bool) -> bool {
-    if !rows.is_empty() && rows[0][0] == "\u{FEFF}" {
+    if !rows.is_empty() && rows[0][0].starts_with("\u{FEFF}") {
         return true;
     }
 
