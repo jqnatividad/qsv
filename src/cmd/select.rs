@@ -61,6 +61,14 @@ Usage:
     qsv select [options] [--] <selection> [<input>]
     qsv select --help
 
+select arguments:
+    <selection>            The columns to select. 
+                           You can select columns by index, by name, by range, by regex and
+                           any combination of these. If the first character is '!', the
+                           selection will be inverted. If the selection contains embedded
+                           spaces or characters that conflict with selector syntax, it must
+                           be quoted. See examples above.
+
 select options:
 These options only apply to the `select` command, not the `--select` option in other commands.
 
