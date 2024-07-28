@@ -6,9 +6,9 @@ The executed Python has 4 ways to reference cell values (as strings):
   1. Directly by using column name (e.g. amount) as a local variable. If a column
      name has spaces and other special characters, they are replaced with underscores
      (e.g. "unit cost" -> unit_cost, "test-units/sec" -> test_units_sec)
-  2. Indexing cell value by column name as an attribute: row.amount
-  3. Indexing cell value by column name as a key: row["amount"]
-  4. Indexing cell value by column position: row[0]
+  2. Indexing cell value by column name as an attribute: col.amount
+  3. Indexing cell value by column name as a key: col["amount"]
+  4. Indexing cell value by column position: col[0]
 
 Of course, if your input has no headers, then 4. will be the only available
 option.
