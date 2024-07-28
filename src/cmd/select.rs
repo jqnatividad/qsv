@@ -42,12 +42,14 @@ selected using regular expressions.
   $ qsv select 1,4,5-7 --random --seed 42
 
   Select columns using a regex using '/<regex>/':
+  # select columns starting with 'a'
   $ qsv select /^a/
+  # select columns with a digit
   $ qsv select '/^.*\d.*$/'
   # remove SSN, account_no and password columns
   $ qsv select '!/SSN|account_no|password/'
 
-  Re-order and duplicate columns arbitrarily:
+  Re-order and duplicate columns arbitrarily using different types of selectors:
   $ qsv select 3-1,Header3-Header1,Header1,Foo[2],Header1
 
   Quote column names that conflict with selector syntax:
