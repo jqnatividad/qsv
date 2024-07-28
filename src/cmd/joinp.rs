@@ -410,30 +410,14 @@ impl JoinStruct {
             JoinCoalesce::JoinSpecific
         };
 
-        let optimization_state = if self.no_optimizations {
-            // use default optimization state
-            polars::lazy::frame::OptState {
-                new_streaming: self.streaming,
-                ..Default::default()
-            }
-        } else {
-            polars::lazy::frame::OptState {
-                projection_pushdown:  true,
-                predicate_pushdown:   true,
-                cluster_with_columns: true,
-                type_coercion:        true,
-                simplify_expr:        true,
-                file_caching:         true,
-                slice_pushdown:       true,
-                comm_subplan_elim:    true,
-                comm_subexpr_elim:    true,
-                streaming:            false,
-                fast_projection:      true,
-                eager:                false,
-                row_estimate:         true,
-                new_streaming:        self.streaming,
-            }
-        };
+        let mut optimization_state = polars::lazy::frame::OptState::default();
+        if self.streaming {
+            optimization_state |= OptState::NEW_STREAMING;
+        }
+        if self.no_optimizations {
+            optimization_state = OptState::from_bits_truncate(0) | OptState::TYPE_COERCION;
+        }
+
         log::debug!("Optimization state: {optimization_state:?}");
 
         let join_results = if jointype == JoinType::Cross {

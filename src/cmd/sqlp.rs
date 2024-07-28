@@ -188,8 +188,7 @@ sqlp options:
     --streaming               Use streaming mode when parsing CSVs. This will use less memory
                               but will be slower. Only use this when you get out of memory errors.
     --low-memory              Use low memory mode when parsing CSVs. This will use less memory
-                              but will be slower. It will also process LazyFrames in streaming mode.
-                              Only use this when you get out of memory errors.
+                              but will be slower. Only use this when you get out of memory errors.
     --no-optimizations        Disable non-default query optimizations. This will make queries slower.
                               Use this when you get query errors or to force CSV parsing when there
                               is only one input file, no CSV parsing options are used and its not
@@ -264,7 +263,7 @@ use polars::{
     io::avro::{AvroWriter, Compression as AvroCompression},
     prelude::{
         CsvWriter, DataFrame, GzipLevel, IpcCompression, IpcWriter, JsonFormat, JsonWriter,
-        LazyCsvReader, LazyFileListReader, NullValues, ParquetCompression, ParquetWriter,
+        LazyCsvReader, LazyFileListReader, NullValues, OptState, ParquetCompression, ParquetWriter,
         SerWriter, StatisticsOptions, ZstdLevel,
     },
     sql::SQLContext,
@@ -595,31 +594,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         None
     };
 
-    let optimization_state = if args.flag_no_optimizations {
-        // use default optimization state
-        polars::lazy::frame::OptState {
-            file_caching: !args.flag_low_memory,
-            new_streaming: args.flag_low_memory || args.flag_streaming,
-            ..Default::default()
-        }
-    } else {
-        polars::lazy::frame::OptState {
-            projection_pushdown:  true,
-            predicate_pushdown:   true,
-            cluster_with_columns: true,
-            type_coercion:        true,
-            simplify_expr:        true,
-            file_caching:         !args.flag_low_memory,
-            slice_pushdown:       true,
-            comm_subplan_elim:    !args.flag_low_memory,
-            comm_subexpr_elim:    true,
-            streaming:            false,
-            fast_projection:      true,
-            eager:                false,
-            row_estimate:         true,
-            new_streaming:        args.flag_low_memory || args.flag_streaming,
-        }
-    };
+    let mut optimization_state = polars::lazy::frame::OptState::default();
+    optimization_state |= OptState::PROJECTION_PUSHDOWN
+        | OptState::PREDICATE_PUSHDOWN
+        | OptState::CLUSTER_WITH_COLUMNS
+        | OptState::TYPE_COERCION
+        | OptState::SIMPLIFY_EXPR
+        | OptState::FILE_CACHING
+        | OptState::SLICE_PUSHDOWN
+        | OptState::COMM_SUBEXPR_ELIM
+        | OptState::FAST_PROJECTION
+        | OptState::ROW_ESTIMATE;
+
+    if args.flag_streaming {
+        optimization_state |= OptState::NEW_STREAMING;
+    }
 
     // check if the input is a SQL script (ends with .sql)
     let is_sql_script = std::path::Path::new(&args.arg_sql)

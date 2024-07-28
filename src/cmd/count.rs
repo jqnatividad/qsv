@@ -178,7 +178,11 @@ pub fn polars_count_input(
     conf: &Config,
     low_memory: bool,
 ) -> Result<(u64, usize), crate::clitypes::CliError> {
-    use polars::{lazy::frame::LazyFrame, prelude::*, sql::SQLContext};
+    use polars::{
+        lazy::frame::{LazyFrame, OptState},
+        prelude::*,
+        sql::SQLContext,
+    };
 
     log::info!("using polars");
 
@@ -236,22 +240,17 @@ pub fn polars_count_input(
                 return Ok((count_regular, 0));
             },
         };
-        let optimization_state = polars::lazy::frame::OptState {
-            projection_pushdown:  true,
-            predicate_pushdown:   true,
-            cluster_with_columns: true,
-            type_coercion:        true,
-            simplify_expr:        true,
-            file_caching:         true,
-            slice_pushdown:       true,
-            comm_subplan_elim:    false,
-            comm_subexpr_elim:    true,
-            streaming:            false,
-            fast_projection:      true,
-            eager:                false,
-            row_estimate:         true,
-            new_streaming:        true,
-        };
+        let mut optimization_state = OptState::default();
+        optimization_state |= OptState::PROJECTION_PUSHDOWN
+            | OptState::PREDICATE_PUSHDOWN
+            | OptState::CLUSTER_WITH_COLUMNS
+            | OptState::TYPE_COERCION
+            | OptState::SIMPLIFY_EXPR
+            | OptState::FILE_CACHING
+            | OptState::SLICE_PUSHDOWN
+            | OptState::COMM_SUBEXPR_ELIM
+            | OptState::FAST_PROJECTION
+            | OptState::NEW_STREAMING;
         ctx.register("sql_lf", lazy_df.with_optimizations(optimization_state));
         "SELECT COUNT(*) FROM sql_lf".to_string()
     };
