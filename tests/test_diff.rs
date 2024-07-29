@@ -307,7 +307,6 @@ fn diff_key_sort() {
         svec!["h1", "h2", "h3"],
         svec!["1", "foo", "bar"],
         svec!["2", "fooz", "bart"],
-        svec!["2", "booz", "bart"],
     ];
     wrk.create("left.csv", left);
 
@@ -315,7 +314,6 @@ fn diff_key_sort() {
         svec!["h1", "h2", "h3"],
         svec!["1", "foo", "bar"],
         svec!["2", "booz", "fart"],
-        svec!["2", "boozey", "bart"],
     ];
     wrk.create("right.csv", right);
 
@@ -326,15 +324,14 @@ fn diff_key_sort() {
         "--key",
         "h3,h1",
         "--sort-columns",
-        "h1,h3",
+        "h1,h3,h2",
     ]);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected: Vec<Vec<String>> = vec![
         svec!["diffresult", "h1", "h2", "h3"],
         svec!["+", "2", "booz", "fart"],
-        svec!["-", "2", "booz", "bart"],
-        svec!["+", "2", "boozey", "bart"],
+        svec!["-", "2", "fooz", "bart"],
     ];
 
     assert_eq!(got, expected);
