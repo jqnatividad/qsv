@@ -276,7 +276,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut final_csv_wtr = config::Config::new(&args.flag_output).writer()?;
     final_csv_wtr.write_record(sel.iter().map(|&i| &byteheaders[i]))?;
     while intermediate_csv_rdr.read_byte_record(&mut record)? {
-        final_csv_wtr.write_record(sel.iter().map(|&i| &record[i]))?;
+        if !record.is_empty() {
+            final_csv_wtr.write_record(sel.iter().map(|&i| &record[i]))?;
+        }
     }
 
     Ok(final_csv_wtr.flush()?)
