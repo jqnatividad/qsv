@@ -28,7 +28,7 @@ number of transformed columns with the --rename option is the same. e.g.:
 
  $ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv
 
-It has 36 supported operations:
+It has 38 supported operations:
 
   * len: Return string length
   * lower: Transform to lowercase
@@ -44,6 +44,8 @@ It has 36 supported operations:
   * strip_prefix: Removes specified prefix in --comparand
   * strip_suffix: Remove specified suffix in --comparand
   * escape - escape (Rust escape_default)
+  * encode62: base62 encode
+  * decode62: base62 decode
   * encode64: base64 encode
   * decode64: base64 decode
   * replace: Replace all matches of a pattern (using --comparand)
@@ -128,10 +130,9 @@ Convert the USD_Price to PHP_Price using the currency symbol "PHP" with a conver
 
   $ qsv apply operations numtocurrency USD_Price -C PHP -R 60 -c PHP_Price file.csv
 
-Base64 encode the plaintext_col column and save the encoded value into new column named encoded_col
-and then decode it.
+Base64 encode the text_col column & save the encoded value into new column named encoded & decode it.
 
-  $ qsv apply operations encode plaintext_col -c encoded_col file.csv | qsv apply operations decode encode_col
+  $ qsv apply operations encode64 text_col -c encoded file.csv | qsv apply operations decode64 encoded
 
 Compute the Normalized Damerau-Levenshtein similarity of the neighborhood column to the string 'Roxbury'
 and save it to a new column named dln_roxbury_score.
@@ -299,6 +300,7 @@ Common options:
 
 use std::{str::FromStr, sync::OnceLock};
 
+use base62;
 use censor::{Censor, Sex, Zealous};
 use cpc::{eval, units::Unit};
 use data_encoding::BASE64;
@@ -344,8 +346,10 @@ enum Operations {
     Censor_Count,
     Copy,
     Currencytonum,
-    Decode,
-    Encode,
+    Decode62,
+    Decode64,
+    Encode62,
+    Encode64,
     Escape,
     Eudex,
     Gender_Guess,
@@ -998,16 +1002,28 @@ fn apply_operations(
             Operations::Mrtrim => {
                 *cell = String::from(cell.trim_end_matches(comparand));
             },
-            Operations::Encode => {
+            Operations::Encode64 => {
                 *cell = BASE64.encode(cell.as_bytes());
             },
-            Operations::Decode => {
+            Operations::Decode64 => {
                 let mut output = vec![0; BASE64.decode_len(cell.len()).unwrap_or_default()];
                 *cell = match BASE64.decode_mut(cell.as_bytes(), &mut output) {
                     Ok(len) => simdutf8::basic::from_utf8(&output[0..len])
                         .unwrap_or_default()
                         .to_owned(),
-                    Err(e) => format!("decoding error: {e:?}"),
+                    Err(e) => format!("decoding64 error: {e:?}"),
+                };
+            },
+            Operations::Encode62 => {
+                *cell = match cell.parse::<u128>() {
+                    Ok(num) => base62::encode(num),
+                    Err(e) => format!("encode62 error: {e:?}"),
+                };
+            },
+            Operations::Decode62 => {
+                *cell = match base62::decode(cell.as_str()) {
+                    Ok(decoded) => decoded.to_string(),
+                    Err(e) => format!("decode62 error: {e:?}"),
                 };
             },
             Operations::Gender_Guess => {
