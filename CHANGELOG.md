@@ -15,8 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `searchset`: add `--not-one` flag by @rzmk in https://github.com/jqnatividad/qsv/pull/1994
 * Added `.ssv` (semicolon separated values) automatic support https://github.com/jqnatividad/qsv/pull/1987
 * Added cargo deb compatibility by @tino097 in https://github.com/jqnatividad/qsv/pull/1991
-* `contrib(completions)`: add `--select` for `json` by @rzmk in https://github.com/jqnatividad/qsv/pull/1992
 * `contrib(completions)`: add `--just-count` for `headers` by @rzmk in https://github.com/jqnatividad/qsv/pull/2006
+* `contrib(completions)`: add `--select` for `json` by @rzmk in https://github.com/jqnatividad/qsv/pull/1992
 * added several benchmarks
 * added more tests
 
@@ -27,15 +27,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `validate`: return delimiter detected upon successful CSV validation https://github.com/jqnatividad/qsv/pull/1977
 * bump polars to latest upstream at py-polars-1.3.0 tag https://github.com/jqnatividad/qsv/pull/2009
 * deps: bump csvs_convert from 0.8.12 to 0.8.13 https://github.com/jqnatividad/qsv/commit/d1d08009deb0579fd4d6fe305097e00e92da4191
-* build(deps): bump tokio from 1.38.0 to 1.38.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1973
-* build(deps): bump pyo3 from 0.22.1 to 0.22.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1979
-* build(deps): bump simple-expand-tilde from 0.1.7 to 0.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1984
 * build(deps): bump cached from 0.52.0 to 0.53.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1983
-* build(deps): bump postgres from 0.19.7 to 0.19.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1985
 * build(deps): bump cached from 0.53.0 to 0.53.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1986
-* build(deps): bump tokio from 1.38.1 to 1.39.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1988
+* build(deps): bump postgres from 0.19.7 to 0.19.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/1985
+* build(deps): bump pyo3 from 0.22.1 to 0.22.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1979
 * build(deps): bump redis from 0.25.4 to 0.26.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1995
 * build(deps): bump serde_json from 1.0.120 to 1.0.121 by @dependabot in https://github.com/jqnatividad/qsv/pull/2011
+* build(deps): bump simple-expand-tilde from 0.1.7 to 0.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1984
+* build(deps): bump tokio from 1.38.0 to 1.38.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1973
+* build(deps): bump tokio from 1.38.1 to 1.39.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1988
 * build(deps): bump xxhash-rust from 0.8.11 to 0.8.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1997
 * apply select clippy suggestions
 * updated several indirect dependencies
