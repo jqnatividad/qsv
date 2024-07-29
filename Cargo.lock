@@ -1110,7 +1110,7 @@ checksum = "ade8366b8bd5ba243f0a58f036cc0ca8a2f069cff1a2351ef1cac6b083e16fc0"
 [[package]]
 name = "calamine"
 version = "0.25.0"
-source = "git+https://github.com/tafia/calamine?rev=59fd7a6#59fd7a619e7b06fee1f73b0616b02c4de651f1f5"
+source = "git+https://github.com/tafia/calamine?rev=a90e877#a90e877aed7984fca28b9925110b5c42d48bf4e7"
 dependencies = [
  "byteorder",
  "chrono",
@@ -2576,9 +2576,9 @@ dependencies = [
 [[package]]
 name = "grex"
 version = "1.4.5"
-source = "git+https://github.com/pemistahl/grex?rev=0c8ab87#0c8ab8764e799e5057f9d21ca85182387b263015"
+source = "git+https://github.com/pemistahl/grex?rev=af059db#af059db81f4582cba8299c10c67a2f5903ae81ed"
 dependencies = [
- "itertools 0.12.1",
+ "itertools 0.13.0",
  "lazy_static",
  "ndarray",
  "petgraph",
