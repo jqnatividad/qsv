@@ -907,6 +907,7 @@ Self-update only works with prebuilt binaries released on GitHub https://github.
 
 #[cfg(not(feature = "self_update"))]
 pub const fn qsv_check_for_update(_check_only: bool, _no_confirm: bool) -> Result<bool, String> {
+    winfo!("Self-update is disabled in this build.");
     Ok(true)
 }
 
