@@ -12,6 +12,8 @@ fn json_array_simple() {
     let mut cmd = wrk.command("json");
     cmd.arg("data.json");
 
+    wrk.assert_success(&mut cmd);
+
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["id", "father", "mother", "oldest_child", "boy"],
@@ -90,6 +92,8 @@ fn json_object_select_column_output() {
     let mut cmd = wrk.command("json");
     cmd.args(["--select", "id,mother,oldest_child,father"])
         .arg("data.json");
+
+    wrk.assert_success(&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
