@@ -6,23 +6,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.130.0] - 2024-07-24
+## [0.130.0] - 2024-07-29
 
 ### Added
+* `apply`: add base62 encode/decode operations https://github.com/jqnatividad/qsv/pull/2013
+* `headers`: add `--just-count` option https://github.com/jqnatividad/qsv/pull/2004
 * `json`: add `--select` option https://github.com/jqnatividad/qsv/pull/1990
 * `searchset`: add `--not-one` flag by @rzmk in https://github.com/jqnatividad/qsv/pull/1994
-* Added`.ssv` (semicolon separated values) automatic support https://github.com/jqnatividad/qsv/pull/1987
+* Added `.ssv` (semicolon separated values) automatic support https://github.com/jqnatividad/qsv/pull/1987
 * Added cargo deb compatibility by @tino097 in https://github.com/jqnatividad/qsv/pull/1991
 * `contrib(completions)`: add `--select` for `json` by @rzmk in https://github.com/jqnatividad/qsv/pull/1992
+* `contrib(completions)`: add `--just-count` for `headers` by @rzmk in https://github.com/jqnatividad/qsv/pull/2006
 * added several benchmarks
 * added more tests
 
 ### Changed
+* `diff`: allow selection of `--key` and `--sort-columns` by name, not just by index https://github.com/jqnatividad/qsv/pull/2010
 * `fetch` & `fetchpost`: replace deprecated Redis execute command https://github.com/jqnatividad/qsv/commit/75cbe2b76426591e4658fdcb7d29287a40a7db36
 * `stats`: more intelligent `--infer-len`option https://github.com/jqnatividad/qsv/commit/c6a0e641cd4c6ef87c070c8944f32a962a11c7e3
 * `validate`: return delimiter detected upon successful CSV validation https://github.com/jqnatividad/qsv/pull/1977
+* bump polars to latest upstream at py-polars-1.3.0 tag https://github.com/jqnatividad/qsv/pull/2009
 * deps: bump csvs_convert from 0.8.12 to 0.8.13 https://github.com/jqnatividad/qsv/commit/d1d08009deb0579fd4d6fe305097e00e92da4191
-* deps: use latest polars upstream with unreleased fixes/features https://github.com/jqnatividad/qsv/commit/604ffa0ba131657a8dfbd9ac7fde953c241a9f2d
 * build(deps): bump tokio from 1.38.0 to 1.38.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1973
 * build(deps): bump pyo3 from 0.22.1 to 0.22.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/1979
 * build(deps): bump simple-expand-tilde from 0.1.7 to 0.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1984
@@ -31,12 +35,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * build(deps): bump cached from 0.53.0 to 0.53.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1986
 * build(deps): bump tokio from 1.38.1 to 1.39.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/1988
 * build(deps): bump redis from 0.25.4 to 0.26.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/1995
+* build(deps): bump serde_json from 1.0.120 to 1.0.121 by @dependabot in https://github.com/jqnatividad/qsv/pull/2011
+* build(deps): bump xxhash-rust from 0.8.11 to 0.8.12 by @dependabot in https://github.com/jqnatividad/qsv/pull/1997
 * apply select clippy suggestions
 * updated several indirect dependencies
 * made various usage text improvements
+* pin Rust nightly to 2024-07-26
 
 ### Fixed
+* `diff`: clarify `--key` usage examples, resolves #1998 by @rzmk in https://github.com/jqnatividad/qsv/pull/2001
 * `json`: refactored so it didn't need to use threads to spawn `qsv select` to order the columns. Had to do this as sometimes intermediate output was sent to stdout before the final output was ready https://github.com/jqnatividad/qsv/commit/0f25deff98139b574dfd61c6e9bf58d36ea16618
+* `py`: replace row with col in usage text by @allen-chin in https://github.com/jqnatividad/qsv/pull/2008
+* `reverse`: fix indexed bug by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2007
 * `validate`: properly auto-detect tab delimiter when file extension is TSV or TAB https://github.com/jqnatividad/qsv/pull/1975
 * fix panic when process_input helper fn receives unexpected input from stdin https://github.com/jqnatividad/qsv/commit/152fec486c0e7b16242f3967930e9654ff2bdf3c
 
@@ -45,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## New Contributors
 * @tino097 made their first contribution in https://github.com/jqnatividad/qsv/pull/1991
+* @allen-chin made their first contribution in https://github.com/jqnatividad/qsv/pull/2008
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.129.1...0.130.0
 
