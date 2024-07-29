@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.130.0] - 2024-07-29
 
+Following the [0.129.0 release - the largest release ever](https://github.com/jqnatividad/qsv/releases/tag/0.129.0), 0.130.0 continues to polish qsv as a data-wrangling engine, packing new features, fixes, and improvements, previewing upcoming features in qsv pro 1.0. Here are a few highlights:
+
+### Highlights
+- Added `.ssv` (semicolon separated values) automatic support. Semicolon separated values are now automatically detected and supported by qsv. Though not as common as CSV, SSV is used in some regions and industries, so qsv now supports it.
+- Added cargo deb compatibility. In preparation for the release of [DataPusher+ 1.0](https://github.com/dathere/datapusher-plus/tree/master), we're now making it easier to upgrade `qsvdp` so [CKAN](https://ckan.org) administrators can install and upgrade it more easily, using `apt-get install qsvdp` or `apt-get upgrade qsvdp`.   
+DP+ is our next-gen, high-speed data ingestion tool for CKAN. Its not only a robust, fast, validating data pump that guarantees high quality data, it also does extended analysis to infer and derive high-quality metadata - what we call "[automagical metadata](https://dathere.com/2023/11/automagical-metadata/)".  
+- Upgraded to the latest Polars upstream at the [py-polars-1.3.0](https://github.com/pola-rs/polars/releases/tag/py-1.3.0) tag. [Polars tops the TPC-H Benchmark](https://pola.rs/posts/benchmarks/) and is several orders of magnitude faster than traditional dataframe libraries (cough - pandas). qsv proudly rides the Polars bear to get subsecond response times even with very large datasets!
+
 ### Added
 * `apply`: add base62 encode/decode operations https://github.com/jqnatividad/qsv/pull/2013
 * `headers`: add `--just-count` option https://github.com/jqnatividad/qsv/pull/2004
@@ -58,6 +66,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * @allen-chin made their first contribution in https://github.com/jqnatividad/qsv/pull/2008
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.129.1...0.130.0
+
+---
+
+To stay updated with datHere's latest news and updates (including [qsv pro](https://qsvpro.dathere.com), [datHere's CKAN DMS](https://dathere.com/ckan-dms/), and [analyze.dathere.com](https://analyze.dathere.com)), subscribe to the newsletter here: [dathere.com/newsletter](https://dathere.com/newsletter/)
 
 ## [0.129.0] - 2024-07-14
 
