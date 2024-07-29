@@ -189,7 +189,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     .collect::<Result<Vec<usize>, _>>()?;
 
                 if left_key_indices != right_key_indices {
-                    return fail_clierror!("Column names on left and right CSVs do not match");
+                    return fail_incorrectusage_clierror!(
+                        "Column names on left and right CSVs do not match. You can resolve this \
+                         by using `qsv select` to reorder the columns on the right CSV to match \
+                         the order of the left CSV."
+                    );
                 }
                 left_key_indices
             }
