@@ -225,7 +225,84 @@ fn apply_ops_upper_index_params() {
 }
 
 #[test]
-fn apply_ops_encode() {
+fn apply_ops_encode62() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["hash", "encoded_hash"],
+            svec!["3824660653605227303", "4YWz9bdwJXT"],
+            svec!["1851770582521928574", "2Cn7zXlsIM2"],
+            svec!["7916590694040213670", "9Qo4IeFuLyQ"],
+            svec!["10903434754618017012", "CzRqVIpxoUG"],
+            svec!["7671262618974725285", "98gSmJMD1XB"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("decode62")
+        .arg("2")
+        .arg("--new-column")
+        .arg("decoded_hash")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["hash", "encoded_hash", "decoded_hash"],
+        svec!["3824660653605227303", "4YWz9bdwJXT", "3824660653605227303"],
+        svec!["1851770582521928574", "2Cn7zXlsIM2", "1851770582521928574"],
+        svec!["7916590694040213670", "9Qo4IeFuLyQ", "7916590694040213670"],
+        svec![
+            "10903434754618017012",
+            "CzRqVIpxoUG",
+            "10903434754618017012"
+        ],
+        svec!["7671262618974725285", "98gSmJMD1XB", "7671262618974725285"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_decode62() {
+    let wrk = Workdir::new("apply");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["hash"],
+            svec!["3824660653605227303"],
+            svec!["1851770582521928574"],
+            svec!["7916590694040213670"],
+            svec!["10903434754618017012"],
+            svec!["7671262618974725285"],
+            svec!["this should cause an error"],
+        ],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("encode62")
+        .arg("1")
+        .arg("--new-column")
+        .arg("encoded_hash")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["hash", "encoded_hash"],
+        svec!["3824660653605227303", "4YWz9bdwJXT"],
+        svec!["1851770582521928574", "2Cn7zXlsIM2"],
+        svec!["7916590694040213670", "9Qo4IeFuLyQ"],
+        svec!["10903434754618017012", "CzRqVIpxoUG"],
+        svec!["7671262618974725285", "98gSmJMD1XB"],
+        svec![
+            "this should cause an error",
+            "encode62 error: ParseIntError { kind: InvalidDigit }"
+        ],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn apply_ops_encode64() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
@@ -252,7 +329,7 @@ fn apply_ops_encode() {
     );
     let mut cmd = wrk.command("apply");
     cmd.arg("operations")
-        .arg("encode")
+        .arg("encode64")
         .arg("surname")
         .arg("--new-column")
         .arg("encoded_surname")
@@ -277,7 +354,7 @@ fn apply_ops_encode() {
 }
 
 #[test]
-fn apply_ops_decode() {
+fn apply_ops_decode64() {
     let wrk = Workdir::new("apply");
     wrk.create(
         "data.csv",
@@ -297,7 +374,7 @@ fn apply_ops_decode() {
     );
     let mut cmd = wrk.command("apply");
     cmd.arg("operations")
-        .arg("decode")
+        .arg("decode64")
         .arg("encoded_surname")
         .arg("--new-column")
         .arg("decoded_surname")
