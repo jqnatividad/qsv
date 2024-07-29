@@ -62,15 +62,25 @@ diff options:
     --delimiter-output <arg>    The field delimiter for writing the CSV diff result.
                                 Must be a single character. (default: ,)
     -k, --key <arg...>          The column indices that uniquely identify a record
-                                as a comma separated list of indices, e.g. 0,1,2.
+                                as a comma separated list of indices, e.g. 0,1,2
+                                or column names, e.g. name,age.
+                                Note that when selecting columns by name, only the 
+                                left CSV's headers are used to match the column names
+                                and it is assumed that the right CSV has the same
+                                selected column names in the same order as the left CSV.
                                 (default: 0)
     --sort-columns <arg...>     The column indices by which the diff result should be
-                                sorted as a comma separated list of indices, e.g. 0,1,2.
+                                sorted as a comma separated list of indices, e.g. 0,1,2
+                                or column names, e.g. name,age.
                                 Records in the diff result that are marked as "modified"
                                 ("delete" and "add" records that have the same key,
                                 but have different content) will always be kept together
                                 in the sorted diff result and so won't be sorted
                                 independently from each other.
+                                Note that when selecting columns by name, only the 
+                                left CSV's headers are used to match the column names
+                                and it is assumed that the right CSV has the same
+                                selected column names in the same order as the left CSV.
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number
                                 of CPUs detected.
@@ -128,30 +138,99 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
     }
 
-    let primary_key_cols = match args.flag_key {
+    let mut csv_rdr_left = rconfig_left.reader()?;
+    let mut csv_rdr_right = rconfig_right.reader()?;
+
+    let headers_left = csv_rdr_left.byte_headers()?;
+    let headers_right = csv_rdr_right.byte_headers()?;
+
+    let primary_key_cols: Vec<usize> = match args.flag_key {
         None => vec![0],
-        Some(s) => s
-            .split(',')
-            .map(str::parse::<usize>)
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|err| CliError::Other(err.to_string()))?,
+        Some(s) => {
+            // check if the key is a comma separated list of numbers
+            if s.chars().all(|c: char| c.is_numeric() || c == ',') {
+                s.split(',')
+                    .map(str::parse::<usize>)
+                    .collect::<Result<Vec<_>, _>>()
+                    .map_err(|err| CliError::Other(err.to_string()))?
+            } else {
+                // check if the key is a comma separated list of column names
+                let left_key_indices = s
+                    .split(',')
+                    .enumerate()
+                    .map(|(index, col_name)| {
+                        headers_left
+                            .iter()
+                            .position(|h| h == col_name.as_bytes())
+                            .ok_or_else(|| {
+                                CliError::Other(format!(
+                                    "Column name '{col_name}' not found on left CSV"
+                                ))
+                            })
+                            .map(|pos| pos + index + 1)
+                    })
+                    .collect::<Result<Vec<usize>, _>>()?;
+
+                // now check if the right CSV has the same selected column names in the same order
+                let right_key_indices = s
+                    .split(',')
+                    .enumerate()
+                    .map(|(index, col_name)| {
+                        headers_right
+                            .iter()
+                            .position(|h| h == col_name.as_bytes())
+                            .ok_or_else(|| {
+                                CliError::Other(format!(
+                                    "Column name '{col_name}' not found on right CSV"
+                                ))
+                            })
+                            .map(|pos| pos + index + 1)
+                    })
+                    .collect::<Result<Vec<usize>, _>>()?;
+
+                if left_key_indices != right_key_indices {
+                    return fail_clierror!("Column names on left and right CSVs do not match");
+                }
+                left_key_indices
+            }
+        },
     };
 
     let sort_cols = args
         .flag_sort_columns
         .map(|s| {
-            s.split(',')
-                .map(str::parse::<usize>)
-                .collect::<Result<Vec<_>, _>>()
-                .map_err(|err| CliError::Other(err.to_string()))
+            // check if the sort columns are a comma separated list of numbers
+            if s.chars().all(|c: char| c.is_numeric() || c == ',') {
+                s.split(',')
+                    .map(str::parse::<usize>)
+                    .collect::<Result<Vec<_>, _>>()
+                    .map_err(|err| CliError::Other(err.to_string()))
+            } else {
+                // check if the sort columns is a comma separated list of column names
+                let left_sort_indices = s
+                    .split(',')
+                    .enumerate()
+                    .map(|(index, col_name)| {
+                        headers_left
+                            .iter()
+                            .position(|h| h == col_name.as_bytes())
+                            .ok_or_else(|| {
+                                CliError::Other(format!(
+                                    "Column name '{col_name}' not found on left CSV"
+                                ))
+                            })
+                            .map(|pos| pos + index + 1)
+                    })
+                    .collect::<Result<Vec<usize>, _>>()?;
+
+                Ok(left_sort_indices)
+            }
         })
         .transpose()?;
 
     let wtr = Config::new(&args.flag_output)
         .delimiter(args.flag_delimiter_output)
         .writer()?;
-    let csv_rdr_left = rconfig_left.reader()?;
-    let csv_rdr_right = rconfig_right.reader()?;
 
     // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
