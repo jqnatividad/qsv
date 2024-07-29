@@ -171,7 +171,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     })
                     .collect::<Result<Vec<usize>, _>>()?;
 
-                // now check if the right CSV has the same selected column names in the same order
+                // now check if the right CSV has the same selected colnames in the same locations
                 let right_key_indices = s
                     .split(',')
                     .enumerate()
@@ -190,9 +190,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                 if left_key_indices != right_key_indices {
                     return fail_incorrectusage_clierror!(
-                        "Column names on left and right CSVs do not match. You can resolve this \
-                         by using `qsv select` to reorder the columns on the right CSV to match \
-                         the order of the left CSV."
+                        "Column names on left and right CSVs do not match.\nUse `qsv select` to \
+                         reorder the columns on the right CSV to match the order of the left \
+                         CSV.\nThe key column indices on the left CSV are in index \
+                         locations:\n{left_key_indices:?}\nand on the right CSV \
+                         are:\n{right_key_indices:?}",
                     );
                 }
                 left_key_indices
