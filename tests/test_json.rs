@@ -1,6 +1,9 @@
+use serial_test::serial;
+
 use crate::workdir::Workdir;
 
 #[test]
+#[serial]
 fn json_array_simple() {
     let wrk = Workdir::new("json_array_simple");
     wrk.create_from_string(
@@ -25,6 +28,7 @@ fn json_array_simple() {
 }
 
 #[test]
+#[serial]
 fn json_array_empty() {
     let wrk = Workdir::new("json_array_empty");
     wrk.create_from_string("data.json", r#"[]"#);
@@ -40,6 +44,7 @@ fn json_array_empty() {
 }
 
 #[test]
+#[serial]
 fn json_array_first_object_empty() {
     let wrk = Workdir::new("json_array_first_object_empty");
     wrk.create_from_string("data.json", r#"[{}]"#);
@@ -55,6 +60,7 @@ fn json_array_first_object_empty() {
 }
 
 #[test]
+#[serial]
 fn json_random() {
     let wrk = Workdir::new("json_random");
     wrk.create_from_string("data.json", "some random text");
@@ -71,6 +77,7 @@ fn json_random() {
 }
 
 #[test]
+#[serial]
 fn json_object_simple() {
     let wrk = Workdir::new("json_object_simple");
     wrk.create_from_string(
@@ -91,6 +98,7 @@ fn json_object_simple() {
 }
 
 #[test]
+#[serial]
 fn json_object_select_column_output() {
     let wrk = Workdir::new("json_object_select_column_output");
     wrk.create_from_string(
@@ -112,6 +120,7 @@ fn json_object_select_column_output() {
 }
 
 #[test]
+#[serial]
 fn json_object_select_column_output_reverse() {
     let wrk = Workdir::new("json_object_select_column_output_reverse");
     wrk.create_from_string(
@@ -138,6 +147,7 @@ fn json_object_select_column_output_reverse() {
 }
 
 #[test]
+#[serial]
 fn json_object_empty() {
     let wrk = Workdir::new("json_object_empty");
     wrk.create_from_string("data.json", r#"{}"#);
@@ -153,6 +163,7 @@ fn json_object_empty() {
 }
 
 #[test]
+#[serial]
 fn json_fruits_stats() {
     let wrk = Workdir::new("json_fruits_stats");
     wrk.create_from_string(
@@ -172,6 +183,7 @@ price,Float,,7,1.5,3.0,1.5,4,4,2.3333,0.6236,0.3889,0,1,0"#.to_string();
 }
 
 #[test]
+#[serial]
 // Verify that qsv stats fruits.csv has the same content as
 // qsv stats fruits.csv | qsv slice --json | qsv json
 fn json_fruits_stats_slice_json() {
@@ -181,6 +193,9 @@ fn json_fruits_stats_slice_json() {
     // qsv stats fruits.csv
     let mut stats_cmd = wrk.command("stats");
     stats_cmd.arg(test_file);
+
+    wrk.assert_success(&mut stats_cmd);
+
     let stats_output: String = wrk.stdout(&mut stats_cmd);
     wrk.create_from_string("stats.csv", stats_output.as_str());
 
@@ -188,20 +203,25 @@ fn json_fruits_stats_slice_json() {
     let mut slice_cmd = wrk.command("slice");
     slice_cmd.arg("stats.csv");
     slice_cmd.arg("--json");
+
+    wrk.assert_success(&mut slice_cmd);
+
     let slice_output: String = wrk.stdout(&mut slice_cmd);
     wrk.create_from_string("slice.json", slice_output.as_str());
 
     // qsv json
     let mut json_cmd = wrk.command("json");
     json_cmd.arg("slice.json");
-    let json_output: String = wrk.stdout(&mut json_cmd);
 
     wrk.assert_success(&mut json_cmd);
+
+    let json_output: String = wrk.stdout(&mut json_cmd);
 
     assert_eq!(stats_output, json_output);
 }
 
 #[test]
+#[serial]
 // Verify that qsv stats House.csv has the same content as
 // qsv stats House.csv | qsv slice --json | qsv json
 fn json_house_stats_slice_json() {
@@ -232,6 +252,7 @@ fn json_house_stats_slice_json() {
 }
 
 #[test]
+#[serial]
 // Verify that House.csv has the same content as
 // qsv slice House.csv --json | qsv json
 // according to qsv diff
@@ -274,6 +295,7 @@ fn json_house_diff() {
 }
 
 #[test]
+#[serial]
 fn json_nested() {
     let wrk = Workdir::new("json_nested");
     let json_data = serde_json::json!({
