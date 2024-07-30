@@ -31,6 +31,8 @@ fn json_array_empty() {
     let mut cmd = wrk.command("json");
     cmd.arg("data.json");
 
+    wrk.assert_err(&mut cmd);
+
     let got = wrk.output_stderr(&mut cmd);
     let expected = "Expected an array of objects in JSON\n".to_string();
 
@@ -44,6 +46,8 @@ fn json_array_first_object_empty() {
     let mut cmd = wrk.command("json");
     cmd.arg("data.json");
 
+    wrk.assert_err(&mut cmd);
+
     let got = wrk.output_stderr(&mut cmd);
     let expected = "Expected a non-empty JSON object\n".to_string();
 
@@ -56,6 +60,8 @@ fn json_random() {
     wrk.create_from_string("data.json", "some random text");
     let mut cmd = wrk.command("json");
     cmd.arg("data.json");
+
+    wrk.assert_err(&mut cmd);
 
     let got = wrk.output_stderr(&mut cmd);
     let expected =
@@ -73,6 +79,8 @@ fn json_object_simple() {
     );
     let mut cmd = wrk.command("json");
     cmd.arg("data.json");
+
+    wrk.assert_success(&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -119,6 +127,8 @@ fn json_object_select_column_output_reverse() {
     cmd.args(["--select", "boy,oldest_child,mother,father,id"])
         .arg("data.json");
 
+    wrk.assert_success(&mut cmd);
+
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["boy", "oldest_child", "mother", "father", "id"],
@@ -133,6 +143,8 @@ fn json_object_empty() {
     wrk.create_from_string("data.json", r#"{}"#);
     let mut cmd = wrk.command("json");
     cmd.arg("data.json");
+
+    wrk.assert_err(&mut cmd);
 
     let got = wrk.output_stderr(&mut cmd);
     let expected = "Expected a non-empty JSON object\n".to_string();
@@ -184,6 +196,8 @@ fn json_fruits_stats_slice_json() {
     json_cmd.arg("slice.json");
     let json_output: String = wrk.stdout(&mut json_cmd);
 
+    wrk.assert_success(&mut json_cmd);
+
     assert_eq!(stats_output, json_output);
 }
 
@@ -212,6 +226,8 @@ fn json_house_stats_slice_json() {
     json_cmd.arg("slice.json");
     let json_output: String = wrk.stdout(&mut json_cmd);
 
+    wrk.assert_success(&mut json_cmd);
+
     assert_eq!(stats_output, json_output);
 }
 
@@ -239,6 +255,7 @@ fn json_house_diff() {
     // qsv json
     let mut json_cmd = wrk.command("json");
     json_cmd.arg("slice.json");
+    wrk.assert_success(&mut json_cmd);
     let json_output: String = wrk.stdout(&mut json_cmd);
     wrk.create_from_string("House2.csv", json_output.as_str());
 
@@ -277,6 +294,8 @@ fn json_nested() {
     let mut cmd = wrk.command("json");
     cmd.arg("data.json");
     cmd.args(vec!["--jaq", filter]);
+
+    wrk.assert_success(&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
