@@ -92,10 +92,7 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
 "#;
 
-use std::{
-    env,
-    io::{Read, Write},
-};
+use std::{env, io::Read};
 
 use jaq_interpret::{Ctx, FilterT, ParseCtx, RcIter, Val};
 use json_objects_to_csv::{flatten_json_object::Flattener, Json2Csv};
@@ -224,36 +221,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         first_dict_headers.push(key.as_str());
     }
 
-    let empty_values = vec![serde_json::Value::Null; 1];
-    let values = if value.is_array() {
-        value.as_array().unwrap_or(&empty_values)
-    } else {
-        &vec![value.clone()]
-    };
-
     // STEP 1: create an intermediate CSV tempfile from the JSON data
     // we need to do this so we can use qsv select to reorder headers to first dict's keys order
     // as the order of the headers in the CSV file is not guaranteed to be the same as the order of
     // the keys in the JSON object
     let temp_dir = env::temp_dir();
-    let intermediate_csv = temp_dir.join("intermediate.csv");
+    let intermediate_csv = temp_dir
+        .join("intermediate.csv")
+        .to_string_lossy()
+        .into_owned();
 
-    // convert JSON to CSV and store it in output_buf
-    let flattener = Flattener::new();
+    // convert JSON to CSV
+    // its inside a block so all the unneeded resources are freed & flushed after the block ends
     {
-        let mut output_buf = Vec::<u8>::new();
-        let csv_buf_writer = csv::WriterBuilder::new().from_writer(&mut output_buf);
+        let empty_values = vec![serde_json::Value::Null; 1];
+        let values = if value.is_array() {
+            value.as_array().unwrap_or(&empty_values)
+        } else {
+            &vec![value.clone()]
+        };
 
-        Json2Csv::new(flattener).convert_from_array(values, csv_buf_writer)?;
-
-        // now write output_buf to intermediate_csv
-        let intermediate_csv_file = std::fs::File::create(&intermediate_csv)?;
-        let mut intermediate_csv_writer = std::io::BufWriter::with_capacity(
-            config::DEFAULT_WTR_BUFFER_CAPACITY,
-            intermediate_csv_file,
-        );
-        intermediate_csv_writer.write_all(&output_buf)?;
-        intermediate_csv_writer.flush()?;
+        let flattener = Flattener::new();
+        let intermediate_csv_writer = csv::WriterBuilder::new()
+            .buffer_capacity(config::DEFAULT_WTR_BUFFER_CAPACITY)
+            .from_path(intermediate_csv.clone())?;
+        Json2Csv::new(flattener).convert_from_array(values, intermediate_csv_writer)?;
     }
 
     // STEP 2: select the columns to use in the final output
@@ -263,8 +255,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .flag_select
         .unwrap_or_else(|| SelectColumns::parse(&first_dict_headers.join(",")).unwrap());
 
-    let sel_rconfig = config::Config::new(&Some(intermediate_csv.to_string_lossy().into_owned()))
-        .no_headers(false);
+    let sel_rconfig = config::Config::new(&Some(intermediate_csv)).no_headers(false);
     let mut intermediate_csv_rdr = sel_rconfig.reader()?;
     let byteheaders = intermediate_csv_rdr.byte_headers()?;
 
