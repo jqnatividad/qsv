@@ -1,0 +1,12 @@
+name: Deb Static Build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Deb Build
+      uses: ebbflow-io/cargo-deb-armv7-debian@1.47.0-1
+            
