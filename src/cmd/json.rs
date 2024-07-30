@@ -162,15 +162,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let args: Args = util::get_args(USAGE, argv)?;
 
-    let flattener = Flattener::new();
     let mut value = match args.arg_input {
-        Some(path) => {
-            if path == "-" {
-                get_value_from_stdin()?
-            } else {
-                get_value_from_path(path)?
-            }
-        },
+        Some(path) if path == "-" => get_value_from_stdin()?,
+        Some(path) => get_value_from_path(path)?,
         None => get_value_from_stdin()?,
     };
 
@@ -245,19 +239,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let intermediate_csv = temp_dir.join("intermediate.csv");
 
     // convert JSON to CSV and store it in output_buf
-    let mut output_buf = Vec::<u8>::new();
-    let csv_buf_writer = csv::WriterBuilder::new().from_writer(&mut output_buf);
-    Json2Csv::new(flattener).convert_from_array(values, csv_buf_writer)?;
+    let flattener = Flattener::new();
+    {
+        let mut output_buf = Vec::<u8>::new();
+        let csv_buf_writer = csv::WriterBuilder::new().from_writer(&mut output_buf);
 
-    // now write output_buf to intermediate_csv
-    let intermediate_csv_file = std::fs::File::create(&intermediate_csv)?;
-    let mut intermediate_csv_writer = std::io::BufWriter::with_capacity(
-        config::DEFAULT_WTR_BUFFER_CAPACITY,
-        intermediate_csv_file,
-    );
-    intermediate_csv_writer.write_all(&output_buf)?;
-    intermediate_csv_writer.flush()?;
-    drop(output_buf);
+        Json2Csv::new(flattener).convert_from_array(values, csv_buf_writer)?;
+
+        // now write output_buf to intermediate_csv
+        let intermediate_csv_file = std::fs::File::create(&intermediate_csv)?;
+        let mut intermediate_csv_writer = std::io::BufWriter::with_capacity(
+            config::DEFAULT_WTR_BUFFER_CAPACITY,
+            intermediate_csv_file,
+        );
+        intermediate_csv_writer.write_all(&output_buf)?;
+        intermediate_csv_writer.flush()?;
+    }
 
     // STEP 2: select the columns to use in the final output
     // if --select is not specified, select in the order of the first dict's keys
@@ -266,19 +263,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .flag_select
         .unwrap_or_else(|| SelectColumns::parse(&first_dict_headers.join(",")).unwrap());
 
-    let sel_rconfig = config::Config::new(&Some(intermediate_csv.to_string_lossy().into_owned()));
+    let sel_rconfig = config::Config::new(&Some(intermediate_csv.to_string_lossy().into_owned()))
+        .no_headers(false);
     let mut intermediate_csv_rdr = sel_rconfig.reader()?;
     let byteheaders = intermediate_csv_rdr.byte_headers()?;
 
     // and write the selected columns to the final CSV file
     let sel = sel_rconfig.select(sel_cols).selection(byteheaders)?;
-    let mut record = csv::ByteRecord::new();
-    let mut final_csv_wtr = config::Config::new(&args.flag_output).writer()?;
+    let mut read_record = csv::ByteRecord::new();
+    let mut write_record = csv::ByteRecord::new();
+    let mut final_csv_wtr = config::Config::new(&args.flag_output)
+        .no_headers(false)
+        .writer()?;
     final_csv_wtr.write_record(sel.iter().map(|&i| &byteheaders[i]))?;
-    while intermediate_csv_rdr.read_byte_record(&mut record)? {
-        if !record.is_empty() {
-            final_csv_wtr.write_record(sel.iter().map(|&i| &record[i]))?;
-        }
+    while intermediate_csv_rdr.read_byte_record(&mut read_record)? {
+        write_record.clear();
+        write_record.extend(sel.iter().map(|&i| &read_record[i]));
+        final_csv_wtr.write_byte_record(&write_record)?;
     }
 
     Ok(final_csv_wtr.flush()?)
