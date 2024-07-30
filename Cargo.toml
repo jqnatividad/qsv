@@ -336,8 +336,9 @@ maintainer = "Konstantin Sivakov <konstantin@datHere.com>"
 copyright = "2024, datHere Inc. <www.dathere.com>"
 extended-description = """A high performance CSV data-wrangling toolkit."""
 depends = "$auto"
+features = ["feature_capable"]
 section = "utility"
 priority = "optional"
 assets = [
- ["target/release/qsv", "usr/bin/", "755"],
+ ["target/release/qsv", "/usr/local/bin/", "755"],
 ]
