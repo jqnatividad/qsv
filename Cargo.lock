@@ -5124,7 +5124,7 @@ dependencies = [
  "rand_hc",
  "rand_xoshiro",
  "rayon",
- "redis 0.26.0",
+ "redis 0.26.1",
  "regex",
  "reqwest",
  "rfd",
@@ -5476,9 +5476,9 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "0.26.0"
+version = "0.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8cc5b667390cb038bc65fc4b18c06e2550469f7e06a02d886f1a018a11f63563"
+checksum = "e902a69d09078829137b4a5d9d082e0490393537badd7c91a3d69d14639e115f"
 dependencies = [
  "ahash 0.8.11",
  "arc-swap",
