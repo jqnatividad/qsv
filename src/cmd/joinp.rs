@@ -633,16 +633,46 @@ pub fn tsvssv_delim<P: AsRef<Path>>(file: P, orig_delim: u8) -> u8 {
     match inputfile_extension.as_str() {
         "tsv" | "tab" => b'\t',
         "ssv" => b';',
+        "sz" => {
+            // now check what the original file extension is
+            let orig_extension = file
+                .as_ref()
+                .file_stem()
+                .and_then(std::ffi::OsStr::to_str)
+                .unwrap_or_default()
+                .to_ascii_lowercase();
+            if orig_extension.ends_with(".tsv") || orig_extension.ends_with(".tab") {
+                b'\t'
+            } else if orig_extension.ends_with(".ssv") {
+                b';'
+            } else {
+                orig_delim
+            }
+        }
         _ => orig_delim,
     }
 
-    // if inputfile_extension.eq_ignore_ascii_case("tsv")
-    //     || inputfile_extension.eq_ignore_ascii_case("tab")
-    // {
-    //     b'\t'
-    // } else if inputfile_extension.eq_ignore_ascii_case("ssv") {
-    //     b';'
-    // } else {
-    //     orig_delim
-    // }
+}
+
+#[test]
+fn test_tsvssv_delim() {
+    assert_eq!(tsvssv_delim("test.tsv", b','), b'\t');
+    assert_eq!(tsvssv_delim("test.tab", b','), b'\t');
+    assert_eq!(tsvssv_delim("test.ssv", b','), b';');
+    assert_eq!(tsvssv_delim("test.sz", b','), b',');
+    assert_eq!(tsvssv_delim("test.csv", b','), b',');
+    assert_eq!(tsvssv_delim("test.TSV", b','), b'\t');
+    assert_eq!(tsvssv_delim("test.Tab", b','), b'\t');
+    assert_eq!(tsvssv_delim("test.SSV", b','), b';');
+    assert_eq!(tsvssv_delim("test.sZ", b','), b',');
+    assert_eq!(tsvssv_delim("test.CsV", b','), b',');
+    assert_eq!(tsvssv_delim("test", b','), b',');
+    assert_eq!(tsvssv_delim("test.csv.sz", b','), b',');
+    assert_eq!(tsvssv_delim("test.tsv.sz", b','), b'\t');
+    assert_eq!(tsvssv_delim("test.tab.sz", b','), b'\t');
+    assert_eq!(tsvssv_delim("test.ssv.sz", b','), b';');
+    assert_eq!(tsvssv_delim("test.csV.Sz", b','), b',');
+    assert_eq!(tsvssv_delim("test.TSV.SZ", b','), b'\t');
+    assert_eq!(tsvssv_delim("test.Tab.sZ", b','), b'\t');
+    assert_eq!(tsvssv_delim("test.SSV.sz", b','), b';');
 }
