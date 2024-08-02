@@ -108,7 +108,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let dupes_output = args.flag_dupes_output.is_some();
     let mut dupewtr = Config::new(&args.flag_dupes_output).writer()?;
 
-    let headers = rdr.byte_headers()?.clone();
+    let headers = rdr.byte_headers()?;
     if dupes_output {
         dupewtr.write_byte_record(&headers)?;
     }
