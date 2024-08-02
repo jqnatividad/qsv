@@ -110,9 +110,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.byte_headers()?;
     if dupes_output {
-        dupewtr.write_byte_record(&headers)?;
+        dupewtr.write_byte_record(headers)?;
     }
-    let sel = rconfig.selection(&headers)?;
+    let sel = rconfig.selection(headers)?;
 
     rconfig.write_headers(&mut rdr, &mut wtr)?;
     let mut dupe_count = 0_usize;
