@@ -1400,6 +1400,96 @@ fn sqlp_sql_ssv() {
 }
 
 #[test]
+fn sqlp_sql_ssv_input() {
+    let wrk = Workdir::new("sqlp_sql_ssv_input");
+    wrk.create_with_delim(
+        "test.ssv",
+        vec![
+            svec!["idx", "val"],
+            svec!["0", "ABC"],
+            svec!["1", "abc"],
+            svec!["2", "000"],
+            svec!["3", "A0C"],
+            svec!["4", "a0c"],
+        ],
+        b';',
+    );
+
+    let output_file = wrk.path("output.ssv").to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.ssv")
+        .arg("SELECT * FROM test")
+        .args(["--output", &output_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let got = wrk.read_to_string(&output_file);
+
+    let expected = "idx;val\n0;ABC\n1;abc\n2;000\n3;A0C\n4;a0c\n";
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_issue2014() {
+    let wrk = Workdir::new("sqlp_issue2014");
+    wrk.create_with_delim(
+        "test.ssv",
+        vec![
+            svec!["id", "item", "price"],
+            svec!["0", "wallet", "9.99"],
+            svec!["1", "comb", "1.39"],
+            svec!["2", "pencil", "0.49"],
+        ],
+        b';',
+    );
+
+    let output_file = wrk.path("output.ssv.sz").to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.ssv")
+        .arg("SELECT * FROM test")
+        .args(["--output", &output_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let mut cmd2 = wrk.command("slice"); // DevSkim: ignore DS126858
+    cmd2.arg(output_file.clone()); // DevSkim: ignore DS126858
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2); // DevSkim: ignore DS126858
+    let expected = vec![
+        svec!["id", "item", "price"],
+        svec!["0", "wallet", "9.99"],
+        svec!["1", "comb", "1.39"],
+        svec!["2", "pencil", "0.49"],
+    ];
+
+    assert_eq!(got, expected);
+
+    let mut cmd2 = wrk.command("snappy"); // DevSkim: ignore DS126858
+    cmd2.arg("decompress").arg(output_file.clone()); // DevSkim: ignore DS126858
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2); // DevSkim: ignore DS126858
+    let expected = vec![
+        ["id;item;price"],
+        ["0;wallet;9.99"],
+        ["1;comb;1.39"],
+        ["2;pencil;0.49"],
+    ];
+
+    assert_eq!(got, expected);
+
+    let mut cmd2 = wrk.command("headers"); // DevSkim: ignore DS126858
+    cmd2.arg(output_file); // DevSkim: ignore DS126858
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2); // DevSkim: ignore DS126858
+    let expected = vec![["1   id"], ["2   item"], ["3   price"]];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sqlp_binary_functions() {
     let wrk = Workdir::new("sqlp_sql_binary_functions");
     wrk.create("dummy.csv", vec![svec!["dummy"], svec!["0"]]);
