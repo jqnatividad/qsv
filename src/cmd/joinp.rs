@@ -622,6 +622,8 @@ impl Args {
 /// if the file has a TSV/TAB or SSV extension, we automatically use
 /// tab or semicolon as the delimiter
 /// otherwise, we use the delimiter specified by the user
+/// if the file has a .sz extension, we check the original file extension
+/// to determine the delimiter
 pub fn tsvssv_delim<P: AsRef<Path>>(file: P, orig_delim: u8) -> u8 {
     let inputfile_extension = file
         .as_ref()
@@ -634,24 +636,25 @@ pub fn tsvssv_delim<P: AsRef<Path>>(file: P, orig_delim: u8) -> u8 {
         "tsv" | "tab" => b'\t',
         "ssv" => b';',
         "sz" => {
-            // now check what the original file extension is
-            let orig_extension = file
+            // its a snappy compressed file
+            // check what the original file extension is
+            let orig_filestem = file
                 .as_ref()
                 .file_stem()
                 .and_then(std::ffi::OsStr::to_str)
                 .unwrap_or_default()
                 .to_ascii_lowercase();
-            if orig_extension.ends_with(".tsv") || orig_extension.ends_with(".tab") {
+            let orig_extension = Path::new(&orig_filestem).extension().unwrap_or_default();
+            if orig_extension == "tsv" || orig_extension == "tab" {
                 b'\t'
-            } else if orig_extension.ends_with(".ssv") {
+            } else if orig_extension == "ssv" {
                 b';'
             } else {
                 orig_delim
             }
-        }
+        },
         _ => orig_delim,
     }
-
 }
 
 #[test]
