@@ -42,6 +42,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
+            cpu-features: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma,+pclmulqdq
 
     steps:
     - name: Installing Rust toolchain
@@ -58,7 +59,7 @@ jobs:
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
     - name: Build qsv
       env:
-        RUSTFLAGS: --emit=asm -C target-cpu=native
+        RUSTFLAGS: --emit=asm -C target-cpu=native ${{ matrix.job.cpu-features }}
       uses: actions-rs/cargo@v1
       with:
         command: build
@@ -67,7 +68,7 @@ jobs:
         args: --release --locked --bin qsv --target ${{ matrix.job.target }} ${{ matrix.job.addl-build-args }},feature_capable ${{ matrix.job.default-features }}
     - name: Build qsvlite
       env:
-        RUSTFLAGS: --emit=asm -C target-cpu=native
+        RUSTFLAGS: --emit=asm -C target-cpu=native ${{ matrix.job.cpu-features }}
       uses: actions-rs/cargo@v1
       with:
         command: build
@@ -76,7 +77,7 @@ jobs:
         args: --release --locked --bin qsvlite --features=lite,self_update,${{ matrix.job.addl-qsvlite-features }} --target ${{ matrix.job.target }} ${{ matrix.job.default-features }}
     - name: Build qsvdp
       env:
-        RUSTFLAGS: --emit=asm -C target-cpu=native
+        RUSTFLAGS: --emit=asm -C target-cpu=native ${{ matrix.job.cpu-features }}
       uses: actions-rs/cargo@v1
       with:
         command: build
