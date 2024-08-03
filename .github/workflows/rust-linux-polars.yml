@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ci-macos-polars-tests-${{ github.ref }}-1
+  group: ci-linux-polars-tests-${{ github.ref }}-1
   cancel-in-progress: true
 
 env:
@@ -17,7 +17,7 @@ env:
 jobs:
   build:
 
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4        
