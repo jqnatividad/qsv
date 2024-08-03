@@ -147,6 +147,7 @@ phf = { version = "0.11", features = ["macros"], optional = true }
 polars = { version = "0.41", features = [
     "asof_join",
     "avro",
+    "avx512",
     "binary_encoding",
     "coalesce",
     "cross_join",
