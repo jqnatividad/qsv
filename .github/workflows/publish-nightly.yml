@@ -37,7 +37,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau,polars
-            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
+            addl-rustflags: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+avx2,+fma,+bmi1,+bmi2,+lzcnt,+pclmulqdq
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: x86_64-unknown-linux-musl
@@ -53,7 +53,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
-            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+sse4.1,+sse4.2
+            addl-rustflags: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+avx2,+fma,+bmi1,+bmi2,+lzcnt,+pclmulqdq
           # - os: windows-latest
           #   os-name: windows
           #   target: x86_64-pc-windows-gnu
@@ -71,7 +71,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
-            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+sse4.1,+sse4.2
+            addl-rustflags: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+avx2,+fma,+bmi1,+bmi2,+lzcnt,+pclmulqdq
 
     steps:
     - name: Installing Rust toolchain
