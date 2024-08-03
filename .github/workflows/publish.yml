@@ -43,7 +43,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau,polars
-            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
+            addl-rustflags: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma,+pclmulqdq
           - os: ubuntu-22.04
             os-name: linux
             target: x86_64-unknown-linux-musl
@@ -54,7 +54,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
-            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
+            addl-rustflags: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma,+pclmulqdq
           - os: ubuntu-22.04
             os-name: linux
             target: i686-unknown-linux-gnu
@@ -74,7 +74,7 @@ jobs:
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
-            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+sse4.1,+sse4.2
+            addl-rustflags: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma,+pclmulqdq
           - os: windows-latest
             os-name: windows
             target: i686-pc-windows-msvc
@@ -94,7 +94,7 @@ jobs:
             default-features: --no-default-features
             addl-qsvlite-features:
             addl-qsvdp-features: luau
-            addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+sse4.1,+sse4.2
+            addl-rustflags: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma,+pclmulqdq
           # - os: macos-12
           #   os-name: macos
           #   target: x86_64-apple-darwin
