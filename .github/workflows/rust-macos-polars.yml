@@ -25,5 +25,5 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
     - name: Run tests
       env:
-        RUSTFLAGS: -C +sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma,+pclmulqdq
+        RUSTFLAGS: -C target-cpu=native
       run: cargo test --verbose --locked --features=polars,feature_capable
