@@ -957,6 +957,12 @@ const completion: Fig.Spec = {
           name: "--ignore-case",
         },
         {
+          name: "--stats-mode",
+        },
+        {
+          name: "--all-unique-text",
+        },
+        {
           name: "--jobs",
         },
         {

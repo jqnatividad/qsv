@@ -1064,7 +1064,7 @@ _qsv() {
             return 0
             ;;
         qsv__frequency)
-            opts="-h --select --limit --unq-limit --lmt-threshold --pct-dec-places --other-sorted --other-text --asc --no-trim --ignore-case --jobs --output --no-headers --delimiter --memcheck --help"
+            opts="-h --select --limit --unq-limit --lmt-threshold --pct-dec-places --other-sorted --other-text --asc --no-trim --ignore-case --stats-mode --all-unique-text --jobs --output --no-headers --delimiter --memcheck --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

@@ -457,6 +457,8 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --asc 'asc'
             cand --no-trim 'no-trim'
             cand --ignore-case 'ignore-case'
+            cand --stats-mode 'stats-mode'
+            cand --all-unique-text 'all-unique-text'
             cand --jobs 'jobs'
             cand --output 'output'
             cand --no-headers 'no-headers'
