@@ -351,6 +351,8 @@ complete -c qsv -n "__fish_qsv_using_subcommand frequency" -l other-text
 complete -c qsv -n "__fish_qsv_using_subcommand frequency" -l asc
 complete -c qsv -n "__fish_qsv_using_subcommand frequency" -l no-trim
 complete -c qsv -n "__fish_qsv_using_subcommand frequency" -l ignore-case
+complete -c qsv -n "__fish_qsv_using_subcommand frequency" -l stats-mode
+complete -c qsv -n "__fish_qsv_using_subcommand frequency" -l all-unique-text
 complete -c qsv -n "__fish_qsv_using_subcommand frequency" -l jobs
 complete -c qsv -n "__fish_qsv_using_subcommand frequency" -l output
 complete -c qsv -n "__fish_qsv_using_subcommand frequency" -l no-headers

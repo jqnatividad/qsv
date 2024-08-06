@@ -501,6 +501,8 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--asc', 'asc', [CompletionResultType]::ParameterName, 'asc')
             [CompletionResult]::new('--no-trim', 'no-trim', [CompletionResultType]::ParameterName, 'no-trim')
             [CompletionResult]::new('--ignore-case', 'ignore-case', [CompletionResultType]::ParameterName, 'ignore-case')
+            [CompletionResult]::new('--stats-mode', 'stats-mode', [CompletionResultType]::ParameterName, 'stats-mode')
+            [CompletionResult]::new('--all-unique-text', 'all-unique-text', [CompletionResultType]::ParameterName, 'all-unique-text')
             [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
             [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
             [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')

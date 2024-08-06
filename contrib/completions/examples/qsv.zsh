@@ -514,6 +514,8 @@ _arguments "${_arguments_options[@]}" : \
 '--asc[]' \
 '--no-trim[]' \
 '--ignore-case[]' \
+'--stats-mode[]' \
+'--all-unique-text[]' \
 '--jobs[]' \
 '--output[]' \
 '--no-headers[]' \
