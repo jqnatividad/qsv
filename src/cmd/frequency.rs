@@ -30,10 +30,10 @@ Out-of-Memory (OOM) errors for larger-than-memory datasets.
 
 To overcome this, the frequency command will automatically use the stats cache if it exists
 to get column cardinalities. This short-circuits frequency compilation for columns with
-all unique values, eliminating memory usage as well, allowing you to compute frequencies
-for larger-than-memory datasets.
+all unique values (i.e. where rowcount == cardinality), enabling it to compute frequencies for
+larger-than-memory datasets as it doesn't need to load all the column's unique values into memory.
 
-This behavior can be overridden with the --stats-mode option.
+This behavior can be adjusted with the --stats-mode option.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_frequency.rs.
 
