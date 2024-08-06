@@ -492,7 +492,7 @@ fn frequency_all_unique_with_stats_cache() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
-        svec!["case_enquiry_id", "ALL_UNIQUE", "100", "100"],
+        svec!["case_enquiry_id", "<ALL_UNIQUE>", "100", "100"],
     ];
     assert_eq!(got, expected);
 }
@@ -512,7 +512,7 @@ fn frequency_all_unique_with_stats_cache_alt_all_unique_text() {
 
     let mut cmd = wrk.command("frequency");
     cmd.args(["--select", "1"])
-        // "ALL_UNIQUE" in German
+        // "<ALL_UNIQUE>" in German
         .args(["--all-unique-text", "<ALLE EINZIGARTIG>"])
         .arg(testdata);
 
@@ -537,7 +537,7 @@ fn frequency_all_unique_force_stats_cache() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["field", "value", "count", "percentage"],
-        svec!["case_enquiry_id", "ALL_UNIQUE", "100", "100"],
+        svec!["case_enquiry_id", "<ALL_UNIQUE>", "100", "100"],
     ];
     assert_eq!(got, expected);
 }

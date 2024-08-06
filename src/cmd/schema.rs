@@ -461,7 +461,7 @@ fn get_unique_values(
         flag_ignore_case:     args.flag_ignore_case,
         // internal mode for getting frequency tables
         flag_stats_mode:      "_schema".to_string(),
-        flag_all_unique_text: "ALL UNIQUE".to_string(),
+        flag_all_unique_text: "<ALL UNIQUE>".to_string(),
         flag_jobs:            Some(util::njobs(args.flag_jobs)),
         flag_output:          None,
         flag_no_headers:      args.flag_no_headers,

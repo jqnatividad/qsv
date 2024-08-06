@@ -19,7 +19,7 @@ to get column cardinalities. This short-circuits frequency compilation for colum
 all unique values (i.e. where rowcount == cardinality), enabling it to compute frequencies for
 larger-than-memory datasets as it doesn't need to load all the column's unique values into memory.
 
-Instead, it will use the "ALL_UNIQUE" value for columns with all unique values.
+Instead, it will use the "<ALL_UNIQUE>" value for columns with all unique values.
 
 This behavior can be adjusted with the --stats-mode option.
 
@@ -93,14 +93,14 @@ frequency options:
                             eliminates memory usage for columns with all unique values.
                             There are three modes:
                               auto: use stats cache if it already exists to get column cardinalities.
-                                    For columns with all unique values, "ALL_UNIQUE" will be used.
+                                    For columns with all unique values, "<ALL_UNIQUE>" will be used.
                               force: force stats calculation to get cardinalities.
                               none: don't use cardinality information.
                                     For columns with all unique values, the first N sorted unique
                                     values (based on the --limit and --unq-limit options) will be used.
                             [default: auto]
-   --all-unique-text <arg>  The text to use for the "ALL_UNIQUE" category.
-                            [default: ALL_UNIQUE]
+   --all-unique-text <arg>  The text to use for the "<ALL_UNIQUE>" category.
+                            [default: <ALL_UNIQUE>]
     -j, --jobs <arg>        The number of jobs to run in parallel.
                             This works much faster when the given CSV data has
                             an index already created. Note that a file handle
