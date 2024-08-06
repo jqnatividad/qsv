@@ -121,13 +121,12 @@ use serde::Deserialize;
 use stats::{merge_all, Frequencies};
 use threadpool::ThreadPool;
 
-use super::schema::{get_stats_records, StatsMode};
 use crate::{
     config::{Config, Delimiter},
     index::Indexed,
     select::{SelectColumns, Selection},
     util,
-    util::ByteString,
+    util::{get_stats_records, ByteString, StatsMode},
     CliResult,
 };
 
@@ -552,7 +551,7 @@ impl Args {
     /// (i.e. where cardinality == rowcount)
     fn get_unique_headers(&self, headers: &Headers) -> CliResult<Vec<usize>> {
         // get the stats records for the entire CSV
-        let schema_args = super::schema::Args {
+        let schema_args = util::SchemaArgs {
             flag_enum_threshold:  0,
             flag_ignore_case:     self.flag_ignore_case,
             flag_strict_dates:    false,

@@ -35,7 +35,6 @@ macro_rules! werr {
     });
 }
 
-#[cfg(any(feature = "feature_capable", feature = "lite"))]
 /// write to stderr and log::warn
 macro_rules! wwarn {
     ($($arg:tt)*) => ({

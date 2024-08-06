@@ -95,7 +95,9 @@ pub struct Config {
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub trait SeekRead: io::Seek + io::Read {}
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 impl<T: io::Seek + io::Read> SeekRead for T {}
 
 impl Config {
