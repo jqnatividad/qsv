@@ -62,6 +62,7 @@ frequency options:
     -u, --unq-limit <arg>   If a column has all unique values, limit the
                             frequency table to a sample of N unique items.
                             Set to '0' to disable a unique_limit.
+                            Only works when --stats-mode is set to "none".
                             [default: 10]
     --lmt-threshold <arg>   The threshold for which --limit and --unq-limit
                             will be applied. If the number of unique items
