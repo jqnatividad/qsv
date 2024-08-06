@@ -24,6 +24,17 @@ items and not to columns with a small number of unique items.
 Since this computes an exact frequency table, memory proportional to the
 cardinality of each column is required.
 
+This is particularly problematic for columns with all unique values (e.g. record IDs),
+as the memory usage is equal to the number of rows in the data, which can cause
+Out-of-Memory (OOM) errors for larger-than-memory datasets.
+
+To overcome this, the frequency command will automatically use the stats cache if it exists
+to get column cardinalities. This short-circuits frequency compilation for columns with
+all unique values (i.e. where rowcount == cardinality), enabling it to compute frequencies for
+larger-than-memory datasets as it doesn't need to load all the column's unique values into memory.
+
+This behavior can be adjusted with the --stats-mode option.
+
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_frequency.rs.
 
 Usage:
@@ -71,6 +82,17 @@ frequency options:
                             The default is to trim leading and trailing whitespaces.
     --no-nulls              Don't include NULLs in the frequency table.
     -i, --ignore-case       Ignore case when computing frequencies.
+    --stats-mode <arg>      The stats mode to use when computing frequencies with cardinalities.
+                            Having column cardinalities short-circuits frequency compilation and
+                            eliminates memory usage for columns with all unique values.
+                            There are three modes:
+                              auto: use stats cache if it already exists to get column cardinalities.
+                                    For columns with all unique values, "ALL_UNIQUE" will be used.
+                              force: force stats calculation to get cardinalities.
+                              none: don't use cardinality information.
+                                    For columns with all unique values, the first N sorted unique
+                                    values (based on the --limit and --unq-limit options) will be used.
+                            [default: auto]
     -j, --jobs <arg>        The number of jobs to run in parallel.
                             This works much faster when the given CSV data has
                             an index already created. Note that a file handle
@@ -91,7 +113,7 @@ Common options:
                            CSV into memory using CONSERVATIVE heuristics.
 "#;
 
-use std::{fs, io};
+use std::{fs, io, sync::OnceLock};
 
 use indicatif::HumanCount;
 use rust_decimal::prelude::*;
@@ -104,7 +126,7 @@ use crate::{
     index::Indexed,
     select::{SelectColumns, Selection},
     util,
-    util::ByteString,
+    util::{get_stats_records, ByteString, StatsMode},
     CliResult,
 };
 
@@ -123,6 +145,7 @@ pub struct Args {
     pub flag_no_trim:        bool,
     pub flag_no_nulls:       bool,
     pub flag_ignore_case:    bool,
+    pub flag_stats_mode:     String,
     pub flag_jobs:           Option<usize>,
     pub flag_output:         Option<String>,
     pub flag_no_headers:     bool,
@@ -131,6 +154,9 @@ pub struct Args {
 }
 
 const NULL_VAL: &[u8] = b"(NULL)";
+
+static UNIQUE_COLUMNS: OnceLock<Vec<usize>> = OnceLock::new();
+static FREQ_ROW_COUNT: OnceLock<u64> = OnceLock::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -153,13 +179,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut pct_decimal: Decimal;
     let mut final_pct_decimal: Decimal;
     let mut pct_string: String;
-    let mut pct_scale;
-    let mut current_scale;
+    let mut pct_scale: u32;
+    let mut current_scale: u32;
     let abs_dec_places = args.flag_pct_dec_places.unsigned_abs() as u32;
-    let mut row;
+    let mut row: Vec<&[u8]>;
+    let mut all_unique_header: bool;
+
+    // safety: we know that UNIQUE_COLUMNS has been previously set when compiling frequencies
+    // by sel_headers fn
+    let all_unique_headers = UNIQUE_COLUMNS.get().unwrap();
 
     wtr.write_record(vec!["field", "value", "count", "percentage"])?;
     let head_ftables = headers.iter().zip(tables);
+    let row_count = *FREQ_ROW_COUNT.get().unwrap_or(&0);
+
     for (i, (header, ftab)) in head_ftables.enumerate() {
         header_vec = if rconfig.no_headers {
             (i + 1).to_string().into_bytes()
@@ -167,16 +200,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             header.to_vec()
         };
 
-        let mut sorted_counts: Vec<(Vec<u8>, u64, f64)> = args.counts(&ftab);
+        let mut sorted_counts: Vec<(Vec<u8>, u64, f64)>;
+        all_unique_header = all_unique_headers.contains(&i);
 
-        // if not --other_sorted and the first value is "Other (", rotate it to the end
-        if !args.flag_other_sorted
-            && sorted_counts.first().is_some_and(|(value, _, _)| {
-                value.starts_with(format!("{} (", args.flag_other_text).as_bytes())
-            })
-        {
-            sorted_counts.rotate_left(1);
-        }
+        if all_unique_header {
+            // if the column has all unique values, we don't need to sort the counts
+            sorted_counts = vec![(b"ALL_UNIQUE".to_vec(), row_count, 100.0_f64)];
+        } else {
+            sorted_counts = args.counts(&ftab);
+
+            // if not --other_sorted and the first value is "Other (", rotate it to the end
+            if !args.flag_other_sorted
+                && sorted_counts.first().is_some_and(|(value, _, _)| {
+                    value.starts_with(format!("{} (", args.flag_other_text).as_bytes())
+                })
+            {
+                sorted_counts.rotate_left(1);
+            }
+        };
 
         for (value, count, percentage) in sorted_counts {
             pct_decimal = Decimal::from_f64(percentage).unwrap_or_default();
@@ -370,6 +411,8 @@ impl Args {
         let mut field_buffer: Vec<u8> = Vec::with_capacity(nsel_len);
         let mut row_buffer: csv::ByteRecord = csv::ByteRecord::with_capacity(200, nsel_len);
 
+        let all_unique_headers = UNIQUE_COLUMNS.get().unwrap();
+
         // assign flags to local variables for faster access
         let flag_no_nulls = self.flag_no_nulls;
         let flag_ignore_case = self.flag_ignore_case;
@@ -385,6 +428,11 @@ impl Args {
                     // safety: we know the row is not empty
                     row_buffer.clone_from(&row.unwrap());
                     for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
+                        if all_unique_headers.contains(&i) {
+                            // if the column has all unique values,
+                            // we don't need to compute frequencies
+                            continue;
+                        }
                         field_buffer = {
                             if let Ok(s) = simdutf8::basic::from_utf8(field) {
                                 util::to_lowercase_into(s, &mut buf);
@@ -414,6 +462,9 @@ impl Args {
                     // safety: we know the row is not empty
                     row_buffer.clone_from(&row.unwrap());
                     for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
+                        if all_unique_headers.contains(&i) {
+                            continue;
+                        }
                         field_buffer = {
                             if let Ok(s) = simdutf8::basic::from_utf8(field) {
                                 util::to_lowercase_into(s.trim(), &mut buf);
@@ -447,6 +498,9 @@ impl Args {
                 if flag_no_trim {
                     // case-sensitive, don't trim whitespace
                     for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
+                        if all_unique_headers.contains(&i) {
+                            continue;
+                        }
                         // no need to convert to string and back to bytes for a "case-sensitive"
                         // comparison we can just use the field directly
                         field_buffer = field.to_vec();
@@ -465,6 +519,9 @@ impl Args {
                 } else {
                     // case-sensitive, trim whitespace
                     for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
+                        if all_unique_headers.contains(&i) {
+                            continue;
+                        }
                         field_buffer = {
                             if let Ok(s) = simdutf8::basic::from_utf8(field) {
                                 s.trim().as_bytes().to_vec()
@@ -490,11 +547,93 @@ impl Args {
         freq_tables
     }
 
+    /// return the names of headers/columns that are unique identifiers
+    /// (i.e. where cardinality == rowcount)
+    fn get_unique_headers(&self, headers: &Headers) -> CliResult<Vec<usize>> {
+        // get the stats records for the entire CSV
+        let schema_args = util::SchemaArgs {
+            flag_enum_threshold:  0,
+            flag_ignore_case:     self.flag_ignore_case,
+            flag_strict_dates:    false,
+            // we still get all the stats columns so we can use the stats cache
+            flag_pattern_columns: crate::select::SelectColumns::parse("").unwrap(),
+            flag_dates_whitelist: String::new(),
+            flag_prefer_dmy:      false,
+            flag_force:           false,
+            flag_stdout:          false,
+            flag_jobs:            Some(util::njobs(self.flag_jobs)),
+            flag_no_headers:      self.flag_no_headers,
+            flag_delimiter:       self.flag_delimiter,
+            arg_input:            self.arg_input.clone(),
+            flag_memcheck:        false,
+        };
+        let stats_mode = match self.flag_stats_mode.as_str() {
+            "auto" => StatsMode::Frequency,
+            "force" => StatsMode::FrequencyForceStats,
+            "none" => StatsMode::None,
+            "_schema" => StatsMode::Schema, // only meant for schema to use
+            _ => return fail_incorrectusage_clierror!("Invalid stats mode"),
+        };
+        let (csv_fields, csv_stats, stats_col_index_map) =
+            get_stats_records(&schema_args, stats_mode)?;
+
+        if stats_mode == StatsMode::None || stats_mode == StatsMode::Schema || csv_fields.is_empty()
+        {
+            // the stats cache does not exist, just return an empty vector
+            // we're not going to be able to get the cardinalities, so
+            // this signals that we just compute frequencies for all columns
+            return Ok(Vec::new());
+        }
+
+        if csv_fields.len() != csv_stats.len() {
+            // this should never happen
+            return fail_clierror!("Mismatch between the number of fields and stats records");
+        }
+        let col_cardinality_vec: Vec<(String, usize)> = csv_stats
+            .iter()
+            .enumerate()
+            .map(|(i, _record)| {
+                // get the column name and stats record
+                // safety: we know that csv_fields and csv_stats have the same length
+                let col_name = csv_fields.get(i).unwrap();
+                let stats_record = csv_stats.get(i).unwrap().clone().to_record(4, false);
+
+                let col_cardinality = match stats_record.get(stats_col_index_map["cardinality"]) {
+                    Some(s) => s.parse::<usize>().unwrap_or(0_usize),
+                    None => 0_usize,
+                };
+                (
+                    std::str::from_utf8(col_name).unwrap().to_string(),
+                    col_cardinality,
+                )
+            })
+            .collect();
+
+        // now, get the unique headers, where cardinality == rowcount
+        let row_count = util::count_rows(&self.rconfig())? as usize;
+        FREQ_ROW_COUNT.set(row_count as u64).unwrap();
+
+        let mut all_unique_headers_vec: Vec<usize> = Vec::with_capacity(5);
+        for (i, _header) in headers.iter().enumerate() {
+            let cardinality = col_cardinality_vec[i].1;
+
+            if cardinality == row_count {
+                all_unique_headers_vec.push(i);
+            }
+        }
+
+        Ok(all_unique_headers_vec)
+    }
+
     fn sel_headers<R: io::Read>(
         &self,
         rdr: &mut csv::Reader<R>,
     ) -> CliResult<(csv::ByteRecord, Selection)> {
         let headers = rdr.byte_headers()?;
+        let all_unique_headers_vec = self.get_unique_headers(headers)?;
+
+        UNIQUE_COLUMNS.set(all_unique_headers_vec).unwrap();
+
         let sel = self.rconfig().selection(headers)?;
         Ok((sel.select(headers).map(<[u8]>::to_vec).collect(), sel))
     }
