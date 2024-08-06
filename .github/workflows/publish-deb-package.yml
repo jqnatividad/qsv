@@ -1,0 +1,37 @@
+name: qsv Debian Package
+
+on:
+  workflow_dispatch:
+
+jobs:
+  analyze-tags:
+    runs-on: ubuntu-20.04
+    outputs:
+      previous-tag: ${{ steps.previoustag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get previous tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
+  build:
+    needs: analyze-tags
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Install Cargo Deb
+        run: cargo install cargo-deb
+
+      - name: Build Debian Package
+        run: cargo deb
+
+      - name: Upload Debian Package
+        uses: actions/upload-artifact@v2
+        with:
+          name: qsv-deb
+          path: target/debian/*
+      
+
+
+
