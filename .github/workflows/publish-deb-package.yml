@@ -20,9 +20,12 @@ jobs:
     needs: analyze-tags
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@master
-      - name: Debian Build
-        uses: ebbflow-io/cargo-deb-armv7-debian@1.47.0-1
+      - name: Install Cargo Deb
+        run: cargo install cargo-deb
+
+      - name: Build Debian Package
+        run: cargo deb
+
       - name: Upload Debian Package
         uses: actions/upload-artifact@v2
         with:
