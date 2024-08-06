@@ -111,6 +111,8 @@ fn frequency_trim() {
         .args(["--limit", "0"])
         .args(["--select", "h2"]);
 
+    wrk.assert_success(&mut cmd);
+
     let mut got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     got.sort_unstable();
     let expected = vec![
@@ -472,6 +474,86 @@ fn frequency_all_unique() {
 }
 
 #[test]
+fn frequency_all_unique_with_stats_cache() {
+    let wrk = Workdir::new("frequency_all_unique_with_stats_cache");
+    let testdata = wrk.load_test_file("boston311-100.csv");
+
+    let mut stats_cmd = wrk.command("stats");
+    stats_cmd
+        .arg(testdata.clone())
+        .arg("--cardinality")
+        .arg("--stats-binout");
+
+    wrk.assert_success(&mut stats_cmd);
+
+    let mut cmd = wrk.command("frequency");
+    cmd.args(["--select", "1"]).arg(testdata);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["case_enquiry_id", "ALL_UNIQUE", "100", "100"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn frequency_all_unique_force_stats_cache() {
+    let wrk = Workdir::new("frequency_all_unique_force_stats_cache");
+    let testdata = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("frequency");
+    cmd.args(["--select", "1"])
+        .args(["--stats-mode", "force"])
+        .arg(testdata);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["case_enquiry_id", "ALL_UNIQUE", "100", "100"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn frequency_all_unique_stats_mode_none() {
+    let wrk = Workdir::new("frequency_all_unique_stats_mode_none");
+    let testdata = wrk.load_test_file("boston311-100.csv");
+
+    // create stats cache
+    let mut stats_cmd = wrk.command("stats");
+    stats_cmd
+        .arg(testdata.clone())
+        .arg("--cardinality")
+        .arg("--stats-binout");
+
+    wrk.assert_success(&mut stats_cmd);
+
+    // run frequency with stats-mode none, ignoring the stats cache
+    let mut cmd = wrk.command("frequency");
+    cmd.args(["--select", "1"])
+        .args(["--stats-mode", "none"])
+        .arg(testdata);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["case_enquiry_id", "101004113298", "1", "1"],
+        svec!["case_enquiry_id", "101004113313", "1", "1"],
+        svec!["case_enquiry_id", "101004113348", "1", "1"],
+        svec!["case_enquiry_id", "101004113363", "1", "1"],
+        svec!["case_enquiry_id", "101004113371", "1", "1"],
+        svec!["case_enquiry_id", "101004113385", "1", "1"],
+        svec!["case_enquiry_id", "101004113386", "1", "1"],
+        svec!["case_enquiry_id", "101004113391", "1", "1"],
+        svec!["case_enquiry_id", "101004113394", "1", "1"],
+        svec!["case_enquiry_id", "101004113403", "1", "1"],
+        svec!["case_enquiry_id", "Other (90)", "90", "90"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn frequency_issue1962() {
     let wrk = Workdir::new("frequency_1962");
     let testdata = wrk.load_test_file("data1962.csv");
@@ -525,7 +607,7 @@ fn prop_frequency() {
     }
     // Run on really small values because we are incredibly careless
     // with allocation.
-    qcheck_sized(p as fn(CsvData) -> bool, 2);
+    qcheck_sized(p as fn(CsvData) -> bool, 5);
 }
 
 // This tests that running the frequency command on a CSV file with these two
@@ -557,7 +639,7 @@ fn prop_frequency_indexed() {
     }
     // Run on really small values because we are incredibly careless
     // with allocation.
-    qcheck_sized(p as fn(CsvData) -> bool, 2);
+    qcheck_sized(p as fn(CsvData) -> bool, 5);
 }
 
 fn param_prop_frequency(name: &str, rows: CsvData, idx: bool) -> bool {
