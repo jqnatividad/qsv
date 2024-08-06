@@ -1400,8 +1400,8 @@ fn sqlp_sql_ssv() {
 }
 
 #[test]
-fn sqlp_sql_ssv_input() {
-    let wrk = Workdir::new("sqlp_sql_ssv_input");
+fn sqlp_sql_ssv_output() {
+    let wrk = Workdir::new("sqlp_sql_ssv_output");
     wrk.create_with_delim(
         "test.ssv",
         vec![
