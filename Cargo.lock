@@ -2835,9 +2835,9 @@ dependencies = [
 
 [[package]]
 name = "hyper-util"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ab92f4f49ee4fb4f997c784b7a2e0fa70050211e0b6a287f898c3c9785ca956"
+checksum = "cde7055719c54e36e95e8719f95883f22072a48ede39db7fc17a4e1d5281e9b9"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -4348,7 +4348,7 @@ dependencies = [
 [[package]]
 name = "polars"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "getrandom",
  "polars-arrow",
@@ -4367,7 +4367,7 @@ dependencies = [
 [[package]]
 name = "polars-arrow"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "ahash 0.8.11",
  "atoi",
@@ -4414,7 +4414,7 @@ dependencies = [
 [[package]]
 name = "polars-compute"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "bytemuck",
  "either",
@@ -4429,7 +4429,7 @@ dependencies = [
 [[package]]
 name = "polars-core"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "ahash 0.8.11",
  "bitflags 2.6.0",
@@ -4462,7 +4462,7 @@ dependencies = [
 [[package]]
 name = "polars-error"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "avro-schema",
  "polars-arrow-format",
@@ -4474,7 +4474,7 @@ dependencies = [
 [[package]]
 name = "polars-expr"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "ahash 0.8.11",
  "bitflags 2.6.0",
@@ -4493,7 +4493,7 @@ dependencies = [
 [[package]]
 name = "polars-io"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "ahash 0.8.11",
  "async-trait",
@@ -4533,7 +4533,7 @@ dependencies = [
 [[package]]
 name = "polars-json"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "ahash 0.8.11",
  "chrono",
@@ -4554,7 +4554,7 @@ dependencies = [
 [[package]]
 name = "polars-lazy"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "ahash 0.8.11",
  "bitflags 2.6.0",
@@ -4579,7 +4579,7 @@ dependencies = [
 [[package]]
 name = "polars-mem-engine"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "memmap2",
  "polars-arrow",
@@ -4598,7 +4598,7 @@ dependencies = [
 [[package]]
 name = "polars-ops"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "ahash 0.8.11",
  "argminmax",
@@ -4631,7 +4631,7 @@ dependencies = [
 [[package]]
 name = "polars-parquet"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "ahash 0.8.11",
  "async-stream",
@@ -4658,7 +4658,7 @@ dependencies = [
 [[package]]
 name = "polars-pipe"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "crossbeam-channel",
  "crossbeam-queue",
@@ -4683,7 +4683,7 @@ dependencies = [
 [[package]]
 name = "polars-plan"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "ahash 0.8.11",
  "bitflags 2.6.0",
@@ -4714,7 +4714,7 @@ dependencies = [
 [[package]]
 name = "polars-row"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "bytemuck",
  "polars-arrow",
@@ -4725,7 +4725,7 @@ dependencies = [
 [[package]]
 name = "polars-sql"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "hex",
  "once_cell",
@@ -4745,7 +4745,7 @@ dependencies = [
 [[package]]
 name = "polars-time"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "atoi",
  "bytemuck",
@@ -4766,7 +4766,7 @@ dependencies = [
 [[package]]
 name = "polars-utils"
 version = "0.41.3"
-source = "git+https://github.com/pola-rs/polars?tag=py-1.4.0#618a71047cb2e900b85392457d2aebd318934490"
+source = "git+https://github.com/pola-rs/polars?tag=py-1.4.1#0c2b5d82fd2726df7d7b318e5c21581a27fffdba"
 dependencies = [
  "ahash 0.8.11",
  "bytemuck",
@@ -5871,9 +5871,9 @@ dependencies = [
 
 [[package]]
 name = "scc"
-version = "2.1.8"
+version = "2.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d777f59627453628a9a5be1ee8d948745b94b1dfc2d0c3099cbd9e08ab89e7c"
+checksum = "06ff467073ddaff34c3a39e5b454f25dd982484a26fff50254ca793c56a1b714"
 dependencies = [
  "sdd",
 ]
