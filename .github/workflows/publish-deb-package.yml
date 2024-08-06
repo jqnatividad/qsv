@@ -20,6 +20,10 @@ jobs:
     needs: analyze-tags
     runs-on: ubuntu-20.04
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+  
       - name: Install Cargo Deb
         run: cargo install cargo-deb
 
