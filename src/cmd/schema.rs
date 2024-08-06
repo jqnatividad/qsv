@@ -119,6 +119,14 @@ pub struct Args {
 
 const STDIN_CSV: &str = "stdin.csv";
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum StatsMode {
+    Schema,
+    Frequency,
+    FrequencyForceStats,
+    None,
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
 
@@ -232,7 +240,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 ///  * max
 pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<String, Value>> {
     // invoke cmd::stats
-    let (csv_fields, csv_stats, stats_col_index_map) = get_stats_records(args)?;
+    let (csv_fields, csv_stats, stats_col_index_map) = get_stats_records(args, StatsMode::Schema)?;
 
     // amortize memory allocation
     let mut low_cardinality_column_indices: Vec<usize> =
@@ -426,7 +434,10 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
 
 /// get stats records from stats.bin file, or if its invalid, by running the stats command
 /// returns tuple (`csv_fields`, `csv_stats`, `stats_col_index_map`)
-fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap<String, usize>)> {
+pub fn get_stats_records(
+    args: &Args,
+    mode: StatsMode,
+) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap<String, usize>)> {
     let stats_args = crate::cmd::stats::Args {
         arg_input:            args.arg_input.clone(),
         flag_select:          crate::select::SelectColumns::parse("").unwrap(),
@@ -473,6 +484,12 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
         false
     };
 
+    if mode == StatsMode::None || (mode == StatsMode::Frequency && !stats_bin_current) {
+        // if the stats.bin file is not present, we're just doing frequency old school
+        // without cardinality
+        return Ok((ByteRecord::new(), Vec::new(), AHashMap::new()));
+    }
+
     let mut stats_bin_loaded = false;
 
     // if stats.bin file exists and is current, use it
@@ -507,19 +524,37 @@ fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap
 
         let statsbin_path = canonical_input_path.with_extension("stats.csv.bin.sz");
 
-        let mut stats_args_str = format!(
-            "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
-             --cardinality --output {output} --stats-binout --force",
-            input = {
-                if let Some(arg_input) = stats_args.arg_input.clone() {
-                    arg_input
-                } else {
-                    "-".to_string()
-                }
-            },
-            dates_whitelist = stats_args.flag_dates_whitelist,
-            output = tempfile_path,
-        );
+        let mut stats_args_str = if mode == StatsMode::Schema {
+            // mode is GetStatsMode::Schema
+            // we're generating schema, so we need all the stats
+            format!(
+                "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
+                 --cardinality --output {output} --stats-binout --force",
+                input = {
+                    if let Some(arg_input) = stats_args.arg_input.clone() {
+                        arg_input
+                    } else {
+                        "-".to_string()
+                    }
+                },
+                dates_whitelist = stats_args.flag_dates_whitelist,
+                output = tempfile_path,
+            )
+        } else {
+            // mode is GetStatsMode::Frequency or GetStatsMode::FrequencyForceStats
+            // we're doing frequency, so we just need cardinality
+            format!(
+                "stats {input} --cardinality --stats-binout --output {output}",
+                input = {
+                    if let Some(arg_input) = stats_args.arg_input.clone() {
+                        arg_input
+                    } else {
+                        "-".to_string()
+                    }
+                },
+                output = tempfile_path,
+            )
+        };
         if args.flag_prefer_dmy {
             stats_args_str = format!("{stats_args_str} --prefer-dmy");
         }
@@ -651,6 +686,8 @@ fn get_unique_values(
         flag_no_nulls:       true,
         flag_no_trim:        false,
         flag_ignore_case:    args.flag_ignore_case,
+        // internal mode for getting frequency tables
+        flag_stats_mode:     "_schema".to_string(),
         flag_jobs:           Some(util::njobs(args.flag_jobs)),
         flag_output:         None,
         flag_no_headers:     args.flag_no_headers,
