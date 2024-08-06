@@ -6,34 +6,39 @@ The frequency table is formatted as CSV data:
     field,value,count,percentage
 
 By default, there is a row for the N most frequent values for each field in the data.
-The order and number of values can be configured with --asc, --limit, --unq-limit
-and --lmt-threshold respectively.
 
-The unique limit (--unq-limit) is particularly useful when a column has all unique values
-(e.g. an ID column) and --limit is set to 0.
-Without a unique limit, the frequency table for that column will be the same as the number
-of rows in the data.
-With a unique limit, the frequency table will be a sample of N unique values, all with
-a count of 1.
+Since this command computes an exact frequency table, memory proportional to the
+cardinality of each column would be normally required.
 
-The --lmt-threshold option allows you to apply the --limit and --unq-limit options only
-when the number of unique items in a column is greater than or equal to the threshold.
-This is useful when you want to apply limits only to columns with a large number of unique
-items and not to columns with a small number of unique items.
-
-Since this computes an exact frequency table, memory proportional to the
-cardinality of each column is required.
-
-This is particularly problematic for columns with all unique values (e.g. record IDs),
-as the memory usage is equal to the number of rows in the data, which can cause
-Out-of-Memory (OOM) errors for larger-than-memory datasets.
+However, this is problematic for columns with all unique values, where the memory usage
+is equal to the number of rows in the data, which can cause Out-of-Memory (OOM) errors
+for larger-than-memory datasets.
 
 To overcome this, the frequency command will automatically use the stats cache if it exists
 to get column cardinalities. This short-circuits frequency compilation for columns with
 all unique values (i.e. where rowcount == cardinality), enabling it to compute frequencies for
 larger-than-memory datasets as it doesn't need to load all the column's unique values into memory.
 
+Instead, it will use the "ALL_UNIQUE" value for columns with all unique values.
+
 This behavior can be adjusted with the --stats-mode option.
+
+STATS_MODE "none" NOTES:
+
+    If --stats mode is set to "none", the frequency command will compute frequencies for
+    all columns regardless of cardinality, even for columns with all unique values.
+
+    In this case, the unique limit (--unq-limit) is particularly useful when a column has
+    all unique values (e.g. an ID column) and --limit is set to 0.
+    Without a unique limit, the frequency table for that column will be the same as the
+    number of rows in the data.
+    With a unique limit, the frequency table will be a sample of N unique values, all with
+    a count of 1.
+
+    Further, the --lmt-threshold option also allows you to apply the --limit & --unq-limit
+    options only when the number of unique items in a column is greater than or equal to the
+    threshold. This is useful when you want to apply limits only to columns with a large number
+    of unique items and not to columns with a small number of unique items.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_frequency.rs.
 
@@ -93,6 +98,8 @@ frequency options:
                                     For columns with all unique values, the first N sorted unique
                                     values (based on the --limit and --unq-limit options) will be used.
                             [default: auto]
+   --all-unique-text <arg>  The text to use for the "ALL_UNIQUE" category.
+                            [default: ALL_UNIQUE]
     -j, --jobs <arg>        The number of jobs to run in parallel.
                             This works much faster when the given CSV data has
                             an index already created. Note that a file handle
@@ -133,24 +140,25 @@ use crate::{
 #[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Deserialize)]
 pub struct Args {
-    pub arg_input:           Option<String>,
-    pub flag_select:         SelectColumns,
-    pub flag_limit:          isize,
-    pub flag_unq_limit:      usize,
-    pub flag_lmt_threshold:  usize,
-    pub flag_pct_dec_places: isize,
-    pub flag_other_sorted:   bool,
-    pub flag_other_text:     String,
-    pub flag_asc:            bool,
-    pub flag_no_trim:        bool,
-    pub flag_no_nulls:       bool,
-    pub flag_ignore_case:    bool,
-    pub flag_stats_mode:     String,
-    pub flag_jobs:           Option<usize>,
-    pub flag_output:         Option<String>,
-    pub flag_no_headers:     bool,
-    pub flag_delimiter:      Option<Delimiter>,
-    pub flag_memcheck:       bool,
+    pub arg_input:            Option<String>,
+    pub flag_select:          SelectColumns,
+    pub flag_limit:           isize,
+    pub flag_unq_limit:       usize,
+    pub flag_lmt_threshold:   usize,
+    pub flag_pct_dec_places:  isize,
+    pub flag_other_sorted:    bool,
+    pub flag_other_text:      String,
+    pub flag_asc:             bool,
+    pub flag_no_trim:         bool,
+    pub flag_no_nulls:        bool,
+    pub flag_ignore_case:     bool,
+    pub flag_stats_mode:      String,
+    pub flag_all_unique_text: String,
+    pub flag_jobs:            Option<usize>,
+    pub flag_output:          Option<String>,
+    pub flag_no_headers:      bool,
+    pub flag_delimiter:       Option<Delimiter>,
+    pub flag_memcheck:        bool,
 }
 
 const NULL_VAL: &[u8] = b"(NULL)";
@@ -193,6 +201,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let head_ftables = headers.iter().zip(tables);
     let row_count = *FREQ_ROW_COUNT.get().unwrap_or(&0);
 
+    let all_unique_text = args.flag_all_unique_text.as_bytes();
+
     for (i, (header, ftab)) in head_ftables.enumerate() {
         header_vec = if rconfig.no_headers {
             (i + 1).to_string().into_bytes()
@@ -205,7 +215,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if all_unique_header {
             // if the column has all unique values, we don't need to sort the counts
-            sorted_counts = vec![(b"ALL_UNIQUE".to_vec(), row_count, 100.0_f64)];
+            sorted_counts = vec![(all_unique_text.to_vec(), row_count, 100.0_f64)];
         } else {
             sorted_counts = args.counts(&ftab);
 
