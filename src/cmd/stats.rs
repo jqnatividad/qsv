@@ -183,12 +183,12 @@ stats options:
                               Note that a file handle is opened for each job.
                               When not set, the number of jobs is set to the
                               number of CPUs detected.
-    --stats-binout            Write the stats in binary format. This is used internally
-                              by other qsv commands (currently `schema` & `tojsonl`) to
-                              load cached stats into memory faster. If set, the snappy compressed
+    --stats-binout            Write the stats in binary format. This is used internally by other
+                              qsv commands (currently `frequency`, `schema` & `tojsonl`) to load
+                              cached stats into memory faster. If set, the snappy compressed
                               binary encoded stats will be written to <FILESTEM>.stats.csv.bin.sz.
-                              You can preemptively create the binary encoded stats file
-                              by using this option BEFORE running the `schema` and `tojsonl`
+                              You can preemptively create the binary encoded stats file by using
+                              this option BEFORE running the `frequency`, `schema` & `tojsonl`
                               commands and they will automatically load the binary encoded
                               stats file if it exists.
  -c, --cache-threshold <arg>  When greater than 1, the threshold in milliseconds before caching

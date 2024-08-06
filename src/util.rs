@@ -13,10 +13,12 @@ use std::{
     time::SystemTime,
 };
 
+use ahash::AHashMap;
+use csv::ByteRecord;
 use docopt::Docopt;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget, ProgressStyle};
-use log::log_enabled;
+use log::{info, log_enabled, warn};
 use reqwest::Client;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
@@ -27,7 +29,8 @@ use sysinfo::System;
 use crate::cmd::count::polars_count_input;
 use crate::{
     config,
-    config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
+    config::{Config, Delimiter, DEFAULT_RDR_BUFFER_CAPACITY, DEFAULT_WTR_BUFFER_CAPACITY},
+    select::SelectColumns,
     CliError, CliResult, CURRENT_COMMAND,
 };
 
@@ -45,6 +48,32 @@ const DEFAULT_FREEMEMORY_HEADROOM_PCT: u8 = 20;
 static ROW_COUNT: OnceLock<Option<u64>> = OnceLock::new();
 
 pub type ByteString = Vec<u8>;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum StatsMode {
+    Schema,
+    Frequency,
+    FrequencyForceStats,
+    None,
+}
+
+#[allow(dead_code)]
+#[derive(serde::Deserialize, Clone)]
+pub struct SchemaArgs {
+    pub flag_enum_threshold:  usize,
+    pub flag_ignore_case:     bool,
+    pub flag_strict_dates:    bool,
+    pub flag_pattern_columns: SelectColumns,
+    pub flag_dates_whitelist: String,
+    pub flag_prefer_dmy:      bool,
+    pub flag_force:           bool,
+    pub flag_stdout:          bool,
+    pub flag_jobs:            Option<usize>,
+    pub flag_no_headers:      bool,
+    pub flag_delimiter:       Option<Delimiter>,
+    pub arg_input:            Option<String>,
+    pub flag_memcheck:        bool,
+}
 
 #[inline]
 pub fn num_cpus() -> usize {
@@ -1886,6 +1915,206 @@ pub fn trim_bs_whitespace(bytes: &[u8]) -> &[u8] {
         .map_or_else(|| start, |pos| pos + 1);
 
     &bytes[start..end]
+}
+
+// get stats records from stats.bin file, or if its invalid, by running the stats command
+/// returns tuple (`csv_fields`, `csv_stats`, `stats_col_index_map`)
+pub fn get_stats_records(
+    args: &SchemaArgs,
+    mode: StatsMode,
+) -> CliResult<(
+    ByteRecord,
+    Vec<crate::cmd::stats::Stats>,
+    AHashMap<String, usize>,
+)> {
+    let stats_args = crate::cmd::stats::Args {
+        arg_input:            args.arg_input.clone(),
+        flag_select:          crate::select::SelectColumns::parse("").unwrap(),
+        flag_everything:      false,
+        flag_typesonly:       false,
+        flag_infer_boolean:   false,
+        flag_mode:            false,
+        flag_cardinality:     true,
+        flag_median:          false,
+        flag_quartiles:       false,
+        flag_mad:             false,
+        flag_nulls:           false,
+        flag_round:           4,
+        flag_infer_dates:     true,
+        flag_dates_whitelist: args.flag_dates_whitelist.to_string(),
+        flag_prefer_dmy:      args.flag_prefer_dmy,
+        flag_force:           args.flag_force,
+        flag_jobs:            Some(njobs(args.flag_jobs)),
+        flag_stats_binout:    true,
+        flag_cache_threshold: 1, // force the creation of stats cache files
+        flag_output:          None,
+        flag_no_headers:      args.flag_no_headers,
+        flag_delimiter:       args.flag_delimiter,
+        flag_memcheck:        args.flag_memcheck,
+    };
+
+    let canonical_input_path = Path::new(&args.arg_input.clone().unwrap()).canonicalize()?;
+    let stats_binary_encoded_path = canonical_input_path.with_extension("stats.csv.bin.sz");
+
+    let stats_bin_current = if stats_binary_encoded_path.exists() {
+        let stats_bin_metadata = std::fs::metadata(&stats_binary_encoded_path)?;
+
+        let input_metadata = std::fs::metadata(args.arg_input.clone().unwrap())?;
+
+        if stats_bin_metadata.modified()? > input_metadata.modified()? {
+            info!("Valid stats.csv.bin.sz file found!");
+            true
+        } else {
+            info!("stats.csv.bin.sz file is older than input file. Regenerating stats.bin file.");
+            false
+        }
+    } else {
+        info!("stats.csv.bin.sz file does not exist: {stats_binary_encoded_path:?}");
+        false
+    };
+
+    if mode == StatsMode::None || (mode == StatsMode::Frequency && !stats_bin_current) {
+        // if the stats.bin file is not present, we're just doing frequency old school
+        // without cardinality
+        return Ok((ByteRecord::new(), Vec::new(), AHashMap::new()));
+    }
+
+    let mut stats_bin_loaded = false;
+
+    // if stats.bin file exists and is current, use it
+    let mut csv_stats: Vec<crate::cmd::stats::Stats> = Vec::new();
+
+    if stats_bin_current && !args.flag_force {
+        let bin_file = BufReader::with_capacity(
+            DEFAULT_RDR_BUFFER_CAPACITY * 4,
+            File::open(stats_binary_encoded_path)?,
+        );
+        let mut buf_binsz_decoder = snap::read::FrameDecoder::new(bin_file);
+        match bincode::deserialize_from(&mut buf_binsz_decoder) {
+            Ok(stats) => {
+                csv_stats = stats;
+                stats_bin_loaded = true;
+            },
+            Err(e) => {
+                wwarn!(
+                    "Error reading stats.csv.bin.sz file: {e:?}. Regenerating stats.bin.sz file."
+                );
+            },
+        }
+    }
+
+    if !stats_bin_loaded {
+        // otherwise, run stats command to generate stats.csv.bin.sz file
+        let tempfile = tempfile::Builder::new()
+            .suffix(".stats.csv")
+            .tempfile()
+            .unwrap();
+        let tempfile_path = tempfile.path().to_str().unwrap().to_string();
+
+        let statsbin_path = canonical_input_path.with_extension("stats.csv.bin.sz");
+
+        let mut stats_args_str = if mode == StatsMode::Schema {
+            // mode is GetStatsMode::Schema
+            // we're generating schema, so we need all the stats
+            format!(
+                "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
+                 --cardinality --output {output} --stats-binout --force",
+                input = {
+                    if let Some(arg_input) = stats_args.arg_input.clone() {
+                        arg_input
+                    } else {
+                        "-".to_string()
+                    }
+                },
+                dates_whitelist = stats_args.flag_dates_whitelist,
+                output = tempfile_path,
+            )
+        } else {
+            // mode is GetStatsMode::Frequency or GetStatsMode::FrequencyForceStats
+            // we're doing frequency, so we just need cardinality
+            format!(
+                "stats {input} --cardinality --stats-binout --output {output}",
+                input = {
+                    if let Some(arg_input) = stats_args.arg_input.clone() {
+                        arg_input
+                    } else {
+                        "-".to_string()
+                    }
+                },
+                output = tempfile_path,
+            )
+        };
+        if args.flag_prefer_dmy {
+            stats_args_str = format!("{stats_args_str} --prefer-dmy");
+        }
+        if args.flag_no_headers {
+            stats_args_str = format!("{stats_args_str} --no-headers");
+        }
+        if let Some(delimiter) = args.flag_delimiter {
+            let delim = delimiter.as_byte() as char;
+            stats_args_str = format!("{stats_args_str} --delimiter {delim}");
+        }
+        if args.flag_memcheck {
+            stats_args_str = format!("{stats_args_str} --memcheck");
+        }
+        if let Some(mut jobs) = stats_args.flag_jobs {
+            if jobs > 2 {
+                jobs -= 1; // leave one core for the main thread
+            }
+            stats_args_str = format!("{stats_args_str} --jobs {jobs}");
+        }
+
+        let stats_args_vec: Vec<&str> = stats_args_str.split_whitespace().collect();
+
+        let qsv_bin = std::env::current_exe().unwrap();
+        let mut stats_cmd = std::process::Command::new(qsv_bin);
+        stats_cmd.args(stats_args_vec);
+        let _stats_output = stats_cmd.output()?;
+
+        let bin_file =
+            BufReader::with_capacity(DEFAULT_RDR_BUFFER_CAPACITY * 2, File::open(statsbin_path)?);
+        let mut buf_binsz_decoder = snap::read::FrameDecoder::new(bin_file);
+
+        match bincode::deserialize_from(&mut buf_binsz_decoder) {
+            Ok(stats) => {
+                csv_stats = stats;
+            },
+            Err(e) => {
+                return fail_clierror!(
+                    "Error reading stats.csv.bin.sz file: {e:?}. Schema generation aborted."
+                );
+            },
+        }
+    };
+
+    // get the headers from the input file
+    let mut rdr = csv::Reader::from_path(args.arg_input.clone().unwrap()).unwrap();
+    let csv_fields = rdr.byte_headers()?.clone();
+    drop(rdr);
+
+    let stats_columns = if stats_bin_loaded {
+        // if stats.bin file is loaded, we need to get the headers from the stats.csv file
+        let stats_bin_csv_path = canonical_input_path.with_extension("stats.csv");
+        let mut stats_csv_reader = csv::Reader::from_path(stats_bin_csv_path)?;
+        let stats_csv_headers = stats_csv_reader.headers()?.clone();
+        drop(stats_csv_reader);
+        stats_csv_headers
+    } else {
+        // otherwise, we generate the headers from the stats_args struct
+        // as we used the stats_args struct to generate the stats.csv file
+        stats_args.stat_headers()
+    };
+
+    let mut stats_col_index_map = AHashMap::new();
+
+    for (i, col) in stats_columns.iter().enumerate() {
+        if col != "field" {
+            // need offset by 1 due to extra "field" column in headers that's not in stats records
+            stats_col_index_map.insert(col.to_owned(), i - 1);
+        }
+    }
+
+    Ok((csv_fields, csv_stats, stats_col_index_map))
 }
 
 // comment out for now as this is still WIP

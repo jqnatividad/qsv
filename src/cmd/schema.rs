@@ -77,11 +77,7 @@ Common options:
                                CSV into memory using CONSERVATIVE heuristics.
 "#;
 
-use std::{
-    fs::File,
-    io::{BufReader, Write},
-    path::Path,
-};
+use std::{fs::File, io::Write, path::Path};
 
 use ahash::{AHashMap, AHashSet};
 use csv::ByteRecord;
@@ -89,38 +85,15 @@ use grex::RegExpBuilder;
 use itertools::Itertools;
 use log::{debug, error, info, warn};
 use rayon::slice::ParallelSliceMut;
-use serde::Deserialize;
 use serde_json::{json, value::Number, Map, Value};
 use stats::Frequencies;
 
-use crate::{
-    cmd::stats::Stats,
-    config::{Config, Delimiter, DEFAULT_RDR_BUFFER_CAPACITY},
-    select::SelectColumns,
-    util, CliResult,
-};
-
-#[derive(Deserialize, Clone)]
-pub struct Args {
-    pub flag_enum_threshold:  usize,
-    pub flag_ignore_case:     bool,
-    pub flag_strict_dates:    bool,
-    pub flag_pattern_columns: SelectColumns,
-    pub flag_dates_whitelist: String,
-    pub flag_prefer_dmy:      bool,
-    pub flag_force:           bool,
-    pub flag_stdout:          bool,
-    pub flag_jobs:            Option<usize>,
-    pub flag_no_headers:      bool,
-    pub flag_delimiter:       Option<Delimiter>,
-    pub arg_input:            Option<String>,
-    pub flag_memcheck:        bool,
-}
+use crate::{cmd::stats::Stats, config::Config, util, util::StatsMode, CliResult};
 
 const STDIN_CSV: &str = "stdin.csv";
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
-    let mut args: Args = util::get_args(USAGE, argv)?;
+    let mut args: util::SchemaArgs = util::get_args(USAGE, argv)?;
 
     // if using stdin, we create a stdin.csv file as stdin is not seekable and we need to
     // open the file multiple times to compile stats/unique values, etc.
@@ -230,9 +203,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 ///  * maxLength
 ///  * min
 ///  * max
-pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<Map<String, Value>> {
+pub fn infer_schema_from_stats(
+    args: &util::SchemaArgs,
+    input_filename: &str,
+) -> CliResult<Map<String, Value>> {
     // invoke cmd::stats
-    let (csv_fields, csv_stats, stats_col_index_map) = get_stats_records(args)?;
+    let (csv_fields, csv_stats, stats_col_index_map) =
+        util::get_stats_records(args, StatsMode::Schema)?;
 
     // amortize memory allocation
     let mut low_cardinality_column_indices: Vec<usize> =
@@ -424,175 +401,6 @@ pub fn infer_schema_from_stats(args: &Args, input_filename: &str) -> CliResult<M
     Ok(properties_map)
 }
 
-/// get stats records from stats.bin file, or if its invalid, by running the stats command
-/// returns tuple (`csv_fields`, `csv_stats`, `stats_col_index_map`)
-fn get_stats_records(args: &Args) -> CliResult<(ByteRecord, Vec<Stats>, AHashMap<String, usize>)> {
-    let stats_args = crate::cmd::stats::Args {
-        arg_input:            args.arg_input.clone(),
-        flag_select:          crate::select::SelectColumns::parse("").unwrap(),
-        flag_everything:      false,
-        flag_typesonly:       false,
-        flag_infer_boolean:   false,
-        flag_mode:            false,
-        flag_cardinality:     true,
-        flag_median:          false,
-        flag_quartiles:       false,
-        flag_mad:             false,
-        flag_nulls:           false,
-        flag_round:           4,
-        flag_infer_dates:     true,
-        flag_dates_whitelist: args.flag_dates_whitelist.to_string(),
-        flag_prefer_dmy:      args.flag_prefer_dmy,
-        flag_force:           args.flag_force,
-        flag_jobs:            Some(util::njobs(args.flag_jobs)),
-        flag_stats_binout:    true,
-        flag_cache_threshold: 1, // force the creation of stats cache files
-        flag_output:          None,
-        flag_no_headers:      args.flag_no_headers,
-        flag_delimiter:       args.flag_delimiter,
-        flag_memcheck:        args.flag_memcheck,
-    };
-
-    let canonical_input_path = Path::new(&args.arg_input.clone().unwrap()).canonicalize()?;
-    let stats_binary_encoded_path = canonical_input_path.with_extension("stats.csv.bin.sz");
-
-    let stats_bin_current = if stats_binary_encoded_path.exists() {
-        let stats_bin_metadata = std::fs::metadata(&stats_binary_encoded_path)?;
-
-        let input_metadata = std::fs::metadata(args.arg_input.clone().unwrap())?;
-
-        if stats_bin_metadata.modified()? > input_metadata.modified()? {
-            info!("Valid stats.csv.bin.sz file found!");
-            true
-        } else {
-            info!("stats.csv.bin.sz file is older than input file. Regenerating stats.bin file.");
-            false
-        }
-    } else {
-        info!("stats.csv.bin.sz file does not exist: {stats_binary_encoded_path:?}");
-        false
-    };
-
-    let mut stats_bin_loaded = false;
-
-    // if stats.bin file exists and is current, use it
-    let mut csv_stats: Vec<Stats> = Vec::new();
-
-    if stats_bin_current && !args.flag_force {
-        let bin_file = BufReader::with_capacity(
-            DEFAULT_RDR_BUFFER_CAPACITY * 4,
-            File::open(stats_binary_encoded_path)?,
-        );
-        let mut buf_binsz_decoder = snap::read::FrameDecoder::new(bin_file);
-        match bincode::deserialize_from(&mut buf_binsz_decoder) {
-            Ok(stats) => {
-                csv_stats = stats;
-                stats_bin_loaded = true;
-            },
-            Err(e) => {
-                wwarn!(
-                    "Error reading stats.csv.bin.sz file: {e:?}. Regenerating stats.bin.sz file."
-                );
-            },
-        }
-    }
-
-    if !stats_bin_loaded {
-        // otherwise, run stats command to generate stats.csv.bin.sz file
-        let tempfile = tempfile::Builder::new()
-            .suffix(".stats.csv")
-            .tempfile()
-            .unwrap();
-        let tempfile_path = tempfile.path().to_str().unwrap().to_string();
-
-        let statsbin_path = canonical_input_path.with_extension("stats.csv.bin.sz");
-
-        let mut stats_args_str = format!(
-            "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
-             --cardinality --output {output} --stats-binout --force",
-            input = {
-                if let Some(arg_input) = stats_args.arg_input.clone() {
-                    arg_input
-                } else {
-                    "-".to_string()
-                }
-            },
-            dates_whitelist = stats_args.flag_dates_whitelist,
-            output = tempfile_path,
-        );
-        if args.flag_prefer_dmy {
-            stats_args_str = format!("{stats_args_str} --prefer-dmy");
-        }
-        if args.flag_no_headers {
-            stats_args_str = format!("{stats_args_str} --no-headers");
-        }
-        if let Some(delimiter) = args.flag_delimiter {
-            let delim = delimiter.as_byte() as char;
-            stats_args_str = format!("{stats_args_str} --delimiter {delim}");
-        }
-        if args.flag_memcheck {
-            stats_args_str = format!("{stats_args_str} --memcheck");
-        }
-        if let Some(mut jobs) = stats_args.flag_jobs {
-            if jobs > 2 {
-                jobs -= 1; // leave one core for the main thread
-            }
-            stats_args_str = format!("{stats_args_str} --jobs {jobs}");
-        }
-
-        let stats_args_vec: Vec<&str> = stats_args_str.split_whitespace().collect();
-
-        let qsv_bin = std::env::current_exe().unwrap();
-        let mut stats_cmd = std::process::Command::new(qsv_bin);
-        stats_cmd.args(stats_args_vec);
-        let _stats_output = stats_cmd.output()?;
-
-        let bin_file =
-            BufReader::with_capacity(DEFAULT_RDR_BUFFER_CAPACITY * 2, File::open(statsbin_path)?);
-        let mut buf_binsz_decoder = snap::read::FrameDecoder::new(bin_file);
-
-        match bincode::deserialize_from(&mut buf_binsz_decoder) {
-            Ok(stats) => {
-                csv_stats = stats;
-            },
-            Err(e) => {
-                return fail_clierror!(
-                    "Error reading stats.csv.bin.sz file: {e:?}. Schema generation aborted."
-                );
-            },
-        }
-    };
-
-    // get the headers from the input file
-    let mut rdr = csv::Reader::from_path(args.arg_input.clone().unwrap()).unwrap();
-    let csv_fields = rdr.byte_headers()?.clone();
-    drop(rdr);
-
-    let stats_columns = if stats_bin_loaded {
-        // if stats.bin file is loaded, we need to get the headers from the stats.csv file
-        let stats_bin_csv_path = canonical_input_path.with_extension("stats.csv");
-        let mut stats_csv_reader = csv::Reader::from_path(stats_bin_csv_path)?;
-        let stats_csv_headers = stats_csv_reader.headers()?.clone();
-        drop(stats_csv_reader);
-        stats_csv_headers
-    } else {
-        // otherwise, we generate the headers from the stats_args struct
-        // as we used the stats_args struct to generate the stats.csv file
-        stats_args.stat_headers()
-    };
-
-    let mut stats_col_index_map = AHashMap::new();
-
-    for (i, col) in stats_columns.iter().enumerate() {
-        if col != "field" {
-            // need offset by 1 due to extra "field" column in headers that's not in stats records
-            stats_col_index_map.insert(col.to_owned(), i - 1);
-        }
-    }
-
-    Ok((csv_fields, csv_stats, stats_col_index_map))
-}
-
 /// get column selector argument string for low cardinality columns
 fn build_low_cardinality_column_selector_arg(
     low_cardinality_column_indices: &mut Vec<usize>,
@@ -634,7 +442,7 @@ fn build_low_cardinality_column_selector_arg(
 /// get frequency tables from `cmd::frequency`
 /// returns map of unique values keyed by header
 fn get_unique_values(
-    args: &Args,
+    args: &util::SchemaArgs,
     column_select_arg: &str,
 ) -> CliResult<AHashMap<String, Vec<String>>> {
     // prepare arg for invoking cmd::frequency
@@ -651,6 +459,8 @@ fn get_unique_values(
         flag_no_nulls:       true,
         flag_no_trim:        false,
         flag_ignore_case:    args.flag_ignore_case,
+        // internal mode for getting frequency tables
+        flag_stats_mode:     "_schema".to_string(),
         flag_jobs:           Some(util::njobs(args.flag_jobs)),
         flag_output:         None,
         flag_no_headers:     args.flag_no_headers,
@@ -731,7 +541,7 @@ fn get_required_fields(properties_map: &Map<String, Value>) -> Vec<Value> {
 
 /// generate map of regex patterns from selected String column of CSV
 fn generate_string_patterns(
-    args: &Args,
+    args: &util::SchemaArgs,
     properties_map: &Map<String, Value>,
 ) -> CliResult<AHashMap<String, String>> {
     // standard boiler-plate for reading CSV

@@ -114,7 +114,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let record_count = util::count_rows(&conf)?;
 
     // we're calling the schema command to infer data types and enums
-    let schema_args = crate::cmd::schema::Args {
+    let schema_args = util::SchemaArgs {
         // we only do three, as we're only inferring boolean based on enum
         // i.e. we only inspect a field if its boolean if its domain
         // is just two values. if its more than 2, that's all we need know
@@ -166,7 +166,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_no_boolean
     };
 
-    let mut lowecase_buffer = String::new();
+    let mut lowercase_buffer = String::new();
 
     // create a vec lookup about inferred field data types
     let mut field_type_vec: Vec<JsonlType> = Vec::with_capacity(headers.len());
@@ -199,7 +199,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 }
                             } else if let Some(str_val) = vals[0].as_str() {
                                 // else, if its a string, get the first character of val1 lowercase
-                                boolcheck(str_val, &mut lowecase_buffer)
+                                boolcheck(str_val, &mut lowercase_buffer)
                             } else {
                                 '*'
                             }
@@ -214,7 +214,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 _ => '*',
                             }
                         } else if let Some(str_val) = vals[1].as_str() {
-                            boolcheck(str_val, &mut lowecase_buffer)
+                            boolcheck(str_val, &mut lowercase_buffer)
                         } else {
                             '*'
                         };
