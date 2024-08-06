@@ -498,6 +498,33 @@ fn frequency_all_unique_with_stats_cache() {
 }
 
 #[test]
+fn frequency_all_unique_with_stats_cache_alt_all_unique_text() {
+    let wrk = Workdir::new("frequency_all_unique_with_stats_cache_alt_all_unique_text");
+    let testdata = wrk.load_test_file("boston311-100.csv");
+
+    let mut stats_cmd = wrk.command("stats");
+    stats_cmd
+        .arg(testdata.clone())
+        .arg("--cardinality")
+        .arg("--stats-binout");
+
+    wrk.assert_success(&mut stats_cmd);
+
+    let mut cmd = wrk.command("frequency");
+    cmd.args(["--select", "1"])
+        // "ALL_UNIQUE" in German
+        .args(["--all-unique-text", "<ALLE EINZIGARTIG>"])
+        .arg(testdata);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["field", "value", "count", "percentage"],
+        svec!["case_enquiry_id", "<ALLE EINZIGARTIG>", "100", "100"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn frequency_all_unique_force_stats_cache() {
     let wrk = Workdir::new("frequency_all_unique_force_stats_cache");
     let testdata = wrk.load_test_file("boston311-100.csv");
