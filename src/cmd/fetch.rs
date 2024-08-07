@@ -995,6 +995,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     winfo!("{end_msg}");
 
+    // if using a Diskcache, explicitly flush it
+    // to ensure all entries are written to disk
+    if cache_type == CacheType::Disk {
+        GET_DISKCACHE_RESPONSE
+            .connection()
+            .flush()
+            .map_err(|e| CliError::Other(format!("Error flushing DiskCache: {e}")))?;
+    }
+
     Ok(wtr.flush()?)
 }
 
@@ -1051,9 +1060,10 @@ fn get_cached_response(
             .set_lifespan(diskcache_config.ttl_secs)
             .set_refresh(diskcache_config.ttl_refresh)
             .build()
-            .expect("error building disk cache");
+            .expect("error building diskcache");
         log::info!("Disk cache created - dir: {cache_dir} - ttl: {ttl_secs}",
             ttl_secs = diskcache_config.ttl_secs);
+        diskcache.remove_expired_entries().expect("error removing expired diskcache entries");
         diskcache
     }"##,
     map_error = r##"|e| CliError::Other(format!("Diskcache Error: {:?}", e))"##,
