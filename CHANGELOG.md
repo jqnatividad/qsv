@@ -6,6 +6,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.131.0] - 2024-08-07
+
+## What's Changed
+* build(deps): bump jaq-parse from 1.0.2 to 1.0.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2016
+* Debpackage update by @tino097 in https://github.com/jqnatividad/qsv/pull/2017
+* build(deps): bump bytes from 1.6.1 to 1.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2018
+* build(deps): bump sysinfo from 0.30.13 to 0.31.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2019
+* build(deps): bump indexmap from 2.2.6 to 2.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2020
+* build(deps): bump bytes from 1.7.0 to 1.7.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2021
+* build(deps): bump serde_json from 1.0.121 to 1.0.122 by @dependabot in https://github.com/jqnatividad/qsv/pull/2022
+* build(deps): bump redis from 0.26.0 to 0.26.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2023
+* build(deps): bump sysinfo from 0.31.0 to 0.31.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2024
+* build(deps): bump regex from 1.10.5 to 1.10.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/2025
+* docs: fix link by @uncenter in https://github.com/jqnatividad/qsv/pull/2026
+* build(deps): bump flate2 from 1.0.30 to 1.0.31 by @dependabot in https://github.com/jqnatividad/qsv/pull/2027
+* `frequency`: smarter frequency compilation with new `--stats-mode` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2030
+* Add building deb package by @tino097 in https://github.com/jqnatividad/qsv/pull/2029
+* `contrib(completions)`: `frequency` updates & remove bashly/fish by @rzmk in https://github.com/jqnatividad/qsv/pull/2031
+* Testing package by @tino097 in https://github.com/jqnatividad/qsv/pull/2032
+* build(deps): bump tempfile from 3.11.0 to 3.12.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2033
+
+## New Contributors
+* @uncenter made their first contribution in https://github.com/jqnatividad/qsv/pull/2026
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.130.0...0.131.0
+
 ## [0.130.0] - 2024-07-29
 
 Following the [0.129.0 release - the largest release ever](https://github.com/jqnatividad/qsv/releases/tag/0.129.0), 0.130.0 continues to polish qsv as a data-wrangling engine, packing new features, fixes, and improvements, previewing upcoming features in qsv pro 1.0. Here are a few highlights:
