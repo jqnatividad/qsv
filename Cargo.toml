@@ -253,6 +253,7 @@ serial_test = { version = "3.1", features = ["file_locks"] }
 
 [patch.crates-io]
 # needed as dynfmt doesn't work in release mode without this
+# see https://github.com/jan-auer/dynfmt/pull/9
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "6a78534" }
@@ -260,8 +261,10 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "6a78534" }
 calamine = { git = "https://github.com/tafia/calamine", rev = "a90e877" }
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
-# use latest upstream version of polars with additional unreleased features/fixes
-# polars = { git = "https://github.com/pola-rs/polars", rev = "66f0026" }
+# Polars has a much higher release tempo for its Python bindings compared
+# to its underlying Rust library. See https://github.com/pola-rs/polars/releases
+# It's qsv's policy to use the latest release of py-polars
+# to take advantage of Polars' latest features and fixes.
 polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.4.1" }
 
 
