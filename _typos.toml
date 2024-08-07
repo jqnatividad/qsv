@@ -2,12 +2,13 @@
 extend-ignore-identifiers-re = ["wrk", "flate", "ND"]
 
 [default.extend-identifiers]
-# typos in third-party code
+# typos in third-party code/libraries
 WrittingCSV = "WrittingCSV"
 seperator   = "seperator"
 
 [default.extend-words]
 # these are false positives in data/examples
+ALLE   = "ALLE"
 ba     = "ba"
 fo     = "fo"
 hel    = "hel"
