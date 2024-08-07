@@ -255,7 +255,7 @@ serial_test = { version = "3.1", features = ["file_locks"] }
 # needed as dynfmt doesn't work in release mode without this
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 # needed to get latest dependencies and unreleased fixes
-grex = { git = "https://github.com/pemistahl/grex", rev = "af059db" }
+grex = { git = "https://github.com/pemistahl/grex", rev = "6a78534" }
 # calamine 0.25.0 with unreleased fixes
 calamine = { git = "https://github.com/tafia/calamine", rev = "a90e877" }
 # use modernized version of local_encoding
