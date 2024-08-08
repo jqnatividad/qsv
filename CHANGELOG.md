@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.131.0] - 2024-08-07
+## [0.131.0] - 2024-08-11
 
 ## What's Changed
 * build(deps): bump jaq-parse from 1.0.2 to 1.0.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2016
@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `contrib(completions)`: `frequency` updates & remove bashly/fish by @rzmk in https://github.com/jqnatividad/qsv/pull/2031
 * Testing package by @tino097 in https://github.com/jqnatividad/qsv/pull/2032
 * build(deps): bump tempfile from 3.11.0 to 3.12.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2033
+* build(deps): bump serde from 1.0.204 to 1.0.205 by @dependabot in https://github.com/jqnatividad/qsv/pull/2036
 
 ## New Contributors
 * @uncenter made their first contribution in https://github.com/jqnatividad/qsv/pull/2026
