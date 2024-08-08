@@ -1,8 +1,8 @@
 ### A whirlwind tour
 
-> ℹ️ **NOTE:** This tour is primarily targeted to Linux and macOS users. Though qsv works on Windows, the tour
-assumes basic knowledge of command-line piping and redirection, and uses other command-line tools (curl, tee, head, etc.)
-that are not installed by default on Windows.
+> ℹ️ **NOTE:** This tour is primarily targeted to Linux and macOS users. Though qsv works on Windows, the tour assumes basic knowledge of command-line piping and redirection, and uses other command-line tools (curl, tee, head, etc.) that are not installed by default on Windows.  
+For a more detailed, interactive tour (which also happens to be Windows-friendly)
+see [100.dathere.com](https://100.dathere.com).
 
 Let's say you're playing with some data from the
 [Data Science Toolkit](https://github.com/petewarden/dstkdata), which contains
