@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `contrib(completions)`: `frequency` updates & remove bashly/fish by @rzmk in https://github.com/jqnatividad/qsv/pull/2031
 * Debian package update by @tino097 in https://github.com/jqnatividad/qsv/pull/2017
 * `publish`: optimized enabled CPU features when building release binaries in all GitHub Actions "publishing" workflows
-* `publish`: ensure latest Python patch release is used when building `qsvpy312` binary variant https://github.com/jqnatividad/qsv/commit/2ab03a097645a95b0d390f546ad9735c9a7e72b2
+* `publish`: ensure latest Python patch release is used when building `qsvpy` binary variants https://github.com/jqnatividad/qsv/commit/2ab03a097645a95b0d390f546ad9735c9a7e72b2 and https://github.com/jqnatividad/qsv/commit/ec6f486ef112cf942b2263b84b97d90cba1beb12
 * `tests`: also enabled CPU features in CI tests
 * `docs`: wordsmith qsv "elevator pitch" https://github.com/jqnatividad/qsv/commit/cc47fe688eeeb13b4deb3f3bf48d954924eee22e
 * `docs`: point to https://100.dathere.com in Whirlwind tour https://github.com/jqnatividad/qsv/commit/fc49aef826c1b1933ea1508cb687476936a147ff
