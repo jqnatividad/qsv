@@ -1,23 +1,24 @@
 static USAGE: &str = r#"
 Compute a frequency table on CSV data.
 
-The frequency table is formatted as CSV data:
+The frequency table is formatted as CSV data with the following columns:
 
     field,value,count,percentage
 
-By default, there is a row for the N most frequent values for each field in the data.
+With a row for the N most frequent values (default:10) for each column in the CSV.
 
 Since this command computes an exact frequency table, memory proportional to the
 cardinality of each column would be normally required.
 
-However, this is problematic for columns with all unique values, where the memory usage
-is equal to the number of rows in the data, which can cause Out-of-Memory (OOM) errors
-for larger-than-memory datasets.
+However, this is problematic for columns with unique values (e.g. an ID column),
+as the command will need to load all the column's values into memory, potentially
+causing Out-of-Memory (OOM) errors for larger-than-memory datasets.
 
-To overcome this, the frequency command will automatically use the stats cache if it exists
-to get column cardinalities. This short-circuits frequency compilation for columns with
-all unique values (i.e. where rowcount == cardinality), enabling it to compute frequencies for
-larger-than-memory datasets as it doesn't need to load all the column's unique values into memory.
+To overcome this, the frequency command will automatically use the stats cache if it
+exists to get column cardinalities. This short-circuits frequency compilation for columns
+with all unique values (i.e. where rowcount == cardinality), increasing performance.
+It also has the added benefit of not having to load all the column's values into memory,
+effectively allowing the frequency command to work with larger-than-memory datasets.
 
 Instead, it will use the "<ALL_UNIQUE>" value for columns with all unique values.
 
@@ -29,7 +30,7 @@ STATS_MODE "none" NOTES:
     all columns regardless of cardinality, even for columns with all unique values.
 
     In this case, the unique limit (--unq-limit) is particularly useful when a column has
-    all unique values (e.g. an ID column) and --limit is set to 0.
+    all unique values  and --limit is set to 0.
     Without a unique limit, the frequency table for that column will be the same as the
     number of rows in the data.
     With a unique limit, the frequency table will be a sample of N unique values, all with
@@ -163,6 +164,7 @@ pub struct Args {
 }
 
 const NULL_VAL: &[u8] = b"(NULL)";
+const NON_UTF8_ERR: &str = "<Non-UTF8 ERROR>";
 
 static UNIQUE_COLUMNS: OnceLock<Vec<usize>> = OnceLock::new();
 static FREQ_ROW_COUNT: OnceLock<u64> = OnceLock::new();
@@ -516,7 +518,8 @@ impl Args {
                         // comparison we can just use the field directly
                         field_buffer = field.to_vec();
 
-                        // safety: we do get_unchecked_mut on freq_tables for the same reason above
+                        // safety: we do get_unchecked_mut on freq_tables for the same safety reason
+                        // above
                         if !field_buffer.is_empty() {
                             unsafe {
                                 freq_tables.get_unchecked_mut(i).add(field_buffer);
@@ -541,7 +544,8 @@ impl Args {
                             }
                         };
 
-                        // safety: we do get_unchecked_mut on freq_tables for the same reason above
+                        // safety: we do get_unchecked_mut on freq_tables for the same safety reason
+                        // above
                         if !field_buffer.is_empty() {
                             unsafe {
                                 freq_tables.get_unchecked_mut(i).add(field_buffer);
@@ -582,7 +586,7 @@ impl Args {
             "auto" => StatsMode::Frequency,
             "force" => StatsMode::FrequencyForceStats,
             "none" => StatsMode::None,
-            "_schema" => StatsMode::Schema, // only meant for schema to use
+            "_schema" => StatsMode::Schema, // only meant for internal use by schema command
             _ => return fail_incorrectusage_clierror!("Invalid stats mode"),
         };
         let (csv_fields, csv_stats, stats_col_index_map) =
@@ -596,10 +600,13 @@ impl Args {
             return Ok(Vec::new());
         }
 
-        if csv_fields.len() != csv_stats.len() {
-            // this should never happen
-            return fail_clierror!("Mismatch between the number of fields and stats records");
-        }
+        // safety: we know that csv_fields and csv_stats have the same length
+        // doing this as an assert also has the added benefit of eliminating bounds checking
+        // in the following hot iterator loop
+        assert!(
+            csv_fields.len() == csv_stats.len(),
+            "Mismatch between the number of fields and stats records"
+        );
         let col_cardinality_vec: Vec<(String, usize)> = csv_stats
             .iter()
             .enumerate()
@@ -614,7 +621,9 @@ impl Args {
                     None => 0_usize,
                 };
                 (
-                    std::str::from_utf8(col_name).unwrap().to_string(),
+                    simdutf8::basic::from_utf8(col_name)
+                        .unwrap_or(NON_UTF8_ERR)
+                        .to_string(),
                     col_cardinality,
                 )
             })
