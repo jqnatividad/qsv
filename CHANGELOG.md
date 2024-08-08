@@ -8,25 +8,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.131.0] - 2024-08-11
 
-## What's Changed
-* build(deps): bump jaq-parse from 1.0.2 to 1.0.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2016
-* Debpackage update by @tino097 in https://github.com/jqnatividad/qsv/pull/2017
-* build(deps): bump bytes from 1.6.1 to 1.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2018
-* build(deps): bump sysinfo from 0.30.13 to 0.31.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2019
-* build(deps): bump indexmap from 2.2.6 to 2.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2020
-* build(deps): bump bytes from 1.7.0 to 1.7.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2021
-* build(deps): bump serde_json from 1.0.121 to 1.0.122 by @dependabot in https://github.com/jqnatividad/qsv/pull/2022
-* build(deps): bump redis from 0.26.0 to 0.26.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2023
-* build(deps): bump sysinfo from 0.31.0 to 0.31.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2024
-* build(deps): bump regex from 1.10.5 to 1.10.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/2025
-* docs: fix link by @uncenter in https://github.com/jqnatividad/qsv/pull/2026
-* build(deps): bump flate2 from 1.0.30 to 1.0.31 by @dependabot in https://github.com/jqnatividad/qsv/pull/2027
-* `frequency`: smarter frequency compilation with new `--stats-mode` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2030
-* Add building deb package by @tino097 in https://github.com/jqnatividad/qsv/pull/2029
+### Added
+* `docs`: added Shell Completion section https://github.com/jqnatividad/qsv/commit/556a2ff48660d05f8e9a865ec427e98114f49b43
+* `docs:` add 🪄 emoji in legend to indicate "automagical" commands https://github.com/jqnatividad/qsv/commit/2753c90fcbd1cc1b41dae0a51d26bfe704029ee8
+* Add building deb package (WIP) by @tino097 in https://github.com/jqnatividad/qsv/pull/2029
+* Added GitHub workflow to test debian package (WIP) by @tino097 in https://github.com/jqnatividad/qsv/pull/2032
+* `tests`: added false positive to _typos.toml configuration https://github.com/jqnatividad/qsv/commit/d576af229bf76b7d0e1f40eb37b578a6b6691ed4
+* added more benchmarks
+* added more tests
+
+### Changed
+* `fetch` & `fetchpost`: remove expired diskcache entries on startup https://github.com/jqnatividad/qsv/commit/9b6ab5db91416f71577b8a1fc91e2e3189a1bd4b
+* `frequency`: smarter frequency compilation with new `--stats-mode` option https://github.com/jqnatividad/qsv/pull/2030
+* `json`: refactored for maintainability & performance https://github.com/jqnatividad/qsv/commit/62e92162a4aa446097736ec76834cf0e06d195b8 and https://github.com/jqnatividad/qsv/commit/4e44b1878b952c455c1922a66795b8c86a1b1dba
+* improved `self-update` messages https://github.com/jqnatividad/qsv/commit/5c874e09e15a274dccd8f83a322002032e65c2d0 and https://github.com/jqnatividad/qsv/commit/0aa0b13cf34103cfb75befc6480f31714d806aa2
 * `contrib(completions)`: `frequency` updates & remove bashly/fish by @rzmk in https://github.com/jqnatividad/qsv/pull/2031
-* Testing package by @tino097 in https://github.com/jqnatividad/qsv/pull/2032
+* Debian package update by @tino097 in https://github.com/jqnatividad/qsv/pull/2017
+* `publish`: optimized enabled CPU features when building release binaries in all GitHub Actions "publishing" workflows
+* `publish`: ensure latest Python patch release is used when building `qsvpy312` binary variant https://github.com/jqnatividad/qsv/commit/2ab03a097645a95b0d390f546ad9735c9a7e72b2
+* `tests`: also enabled CPU features in CI tests
+* `docs`: wordsmith qsv "elevator pitch" https://github.com/jqnatividad/qsv/commit/cc47fe688eeeb13b4deb3f3bf48d954924eee22e
+* `docs`: point to https://100.dathere.com in Whirlwind tour https://github.com/jqnatividad/qsv/commit/fc49aef826c1b1933ea1508cb687476936a147ff
+* `deps`: bump polars to latest upstream post py-1.41.1 release at the time of this release
+* build(deps): bump bytes from 1.6.1 to 1.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2018
+* build(deps): bump bytes from 1.7.0 to 1.7.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2021
+* build(deps): bump flate2 from 1.0.30 to 1.0.31 by @dependabot in https://github.com/jqnatividad/qsv/pull/2027
+* build(deps): bump indexmap from 2.2.6 to 2.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2020
+* build(deps): bump jaq-parse from 1.0.2 to 1.0.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2016
+* build(deps): bump redis from 0.26.0 to 0.26.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2023
+* build(deps): bump regex from 1.10.5 to 1.10.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/2025
+* build(deps): bump serde_json from 1.0.121 to 1.0.122 by @dependabot in https://github.com/jqnatividad/qsv/pull/2022
+* build(deps): bump sysinfo from 0.30.13 to 0.31.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2019
+* build(deps): bump sysinfo from 0.31.0 to 0.31.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2024
 * build(deps): bump tempfile from 3.11.0 to 3.12.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2033
 * build(deps): bump serde from 1.0.204 to 1.0.205 by @dependabot in https://github.com/jqnatividad/qsv/pull/2036
+* apply select clippy suggestions
+* updated several indirect dependencies
+* made various usage text improvements
+* bumped MSRV to 1.80
+
+### Fixed
+* `sqlp` & `joinp`: fixed `.ssv.sz` output auto-compression support https://github.com/jqnatividad/qsv/commit/5397f6c7a3b083872bbb97d90db3a2fd2f8521e6 & https://github.com/jqnatividad/qsv/commit/d86ba6376d5819898187d5fa88eae19373022e5b
+* `docs`: fix link by @uncenter in https://github.com/jqnatividad/qsv/pull/2026
+* `tests`: correct misnamed test https://github.com/jqnatividad/qsv/commit/8ae600011ddb109e7993e54dae9b933d15eccd38
+* `tests`: fix flaky `reverse` property tests https://github.com/jqnatividad/qsv/commit/d86ba6376d5819898187d5fa88eae19373022e5b
+
+### Removed
+* `docs`: "Quicksilver" is the name of the logo horse, not how you pronounce "qsv" https://github.com/jqnatividad/qsv/commit/e4551ae4b62a3a635b7c351c5f28aa2a7d374958
 
 ## New Contributors
 * @uncenter made their first contribution in https://github.com/jqnatividad/qsv/pull/2026
