@@ -225,6 +225,11 @@ There are four binary variants of qsv:
 
 [^2]: The `foreach` feature is not available on Windows. The `luau`feature is enabled by default on the prebuilt binaries if the platform supports it.  
 
+### Shell Completion
+qsv has extensive, extendable [shell completion](https://en.wikipedia.org/wiki/Command-line_completion) support. It currently supports the following shells: `bash`, `zsh`, `powershell`, `fish`, `nushell`, `fig` & `elvish`.
+
+To enable shell completion, see the [Shell Completion](contrib/completions/README.md) documentation. If you're using Bash, you can also follow the step-by-step tutorial at [100.dathere.com](https://100.dathere.com/exercises-setup.html#optional-set-up-qsv-completions).  
+
 ## Regular Expression Syntax
 
 The `--select` option and several commands (`apply`, `applydp`, `datefmt`, `exclude`, `fetchpost`, `replace`, `schema`, `search`, `searchset`, `select`, `sqlp` & `stats`) allow the user to specify regular expressions. We use the [`regex`](https://docs.rs/regex) crate to parse, compile and execute these expressions. [^3]
