@@ -18,12 +18,12 @@ Practically speaking, this makes `frequency` able to handle "real-world" dataset
 To ensure `frequency` is as fast as possible, `index` and compute `stats` your datasets beforehand.
 * __Setting the stage for Datapusher+ v1 and...__  
 The "[itches we've been scratching](https://en.wikipedia.org/wiki/The_Cathedral_and_the_Bazaar#Lessons_for_creating_good_open_source_software)" the past few months have been informed by our work at several clients towards the release of Datapusher+ 1.0 and qsv pro 1.0 (more info below) - both targeted for release this month.
-DP+ is our third-gen, high-speed data ingestion/registration tool for CKAN that uses qsv as its data wrangling/analysis engine. It will enable us to reinvent the way data is ingested into CKAN - with exponentially faster data ingestion, metadata inferencing, data validation, computed metadata fields, and more!  
+[DP+](https://github.com/dathere/datapusher-plus) is our third-gen, high-speed data ingestion/registration tool for CKAN that uses qsv as its data wrangling/analysis engine. It will enable us to reinvent the way data is ingested into CKAN - with exponentially faster data ingestion, metadata inferencing, data validation, computed metadata fields, and more!  
 We're particularly excited how qsv will allow us to compute and derive high-quality metadata for datasets (with a focus on inferring optional recommended [DCAT-US v3](https://doi-do.github.io/dcat-us/) metadata fields) in "near real-time", while dataset publishers are still entering metadata. This will be a game-changer for CKAN administrators and data publishers!
 * __...qsv pro 1.0__  
-qsv pro is our enterprise-grade data wrangling/data curation workbench that will be released this month. It will feature a full-blown "Excel-like" GUI, a workflow manager, a natural language interface and more!  
-The natural language interface uses Retrieval Augmented Generation (RAG) techniques to generate Polars SQL queries from natural language. It feel magical as the answers are generated with sub-second response times, even with very large datasets.  
-@rzmk has been baking it for a year now and it's almost ready for a 1.0 release. We feel qsv pro will be a game-changer for data wranglers and data curators who need to work with large datasets and need to perform complex data wrangling operations in a user-friendly way, without having to write code.
+[qsv pro](https://qsvpro.dathere.com) is [datHere](https://dathere.com)'s enterprise-grade data wrangling/curation workbench that’s planned for v1.0 release this month.
+Building the core functionality of qsv pro's Workflow feature is one of the primary reasons for a v1.0 release.  
+We feel qsv pro may be a game-changer for data wranglers and data curators who need to work with spreadsheets and large datasets to view statistical data and metadata while also performing complex data wrangling operations in a user-friendly way without having to write code.
 
 ---
 
