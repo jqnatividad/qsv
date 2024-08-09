@@ -10,7 +10,7 @@ With a row for the N most frequent values (default:10) for each column in the CS
 Since this command computes an exact frequency table, memory proportional to the
 cardinality of each column would be normally required.
 
-However, this is problematic for columns with unique values (e.g. an ID column),
+However, this is problematic for columns with ALL unique values (e.g. an ID column),
 as the command will need to load all the column's values into memory, potentially
 causing Out-of-Memory (OOM) errors for larger-than-memory datasets.
 
@@ -431,6 +431,12 @@ impl Args {
         let flag_ignore_case = self.flag_ignore_case;
         let flag_no_trim = self.flag_no_trim;
 
+        // compile a vector of bool flags for all_unique_headers
+        // so we can skip the contains check in the hot loop below
+        let all_unique_flag_vec: Vec<bool> = (0..nsel_len)
+            .map(|i| all_unique_headers.contains(&i))
+            .collect();
+
         if flag_ignore_case {
             // case insensitive when computing frequencies
             let mut buf = String::new();
@@ -441,7 +447,8 @@ impl Args {
                     // safety: we know the row is not empty
                     row_buffer.clone_from(&row.unwrap());
                     for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
-                        if all_unique_headers.contains(&i) {
+                        // safety: all_unique_flag_vec.len() is the same as nsel.len()
+                        if unsafe { *all_unique_flag_vec.get_unchecked(i) } {
                             // if the column has all unique values,
                             // we don't need to compute frequencies
                             continue;
@@ -475,7 +482,7 @@ impl Args {
                     // safety: we know the row is not empty
                     row_buffer.clone_from(&row.unwrap());
                     for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
-                        if all_unique_headers.contains(&i) {
+                        if unsafe { *all_unique_flag_vec.get_unchecked(i) } {
                             continue;
                         }
                         field_buffer = {
@@ -511,15 +518,14 @@ impl Args {
                 if flag_no_trim {
                     // case-sensitive, don't trim whitespace
                     for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
-                        if all_unique_headers.contains(&i) {
+                        if unsafe { *all_unique_flag_vec.get_unchecked(i) } {
                             continue;
                         }
                         // no need to convert to string and back to bytes for a "case-sensitive"
                         // comparison we can just use the field directly
                         field_buffer = field.to_vec();
 
-                        // safety: we do get_unchecked_mut on freq_tables for the same safety reason
-                        // above
+                        // safety: get_unchecked_mut on freq_tables for same safety reason above
                         if !field_buffer.is_empty() {
                             unsafe {
                                 freq_tables.get_unchecked_mut(i).add(field_buffer);
@@ -533,7 +539,7 @@ impl Args {
                 } else {
                     // case-sensitive, trim whitespace
                     for (i, field) in nsel.select(row_buffer.into_iter()).enumerate() {
-                        if all_unique_headers.contains(&i) {
+                        if unsafe { *all_unique_flag_vec.get_unchecked(i) } {
                             continue;
                         }
                         field_buffer = {
@@ -544,8 +550,7 @@ impl Args {
                             }
                         };
 
-                        // safety: we do get_unchecked_mut on freq_tables for the same safety reason
-                        // above
+                        // safety: get_unchecked_mut on freq_tables for same safety reason above
                         if !field_buffer.is_empty() {
                             unsafe {
                                 freq_tables.get_unchecked_mut(i).add(field_buffer);
