@@ -453,19 +453,19 @@ impl Args {
                             // we don't need to compute frequencies
                             continue;
                         }
-                        field_buffer = {
-                            if let Ok(s) = simdutf8::basic::from_utf8(field) {
-                                util::to_lowercase_into(s, &mut buf);
-                                buf.as_bytes().to_vec()
-                            } else {
-                                field.to_vec()
-                            }
-                        };
 
                         // safety: we do get_unchecked_mut on freq_tables
                         // as we know that nsel_len is the same as freq_tables.len()
                         // so we can skip the bounds check
-                        if !field_buffer.is_empty() {
+                        if !field.is_empty() {
+                            field_buffer = {
+                                if let Ok(s) = simdutf8::basic::from_utf8(field) {
+                                    util::to_lowercase_into(s, &mut buf);
+                                    buf.as_bytes().to_vec()
+                                } else {
+                                    field.to_vec()
+                                }
+                            };
                             unsafe {
                                 freq_tables.get_unchecked_mut(i).add(field_buffer);
                             }
@@ -485,19 +485,19 @@ impl Args {
                         if unsafe { *all_unique_flag_vec.get_unchecked(i) } {
                             continue;
                         }
-                        field_buffer = {
-                            if let Ok(s) = simdutf8::basic::from_utf8(field) {
-                                util::to_lowercase_into(s.trim(), &mut buf);
-                                buf.as_bytes().to_vec()
-                            } else {
-                                util::trim_bs_whitespace(field).to_vec()
-                            }
-                        };
 
                         // safety: we do get_unchecked_mut on freq_tables
                         // as we know that nsel_len is the same as freq_tables.len()
                         // so we can skip the bounds check
-                        if !field_buffer.is_empty() {
+                        if !field.is_empty() {
+                            field_buffer = {
+                                if let Ok(s) = simdutf8::basic::from_utf8(field) {
+                                    util::to_lowercase_into(s.trim(), &mut buf);
+                                    buf.as_bytes().to_vec()
+                                } else {
+                                    util::trim_bs_whitespace(field).to_vec()
+                                }
+                            };
                             unsafe {
                                 freq_tables.get_unchecked_mut(i).add(field_buffer);
                             }
@@ -521,14 +521,13 @@ impl Args {
                         if unsafe { *all_unique_flag_vec.get_unchecked(i) } {
                             continue;
                         }
-                        // no need to convert to string and back to bytes for a "case-sensitive"
-                        // comparison we can just use the field directly
-                        field_buffer = field.to_vec();
 
                         // safety: get_unchecked_mut on freq_tables for same safety reason above
-                        if !field_buffer.is_empty() {
+                        if !field.is_empty() {
+                            // no need to convert to string and back to bytes for a "case-sensitive"
+                            // comparison we can just use the field directly
                             unsafe {
-                                freq_tables.get_unchecked_mut(i).add(field_buffer);
+                                freq_tables.get_unchecked_mut(i).add(field.to_vec());
                             }
                         } else if !flag_no_nulls {
                             unsafe {
@@ -542,16 +541,16 @@ impl Args {
                         if unsafe { *all_unique_flag_vec.get_unchecked(i) } {
                             continue;
                         }
-                        field_buffer = {
-                            if let Ok(s) = simdutf8::basic::from_utf8(field) {
-                                s.trim().as_bytes().to_vec()
-                            } else {
-                                util::trim_bs_whitespace(field).to_vec()
-                            }
-                        };
 
                         // safety: get_unchecked_mut on freq_tables for same safety reason above
-                        if !field_buffer.is_empty() {
+                        if !field.is_empty() {
+                            field_buffer = {
+                                if let Ok(s) = simdutf8::basic::from_utf8(field) {
+                                    s.trim().as_bytes().to_vec()
+                                } else {
+                                    util::trim_bs_whitespace(field).to_vec()
+                                }
+                            };
                             unsafe {
                                 freq_tables.get_unchecked_mut(i).add(field_buffer);
                             }
