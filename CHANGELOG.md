@@ -64,7 +64,7 @@ We feel qsv pro may be a game-changer for data wranglers and data curators who n
 * apply select clippy suggestions
 * updated several indirect dependencies
 * made various usage text improvements
-* bumped MSRV to 1.80
+* bumped MSRV to 1.80.1
 
 ### Fixed
 * `sqlp` & `joinp`: fixed `.ssv.sz` output auto-compression support https://github.com/jqnatividad/qsv/commit/5397f6c7a3b083872bbb97d90db3a2fd2f8521e6 & https://github.com/jqnatividad/qsv/commit/d86ba6376d5819898187d5fa88eae19373022e5b
