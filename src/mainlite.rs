@@ -46,6 +46,7 @@ macro_rules! command_list {
     json        Convert JSON to CSV
     jsonl       Convert newline-delimited JSON files to CSV
     partition   Partition CSV data based on a column value
+    pro         Interact with the qsv pro API
     prompt      Open a file dialog to pick a file
     pseudo      Pseudonymise the values of a column
     rename      Rename the columns of CSV data efficiently
@@ -252,6 +253,7 @@ enum Command {
     Json,
     Jsonl,
     Partition,
+    Pro,
     Prompt,
     Pseudo,
     Rename,
@@ -322,6 +324,7 @@ impl Command {
             Command::Json => cmd::json::run(argv),
             Command::Jsonl => cmd::jsonl::run(argv),
             Command::Partition => cmd::partition::run(argv),
+            Command::Pro => cmd::pro::run(argv),
             Command::Prompt => cmd::prompt::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
             Command::Rename => cmd::rename::run(argv),
