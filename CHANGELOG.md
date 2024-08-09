@@ -6,7 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.131.0] - 2024-08-11
+## [0.131.1] - 2024-08-09
+
+### Changed
+* deps: bump polars to latest upstream post py-1.41.1 release at the time of this release
+* build(deps): bump filetime from 0.2.23 to 0.2.24 by @dependabot in https://github.com/jqnatividad/qsv/pull/2038
+
+### Fixed
+* `frequency`: change `--stats-mode` default to `none` from `auto`.   
+This is because of a big performance regression when using `--stats-mode auto` on datasets with columns with ALL unique values. 
+See https://github.com/jqnatividad/qsv/issues/2040 for more info.
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.131.0...0.131.1
+
+## [0.131.0] - 2024-08-08
 
 ### Highlights
 * __Refactored `frequency` to make it smarter and faster.__   
