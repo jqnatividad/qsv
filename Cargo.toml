@@ -266,7 +266,7 @@ local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", br
 # It's qsv's policy to use the latest release of py-polars
 # to take advantage of Polars' latest features and fixes.
 # polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.4.1" }
-polars = { git = "https://github.com/pola-rs/polars", rev = "34f5387" }
+polars = { git = "https://github.com/pola-rs/polars", rev = "9dd9569" }
 
 
 [features]
