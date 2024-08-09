@@ -9,7 +9,7 @@ Notes:
 - You may learn more about qsv pro at: https://qsvpro.dathere.com.
 
 The qsv pro command has subcommands:
-    lens:     Run csvlens on a local file in a new Alacritty terminal window (Windows only).
+    lens:     Run csvlens on a local file in a new Alacritty terminal emulator window (Windows only).
     workflow: Import a local file into the qsv pro Workflow.
 
 Usage:
