@@ -36,9 +36,9 @@ use crate::{util, CliResult};
 #[allow(dead_code)]
 #[derive(Deserialize)]
 struct Args {
-    arg_input:     PathBuf,
-    cmd_lens:      bool,
-    cmd_workflow:  bool,
+    arg_input:    PathBuf,
+    cmd_lens:     bool,
+    cmd_workflow: bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
