@@ -11,15 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Highlights
 * __Refactored `frequency` to make it smarter and faster.__   
 `frequency`'s core algorithm essentially compiles an in-memory hashmap to determine the frequency of each unique value for each column. It does this using multi-threaded, multi-I/O techniques to make it blazing fast.   
-However, for columns with unique values (e.g. ID columns), this takes a comparatively long time and consumes a lot of memory as it essentially compiles a hashmap of the entire column.  
+However, for columns with ALL unique values (e.g. ID columns), this takes a comparatively long time and consumes a lot of memory as it essentially compiles a hashmap of the entire column.  
 Now, with the new `--stats-mode` option (enabled by default), `frequency` can compile the dataset in a more intelligent way by looking up a column's cardinality in the stats cache.  
-If the cardinality of a column is equal to the CSV's rowcount (indicating a column with unique values), it short-circuits frequency calculations for that column - dramatically reducing the time and memory requirements for the unique column as it eliminates the need to maintain a hashmap for it.  
+If the cardinality of a column is equal to the CSV's rowcount (indicating a column with ALL unique values), it short-circuits frequency calculations for that column - dramatically reducing the time and memory requirements for the ID column as it eliminates the need to maintain a hashmap for it.  
 Practically speaking, this makes `frequency` able to handle "real-world" datasets of any size.  
-To ensure `frequency` is as fast as possible, `index` and compute `stats` your datasets beforehand.
+To ensure `frequency` is as fast as possible, be sure to `index` and compute `stats` for your datasets beforehand.
 * __Setting the stage for Datapusher+ v1 and...__  
-The "[itches we've been scratching](https://en.wikipedia.org/wiki/The_Cathedral_and_the_Bazaar#Lessons_for_creating_good_open_source_software)" the past few months have been informed by our work at several clients towards the release of Datapusher+ 1.0 and qsv pro 1.0 (more info below) - both targeted for release this month.
+The "[itches we've been scratching](https://en.wikipedia.org/wiki/The_Cathedral_and_the_Bazaar#Lessons_for_creating_good_open_source_software)" the past few months have been informed by our work at several clients towards the release of Datapusher+ 1.0 and qsv pro 1.0 (more info below) - both targeted for release this month.  
 [DP+](https://github.com/dathere/datapusher-plus) is our third-gen, high-speed data ingestion/registration tool for CKAN that uses qsv as its data wrangling/analysis engine. It will enable us to reinvent the way data is ingested into CKAN - with exponentially faster data ingestion, metadata inferencing, data validation, computed metadata fields, and more!  
-We're particularly excited how qsv will allow us to compute and derive high-quality metadata for datasets (with a focus on inferring optional recommended [DCAT-US v3](https://doi-do.github.io/dcat-us/) metadata fields) in "near real-time", while dataset publishers are still entering metadata. This will be a game-changer for CKAN administrators and data publishers!
+We're particularly excited how qsv will allow us to compute and infer high-quality metadata for datasets (with a focus on inferring optional recommended [DCAT-US v3](https://doi-do.github.io/dcat-us/) metadata fields) in "near real-time", while dataset publishers are still entering metadata. This will be a game-changer for CKAN administrators and data publishers!
 * __...qsv pro 1.0__  
 [qsv pro](https://qsvpro.dathere.com) is [datHere](https://dathere.com)'s enterprise-grade data wrangling/curation workbench that’s planned for v1.0 release this month.
 Building the core functionality of qsv pro's Workflow feature is one of the primary reasons for a v1.0 release.  
