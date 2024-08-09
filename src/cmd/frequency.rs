@@ -14,15 +14,18 @@ However, this is problematic for columns with ALL unique values (e.g. an ID colu
 as the command will need to load all the column's values into memory, potentially
 causing Out-of-Memory (OOM) errors for larger-than-memory datasets.
 
-To overcome this, the frequency command will automatically use the stats cache if it
-exists to get column cardinalities. This short-circuits frequency compilation for columns
-with all unique values (i.e. where rowcount == cardinality), increasing performance.
-It also has the added benefit of not having to load all the column's values into memory,
-effectively allowing the frequency command to work with larger-than-memory datasets.
+To overcome this, the frequency command can use the stats cache if it exists to get
+column cardinalities. This short-circuits frequency compilation for columns
+with all unique values (i.e. where rowcount == cardinality), eliminating the need to
+maintain a in-memory hashmap for ID columns. This allows the command to compute frequencies
+for larger-than-memory datasets.
 
-Instead, it will use the "<ALL_UNIQUE>" value for columns with all unique values.
+However, in the current implementation, the stats cache takes a while to load, eliminating
+the performance benefits of cardinality-based frequency tables.
+See https://github.com/jqnatividad/qsv/issues/2040
 
-This behavior can be adjusted with the --stats-mode option.
+Therefore, only use the `--stats-mode` option if you have a large dataset with columns
+that have all unique values and you want to avoid OOM errors.
 
 STATS_MODE "none" NOTES:
 
@@ -99,7 +102,7 @@ frequency options:
                               none: don't use cardinality information.
                                     For columns with all unique values, the first N sorted unique
                                     values (based on the --limit and --unq-limit options) will be used.
-                            [default: auto]
+                            [default: none]
    --all-unique-text <arg>  The text to use for the "<ALL_UNIQUE>" category.
                             [default: <ALL_UNIQUE>]
     -j, --jobs <arg>        The number of jobs to run in parallel.
