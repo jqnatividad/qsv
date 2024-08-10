@@ -212,7 +212,7 @@ cargo build --release --locked --bin qsvlite -F lite
 cargo build --release --locked --bin qsvdp -F datapusher_plus,luau,polars
 ```
 
-NOTE: To build with Rust nightly, see [Nightly Release Builds](docs/PERFORMANCE.md#nightly-release-builds).
+> **_NOTE:_** To build with Rust nightly, see [Nightly Release Builds](docs/PERFORMANCE.md#nightly-release-builds).
 
 ### Variants
 
@@ -223,7 +223,9 @@ There are four binary variants of qsv:
 * `qsvlite` - all features disabled (~13% of the size of `qsv`)
 * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus) with only DataPusher+ relevant commands; an embedded [`luau`](#luau_deeplink) interpreter; [`applydp`](#applydp_deeplink), a slimmed-down version of the `apply` feature; the `--progressbar` option disabled; and the self-update only checking for new releases, requiring an explicit `--update` (~12% of the the size of `qsv`).
 
-[^2]: The `foreach` feature is not available on Windows. The `luau`feature is enabled by default on the prebuilt binaries if the platform supports it.  
+> **_NOTE:_** There are "portable" subvariants of qsv available with the "p" suffix - `qsvp`, `qsvplite` and `qsvpdp`. These subvariants are compiled without any CPU features enabled. Use these subvariants if you're getting "Illegal instruction" errors when running the regular qsv binaries.
+
+[^2]: The `luau`feature is enabled by default on the prebuilt binaries if the platform supports it.  
 
 ### Shell Completion
 qsv has extensive, extendable [shell completion](https://en.wikipedia.org/wiki/Command-line_completion) support. It currently supports the following shells: `bash`, `zsh`, `powershell`, `fish`, `nushell`, `fig` & `elvish`.
