@@ -240,7 +240,7 @@ simdutf8 = { version = "0.1", features = ["aarch64_neon"] }
 
 [dev-dependencies]
 actix-governor = "0.5"
-actix-web = { version = "4.8", default-features = false, features = [
+actix-web = { version = "4.9", default-features = false, features = [
     "compress-brotli",
     "compress-gzip",
 ] }
