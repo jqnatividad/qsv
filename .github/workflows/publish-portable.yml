@@ -1,4 +1,4 @@
-name: Publish-Portable
+name: Publish Portable - no CPU features
 
 on:
   push:
@@ -190,12 +190,17 @@ jobs:
         mkdir qsv-${{ needs.analyze-tags.outputs.previous-tag }}
         rm target/${{ matrix.job.target }}/release/*.d 
         cp -v target/${{ matrix.job.target }}/release/qsv* qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        cd qsv-${{ needs.analyze-tags.outputs.previous-tag }}
+        mv qsv qsvp
+        mv qsvlite qsvplite
+        mv qsvdp qsvpdp
+        cd ..
     - name: Create README
       shell: bash
       run: |
         cat docs/publishing_assets/README.txt docs/publishing_assets/qsv-${{ matrix.job.target }}.txt > qsv-${{ needs.analyze-tags.outputs.previous-tag }}/README
     - name: zip up binaries
-      run: 7z a -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}-portable.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/* -mx=9 -mmt=on
+      run: 7z a -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/* -mx=9 -mmt=on
     - name: install zipsign
       run: |
         cargo install zipsign
@@ -208,13 +213,13 @@ jobs:
         working-directory: "."        
     - name: zipsign binary
       run: |
-        zipsign sign zip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}-portable.zip qsvpriv.key
+        zipsign sign zip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip qsvpriv.key
     - name: Upload zipped binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}-portable.zip
-        asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}-portable.zip
+        file: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+        asset_name: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
         overwrite: true
         tag: ${{ needs.analyze-tags.outputs.previous-tag }}    
  
