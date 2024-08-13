@@ -31,6 +31,35 @@ slice options:
                            JSON array. If --no-headers is set, then
                            the keys are the column indices (zero-based).
 
+Examples:
+    # Slice from the 3rd record to the end
+    qsv slice --start 2 data.csv
+
+    # Slice the first three records
+    qsv slice --start 0 --end 2 data.csv
+    qsv slice --len 3 data.csv
+    qsv slice -l 3 data.csv
+
+    # Slice the last record
+    qsv slice -s -1 data.csv
+
+    # Slice the last 10 records
+    qsv slice -s -10 data.csv
+
+    # Slice the first three records of the last 10 records
+    qsv slice -s -10 -l 3 data.csv
+
+    # Slice the second record
+    qsv slice --index 1 data.csv
+    qs slice -i 1 data.csv
+
+    # Slice the from the second record, two records
+    qsv slice -s 1 --len 2 data.csv
+
+    # Slice records 10 to 20 as JSON   
+    qsv slice -s 9 -e 19 --json data.csv
+    qsv slice -s 9 -l 10 --json data.csv
+
 Common options:
     -h, --help             Display this message
     -o, --output <file>    Write output to <file> instead of stdout.
