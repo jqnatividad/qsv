@@ -53,7 +53,7 @@ Examples:
     qsv slice --index 1 data.csv
     qs slice -i 1 data.csv
 
-    # Slice the from the second record, two records
+    # Slice from the second record, two records
     qsv slice -s 1 --len 2 data.csv
 
     # Slice records 10 to 20 as JSON   
