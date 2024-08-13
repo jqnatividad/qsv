@@ -9,7 +9,7 @@ If the end of the range isn't specified, then the slice continues to the last
 record in the CSV data.
 
 This operation can be made much faster by creating an index with 'qsv index'
-first. Namely, a slice on an index requires parsing just the rows that are
+first. With an index, the command requires parsing just the rows that are
 sliced. Without an index, all rows up to the first row in the slice must be
 parsed.
 
@@ -51,7 +51,7 @@ Examples:
 
     # Slice the second record
     qsv slice --index 1 data.csv
-    qs slice -i 1 data.csv
+    qsv slice -i 1 data.csv
 
     # Slice from the second record, two records
     qsv slice -s 1 --len 2 data.csv
