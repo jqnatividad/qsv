@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: https://github.com/tino097/qsv-deb-releases.git
+          repository: tino097/qsv-deb-releases
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
       - name: Setup Git
