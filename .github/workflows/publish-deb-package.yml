@@ -68,7 +68,6 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           repository: tino097/qsv-deb-releases
-          github_token: ${{ secrets.DEB_TOKEN }}
           branch: main
 
 
