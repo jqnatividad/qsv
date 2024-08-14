@@ -64,9 +64,10 @@ jobs:
 
 
       - name: Commit and Push
+        id: push_deb_package
         uses: cpina/github-action-push-to-another-repository@main
         env:
-          API_TOKEN_GITHUB: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
           source_directory: target/debian
           destination-github-username: 'tino097'
