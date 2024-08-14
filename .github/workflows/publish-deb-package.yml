@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: qsv-deb
-          path: packages/debian/*
+          path: target/debian/*
       
   push:
     needs: build
