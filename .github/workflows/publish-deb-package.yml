@@ -53,10 +53,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: qsv-deb
-
-      - name: Move Debian Package
-        run: mv paclages/debian/* .
-        
+      
       - name: Commit and Push
         run: |
           git add .
