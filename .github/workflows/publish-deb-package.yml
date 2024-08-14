@@ -45,17 +45,19 @@ jobs:
           repository: tino097/qsv-deb-releases
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
-      - name: Setup Git
-        run: |
-          git config --global user.email "<>"
-          git config --global user.name "GitHub Actions"
-          git add .
-          git commit -m "Add Debian Package"
+
       - name: Download Debian Package
         uses: actions/download-artifact@v2
         with:
           name: qsv-deb
-      
+
+      - name: Setup Git
+        run: |
+            git config --global user.email "<>"
+            git config --global user.name "GitHub Actions"
+            git add .
+            git commit -m "Add Debian Package"
+
       - name: Commit and Push
         uses: ad-m/github-push-action@master
         with:
