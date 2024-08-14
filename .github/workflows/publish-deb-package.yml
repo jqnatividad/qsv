@@ -49,6 +49,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
           fetch-depth: 0
+      
 
       - name: Download Debian Package
         uses: actions/download-artifact@v2
@@ -59,6 +60,7 @@ jobs:
       - name: Commit and Push
         id: push_deb_package
         uses: cpina/github-action-push-to-another-repository@main
+        
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
