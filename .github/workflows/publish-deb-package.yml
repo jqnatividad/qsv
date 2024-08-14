@@ -64,6 +64,7 @@ jobs:
         with:
           source_directory: target/debian
           destination-github-username: 'tino097'
+          user_email: 'tino097@gmail.com'
           destination-repository-name: 'qsv-deb-releases'
           commit_message: 'Add Debian Package'
           target_branch: main
