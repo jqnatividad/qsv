@@ -11,6 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Get previous tag
         id: previoustag
@@ -44,7 +45,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tino097/qsv-deb-releases
-          persist-credentials: true
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
           fetch-depth: 0
