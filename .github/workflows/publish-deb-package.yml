@@ -49,16 +49,19 @@ jobs:
         run: |
           git config --global user.email "<>"
           git config --global user.name "GitHub Actions"
+          git add .
+          git commit -m "Add Debian Package"
       - name: Download Debian Package
         uses: actions/download-artifact@v2
         with:
           name: qsv-deb
       
       - name: Commit and Push
-        run: |
-          git add .
-          git commit -m "Add Debian Package"
-          git push
+        uses: ad-m/github-push-action@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
+          force: true
 
 
 
