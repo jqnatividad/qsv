@@ -3,7 +3,7 @@ name: qsv Debian Package
 on:
   workflow_dispatch:
 
-jobs:
+jobs:                
   analyze-tags:
     runs-on: ubuntu-20.04
     outputs:
@@ -39,6 +39,10 @@ jobs:
   push:
     needs: build
     runs-on: ubuntu-20.04
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,7 +68,5 @@ jobs:
           repository: tino097/qsv-deb-releases
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
-          force: true
-
 
 
