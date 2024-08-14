@@ -61,7 +61,8 @@ jobs:
       - name: Commit and Push
         uses: ad-m/github-push-action@master
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: tino097/qsv-deb-releases
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
           force: true
 
