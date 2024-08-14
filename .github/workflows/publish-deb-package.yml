@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
   
       - name: Install Cargo Deb
         run: cargo install cargo-deb
@@ -65,7 +66,7 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           repository: tino097/qsv-deb-releases
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
+          github_token: ${{ secrets.PAT_TOKEN }}
+          branch: ${{ github.ref }}
 
 
