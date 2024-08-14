@@ -54,14 +54,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: qsv-deb
-
-      # - name: Setup Git
-      #   run: |
-      #       git config --global user.email "<>"
-      #       git config --global user.name "GitHub Actions"
-      #       git add .
-      #       git commit -m "Add Debian Package"
-
+          path: target/debian
 
       - name: Commit and Push
         id: push_deb_package
