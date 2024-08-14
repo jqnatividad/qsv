@@ -31,11 +31,37 @@ jobs:
         run: cargo deb
 
       - name: Upload Debian Package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: qsv-deb
-          path: target/debian/*
+          path: packages/debian/*
       
+  push:
+    needs: build
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: https://github.com/tino097/qsv-deb-releases.git
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+      - name: Setup Git
+        run: |
+          git config --global user.email "<>"
+          git config --global user.name "GitHub Actions"
+      - name: Download Debian Package
+        uses: actions/download-artifact@v2
+        with:
+          name: qsv-deb
+
+      - name: Move Debian Package
+        run: mv paclages/debian/* .
+        
+      - name: Commit and Push
+        run: |
+          git add .
+          git commit -m "Add Debian Package"
+          git push
 
 
 
