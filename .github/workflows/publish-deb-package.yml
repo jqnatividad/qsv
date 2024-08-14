@@ -55,19 +55,21 @@ jobs:
         with:
           name: qsv-deb
 
-      - name: Setup Git
-        run: |
-            git config --unset-all http.https://github.com/.extraheader
-            git config --global user.email "<>"
-            git config --global user.name "GitHub Actions"
-            git add .
-            git commit -m "Add Debian Package"
+      # - name: Setup Git
+      #   run: |
+      #       git config --global user.email "<>"
+      #       git config --global user.name "GitHub Actions"
+      #       git add .
+      #       git commit -m "Add Debian Package"
+
 
       - name: Commit and Push
-        uses: ad-m/github-push-action@master
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
-          repository: tino097/qsv-deb-releases
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
-
-
+          source_directory: target/debian
+          destination-github-username: 'tino097'
+          destination-repository-name: 'qsv-deb-releases'
+          commit_message: 'Add Debian Package'
+          target_branch: main
