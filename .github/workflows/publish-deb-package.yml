@@ -47,8 +47,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tino097/qsv-deb-releases
+          persist-credentials: false
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
+          fetch-depth: 0
 
       - name: Download Debian Package
         uses: actions/download-artifact@v2
