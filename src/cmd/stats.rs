@@ -243,7 +243,6 @@ use std::{
     sync::OnceLock,
 };
 
-// use gzp::{par::compress::ParCompressBuilder, snap::Snap};
 use itertools::Itertools;
 use qsv_dateparser::parse_with_preference;
 use serde::{Deserialize, Serialize};
@@ -254,10 +253,9 @@ use threadpool::ThreadPool;
 
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
 use crate::{
-    config::{Config, Delimiter}, //, DEFAULT_WTR_BUFFER_CAPACITY},
+    config::{Config, Delimiter},
     select::{SelectColumns, Selection},
-    util,
-    CliResult,
+    util, CliResult,
 };
 
 #[allow(clippy::unsafe_derive_deserialize)]
@@ -319,7 +317,7 @@ struct StatsArgs {
     qsv_version:          String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct StatsData {
     pub field:                String,
     // type is a reserved keyword in Rust

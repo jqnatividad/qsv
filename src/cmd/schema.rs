@@ -249,10 +249,6 @@ pub fn infer_schema_from_stats(
         // grab stats record for current column
         stats_record = csv_stats[i].clone();
 
-        if log::log_enabled!(log::Level::Debug) {
-            debug!("stats[{header_string}]: {stats_record:?}");
-        }
-
         // get Type from stats record
         col_type = stats_record.r#type.clone();
 
