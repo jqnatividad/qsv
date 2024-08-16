@@ -88,7 +88,7 @@ use rayon::slice::ParallelSliceMut;
 use serde_json::{json, value::Number, Map, Value};
 use stats::Frequencies;
 
-use crate::{cmd::stats::Stats, config::Config, util, util::StatsMode, CliResult};
+use crate::{cmd::stats::StatsData, config::Config, util, util::StatsMode, CliResult};
 
 const STDIN_CSV: &str = "stdin.csv";
 
@@ -208,12 +208,11 @@ pub fn infer_schema_from_stats(
     input_filename: &str,
 ) -> CliResult<Map<String, Value>> {
     // invoke cmd::stats
-    let (csv_fields, csv_stats, stats_col_index_map) =
-        util::get_stats_records(args, StatsMode::Schema)?;
+    let (csv_fields, csv_stats) = util::get_stats_records(args, StatsMode::Schema)?;
 
     // amortize memory allocation
-    let mut low_cardinality_column_indices: Vec<usize> =
-        Vec::with_capacity(args.flag_enum_threshold);
+    let mut low_cardinality_column_indices: Vec<u64> =
+        Vec::with_capacity(args.flag_enum_threshold as usize);
 
     // build column selector arg to invoke cmd::frequency with
     let column_select_arg: String = build_low_cardinality_column_selector_arg(
@@ -221,7 +220,6 @@ pub fn infer_schema_from_stats(
         args.flag_enum_threshold,
         &csv_fields,
         &csv_stats,
-        &stats_col_index_map,
     );
 
     // invoke cmd::frequency to get unique values for each field
@@ -233,7 +231,7 @@ pub fn infer_schema_from_stats(
     // amortize memory allocations
     let mut field_map: Map<String, Value> = Map::with_capacity(10);
     let mut type_list: Vec<Value> = Vec::with_capacity(4);
-    let mut enum_list: Vec<Value> = Vec::with_capacity(args.flag_enum_threshold);
+    let mut enum_list: Vec<Value> = Vec::with_capacity(args.flag_enum_threshold as usize);
     let mut header_byte_slice;
     let mut header_string;
     let mut stats_record;
@@ -241,6 +239,7 @@ pub fn infer_schema_from_stats(
     let mut col_null_count;
 
     // generate definition for each CSV column/field and add to properties_map
+    #[allow(clippy::needless_range_loop)]
     for i in 0..csv_fields.len() {
         header_byte_slice = csv_fields.get(i).unwrap();
 
@@ -248,20 +247,17 @@ pub fn infer_schema_from_stats(
         header_string = convert_to_string(header_byte_slice)?;
 
         // grab stats record for current column
-        stats_record = csv_stats.get(i).unwrap().clone().to_record(4, false);
+        stats_record = csv_stats[i].clone();
 
         if log::log_enabled!(log::Level::Debug) {
             debug!("stats[{header_string}]: {stats_record:?}");
         }
 
         // get Type from stats record
-        col_type = stats_record.get(stats_col_index_map["type"]).unwrap();
+        col_type = stats_record.r#type.clone();
+
         // get NullCount
-        col_null_count = if let Some(s) = stats_record.get(stats_col_index_map["nullcount"]) {
-            s.parse::<usize>().unwrap_or(0_usize)
-        } else {
-            0_usize
-        };
+        col_null_count = stats_record.nullcount;
 
         // debug!(
         //     "{header_string}: type={col_type}, optional={}",
@@ -277,27 +273,25 @@ pub fn infer_schema_from_stats(
         type_list.clear();
         enum_list.clear();
 
-        match col_type {
+        match col_type.as_str() {
             "String" => {
                 type_list.push(Value::String("string".to_string()));
 
                 // minLength constraint
-                if let Some(min_length_str) = stats_record.get(stats_col_index_map["min_length"]) {
-                    let min_length = min_length_str.parse::<u32>().unwrap();
+                if let Some(min_length) = stats_record.min_length {
                     field_map.insert(
                         "minLength".to_string(),
                         Value::Number(Number::from(min_length)),
                     );
-                };
+                }
 
                 // maxLength constraint
-                if let Some(max_length_str) = stats_record.get(stats_col_index_map["max_length"]) {
-                    let max_length = max_length_str.parse::<u32>().unwrap();
+                if let Some(max_length) = stats_record.max_length {
                     field_map.insert(
                         "maxLength".to_string(),
                         Value::Number(Number::from(max_length)),
                     );
-                };
+                }
 
                 // enum constraint
                 if let Some(values) = unique_values_map.get(&header_string) {
@@ -309,15 +303,23 @@ pub fn infer_schema_from_stats(
             "Integer" => {
                 type_list.push(Value::String("integer".to_string()));
 
-                if let Some(min_str) = stats_record.get(stats_col_index_map["min"]) {
-                    let min = atoi_simd::parse::<i64>(min_str.as_bytes()).unwrap();
-                    field_map.insert("minimum".to_string(), Value::Number(Number::from(min)));
-                };
+                if let Some(min) = stats_record.min {
+                    field_map.insert(
+                        "minimum".to_string(),
+                        Value::Number(Number::from(
+                            atoi_simd::parse::<i64>(min.as_bytes()).unwrap(),
+                        )),
+                    );
+                }
 
-                if let Some(max_str) = stats_record.get(stats_col_index_map["max"]) {
-                    let max = atoi_simd::parse::<i64>(max_str.as_bytes()).unwrap();
-                    field_map.insert("maximum".to_string(), Value::Number(Number::from(max)));
-                };
+                if let Some(max) = stats_record.max {
+                    field_map.insert(
+                        "maximum".to_string(),
+                        Value::Number(Number::from(
+                            atoi_simd::parse::<i64>(max.as_bytes()).unwrap(),
+                        )),
+                    );
+                }
 
                 // enum constraint
                 if let Some(values) = unique_values_map.get(&header_string) {
@@ -330,21 +332,19 @@ pub fn infer_schema_from_stats(
             "Float" => {
                 type_list.push(Value::String("number".to_string()));
 
-                if let Some(min_str) = stats_record.get(stats_col_index_map["min"]) {
-                    let min = min_str.parse::<f64>().unwrap();
+                if let Some(min) = stats_record.min {
                     field_map.insert(
                         "minimum".to_string(),
-                        Value::Number(Number::from_f64(min).unwrap()),
+                        Value::Number(Number::from_f64(min.parse::<f64>().unwrap()).unwrap()),
                     );
-                };
+                }
 
-                if let Some(max_str) = stats_record.get(stats_col_index_map["max"]) {
-                    let max = max_str.parse::<f64>().unwrap();
+                if let Some(max) = stats_record.max {
                     field_map.insert(
                         "maximum".to_string(),
-                        Value::Number(Number::from_f64(max).unwrap()),
+                        Value::Number(Number::from_f64(max.parse::<f64>().unwrap()).unwrap()),
                     );
-                };
+                }
             },
             "NULL" => {
                 type_list.push(Value::String("null".to_string()));
@@ -403,29 +403,22 @@ pub fn infer_schema_from_stats(
 
 /// get column selector argument string for low cardinality columns
 fn build_low_cardinality_column_selector_arg(
-    low_cardinality_column_indices: &mut Vec<usize>,
-    enum_cardinality_threshold: usize,
+    low_cardinality_column_indices: &mut Vec<u64>,
+    enum_cardinality_threshold: u64,
     csv_fields: &ByteRecord,
-    csv_stats: &[Stats],
-    stats_col_index_map: &AHashMap<String, usize>,
+    csv_stats: &[StatsData],
 ) -> String {
     low_cardinality_column_indices.clear();
 
     // identify low cardinality columns
+    #[allow(clippy::needless_range_loop)]
     for i in 0..csv_fields.len() {
-        // grab stats record for current column
-        let stats_record = csv_stats.get(i).unwrap().clone().to_record(4, false);
-
         // get Cardinality
-        let col_cardinality = match stats_record.get(stats_col_index_map["cardinality"]) {
-            Some(s) => s.parse::<usize>().unwrap_or(0_usize),
-            None => 0_usize,
-        };
-        // debug!("column_{i}: cardinality={col_cardinality}");
+        let col_cardinality = csv_stats[i].cardinality;
 
         if col_cardinality > 0 && col_cardinality <= enum_cardinality_threshold {
             // column selector uses 1-based index
-            low_cardinality_column_indices.push(i + 1);
+            low_cardinality_column_indices.push((i + 1) as u64);
         };
     }
 
@@ -450,7 +443,7 @@ fn get_unique_values(
         arg_input:            args.arg_input.clone(),
         flag_select:          crate::select::SelectColumns::parse(column_select_arg).unwrap(),
         flag_limit:           args.flag_enum_threshold as isize,
-        flag_unq_limit:       args.flag_enum_threshold,
+        flag_unq_limit:       args.flag_enum_threshold as usize,
         flag_lmt_threshold:   0,
         flag_pct_dec_places:  -5,
         flag_other_sorted:    false,
@@ -545,8 +538,6 @@ fn generate_string_patterns(
     args: &util::SchemaArgs,
     properties_map: &Map<String, Value>,
 ) -> CliResult<AHashMap<String, String>> {
-    // standard boiler-plate for reading CSV
-
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)

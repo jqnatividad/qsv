@@ -596,8 +596,7 @@ impl Args {
             "_schema" => StatsMode::Schema, // only meant for internal use by schema command
             _ => return fail_incorrectusage_clierror!("Invalid stats mode"),
         };
-        let (csv_fields, csv_stats, stats_col_index_map) =
-            get_stats_records(&schema_args, stats_mode)?;
+        let (csv_fields, csv_stats) = get_stats_records(&schema_args, stats_mode)?;
 
         if stats_mode == StatsMode::None || stats_mode == StatsMode::Schema || csv_fields.is_empty()
         {
@@ -614,30 +613,24 @@ impl Args {
             csv_fields.len() == csv_stats.len(),
             "Mismatch between the number of fields and stats records"
         );
-        let col_cardinality_vec: Vec<(String, usize)> = csv_stats
+        let col_cardinality_vec: Vec<(String, u64)> = csv_stats
             .iter()
             .enumerate()
-            .map(|(i, _record)| {
+            .map(|(i, stats_record)| {
                 // get the column name and stats record
                 // safety: we know that csv_fields and csv_stats have the same length
                 let col_name = csv_fields.get(i).unwrap();
-                let stats_record = csv_stats.get(i).unwrap().clone().to_record(4, false);
-
-                let col_cardinality = match stats_record.get(stats_col_index_map["cardinality"]) {
-                    Some(s) => s.parse::<usize>().unwrap_or(0_usize),
-                    None => 0_usize,
-                };
                 (
                     simdutf8::basic::from_utf8(col_name)
                         .unwrap_or(NON_UTF8_ERR)
                         .to_string(),
-                    col_cardinality,
+                    stats_record.cardinality,
                 )
             })
             .collect();
 
         // now, get the unique headers, where cardinality == rowcount
-        let row_count = util::count_rows(&self.rconfig())? as usize;
+        let row_count = util::count_rows(&self.rconfig())?;
         FREQ_ROW_COUNT.set(row_count as u64).unwrap();
 
         let mut all_unique_headers_vec: Vec<usize> = Vec::with_capacity(5);
@@ -659,7 +652,9 @@ impl Args {
         let headers = rdr.byte_headers()?;
         let all_unique_headers_vec = self.get_unique_headers(headers)?;
 
-        UNIQUE_COLUMNS.set(all_unique_headers_vec).unwrap();
+        UNIQUE_COLUMNS
+            .set(all_unique_headers_vec)
+            .map_err(|_| "Cannot set UNIQUE_COLUMNS")?;
 
         let sel = self.rconfig().selection(headers)?;
         Ok((sel.select(headers).map(<[u8]>::to_vec).collect(), sel))
