@@ -1568,16 +1568,22 @@ pub fn process_input(
 
     // if the input is empty or "-", its stdin. try to copy stdin to a file named
     // "stdin" in the passed temp directory
-    if arg_input.len() == 1 && arg_input[0] == PathBuf::from("-") {
+    let mut stdin_flag = false;
+    let mut stdin_path = PathBuf::new();
+    let mut stdin_file_created = false;
+    if !arg_input.is_empty() && arg_input[0] == PathBuf::from("-") {
         // its "-", remove the "-" from the input so its empty
         arg_input.remove(0);
+        stdin_flag = true;
     }
-    if arg_input.is_empty() {
+    if arg_input.is_empty() || stdin_flag {
         // copy stdin to a file named stdin in a temp directory
         let tmp_filename = tmpdir.path().join("stdin");
         let mut tmp_file = std::fs::File::create(&tmp_filename)?;
         std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
         tmp_file.flush()?;
+        stdin_path.clone_from(&tmp_filename);
+        stdin_file_created = true;
         processed_input.push(tmp_filename);
     }
 
@@ -1645,8 +1651,20 @@ pub fn process_input(
 
     // check the input files
     for path in work_input {
-        // does the input file exist?
-        if !path.exists() {
+        // check if the path is "-" (stdin)
+        if path == PathBuf::from("-") {
+            if !stdin_file_created {
+                // if stdin was not copied to a file, copy stdin to a file named "stdin"
+                let tmp_filename = tmpdir.path().join("stdin");
+                let mut tmp_file = std::fs::File::create(&tmp_filename)?;
+                std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
+                tmp_file.flush()?;
+                stdin_file_created = true;
+                stdin_path = tmp_filename;
+            }
+            processed_input.push(stdin_path.clone());
+            continue;
+        } else if !path.exists() {
             return fail_clierror!("Input file '{}' does not exist", path.display());
         }
 
