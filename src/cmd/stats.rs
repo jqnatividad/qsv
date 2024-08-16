@@ -51,9 +51,8 @@ chunks and each chunk is processed in parallel. The number of chunks is determin
 number of logical CPUs detected. You can override this by setting the --jobs option.
 
 As stats is a central command in qsv, and can be expensive to compute, `stats` caches results
-in <FILESTEM>.stats.csv & if the --stats-binout option is used, <FILESTEM>.stats.csv.bin.sz 
-(e.g., qsv stats nyc311.csv will create nyc311.stats.csv & nyc311.stats.csv.bin.sz).
-The .bin.sz file is the snappy-compressed binary format of the computed stats.
+in <FILESTEM>.stats.csv & if the --stats-json option is used, <FILESTEM>.stats.csv.data.json 
+(e.g., qsv stats nyc311.csv will create nyc311.stats.csv & nyc311.stats.csv.data.json).
 The arguments used to generate the cached stats are saved in <FILESTEM>.stats.csv.json.
 
 If stats have already been computed for the input file with similar arguments and the file
@@ -183,14 +182,13 @@ stats options:
                               Note that a file handle is opened for each job.
                               When not set, the number of jobs is set to the
                               number of CPUs detected.
-    --stats-binout            Write the stats in binary format. This is used internally by other
-                              qsv commands (currently `frequency`, `schema` & `tojsonl`) to load
-                              cached stats into memory faster. If set, the snappy compressed
-                              binary encoded stats will be written to <FILESTEM>.stats.csv.bin.sz.
-                              You can preemptively create the binary encoded stats file by using
+    --stats-json              Also write the stats in json format. 
+                              If set, the stats will be written to <FILESTEM>.stats.csv.data.json.
+                              Note that this option used internally by other qsv commands
+                              (currently `frequency`, `schema` & `tojsonl`) to load cached stats. 
+                              You can preemptively create the stats-json file by using
                               this option BEFORE running the `frequency`, `schema` & `tojsonl`
-                              commands and they will automatically load the binary encoded
-                              stats file if it exists.
+                              commands and they will automatically use it.
  -c, --cache-threshold <arg>  When greater than 1, the threshold in milliseconds before caching
                               stats results. If a stats run takes longer than this threshold,
                               the stats results will be cached.
@@ -245,7 +243,6 @@ use std::{
     sync::OnceLock,
 };
 
-use gzp::{par::compress::ParCompressBuilder, snap::Snap};
 use itertools::Itertools;
 use qsv_dateparser::parse_with_preference;
 use serde::{Deserialize, Serialize};
@@ -256,7 +253,7 @@ use threadpool::ThreadPool;
 
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
 use crate::{
-    config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
+    config::{Config, Delimiter},
     select::{SelectColumns, Selection},
     util, CliResult,
 };
@@ -281,7 +278,7 @@ pub struct Args {
     pub flag_prefer_dmy:      bool,
     pub flag_force:           bool,
     pub flag_jobs:            Option<usize>,
-    pub flag_stats_binout:    bool,
+    pub flag_stats_json:      bool,
     pub flag_cache_threshold: isize,
     pub flag_output:          Option<String>,
     pub flag_no_headers:      bool,
@@ -319,6 +316,92 @@ struct StatsArgs {
     compute_duration_ms:  u64,
     qsv_version:          String,
 }
+
+#[derive(Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct StatsData {
+    pub field:                String,
+    // type is a reserved keyword in Rust
+    // so we escape it as r#type
+    // we need to do this for serde to work
+    pub r#type:               String,
+    pub is_ascii:             bool,
+    pub sum:                  Option<f64>,
+    pub min:                  Option<String>,
+    pub max:                  Option<String>,
+    pub range:                Option<f64>,
+    pub min_length:           Option<usize>,
+    pub max_length:           Option<usize>,
+    pub mean:                 Option<f64>,
+    pub sem:                  Option<f64>,
+    pub stddev:               Option<f64>,
+    pub variance:             Option<f64>,
+    pub cv:                   Option<f64>,
+    pub nullcount:            u64,
+    pub max_precision:        Option<u32>,
+    pub sparsity:             Option<f64>,
+    pub mad:                  Option<f64>,
+    pub lower_outer_fence:    Option<f64>,
+    pub lower_inner_fence:    Option<f64>,
+    pub q1:                   Option<f64>,
+    pub q2_median:            Option<f64>,
+    pub q3:                   Option<f64>,
+    pub iqr:                  Option<f64>,
+    pub upper_inner_fence:    Option<f64>,
+    pub upper_outer_fence:    Option<f64>,
+    pub skewness:             Option<f64>,
+    pub cardinality:          u64,
+    pub mode:                 Option<String>,
+    pub mode_count:           Option<u64>,
+    pub mode_occurrences:     Option<u64>,
+    pub antimode:             Option<String>,
+    pub antimode_count:       Option<u64>,
+    pub antimode_occurrences: Option<u64>,
+}
+
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum JsonTypes {
+    Int,
+    Float,
+    Bool,
+    String,
+}
+
+pub static STATSDATA_TYPES_ARRAY: [JsonTypes; 34] = [
+    JsonTypes::String, //field
+    JsonTypes::String, //type
+    JsonTypes::Bool,   //is_ascii
+    JsonTypes::Float,  //sum
+    JsonTypes::String, //min
+    JsonTypes::String, //max
+    JsonTypes::Float,  //range
+    JsonTypes::Int,    //min_length
+    JsonTypes::Int,    //max_length
+    JsonTypes::Float,  //mean
+    JsonTypes::Float,  //sem
+    JsonTypes::Float,  //stddev
+    JsonTypes::Float,  //variance
+    JsonTypes::Float,  //cv
+    JsonTypes::Int,    //nullcount
+    JsonTypes::Int,    //max_precision
+    JsonTypes::Float,  //sparsity
+    JsonTypes::Float,  //mad
+    JsonTypes::Float,  //lower_outer_fence
+    JsonTypes::Float,  //lower_inner_fence
+    JsonTypes::Float,  //q1
+    JsonTypes::Float,  //q2_median
+    JsonTypes::Float,  //q3
+    JsonTypes::Float,  //iqr
+    JsonTypes::Float,  //upper_inner_fence
+    JsonTypes::Float,  //upper_outer_fence
+    JsonTypes::Float,  //skewness
+    JsonTypes::Int,    //cardinality
+    JsonTypes::String, //mode
+    JsonTypes::Int,    //mode_count
+    JsonTypes::Int,    //mode_occurrences
+    JsonTypes::String, //antimode
+    JsonTypes::Int,    //antimode_count
+    JsonTypes::Int,    //antimode_occurrences
+];
 
 static INFER_DATE_FLAGS: OnceLock<Vec<bool>> = OnceLock::new();
 static RECORD_COUNT: OnceLock<u64> = OnceLock::new();
@@ -436,14 +519,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    // create stats_for_encoding to store the stats in binary format
-    let mut stats_for_encoding: Vec<Stats> = Vec::new();
-
     let mut compute_stats = true;
-    let mut create_cache = args.flag_cache_threshold > 0 || args.flag_stats_binout;
+    let mut create_cache = args.flag_cache_threshold > 0 || args.flag_stats_json;
     let mut autoindex_set = false;
 
-    let write_stats_binout = args.flag_stats_binout;
+    let write_stats_json = args.flag_stats_json;
 
     if let Some(path) = fconfig.path.clone() {
         let path_file_stem = path.file_stem().unwrap().to_str().unwrap();
@@ -572,14 +652,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 },
             }?;
 
-            // clone a copy of stats so we can binary encode it to disk later
-            if write_stats_binout {
-                stats_for_encoding.clone_from(&stats);
-            }
-
             let stats_sr_vec = args.stats_to_records(stats);
 
-            wtr.write_record(&args.stat_headers())?;
+            let stats_headers_sr = args.stat_headers();
+            wtr.write_record(&stats_headers_sr)?;
             let fields = headers.iter().zip(stats_sr_vec);
             for (i, (header, stat)) in fields.enumerate() {
                 let header = if args.flag_no_headers {
@@ -692,28 +768,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 serde_json::to_string_pretty(&current_stats_args).unwrap(),
             )?;
 
-            // only create the binary encoded files if we computed the stats
-            // and the user specified --stats-binout
-            if write_stats_binout {
-                // binary encode the stats to "<FILESTEM>.stats.csv.bin.sz"
-                let mut stats_bin_pathbuf = path;
-                stats_bin_pathbuf.set_extension("stats.csv.bin.sz");
-                // we do the binary encoding inside a block so that the encoded_file
-                // automatically gets dropped/flushed before we copy it to the output file
-                {
-                    let encoded_file = ParCompressBuilder::<Snap>::new()
-                        .num_threads(util::max_jobs())?
-                        .buffer_size(DEFAULT_WTR_BUFFER_CAPACITY * 2)?
-                        .pin_threads(Some(0))
-                        .from_writer(fs::File::create(stats_bin_pathbuf.clone())?);
-
-                    if let Err(e) = bincode::serialize_into(encoded_file, &stats_for_encoding) {
-                        return fail_clierror!(
-                            "Failed to write binary encoded stats {}: {e:?}",
-                            stats_bin_pathbuf.display()
-                        );
-                    }
-                }
+            // save the stats data to "<FILESTEM>.stats.csv.data.json"
+            if write_stats_json {
+                stats_pathbuf.set_extension("data.json");
+                util::csv_to_jsonl(&currstats_filename, &STATSDATA_TYPES_ARRAY, stats_pathbuf)?;
             }
         }
     }
