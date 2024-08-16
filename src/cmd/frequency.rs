@@ -15,26 +15,26 @@ as the command will need to load all the column's values into memory, potentiall
 causing Out-of-Memory (OOM) errors for larger-than-memory datasets.
 
 To overcome this, the frequency command can use the stats cache if it exists to get
-column cardinalities. This short-circuits frequency compilation for columns
-with all unique values (i.e. where rowcount == cardinality), eliminating the need to
+column cardinalities. This short-circuits frequency compilation for columns with
+all unique values (i.e. where rowcount == cardinality), eliminating the need to
 maintain an in-memory hashmap for ID columns. This allows `frequency` to handle
-larger-than-memory datasets with the added benefit of also making it faster!
+larger-than-memory datasets with the added benefit of also making it faster when
+working with datasets with ID columns.
 
 STATS_MODE "none" NOTES:
 
-    If --stats mode is set to "none", the frequency command will compute frequencies for
-    all columns regardless of cardinality, even for columns with all unique values.
+    If --stats mode is set to "none", the frequency command will compute frequencies
+    for all columns regardless of cardinality, even for columns with all unique values.
+    In this case, the unique limit (--unq-limit) is particularly useful when a column
+    has all unique values  and --limit is set to 0.
+    Without a unique limit, the frequency table for that column will be the same as
+    the number of rows in the data.
+    With a unique limit, the frequency table will be a sample of N unique values,
+    all with a count of 1.
 
-    In this case, the unique limit (--unq-limit) is particularly useful when a column has
-    all unique values  and --limit is set to 0.
-    Without a unique limit, the frequency table for that column will be the same as the
-    number of rows in the data.
-    With a unique limit, the frequency table will be a sample of N unique values, all with
-    a count of 1.
-
-    Further, the --lmt-threshold option also allows you to apply the --limit & --unq-limit
-    options only when the number of unique items in a column is greater than or equal to the
-    threshold. This is useful when you want to apply limits only to columns with a large number
+    The --lmt-threshold option also allows you to apply the --limit and --unq-limit
+    options only when the number of unique items in a column >= threshold.
+    This is useful when you want to apply limits only to columns with a large number
     of unique items and not to columns with a small number of unique items.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_frequency.rs.
