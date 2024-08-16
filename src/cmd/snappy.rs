@@ -101,42 +101,39 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // this is automatically deleted when temp_download goes out of scope
     let temp_download = NamedTempFile::new()?;
 
-    let input_reader: Box<dyn BufRead> = match &args.arg_input {
-        Some(uri) => {
-            let path = if Url::parse(uri).is_ok() && uri.starts_with("http") {
-                // its a remote file, download it first
-                let future = util::download_file(
-                    uri,
-                    temp_download.path().to_path_buf(),
-                    args.flag_progressbar && !args.cmd_check && !args.flag_quiet,
-                    args.flag_user_agent,
-                    Some(args.flag_timeout),
-                    if args.cmd_check {
-                        Some(50) // only download 50 bytes when checking for a snappy header
-                    } else {
-                        None
-                    },
-                );
-                tokio::runtime::Runtime::new()?.block_on(future)?;
-                // safety: temp_download is a NamedTempFile, so we know that it can be converted
-                let temp_download_path = temp_download.path().to_str().unwrap().to_string();
-                temp_download_path
-            } else {
-                // its a local file
-                uri.to_string()
-            };
+    let input_reader: Box<dyn BufRead> = if let Some(uri) = &args.arg_input {
+        let path = if Url::parse(uri).is_ok() && uri.starts_with("http") {
+            // its a remote file, download it first
+            let future = util::download_file(
+                uri,
+                temp_download.path().to_path_buf(),
+                args.flag_progressbar && !args.cmd_check && !args.flag_quiet,
+                args.flag_user_agent,
+                Some(args.flag_timeout),
+                if args.cmd_check {
+                    Some(50) // only download 50 bytes when checking for a snappy header
+                } else {
+                    None
+                },
+            );
+            tokio::runtime::Runtime::new()?.block_on(future)?;
+            // safety: temp_download is a NamedTempFile, so we know that it can be converted
+            let temp_download_path = temp_download.path().to_str().unwrap().to_string();
+            temp_download_path
+        } else {
+            // its a local file
+            uri.to_string()
+        };
 
-            let file = fs::File::open(path)?;
-            input_bytes = file.metadata()?.len();
-            Box::new(io::BufReader::with_capacity(
-                config::DEFAULT_RDR_BUFFER_CAPACITY,
-                file,
-            ))
-        },
-        None => {
-            input_bytes = 0;
-            Box::new(io::BufReader::new(stdin().lock()))
-        },
+        let file = fs::File::open(path)?;
+        input_bytes = file.metadata()?.len();
+        Box::new(io::BufReader::with_capacity(
+            config::DEFAULT_RDR_BUFFER_CAPACITY,
+            file,
+        ))
+    } else {
+        input_bytes = 0;
+        Box::new(io::BufReader::new(stdin().lock()))
     };
 
     let output_writer: Box<dyn Write + Send + 'static> = match &args.flag_output {

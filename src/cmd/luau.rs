@@ -1395,17 +1395,14 @@ fn beginend_insertrecord(
     headers_count: usize,
     wtr: &mut csv::Writer<Box<dyn Write>>,
 ) -> Result<(), CliError> {
-    match luau.globals().raw_get(QSV_INSERTRECORD_TBL) {
-        Ok(Value::Table(insertrecord_table)) => {
-            // QSV_INSERTRECORD_TBL is populated, we have a record to insert
-            insertrecord.clear();
+    if let Ok(Value::Table(insertrecord_table)) = luau.globals().raw_get(QSV_INSERTRECORD_TBL) {
+        // QSV_INSERTRECORD_TBL is populated, we have a record to insert
+        insertrecord.clear();
 
-            create_insertrecord(&insertrecord_table, insertrecord, headers_count)?;
+        create_insertrecord(&insertrecord_table, insertrecord, headers_count)?;
 
-            wtr.write_record(&*insertrecord)?;
-            insertrecord_table.clear()?;
-        },
-        Ok(_) | Err(_) => {},
+        wtr.write_record(&*insertrecord)?;
+        insertrecord_table.clear()?;
     }
     Ok(())
 }
