@@ -487,9 +487,7 @@ fn frequency_all_unique_with_stats_cache() {
     wrk.assert_success(&mut stats_cmd);
 
     let mut cmd = wrk.command("frequency");
-    cmd.args(["--select", "1"])
-        .args(["--stats-mode", "auto"])
-        .arg(testdata);
+    cmd.args(["--select", "1"]).arg(testdata);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![

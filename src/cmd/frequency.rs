@@ -17,15 +17,8 @@ causing Out-of-Memory (OOM) errors for larger-than-memory datasets.
 To overcome this, the frequency command can use the stats cache if it exists to get
 column cardinalities. This short-circuits frequency compilation for columns
 with all unique values (i.e. where rowcount == cardinality), eliminating the need to
-maintain a in-memory hashmap for ID columns. This allows the command to compute frequencies
-for larger-than-memory datasets.
-
-However, in the current implementation, the stats cache takes a while to load, eliminating
-the performance benefits of cardinality-based frequency tables.
-See https://github.com/jqnatividad/qsv/issues/2040
-
-Therefore, only use the `--stats-mode` option if you have a large dataset with columns
-that have all unique values and you want to avoid OOM errors.
+maintain an in-memory hashmap for ID columns. This allows `frequency` to handle
+larger-than-memory datasets with the added benefit of also making it faster!
 
 STATS_MODE "none" NOTES:
 
@@ -98,11 +91,12 @@ frequency options:
                             There are three modes:
                               auto: use stats cache if it already exists to get column cardinalities.
                                     For columns with all unique values, "<ALL_UNIQUE>" will be used.
-                              force: force stats calculation to get cardinalities.
+                              force: force stats calculation to get cardinalities. If the stats cache
+                                    does not exist, it will be created.
                               none: don't use cardinality information.
                                     For columns with all unique values, the first N sorted unique
                                     values (based on the --limit and --unq-limit options) will be used.
-                            [default: none]
+                            [default: auto]
    --all-unique-text <arg>  The text to use for the "<ALL_UNIQUE>" category.
                             [default: <ALL_UNIQUE>]
     -j, --jobs <arg>        The number of jobs to run in parallel.
