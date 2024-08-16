@@ -13,12 +13,11 @@ use std::{
     time::SystemTime,
 };
 
-use ahash::AHashMap;
 use csv::ByteRecord;
 use docopt::Docopt;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget, ProgressStyle};
-use log::{info, log_enabled, warn};
+use log::{info, log_enabled};
 use reqwest::Client;
 use serde::de::DeserializeOwned;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
@@ -28,6 +27,7 @@ use sysinfo::System;
 #[cfg(feature = "polars")]
 use crate::cmd::count::polars_count_input;
 use crate::{
+    cmd::stats::{JsonTypes, StatsData, STATSDATA_TYPES_ARRAY},
     config,
     config::{Config, Delimiter, DEFAULT_RDR_BUFFER_CAPACITY, DEFAULT_WTR_BUFFER_CAPACITY},
     select::SelectColumns,
@@ -60,7 +60,7 @@ pub enum StatsMode {
 #[allow(dead_code)]
 #[derive(serde::Deserialize, Clone)]
 pub struct SchemaArgs {
-    pub flag_enum_threshold:  usize,
+    pub flag_enum_threshold:  u64,
     pub flag_ignore_case:     bool,
     pub flag_strict_dates:    bool,
     pub flag_pattern_columns: SelectColumns,
@@ -1917,16 +1917,12 @@ pub fn trim_bs_whitespace(bytes: &[u8]) -> &[u8] {
     &bytes[start..end]
 }
 
-// get stats records from stats.bin file, or if its invalid, by running the stats command
+/// get stats records from stats.csv.data.json file, or if its invalid, by running the stats command
 /// returns tuple (`csv_fields`, `csv_stats`, `stats_col_index_map`)
 pub fn get_stats_records(
     args: &SchemaArgs,
     mode: StatsMode,
-) -> CliResult<(
-    ByteRecord,
-    Vec<crate::cmd::stats::Stats>,
-    AHashMap<String, usize>,
-)> {
+) -> CliResult<(ByteRecord, Vec<StatsData>)> {
     let stats_args = crate::cmd::stats::Args {
         arg_input:            args.arg_input.clone(),
         flag_select:          crate::select::SelectColumns::parse("").unwrap(),
@@ -1945,7 +1941,7 @@ pub fn get_stats_records(
         flag_prefer_dmy:      args.flag_prefer_dmy,
         flag_force:           args.flag_force,
         flag_jobs:            Some(njobs(args.flag_jobs)),
-        flag_stats_binout:    true,
+        flag_stats_json:      true,
         flag_cache_threshold: 1, // force the creation of stats cache files
         flag_output:          None,
         flag_no_headers:      args.flag_no_headers,
@@ -1953,72 +1949,78 @@ pub fn get_stats_records(
         flag_memcheck:        args.flag_memcheck,
     };
 
-    let canonical_input_path = Path::new(&args.arg_input.clone().unwrap()).canonicalize()?;
-    let stats_binary_encoded_path = canonical_input_path.with_extension("stats.csv.bin.sz");
+    if mode == StatsMode::None
+        || args.arg_input.is_none()
+        || args.arg_input.as_ref() == Some(&"-".to_string())
+    {
+        // if stdin or StatsMode::None,
+        // we're just doing frequency old school w/o cardinality
+        return Ok((ByteRecord::new(), Vec::new()));
+    };
 
-    let stats_bin_current = if stats_binary_encoded_path.exists() {
-        let stats_bin_metadata = std::fs::metadata(&stats_binary_encoded_path)?;
+    let canonical_input_path = Path::new(&args.arg_input.clone().unwrap()).canonicalize()?;
+    let statsdata_path = canonical_input_path.with_extension("stats.csv.data.json");
+
+    let stats_data_current = if statsdata_path.exists() {
+        let statsdata_metadata = std::fs::metadata(&statsdata_path)?;
 
         let input_metadata = std::fs::metadata(args.arg_input.clone().unwrap())?;
 
-        if stats_bin_metadata.modified()? > input_metadata.modified()? {
-            info!("Valid stats.csv.bin.sz file found!");
+        if statsdata_metadata.modified()? > input_metadata.modified()? {
+            info!("Valid stats.csv.data.json file found!");
             true
         } else {
-            info!("stats.csv.bin.sz file is older than input file. Regenerating stats.bin file.");
+            info!(
+                "stats.csv.data.json file is older than input file. Regenerating stats json file."
+            );
             false
         }
     } else {
-        info!("stats.csv.bin.sz file does not exist: {stats_binary_encoded_path:?}");
+        info!("stats.csv.data.json file does not exist: {statsdata_path:?}");
         false
     };
 
-    if mode == StatsMode::None || (mode == StatsMode::Frequency && !stats_bin_current) {
-        // if the stats.bin file is not present, we're just doing frequency old school
-        // without cardinality
-        return Ok((ByteRecord::new(), Vec::new(), AHashMap::new()));
+    if mode == StatsMode::Frequency && !stats_data_current {
+        // if the stats.data file is not current,
+        // we're also doing frequency old school w/o cardinality
+        return Ok((ByteRecord::new(), Vec::new()));
     }
 
-    let mut stats_bin_loaded = false;
+    let mut stats_data_loaded = false;
 
-    // if stats.bin file exists and is current, use it
-    let mut csv_stats: Vec<crate::cmd::stats::Stats> = Vec::new();
+    let mut csv_stats: Vec<StatsData> = Vec::new();
 
-    if stats_bin_current && !args.flag_force {
-        let bin_file = BufReader::with_capacity(
-            DEFAULT_RDR_BUFFER_CAPACITY * 4,
-            File::open(stats_binary_encoded_path)?,
-        );
-        let mut buf_binsz_decoder = snap::read::FrameDecoder::new(bin_file);
-        match bincode::deserialize_from(&mut buf_binsz_decoder) {
-            Ok(stats) => {
-                csv_stats = stats;
-                stats_bin_loaded = true;
-            },
-            Err(e) => {
-                wwarn!(
-                    "Error reading stats.csv.bin.sz file: {e:?}. Regenerating stats.bin.sz file."
-                );
-            },
+    // if stats_data file exists and is current, use it
+    if stats_data_current && !args.flag_force {
+        stats_data_loaded = true;
+
+        let statsdata_file = std::fs::File::open(&statsdata_path)?;
+        let statsdata_reader = std::io::BufReader::new(statsdata_file);
+        let statsdata_lines = statsdata_reader.lines();
+
+        for line in statsdata_lines {
+            let line = line?;
+            let stats_record: StatsData = serde_json::from_str(&line)?;
+            csv_stats.push(stats_record);
         }
     }
 
-    if !stats_bin_loaded {
-        // otherwise, run stats command to generate stats.csv.bin.sz file
+    if !stats_data_loaded {
+        // otherwise, run stats command to generate stats.csv.data.json file
         let tempfile = tempfile::Builder::new()
             .suffix(".stats.csv")
             .tempfile()
             .unwrap();
         let tempfile_path = tempfile.path().to_str().unwrap().to_string();
 
-        let statsbin_path = canonical_input_path.with_extension("stats.csv.bin.sz");
+        let statsdatajson_path = canonical_input_path.with_extension("stats.csv.data.json");
 
         let mut stats_args_str = if mode == StatsMode::Schema {
             // mode is GetStatsMode::Schema
-            // we're generating schema, so we need all the stats
+            // we're generating schema, so we cardinality and to infer-dates
             format!(
                 "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
-                 --cardinality --output {output} --stats-binout --force",
+                 --cardinality --output {output} --stats-json --force",
                 input = {
                     if let Some(arg_input) = stats_args.arg_input.clone() {
                         arg_input
@@ -2033,7 +2035,7 @@ pub fn get_stats_records(
             // mode is GetStatsMode::Frequency or GetStatsMode::FrequencyForceStats
             // we're doing frequency, so we just need cardinality
             format!(
-                "stats {input} --cardinality --stats-binout --output {output}",
+                "stats {input} --cardinality --stats-json --output {output}",
                 input = {
                     if let Some(arg_input) = stats_args.arg_input.clone() {
                         arg_input
@@ -2071,19 +2073,24 @@ pub fn get_stats_records(
         stats_cmd.args(stats_args_vec);
         let _stats_output = stats_cmd.output()?;
 
-        let bin_file =
-            BufReader::with_capacity(DEFAULT_RDR_BUFFER_CAPACITY * 2, File::open(statsbin_path)?);
-        let mut buf_binsz_decoder = snap::read::FrameDecoder::new(bin_file);
+        // create a statsdatajon from the output of the stats command
+        csv_to_jsonl(
+            &tempfile_path,
+            &STATSDATA_TYPES_ARRAY,
+            statsdatajson_path.clone(),
+        )?;
 
-        match bincode::deserialize_from(&mut buf_binsz_decoder) {
-            Ok(stats) => {
-                csv_stats = stats;
-            },
-            Err(e) => {
-                return fail_clierror!(
-                    "Error reading stats.csv.bin.sz file: {e:?}. Schema generation aborted."
-                );
-            },
+        let statsdatajson_rdr = BufReader::with_capacity(
+            DEFAULT_RDR_BUFFER_CAPACITY * 2,
+            File::open(statsdatajson_path)?,
+        );
+
+        let mut statsrecord: StatsData;
+        let mut curr_line: String;
+        for line in statsdatajson_rdr.lines() {
+            curr_line = line?;
+            statsrecord = serde_json::from_str(&curr_line)?;
+            csv_stats.push(statsrecord);
         }
     };
 
@@ -2092,29 +2099,74 @@ pub fn get_stats_records(
     let csv_fields = rdr.byte_headers()?.clone();
     drop(rdr);
 
-    let stats_columns = if stats_bin_loaded {
-        // if stats.bin file is loaded, we need to get the headers from the stats.csv file
-        let stats_bin_csv_path = canonical_input_path.with_extension("stats.csv");
-        let mut stats_csv_reader = csv::Reader::from_path(stats_bin_csv_path)?;
-        let stats_csv_headers = stats_csv_reader.headers()?.clone();
-        drop(stats_csv_reader);
-        stats_csv_headers
-    } else {
-        // otherwise, we generate the headers from the stats_args struct
-        // as we used the stats_args struct to generate the stats.csv file
-        stats_args.stat_headers()
-    };
+    Ok((csv_fields, csv_stats))
+}
 
-    let mut stats_col_index_map = AHashMap::new();
+/// simple helper to convert a CSV file to a JSONL file
+/// no type inferencing is done unlike tojsonl, so all fields are strings
+pub fn csv_to_jsonl(
+    input_csv: &str,
+    csv_types: &[JsonTypes],
+    output_jsonl: PathBuf,
+) -> CliResult<()> {
+    let file = File::open(input_csv)?;
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(true) // requires headers for keys
+        .from_reader(file);
 
-    for (i, col) in stats_columns.iter().enumerate() {
-        if col != "field" {
-            // need offset by 1 due to extra "field" column in headers that's not in stats records
-            stats_col_index_map.insert(col.to_owned(), i - 1);
+    // Get the headers and create a vector of of keys
+    let headers = rdr.headers()?;
+    let key_vec: Vec<String> = headers
+        .iter()
+        .map(std::string::ToString::to_string)
+        .collect();
+
+    let output = File::create(output_jsonl)?;
+    let mut writer = BufWriter::new(output);
+
+    // amortize allocations
+    let mut json_object = serde_json::Map::with_capacity(key_vec.len());
+    let mut record = csv::StringRecord::new();
+    let mut json_line: String;
+
+    // Iterate over each record in the CSV
+    while rdr.read_record(&mut record)? {
+        json_object.clear();
+
+        // safety: we know the record length is the same as the key_vec length
+        for (i, val) in record.iter().enumerate() {
+            let key = unsafe { key_vec.get_unchecked(i) };
+            let data_type = if key == "cardinality" {
+                &JsonTypes::Int
+            } else {
+                csv_types.get(i).unwrap_or(&JsonTypes::String)
+            };
+            let value = if val.is_empty() && data_type != &JsonTypes::Bool {
+                continue;
+            } else {
+                match *data_type {
+                    JsonTypes::String => serde_json::Value::String(val.to_owned()),
+                    JsonTypes::Int => {
+                        let num = val.parse::<u64>().unwrap_or_default();
+                        serde_json::Value::Number(serde_json::Number::from(num))
+                    },
+                    JsonTypes::Float => serde_json::Value::Number(
+                        serde_json::Number::from_f64(val.parse::<f64>().unwrap_or_default())
+                            .unwrap_or_else(|| serde_json::Number::from(0)),
+                    ),
+                    JsonTypes::Bool => {
+                        serde_json::Value::Bool(val.parse::<bool>().unwrap_or(false))
+                    },
+                }
+            };
+            json_object.insert(key.to_string(), value);
         }
+
+        json_line = serde_json::to_string(&json_object)?;
+        writeln!(writer, "{json_line}")?;
     }
 
-    Ok((csv_fields, csv_stats, stats_col_index_map))
+    Ok(writer.flush()?)
 }
 
 // comment out for now as this is still WIP
