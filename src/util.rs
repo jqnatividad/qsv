@@ -1921,31 +1921,6 @@ pub fn get_stats_records(
     args: &SchemaArgs,
     mode: StatsMode,
 ) -> CliResult<(ByteRecord, Vec<StatsData>)> {
-    let stats_args = crate::cmd::stats::Args {
-        arg_input:            args.arg_input.clone(),
-        flag_select:          crate::select::SelectColumns::parse("").unwrap(),
-        flag_everything:      false,
-        flag_typesonly:       false,
-        flag_infer_boolean:   false,
-        flag_mode:            false,
-        flag_cardinality:     true,
-        flag_median:          false,
-        flag_quartiles:       false,
-        flag_mad:             false,
-        flag_nulls:           false,
-        flag_round:           4,
-        flag_infer_dates:     true,
-        flag_dates_whitelist: args.flag_dates_whitelist.to_string(),
-        flag_prefer_dmy:      args.flag_prefer_dmy,
-        flag_force:           args.flag_force,
-        flag_jobs:            Some(njobs(args.flag_jobs)),
-        flag_stats_json:      true,
-        flag_cache_threshold: 1, // force the creation of stats cache files
-        flag_output:          None,
-        flag_no_headers:      args.flag_no_headers,
-        flag_delimiter:       args.flag_delimiter,
-        flag_memcheck:        args.flag_memcheck,
-    };
 
     if mode == StatsMode::None
         || args.arg_input.is_none()
@@ -1985,25 +1960,50 @@ pub fn get_stats_records(
     }
 
     let mut stats_data_loaded = false;
-
     let mut csv_stats: Vec<StatsData> = Vec::new();
 
     // if stats_data file exists and is current, use it
     if stats_data_current && !args.flag_force {
-        stats_data_loaded = true;
-
         let statsdata_file = std::fs::File::open(&statsdata_path)?;
         let statsdata_reader = std::io::BufReader::new(statsdata_file);
         let statsdata_lines = statsdata_reader.lines();
 
-        for line in statsdata_lines {
-            let line = line?;
+        let mut line: String;
+        for curr_line in statsdata_lines {
+            line = curr_line?;
             let stats_record: StatsData = serde_json::from_str(&line)?;
             csv_stats.push(stats_record);
         }
+        stats_data_loaded = true;
     }
 
     if !stats_data_loaded {
+        let stats_args = crate::cmd::stats::Args {
+            arg_input:            args.arg_input.clone(),
+            flag_select:          crate::select::SelectColumns::parse("").unwrap(),
+            flag_everything:      false,
+            flag_typesonly:       false,
+            flag_infer_boolean:   false,
+            flag_mode:            false,
+            flag_cardinality:     true,
+            flag_median:          false,
+            flag_quartiles:       false,
+            flag_mad:             false,
+            flag_nulls:           false,
+            flag_round:           4,
+            flag_infer_dates:     true,
+            flag_dates_whitelist: args.flag_dates_whitelist.to_string(),
+            flag_prefer_dmy:      args.flag_prefer_dmy,
+            flag_force:           args.flag_force,
+            flag_jobs:            Some(njobs(args.flag_jobs)),
+            flag_stats_json:      true,
+            flag_cache_threshold: 1, // force the creation of stats cache files
+            flag_output:          None,
+            flag_no_headers:      args.flag_no_headers,
+            flag_delimiter:       args.flag_delimiter,
+            flag_memcheck:        args.flag_memcheck,
+        };
+
         // otherwise, run stats command to generate stats.csv.data.json file
         let tempfile = tempfile::Builder::new()
             .suffix(".stats.csv")
