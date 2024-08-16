@@ -1560,32 +1560,11 @@ pub fn isutf8_file(path: &Path) -> Result<bool, CliError> {
 /// If the input is a file, add the file to the input.
 /// If the input are snappy compressed files, uncompress them before adding them to the input.
 pub fn process_input(
-    mut arg_input: Vec<PathBuf>,
+    arg_input: Vec<PathBuf>,
     tmpdir: &tempfile::TempDir,
     custom_empty_stdin_errmsg: &str,
 ) -> Result<Vec<PathBuf>, CliError> {
     let mut processed_input = Vec::with_capacity(arg_input.len());
-
-    // if the input is empty or "-", its stdin. try to copy stdin to a file named
-    // "stdin" in the passed temp directory
-    let mut stdin_flag = false;
-    let mut stdin_path = PathBuf::new();
-    let mut stdin_file_created = false;
-    if !arg_input.is_empty() && arg_input[0] == PathBuf::from("-") {
-        // its "-", remove the "-" from the input so its empty
-        arg_input.remove(0);
-        stdin_flag = true;
-    }
-    if arg_input.is_empty() || stdin_flag {
-        // copy stdin to a file named stdin in a temp directory
-        let tmp_filename = tmpdir.path().join("stdin");
-        let mut tmp_file = std::fs::File::create(&tmp_filename)?;
-        std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
-        tmp_file.flush()?;
-        stdin_path.clone_from(&tmp_filename);
-        stdin_file_created = true;
-        processed_input.push(tmp_filename);
-    }
 
     let work_input = if arg_input.len() == 1 {
         let input_path = &arg_input[0];
@@ -1648,6 +1627,9 @@ pub fn process_input(
     } else {
         arg_input
     };
+
+    let mut stdin_path = PathBuf::new();
+    let mut stdin_file_created = false;
 
     // check the input files
     for path in work_input {
