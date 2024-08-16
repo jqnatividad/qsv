@@ -1,12 +1,10 @@
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use std::borrow::Cow;
-#[cfg(any(feature = "feature_capable", feature = "lite"))]
-use std::io::BufRead;
 use std::{
     cmp::min,
     env, fs,
     fs::File,
-    io::{BufReader, BufWriter, Read, Write},
+    io::{BufRead, BufReader, BufWriter, Read, Write},
     path::{Path, PathBuf},
     str,
     sync::OnceLock,
