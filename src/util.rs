@@ -1921,7 +1921,6 @@ pub fn get_stats_records(
     args: &SchemaArgs,
     mode: StatsMode,
 ) -> CliResult<(ByteRecord, Vec<StatsData>)> {
-
     if mode == StatsMode::None
         || args.arg_input.is_none()
         || args.arg_input.as_ref() == Some(&"-".to_string())
