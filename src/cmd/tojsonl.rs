@@ -9,7 +9,7 @@ It will infer a column as boolean if its cardinality is 2, and the first charact
 the values are one of the following case-insensitive combinations:
   t/f; t/null; 1/0; 1/null; y/n & y/null are treated as true/false.
 
-The `tojsonl` command will reuse a `stats.csv.bin.sz` file if it exists and is current
+The `tojsonl` command will reuse a `stats.csv.data.json` file if it exists and is current
 (i.e. stats generated with --cardinality and --infer-dates options) and will skip
 recomputing stats.
 
