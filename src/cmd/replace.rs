@@ -24,6 +24,9 @@ replace arguments:
 replace options:
     -i, --ignore-case      Case insensitive search. This is equivalent to
                            prefixing the regex with '(?i)'.
+    --literal              Treat the regex pattern as a literal string. This allows
+                           you to search for exact matches that even contain special
+                           regex characters without escaping them.
     -s, --select <arg>     Select the columns to search. See 'qsv select -h'
                            for the full syntax.
     -u, --unicode          Enable unicode support. When enabled, character classes
@@ -50,7 +53,7 @@ Common options:
 
 "#;
 
-use std::{borrow::Cow, collections::HashSet, env};
+use std::{borrow::Cow, collections::HashSet};
 
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget};
@@ -75,6 +78,7 @@ struct Args {
     flag_no_headers:     bool,
     flag_delimiter:      Option<Delimiter>,
     flag_ignore_case:    bool,
+    flag_literal:        bool,
     flag_size_limit:     usize,
     flag_dfa_size_limit: usize,
     flag_progressbar:    bool,
@@ -85,11 +89,20 @@ const NULL_VALUE: &str = "<null>";
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let regex_unicode = match env::var("QSV_REGEX_UNICODE") {
-        Ok(_) => true,
-        Err(_) => args.flag_unicode,
+
+    let regex_unicode = if util::get_envvar_flag("QSV_REGEX_UNICODE") {
+        true
+    } else {
+        args.flag_unicode
     };
-    let pattern = RegexBuilder::new(&args.arg_pattern)
+
+    let arg_pattern = if args.flag_literal {
+        regex::escape(&args.arg_pattern)
+    } else {
+        args.arg_pattern.clone()
+    };
+
+    let pattern = RegexBuilder::new(&arg_pattern)
         .case_insensitive(args.flag_ignore_case)
         .unicode(regex_unicode)
         .size_limit(args.flag_size_limit * (1 << 20))

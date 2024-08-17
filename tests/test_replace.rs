@@ -29,6 +29,34 @@ fn replace() {
 }
 
 #[test]
+fn replace_regex_literal() {
+    let wrk = Workdir::new("replace");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["identifier", "color"],
+            svec!["164.0", "yel$low^"],
+            svec!["165.0", "yellow"],
+            svec!["166.0", "yellow"],
+            svec!["167.0", "yel$low^.0"],
+        ],
+    );
+    let mut cmd = wrk.command("replace");
+    cmd.arg("$low^").arg("low").arg("--literal").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["identifier", "color"],
+        svec!["164.0", "yellow"],
+        svec!["165.0", "yellow"],
+        svec!["166.0", "yellow"],
+        svec!["167.0", "yellow.0"],
+    ];
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn replace_match() {
     let wrk = Workdir::new("replace_match");
     wrk.create(
