@@ -741,6 +741,7 @@ _arguments "${_arguments_options[@]}" : \
 (replace)
 _arguments "${_arguments_options[@]}" : \
 '--ignore-case[]' \
+'--literal[]' \
 '--select[]' \
 '--unicode[]' \
 '--size-limit[]' \

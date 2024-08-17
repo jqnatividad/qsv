@@ -2268,7 +2268,7 @@ _qsv() {
             return 0
             ;;
         qsv__replace)
-            opts="-h --ignore-case --select --unicode --size-limit --dfa-size-limit --output --no-headers --delimiter --progressbar --quiet --help"
+            opts="-h --ignore-case --literal --select --unicode --size-limit --dfa-size-limit --output --no-headers --delimiter --progressbar --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
