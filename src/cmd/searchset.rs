@@ -123,22 +123,15 @@ struct Args {
     flag_quiet:             bool,
 }
 
-fn read_regexset(filename: &String, literal: bool) -> io::Result<Vec<String>> {
-    match File::open(filename) {
-        Ok(f) => {
-            if literal {
-                BufReader::new(f)
-                    .lines()
-                    .map(|l| l.map(|s| regex::escape(&s)))
-                    .collect()
-            } else {
-                BufReader::new(f).lines().collect()
-            }
-        },
-        Err(e) => Err(io::Error::new(
-            io::ErrorKind::NotFound,
-            format!("Cannot open regexset file {filename}: {e}"),
-        )),
+fn read_regexset(filename: &str, literal: bool) -> io::Result<Vec<String>> {
+    let file = File::open(filename)?;
+    let reader = BufReader::new(file);
+    let lines = reader.lines();
+
+    if literal {
+        lines.map(|line| line.map(|s| regex::escape(&s))).collect()
+    } else {
+        lines.collect()
     }
 }
 
