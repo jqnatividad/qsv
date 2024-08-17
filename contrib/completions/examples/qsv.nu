@@ -633,6 +633,7 @@ module completions {
 
   export extern "qsv search" [
     --ignore-case
+    --literal
     --select
     --invert-match
     --unicode
@@ -654,6 +655,7 @@ module completions {
 
   export extern "qsv searchset" [
     --ignore-case
+    --literal
     --select
     --invert-match
     --unicode

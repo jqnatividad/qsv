@@ -3,6 +3,7 @@ use clap::{arg, Command};
 pub fn searchset_cmd() -> Command {
     Command::new("searchset").args([
         arg!(--"ignore-case"),
+        arg!(--literal),
         arg!(--select),
         arg!(--"invert-match"),
         arg!(--unicode),

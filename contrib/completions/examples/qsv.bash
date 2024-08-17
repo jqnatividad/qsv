@@ -2338,7 +2338,7 @@ _qsv() {
             return 0
             ;;
         qsv__search)
-            opts="-h --ignore-case --select --invert-match --unicode --flag --quick --preview-match --count --size-limit --dfa-size-limit --json --not-one --output --no-headers --delimiter --progressbar --quiet --help"
+            opts="-h --ignore-case --literal --select --invert-match --unicode --flag --quick --preview-match --count --size-limit --dfa-size-limit --json --not-one --output --no-headers --delimiter --progressbar --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -2352,7 +2352,7 @@ _qsv() {
             return 0
             ;;
         qsv__searchset)
-            opts="-h --ignore-case --select --invert-match --unicode --flag --flag-matches-only --unmatched-output --quick --count --json --not-one --size-limit --dfa-size-limit --output --no-headers --delimiter --progressbar --quiet --help"
+            opts="-h --ignore-case --literal --select --invert-match --unicode --flag --flag-matches-only --unmatched-output --quick --count --json --not-one --size-limit --dfa-size-limit --output --no-headers --delimiter --progressbar --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

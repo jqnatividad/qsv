@@ -809,6 +809,7 @@ _arguments "${_arguments_options[@]}" : \
 (search)
 _arguments "${_arguments_options[@]}" : \
 '--ignore-case[]' \
+'--literal[]' \
 '--select[]' \
 '--invert-match[]' \
 '--unicode[]' \
@@ -832,6 +833,7 @@ _arguments "${_arguments_options[@]}" : \
 (searchset)
 _arguments "${_arguments_options[@]}" : \
 '--ignore-case[]' \
+'--literal[]' \
 '--select[]' \
 '--invert-match[]' \
 '--unicode[]' \

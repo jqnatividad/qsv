@@ -546,6 +546,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand schema" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand schema" -l memcheck
 complete -c qsv -n "__fish_qsv_using_subcommand schema" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand search" -l ignore-case
+complete -c qsv -n "__fish_qsv_using_subcommand search" -l literal
 complete -c qsv -n "__fish_qsv_using_subcommand search" -l select
 complete -c qsv -n "__fish_qsv_using_subcommand search" -l invert-match
 complete -c qsv -n "__fish_qsv_using_subcommand search" -l unicode
@@ -564,6 +565,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand search" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand search" -l quiet
 complete -c qsv -n "__fish_qsv_using_subcommand search" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l ignore-case
+complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l literal
 complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l select
 complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l invert-match
 complete -c qsv -n "__fish_qsv_using_subcommand searchset" -l unicode

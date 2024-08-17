@@ -712,6 +712,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
         }
         &'qsv;search'= {
             cand --ignore-case 'ignore-case'
+            cand --literal 'literal'
             cand --select 'select'
             cand --invert-match 'invert-match'
             cand --unicode 'unicode'
@@ -733,6 +734,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
         }
         &'qsv;searchset'= {
             cand --ignore-case 'ignore-case'
+            cand --literal 'literal'
             cand --select 'select'
             cand --invert-match 'invert-match'
             cand --unicode 'unicode'
