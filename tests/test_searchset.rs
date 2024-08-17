@@ -17,8 +17,28 @@ fn data(headers: bool) -> Vec<Vec<String>> {
     rows
 }
 
+fn data_with_regex_chars(headers: bool) -> Vec<Vec<String>> {
+    let mut rows = vec![
+        svec!["foo$bar^", "barfoo"],
+        svec!["a", "b"],
+        svec!["$bar^foo", "foobar"],
+        svec!["is wal[do] here", "spot"],
+        svec!["Ḟooƀar", "$ḃar^ḟoo"],
+        svec!["bleh", "no, Wal[do] is there"],
+    ];
+    if headers {
+        rows.insert(0, svec!["h1", "h2"]);
+    }
+    rows
+}
+
 fn regexset_file() -> Vec<Vec<String>> {
     let rows = vec![svec!["^foo"], svec!["bar$"], svec!["waldo"]];
+    rows
+}
+
+fn regexset_literal_file() -> Vec<Vec<String>> {
+    let rows = vec![svec!["$bar^"], svec!["[do]"]];
     rows
 }
 
@@ -425,5 +445,25 @@ fn searchset_flag_complex_unmatched_output() {
     let unmatched_got: String = wrk.from_str(&wrk.path("unmatched.csv"));
     assert_eq!(unmatched_got, nopii_file);
 
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn searchset_literal() {
+    let wrk = Workdir::new("searchset_literal");
+    wrk.create("data.csv", data_with_regex_chars(true));
+    wrk.create("regexset.txt", regexset_literal_file());
+    let mut cmd = wrk.command("searchset");
+    cmd.arg("regexset.txt").arg("data.csv").arg("--literal");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["h1", "h2"],
+        svec!["foo$bar^", "barfoo"],
+        svec!["$bar^foo", "foobar"],
+        svec!["is wal[do] here", "spot"],
+        svec!["bleh", "no, Wal[do] is there"],
+    ];
+    assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
 }
