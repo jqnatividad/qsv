@@ -776,6 +776,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         }
         'qsv;search' {
             [CompletionResult]::new('--ignore-case', 'ignore-case', [CompletionResultType]::ParameterName, 'ignore-case')
+            [CompletionResult]::new('--literal', 'literal', [CompletionResultType]::ParameterName, 'literal')
             [CompletionResult]::new('--select', 'select', [CompletionResultType]::ParameterName, 'select')
             [CompletionResult]::new('--invert-match', 'invert-match', [CompletionResultType]::ParameterName, 'invert-match')
             [CompletionResult]::new('--unicode', 'unicode', [CompletionResultType]::ParameterName, 'unicode')
@@ -798,6 +799,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         }
         'qsv;searchset' {
             [CompletionResult]::new('--ignore-case', 'ignore-case', [CompletionResultType]::ParameterName, 'ignore-case')
+            [CompletionResult]::new('--literal', 'literal', [CompletionResultType]::ParameterName, 'literal')
             [CompletionResult]::new('--select', 'select', [CompletionResultType]::ParameterName, 'select')
             [CompletionResult]::new('--invert-match', 'invert-match', [CompletionResultType]::ParameterName, 'invert-match')
             [CompletionResult]::new('--unicode', 'unicode', [CompletionResultType]::ParameterName, 'unicode')

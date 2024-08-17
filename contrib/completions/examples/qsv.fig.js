@@ -1662,6 +1662,9 @@ const completion: Fig.Spec = {
           name: "--ignore-case",
         },
         {
+          name: "--literal",
+        },
+        {
           name: "--select",
         },
         {
@@ -1720,6 +1723,9 @@ const completion: Fig.Spec = {
       options: [
         {
           name: "--ignore-case",
+        },
+        {
+          name: "--literal",
         },
         {
           name: "--select",
