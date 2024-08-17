@@ -28,6 +28,9 @@ Usage:
 search options:
     -i, --ignore-case          Case insensitive search. This is equivalent to
                                prefixing the regex with '(?i)'.
+    --literal                  Treat the regex as a literal string. This allows
+                               you to search for exact matches that even contain special
+                               regex characters without escaping them.
     -s, --select <arg>         Select the columns to search. See 'qsv select -h'
                                for the full syntax.
     -v, --invert-match         Select only rows that did not match
@@ -99,6 +102,7 @@ use crate::{
 struct Args {
     arg_input:              Option<String>,
     arg_regexset_file:      String,
+    flag_literal:           bool,
     flag_select:            SelectColumns,
     flag_output:            Option<String>,
     flag_no_headers:        bool,
@@ -119,9 +123,18 @@ struct Args {
     flag_quiet:             bool,
 }
 
-fn read_regexset(filename: &String) -> io::Result<Vec<String>> {
+fn read_regexset(filename: &String, literal: bool) -> io::Result<Vec<String>> {
     match File::open(filename) {
-        Ok(f) => BufReader::new(f).lines().collect(),
+        Ok(f) => {
+            if literal {
+                BufReader::new(f)
+                    .lines()
+                    .map(|l| l.map(|s| regex::escape(&s)))
+                    .collect()
+            } else {
+                BufReader::new(f).lines().collect()
+            }
+        },
         Err(e) => Err(io::Error::new(
             io::ErrorKind::NotFound,
             format!("Cannot open regexset file {filename}: {e}"),
@@ -142,7 +155,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
     }
 
-    let regexset = read_regexset(&args.arg_regexset_file)?;
+    let regexset = read_regexset(&args.arg_regexset_file, args.flag_literal)?;
 
     let mut regex_labels: Vec<String> = Vec::with_capacity(regexset.len());
     let labels_re = Regex::new(r".?#(?P<label>.*)$").unwrap();
