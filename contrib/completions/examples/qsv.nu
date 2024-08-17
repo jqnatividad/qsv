@@ -575,6 +575,7 @@ module completions {
 
   export extern "qsv replace" [
     --ignore-case
+    --literal
     --select
     --unicode
     --size-limit

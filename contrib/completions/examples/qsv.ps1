@@ -713,6 +713,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         }
         'qsv;replace' {
             [CompletionResult]::new('--ignore-case', 'ignore-case', [CompletionResultType]::ParameterName, 'ignore-case')
+            [CompletionResult]::new('--literal', 'literal', [CompletionResultType]::ParameterName, 'literal')
             [CompletionResult]::new('--select', 'select', [CompletionResultType]::ParameterName, 'select')
             [CompletionResult]::new('--unicode', 'unicode', [CompletionResultType]::ParameterName, 'unicode')
             [CompletionResult]::new('--size-limit', 'size-limit', [CompletionResultType]::ParameterName, 'size-limit')

@@ -503,6 +503,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand rename" -l no-headers
 complete -c qsv -n "__fish_qsv_using_subcommand rename" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand rename" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand replace" -l ignore-case
+complete -c qsv -n "__fish_qsv_using_subcommand replace" -l literal
 complete -c qsv -n "__fish_qsv_using_subcommand replace" -l select
 complete -c qsv -n "__fish_qsv_using_subcommand replace" -l unicode
 complete -c qsv -n "__fish_qsv_using_subcommand replace" -l size-limit

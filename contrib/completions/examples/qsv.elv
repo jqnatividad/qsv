@@ -654,6 +654,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
         }
         &'qsv;replace'= {
             cand --ignore-case 'ignore-case'
+            cand --literal 'literal'
             cand --select 'select'
             cand --unicode 'unicode'
             cand --size-limit 'size-limit'
