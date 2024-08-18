@@ -1915,8 +1915,8 @@ pub fn trim_bs_whitespace(bytes: &[u8]) -> &[u8] {
     &bytes[start..end]
 }
 
-/// get stats records from stats.csv.data.json file, or if its invalid, by running the stats command
-/// returns tuple (`csv_fields`, `csv_stats`, `stats_col_index_map`)
+/// get stats records from stats.csv.data.jsonl file, or if its invalid, by running the stats
+/// command returns tuple (`csv_fields`, `csv_stats`, `stats_col_index_map`)
 pub fn get_stats_records(
     args: &SchemaArgs,
     mode: StatsMode,
@@ -1931,7 +1931,7 @@ pub fn get_stats_records(
     };
 
     let canonical_input_path = Path::new(&args.arg_input.clone().unwrap()).canonicalize()?;
-    let statsdata_path = canonical_input_path.with_extension("stats.csv.data.json");
+    let statsdata_path = canonical_input_path.with_extension("stats.csv.data.jsonl");
 
     let stats_data_current = if statsdata_path.exists() {
         let statsdata_metadata = std::fs::metadata(&statsdata_path)?;
@@ -1939,16 +1939,17 @@ pub fn get_stats_records(
         let input_metadata = std::fs::metadata(args.arg_input.clone().unwrap())?;
 
         if statsdata_metadata.modified()? > input_metadata.modified()? {
-            info!("Valid stats.csv.data.json file found!");
+            info!("Valid stats.csv.data.jsonl file found!");
             true
         } else {
             info!(
-                "stats.csv.data.json file is older than input file. Regenerating stats json file."
+                "stats.csv.data.jsonl file is older than input file. Regenerating stats jsonl \
+                 file."
             );
             false
         }
     } else {
-        info!("stats.csv.data.json file does not exist: {statsdata_path:?}");
+        info!("stats.csv.data.jsonl file does not exist: {statsdata_path:?}");
         false
     };
 
@@ -1995,7 +1996,7 @@ pub fn get_stats_records(
             flag_prefer_dmy:      args.flag_prefer_dmy,
             flag_force:           args.flag_force,
             flag_jobs:            Some(njobs(args.flag_jobs)),
-            flag_stats_json:      true,
+            flag_stats_jsonl:     true,
             flag_cache_threshold: 1, // force the creation of stats cache files
             flag_output:          None,
             flag_no_headers:      args.flag_no_headers,
@@ -2003,21 +2004,21 @@ pub fn get_stats_records(
             flag_memcheck:        args.flag_memcheck,
         };
 
-        // otherwise, run stats command to generate stats.csv.data.json file
+        // otherwise, run stats command to generate stats.csv.data.jsonl file
         let tempfile = tempfile::Builder::new()
             .suffix(".stats.csv")
             .tempfile()
             .unwrap();
         let tempfile_path = tempfile.path().to_str().unwrap().to_string();
 
-        let statsdatajson_path = canonical_input_path.with_extension("stats.csv.data.json");
+        let statsdatajson_path = canonical_input_path.with_extension("stats.csv.data.jsonl");
 
         let mut stats_args_str = if mode == StatsMode::Schema {
             // mode is GetStatsMode::Schema
             // we're generating schema, so we cardinality and to infer-dates
             format!(
                 "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
-                 --cardinality --output {output} --stats-json --force",
+                 --cardinality --stats-jsonl --force --output {output}",
                 input = {
                     if let Some(arg_input) = stats_args.arg_input.clone() {
                         arg_input
@@ -2032,7 +2033,7 @@ pub fn get_stats_records(
             // mode is GetStatsMode::Frequency or GetStatsMode::FrequencyForceStats
             // we're doing frequency, so we just need cardinality
             format!(
-                "stats {input} --cardinality --stats-json --output {output}",
+                "stats {input} --cardinality --stats-jsonl --output {output}",
                 input = {
                     if let Some(arg_input) = stats_args.arg_input.clone() {
                         arg_input

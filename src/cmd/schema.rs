@@ -21,9 +21,9 @@ a `stdin.csv` file will created with stdin's contents as well.
 Note that `stdin.csv` will be overwritten if it already exists.
 
 Schema generation can be a compute-intensive process, especially for large CSV files.
-To speed up generation, the `schema` command will reuse a `stats.csv.data.json` file if it
+To speed up generation, the `schema` command will reuse a `stats.csv.data.jsonl` file if it
 exists and is current (i.e. stats generated with --cardinality and --infer-dates options).
-Otherwise, it will run the `stats` command to generate the `stats.csv.data.json` file first,
+Otherwise, it will run the `stats` command to generate the `stats.csv.data.jsonl` file first,
 and then use that to generate the schema file.
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_schema.rs.
