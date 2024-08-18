@@ -252,6 +252,9 @@ rusqlite = { version = "0.31", features = ["bundled"] }
 serial_test = { version = "3.1", features = ["file_locks"] }
 
 [patch.crates-io]
+# use our tweaked fork of csv crate
+# the csv crate underpins a lot of qsv's functionality, so every perf tweak helps
+csv = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
@@ -263,7 +266,7 @@ calamine = { git = "https://github.com/tafia/calamine", rev = "a90e877" }
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
 # Polars has a much higher release tempo for its Python bindings compared
 # to its underlying Rust library. See https://github.com/pola-rs/polars/releases
-# It's qsv's policy to use the latest release of py-polars
+# It's qsv's policy to use the latest release of polars/py-polars
 # to take advantage of Polars' latest features and fixes.
 # polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.4.1" }
 polars = { git = "https://github.com/pola-rs/polars", rev = "1dc2533" }
