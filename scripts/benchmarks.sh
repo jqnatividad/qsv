@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=4.9.1
+bm_version=4.10.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -577,6 +577,7 @@ run --index schema_index "$qsv_bin" schema "$data"
 run search "$qsv_bin" search -s \'Agency Name\' "'(?i)us'" "$data"
 run search_unicode "$qsv_bin" search --unicode -s \'Agency Name\' "'(?i)us'" "$data"
 run search_file "$qsv_bin" search "'(?i)us'" "$data"
+run search_file_literal "$qsv_bin" search --literal "'$'" "$data"
 run search_file_unicode "$qsv_bin" search --unicode "'(?i)us'" "$data"
 run search_file_case_sensitive "$qsv_bin" search "'us'" "$data"
 run search_file_case_sensitive_unicode "$qsv_bin" search --unicode "'us'" "$data"
@@ -744,7 +745,7 @@ if [ "$with_index_count" -gt 0 ]; then
   echo "  Preparing index and stats cache..."
   rm -f "$data".idx
   "$qsv_bin" index "$data"
-  "$qsv_bin" stats "$data" --everything --infer-dates --stats-binout --force \
+  "$qsv_bin" stats "$data" --everything --infer-dates --stats-jsonl --force \
     --output benchmark_work.stats.csv
 fi
 
