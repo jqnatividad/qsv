@@ -671,8 +671,18 @@ fn prop_frequency_indexed() {
 }
 
 fn param_prop_frequency(name: &str, rows: CsvData, idx: bool) -> bool {
-    if !rows.is_empty() && rows[0][0].len() == 3 && rows[0][0] == "\u{FEFF}" {
+    if !rows.is_empty() {
         return true;
+    }
+
+    let rows_check = rows.clone();
+
+    for row in rows_check.into_iter() {
+        for field in row.into_iter() {
+            if field.contains("\u{FEFF}") {
+                return true;
+            }
+        }
     }
     let wrk = Workdir::new(name);
     if idx {
