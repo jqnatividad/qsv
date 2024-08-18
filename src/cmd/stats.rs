@@ -207,7 +207,7 @@ Common options:
     -n, --no-headers       When set, the first row will NOT be interpreted
                            as column names. i.e., They will be included
                            in statistics.
-    -d, --delimiter <arg>  The field delimiter for reading CSV data.
+    -d, --delimiter <arg>  The field delimiter for READING CSV data.
                            Must be a single character. (default: ,)
     --memcheck             Check if there is enough memory to load the entire
                            CSV into memory using CONSERVATIVE heuristics.
@@ -255,7 +255,7 @@ use threadpool::ThreadPool;
 
 use self::FieldType::{TDate, TDateTime, TFloat, TInteger, TNull, TString};
 use crate::{
-    config::{Config, Delimiter},
+    config::{get_delim_by_extension, Config, Delimiter},
     select::{SelectColumns, Selection},
     util, CliResult,
 };
@@ -368,6 +368,8 @@ pub enum JsonTypes {
     String,
 }
 
+// we use this to serialize the StatsData data structure
+// to a JSONL file using serde_json
 pub static STATSDATA_TYPES_ARRAY: [JsonTypes; 34] = [
     JsonTypes::String, //field
     JsonTypes::String, //type
@@ -491,14 +493,37 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         NamedTempFile::new()?
     };
-    let stats_csv_tempfile_fname = stats_csv_tempfile.path().to_str().unwrap().to_owned();
+
+    // find the delimiter to use based on the extension of the output file
+    let mut snappy = false;
+    let (output_extension, output_delim) = if let Some(ref output_path) = args.flag_output {
+        let output_path = Path::new(&output_path);
+        get_delim_by_extension(output_path, &mut snappy, b',')
+    } else {
+        (String::new(), b',')
+    };
+    // construct the output temp filename suffix
+    let stats_csv_tempfile_extension = match output_extension.as_str() {
+        "tsv" => ".tsv",
+        "tab" => ".tab",
+        "ssv" => ".ssv",
+        _ => ".csv",
+    };
+    let stats_csv_tempfile_fname = format!(
+        "{stem}{prime_ext}{snappy_ext}",
+        stem = stats_csv_tempfile.path().to_str().unwrap(),
+        prime_ext = stats_csv_tempfile_extension,
+        snappy_ext = if snappy { ".sz" } else { "" }
+    );
 
     // we will write the stats to a temp file
-    let mut wtr = Config::new(&Some(stats_csv_tempfile_fname.clone())).writer()?;
-    let mut fconfig = args.rconfig();
+    let wconfig = Config::new(&Some(stats_csv_tempfile_fname.clone()))
+        .delimiter(Some(Delimiter(output_delim)));
+    let mut wtr = wconfig.writer()?;
+    let mut rconfig = args.rconfig();
     let mut stdin_tempfile_path = None;
 
-    if fconfig.is_stdin() {
+    if rconfig.is_stdin() {
         // read from stdin and write to a temp file
         log::info!("Reading from stdin");
         let mut stdin_file = NamedTempFile::new()?;
@@ -511,10 +536,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .or(Err("Cannot keep temporary file".to_string()))?;
         stdin_tempfile_path = Some(tempfile_path.clone());
         args.arg_input = Some(tempfile_path.to_string_lossy().to_string());
-        fconfig.path = Some(tempfile_path);
+        rconfig.path = Some(tempfile_path);
     } else {
         // check if the input file exists
-        if let Some(path) = fconfig.path.clone() {
+        if let Some(path) = rconfig.path.clone() {
             if !path.exists() {
                 return fail_clierror!("File {:?} does not exist", path.display());
             }
@@ -527,7 +552,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let write_stats_jsonl = args.flag_stats_jsonl;
 
-    if let Some(path) = fconfig.path.clone() {
+    if let Some(path) = rconfig.path.clone() {
         let path_file_stem = path.file_stem().unwrap().to_str().unwrap();
         let stats_file = stats_path(&path, false)?;
         // check if <FILESTEM>.stats.csv file already exists.
@@ -630,15 +655,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // check if flag_cache_threshold is a negative number,
             // if so, set the autoindex_size to absolute of the number
             if args.flag_cache_threshold.is_negative() {
-                fconfig.autoindex_size = args.flag_cache_threshold.unsigned_abs() as u64;
+                rconfig.autoindex_size = args.flag_cache_threshold.unsigned_abs() as u64;
                 autoindex_set = true;
             }
 
             // we need to count the number of records in the file to calculate sparsity
-            let record_count = RECORD_COUNT.get_or_init(|| util::count_rows(&fconfig).unwrap());
+            let record_count = RECORD_COUNT.get_or_init(|| util::count_rows(&rconfig).unwrap());
             log::info!("scanning {record_count} records...");
 
-            let (headers, stats) = match fconfig.indexed()? {
+            let (headers, stats) = match rconfig.indexed()? {
                 None => args.sequential_stats(&args.flag_dates_whitelist),
                 Some(idx) => {
                     let idx_count = idx.count();
@@ -701,15 +726,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         stats_csv_tempfile_fname
     } else {
         // we didn't compute the stats, re-use the existing stats file
-        stats_path(fconfig.path.as_ref().unwrap(), false)?
+        stats_path(rconfig.path.as_ref().unwrap(), false)?
             .to_str()
             .unwrap()
             .to_owned()
     };
 
-    if fconfig.is_stdin() {
+    if rconfig.is_stdin() {
         // if we read from stdin, copy the temp stats file to "stdin.stats.csv"
-        let mut stats_pathbuf = stats_path(fconfig.path.as_ref().unwrap(), true)?;
+        let mut stats_pathbuf = stats_path(rconfig.path.as_ref().unwrap(), true)?;
         fs::copy(currstats_filename.clone(), stats_pathbuf.clone())?;
 
         // save the stats args to "stdin.stats.csv.json"
@@ -718,7 +743,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             stats_pathbuf,
             serde_json::to_string_pretty(&current_stats_args).unwrap(),
         )?;
-    } else if let Some(path) = fconfig.path {
+    } else if let Some(path) = rconfig.path {
         // if we read from a file, copy the temp stats file to "<FILESTEM>.stats.csv"
         let mut stats_pathbuf = path.clone();
         stats_pathbuf.set_extension("stats.csv");
