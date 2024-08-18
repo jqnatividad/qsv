@@ -2618,7 +2618,7 @@ _qsv() {
             return 0
             ;;
         qsv__stats)
-            opts="-h --select --everything --typesonly --infer-boolean --mode --cardinality --median --mad --quartiles --round --nulls --infer-dates --prefer-dmy --force --jobs --stats-binout --cache-threshold --output --no-headers --delimiter --memcheck --help"
+            opts="-h --select --everything --typesonly --infer-boolean --mode --cardinality --median --mad --quartiles --round --nulls --infer-dates --prefer-dmy --force --jobs --stats-jsonl --cache-threshold --output --no-headers --delimiter --memcheck --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

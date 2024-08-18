@@ -2229,7 +2229,7 @@ const completion: Fig.Spec = {
           name: "--jobs",
         },
         {
-          name: "--stats-binout",
+          name: "--stats-jsonl",
         },
         {
           name: "--cache-threshold",

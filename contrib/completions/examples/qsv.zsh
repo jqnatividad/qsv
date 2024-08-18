@@ -1080,7 +1080,7 @@ _arguments "${_arguments_options[@]}" : \
 '--prefer-dmy[]' \
 '--force[]' \
 '--jobs[]' \
-'--stats-binout[]' \
+'--stats-jsonl[]' \
 '--cache-threshold[]' \
 '--output[]' \
 '--no-headers[]' \
