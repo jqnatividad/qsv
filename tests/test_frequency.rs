@@ -482,7 +482,7 @@ fn frequency_all_unique_with_stats_cache() {
     stats_cmd
         .arg(testdata.clone())
         .arg("--cardinality")
-        .arg("--stats-json");
+        .arg("--stats-jsonl");
 
     wrk.assert_success(&mut stats_cmd);
 
@@ -506,7 +506,7 @@ fn frequency_all_unique_with_stats_cache_alt_all_unique_text() {
     stats_cmd
         .arg(testdata.clone())
         .arg("--cardinality")
-        .arg("--stats-json");
+        .arg("--stats-jsonl");
 
     wrk.assert_success(&mut stats_cmd);
 
@@ -553,7 +553,7 @@ fn frequency_all_unique_stats_mode_none() {
     stats_cmd
         .arg(testdata.clone())
         .arg("--cardinality")
-        .arg("--stats-json");
+        .arg("--stats-jsonl");
 
     wrk.assert_success(&mut stats_cmd);
 

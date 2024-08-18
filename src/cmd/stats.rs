@@ -51,9 +51,9 @@ chunks and each chunk is processed in parallel. The number of chunks is determin
 number of logical CPUs detected. You can override this by setting the --jobs option.
 
 As stats is a central command in qsv, and can be expensive to compute, `stats` caches results
-in <FILESTEM>.stats.csv & if the --stats-json option is used, <FILESTEM>.stats.csv.data.json 
-(e.g., qsv stats nyc311.csv will create nyc311.stats.csv & nyc311.stats.csv.data.json).
-The arguments used to generate the cached stats are saved in <FILESTEM>.stats.csv.json.
+in <FILESTEM>.stats.csv & if the --stats-json option is used, <FILESTEM>.stats.csv.data.jsonl
+(e.g., qsv stats nyc311.csv will create nyc311.stats.csv & nyc311.stats.csv.data.jsonl).
+The arguments used to generate the cached stats are saved in <FILESTEM>.stats.csv.jsonl.
 
 If stats have already been computed for the input file with similar arguments and the file
 hasn't changed, the stats will be loaded from the cache instead of recomputing it.
@@ -182,11 +182,11 @@ stats options:
                               Note that a file handle is opened for each job.
                               When not set, the number of jobs is set to the
                               number of CPUs detected.
-    --stats-json              Also write the stats in json format. 
-                              If set, the stats will be written to <FILESTEM>.stats.csv.data.json.
+    --stats-jsonl             Also write the stats in JSONL format. 
+                              If set, the stats will be written to <FILESTEM>.stats.csv.data.jsonl.
                               Note that this option used internally by other qsv commands
                               (currently `frequency`, `schema` & `tojsonl`) to load cached stats. 
-                              You can preemptively create the stats-json file by using
+                              You can preemptively create the stats-jsonl file by using
                               this option BEFORE running the `frequency`, `schema` & `tojsonl`
                               commands and they will automatically use it.
  -c, --cache-threshold <arg>  When greater than 1, the threshold in milliseconds before caching
@@ -227,7 +227,9 @@ a JSONschema based on a CSV's summary statistics; and use the generated JSONsche
 quickly validate complex CSVs (NYC's 311 data) at almost 930,000 records/sec.
 
 It's type inferences are also used by the `tojsonl` command to generate properly typed
-JSONL files.
+JSONL files; the `frequency` command to short-circuit frequency table generation for columns
+with all unique values; and the `schema` command to set the data type of a column and identify
+low-cardinality columns for enum generation in the JSONschema.
 
 To safeguard against undefined behavior, `stats` is the most extensively tested command,
 with ~500 tests.
@@ -278,7 +280,7 @@ pub struct Args {
     pub flag_prefer_dmy:      bool,
     pub flag_force:           bool,
     pub flag_jobs:            Option<usize>,
-    pub flag_stats_json:      bool,
+    pub flag_stats_jsonl:     bool,
     pub flag_cache_threshold: isize,
     pub flag_output:          Option<String>,
     pub flag_no_headers:      bool,
@@ -520,10 +522,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut compute_stats = true;
-    let mut create_cache = args.flag_cache_threshold > 0 || args.flag_stats_json;
+    let mut create_cache = args.flag_cache_threshold > 0 || args.flag_stats_jsonl;
     let mut autoindex_set = false;
 
-    let write_stats_json = args.flag_stats_json;
+    let write_stats_jsonl = args.flag_stats_jsonl;
 
     if let Some(path) = fconfig.path.clone() {
         let path_file_stem = path.file_stem().unwrap().to_str().unwrap();
@@ -768,9 +770,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 serde_json::to_string_pretty(&current_stats_args).unwrap(),
             )?;
 
-            // save the stats data to "<FILESTEM>.stats.csv.data.json"
-            if write_stats_json {
-                stats_pathbuf.set_extension("data.json");
+            // save the stats data to "<FILESTEM>.stats.csv.data.jsonl"
+            if write_stats_jsonl {
+                stats_pathbuf.set_extension("data.jsonl");
                 util::csv_to_jsonl(&currstats_filename, &STATSDATA_TYPES_ARRAY, stats_pathbuf)?;
             }
         }
