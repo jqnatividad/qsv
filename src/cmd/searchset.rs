@@ -25,7 +25,13 @@ Usage:
     qsv searchset [options] (<regexset-file>) [<input>]
     qsv searchset --help
 
-search options:
+searchset arguments:
+    <regex>                    Regular expression to match. Uses Rust regex syntax.
+                               See https://docs.rs/regex/latest/regex/index.html#syntax
+                               or https://regex101.com with the Rust flavor for more info.
+    <input>                    The CSV file to read. If not given, reads from stdin.
+
+searchset options:
     -i, --ignore-case          Case insensitive search. This is equivalent to
                                prefixing the regex with '(?i)'.
     --literal                  Treat the regex as a literal string. This allows

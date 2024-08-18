@@ -19,6 +19,12 @@ Usage:
     qsv search [options] <regex> [<input>]
     qsv search --help
 
+search arguments:
+    <regex>                Regular expression to match. Uses Rust regex syntax.
+                           See https://docs.rs/regex/latest/regex/index.html#syntax
+                           or https://regex101.com with the Rust flavor for more info.
+    <input>                The CSV file to read. If not given, reads from stdin.
+
 search options:
     -i, --ignore-case      Case insensitive search. This is equivalent to
                            prefixing the regex with '(?i)'.
