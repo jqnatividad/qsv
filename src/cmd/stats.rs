@@ -498,7 +498,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut snappy = false;
     let (output_extension, output_delim) = if let Some(ref output_path) = args.flag_output {
         let output_path = Path::new(&output_path);
-        get_delim_by_extension(&output_path, &mut snappy, b',')
+        get_delim_by_extension(output_path, &mut snappy, b',')
     } else {
         (String::new(), b',')
     };
