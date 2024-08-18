@@ -1226,6 +1226,104 @@ fn stats_zero_cv() {
     assert_eq!(got, expected);
 }
 
+#[test]
+fn stats_output_tab_delimited() {
+    let wrk = Workdir::new("stats_output_tab_delimited");
+
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["col1", "col2", "col3"],
+            svec!["1", "4321", "01"],
+            svec!["2", "3210", "02"],
+            svec!["3", "2101", "03"],
+            svec!["4", "1012", "04"],
+            svec!["5", "0", "10"],
+        ],
+    );
+
+    let out_file = wrk.path("output.tab").to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("data.csv").args(["--output", &out_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let got = std::fs::read_to_string(out_file).unwrap();
+    let expected = r#"field	type	is_ascii	sum	min	max	range	min_length	max_length	mean	sem	stddev	variance	cv	nullcount	max_precision	sparsity
+col1	Integer		15	1	5	4	1	1	3	0.6325	1.4142	2	47.1405	0		0
+col2	Integer		10644	0	4321	4321	1	4	2128.8	685.6979	1533.267	2350907.76	72.0249	0		0
+col3	String	true		01	10		2	2						0		0
+"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn stats_output_ssv_delimited() {
+    let wrk = Workdir::new("stats_output_ssv_delimited");
+
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["col1", "col2", "col3"],
+            svec!["1", "4321", "01"],
+            svec!["2", "3210", "02"],
+            svec!["3", "2101", "03"],
+            svec!["4", "1012", "04"],
+            svec!["5", "0", "10"],
+        ],
+    );
+
+    let out_file = wrk.path("output.ssv").to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("data.csv").args(["--output", &out_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let got = std::fs::read_to_string(out_file).unwrap();
+    let expected = r#"field;type;is_ascii;sum;min;max;range;min_length;max_length;mean;sem;stddev;variance;cv;nullcount;max_precision;sparsity
+col1;Integer;;15;1;5;4;1;1;3;0.6325;1.4142;2;47.1405;0;;0
+col2;Integer;;10644;0;4321;4321;1;4;2128.8;685.6979;1533.267;2350907.76;72.0249;0;;0
+col3;String;true;;01;10;;2;2;;;;;;0;;0
+"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn stats_output_csvsz_delimited() {
+    let wrk = Workdir::new("stats_output_csvsz_delimited");
+
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["col1", "col2", "col3"],
+            svec!["1", "4321", "01"],
+            svec!["2", "3210", "02"],
+            svec!["3", "2101", "03"],
+            svec!["4", "1012", "04"],
+            svec!["5", "0", "10"],
+        ],
+    );
+
+    let out_file = wrk.path("output.csv.sz").to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("stats");
+    cmd.arg("data.csv").args(["--output", &out_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let mut cmd = wrk.command("snappy");
+    cmd.arg("decompress").arg(out_file.clone());
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "field,type,is_ascii,sum,min,max,range,min_length,max_length,mean,sem,stddev,\
+                    variance,cv,nullcount,max_precision,sparsity\ncol1,Integer,,15,1,5,4,1,1,3,0.\
+                    6325,1.4142,2,47.1405,0,,0\ncol2,Integer,,10644,0,4321,4321,1,4,2128.8,685.\
+                    6979,1533.267,2350907.76,72.0249,0,,0\ncol3,String,true,,01,10,,2,2,,,,,,0,,0";
+    assert_eq!(got, expected);
+}
+
 mod stats_infer_nothing {
     // Only test CSV data with headers.
     // Empty CSV data with no headers won't produce any statistical analysis.
