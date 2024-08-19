@@ -561,6 +561,7 @@ pub fn get_delim_by_extension(path: &Path, default_delim: u8) -> (String, u8, bo
         .to_str()
         .unwrap()
         .to_ascii_lowercase();
+    #[allow(clippy::case_sensitive_file_extension_comparisons)]
     let delim = match file_extension.as_str() {
         "tsv" | "tab" => b'\t',
         "ssv" => b';',
