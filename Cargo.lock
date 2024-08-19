@@ -5149,7 +5149,6 @@ dependencies = [
  "assert-json-diff",
  "atoi_simd 0.16.0",
  "base62",
- "bincode",
  "byteorder",
  "bytes",
  "cached",
