@@ -127,9 +127,7 @@ impl Config {
             Some(ref s) if &**s == "-" => (None, default_delim, false),
             Some(ref s) => {
                 let path = PathBuf::from(s);
-                let mut snappy: bool = false;
-                let (file_extension, delim) =
-                    get_delim_by_extension(&path, &mut snappy, default_delim);
+                let (file_extension, delim, snappy) = get_delim_by_extension(&path, default_delim);
                 (Some(path), delim, snappy || file_extension.ends_with("sz"))
             },
         };
@@ -555,33 +553,33 @@ impl Config {
     }
 }
 
-pub fn get_delim_by_extension(path: &Path, snappy: &mut bool, default_delim: u8) -> (String, u8) {
+pub fn get_delim_by_extension(path: &Path, default_delim: u8) -> (String, u8, bool) {
+    let mut snappy = false;
     let file_extension = path
         .extension()
         .unwrap_or_default()
         .to_str()
         .unwrap()
         .to_ascii_lowercase();
-    let delim = if file_extension == "tsv" || file_extension == "tab" {
-        b'\t'
-    } else if file_extension == "ssv" {
-        b';'
-    } else if file_extension == "csv" {
-        b','
-    } else {
-        let filename = path.file_name().unwrap().to_str().unwrap();
-        if filename.ends_with(".csv.sz") {
-            *snappy = true;
-            b','
-        } else if filename.ends_with(".tsv.sz") || filename.ends_with(".tab.sz") {
-            *snappy = true;
-            b'\t'
-        } else if filename.ends_with(".ssv.sz") {
-            *snappy = true;
-            b';'
-        } else {
-            default_delim
-        }
+    let delim = match file_extension.as_str() {
+        "tsv" | "tab" => b'\t',
+        "ssv" => b';',
+        "csv" => b',',
+        _ => match path.extension().and_then(|ext| ext.to_str()) {
+            Some("csv.sz") => {
+                snappy = true;
+                b','
+            },
+            Some("tsv.sz") | Some("tab.sz") => {
+                snappy = true;
+                b'\t'
+            },
+            Some("ssv.sz") => {
+                snappy = true;
+                b';'
+            },
+            _ => default_delim,
+        },
     };
-    (file_extension, delim)
+    (file_extension, delim, snappy)
 }

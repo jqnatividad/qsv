@@ -495,24 +495,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // find the delimiter to use based on the extension of the output file
-    let mut snappy = false;
-    let (output_extension, output_delim) = if let Some(ref output_path) = args.flag_output {
-        let output_path = Path::new(&output_path);
-        get_delim_by_extension(output_path, &mut snappy, b',')
+    // and if we need to snappy compress the output
+    let (output_extension, output_delim, snappy) = if let Some(ref output_path) = args.flag_output {
+        get_delim_by_extension(Path::new(&output_path), b',')
     } else {
-        (String::new(), b',')
-    };
-    // construct the output temp filename suffix
-    let stats_csv_tempfile_extension = match output_extension.as_str() {
-        "tsv" => ".tsv",
-        "tab" => ".tab",
-        "ssv" => ".ssv",
-        _ => ".csv",
+        (String::new(), b',', false)
     };
     let stats_csv_tempfile_fname = format!(
-        "{stem}{prime_ext}{snappy_ext}",
+        "{stem}.{prime_ext}{snappy_ext}",
         stem = stats_csv_tempfile.path().to_str().unwrap(),
-        prime_ext = stats_csv_tempfile_extension,
+        prime_ext = output_extension,
         snappy_ext = if snappy { ".sz" } else { "" }
     );
 
