@@ -565,20 +565,19 @@ pub fn get_delim_by_extension(path: &Path, default_delim: u8) -> (String, u8, bo
         "tsv" | "tab" => b'\t',
         "ssv" => b';',
         "csv" => b',',
-        _ => match path.extension().and_then(|ext| ext.to_str()) {
-            Some("csv.sz") => {
-                snappy = true;
-                b','
-            },
-            Some("tsv.sz") | Some("tab.sz") => {
-                snappy = true;
-                b'\t'
-            },
-            Some("ssv.sz") => {
-                snappy = true;
-                b';'
-            },
-            _ => default_delim,
+        _ => {
+            let snappied_ext = path
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .unwrap_or("_");
+            let delim = match snappied_ext {
+                "csv.sz" => b',',
+                "tsv.sz" | "tab.sz" => b'\t',
+                "ssv.sz" => b';',
+                _ => default_delim,
+            };
+            snappy = snappied_ext.ends_with(".sz");
+            delim
         },
     };
     (file_extension, delim, snappy)
