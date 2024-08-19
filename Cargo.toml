@@ -255,8 +255,8 @@ serial_test = { version = "3.1", features = ["file_locks"] }
 [patch.crates-io]
 # use our tweaked fork of csv crate
 # the csv crate underpins a lot of qsv's functionality, so every perf tweak helps
-csv = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
-csv-core = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
+csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
+csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
@@ -270,7 +270,9 @@ local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", br
 # Polars has a much higher release tempo for its Python bindings compared
 # to its underlying Rust library. See https://github.com/pola-rs/polars/releases
 # It's qsv's policy to use the latest upstream of polars/py-polars
-# to take advantage of Polars' latest unreleased features and fixes.
+# to take advantage of Polars' latest unreleased fixes and features.
+# Based on what's available at the time of qsv's release, we may need to pin polars to a py-polars tag
+# or a specific commit if more revisions have been made since the latest polars/py-polars release.
 # polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.4.1" }
 polars = { git = "https://github.com/pola-rs/polars", rev = "bad13b3" }
 
@@ -343,13 +345,11 @@ nightly = [
 ]
 
 [package.metadata.deb]
-maintainer = "Konstantin Sivakov <konstantin@datHere.com>"
-copyright = "2024, datHere Inc. <www.dathere.com>"
+maintainer           = "Konstantin Sivakov <konstantin@datHere.com>"
+copyright            = "2024, datHere Inc. <www.dathere.com>"
 extended-description = """A high performance CSV data-wrangling toolkit."""
-depends = "$auto"
-features = ["feature_capable"]
-section = "utility"
-priority = "optional"
-assets = [
- ["target/release/qsv", "/usr/local/bin/", "755"],
-]
+depends              = "$auto"
+features             = ["feature_capable"]
+section              = "utility"
+priority             = "optional"
+assets               = [["target/release/qsv", "/usr/local/bin/", "755"]]
