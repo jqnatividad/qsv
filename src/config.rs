@@ -566,10 +566,7 @@ pub fn get_delim_by_extension(path: &Path, default_delim: u8) -> (String, u8, bo
         "ssv" => b';',
         "csv" => b',',
         _ => {
-            let snappied_ext = path
-                .extension()
-                .and_then(|ext| ext.to_str())
-                .unwrap_or("_");
+            let snappied_ext = path.extension().and_then(|ext| ext.to_str()).unwrap_or("_");
             let delim = match snappied_ext {
                 "csv.sz" => b',',
                 "tsv.sz" | "tab.sz" => b'\t',
