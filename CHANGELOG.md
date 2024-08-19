@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.0] - 2024-08-19
+
+## What's Changed
+* build(deps): bump actix-web from 4.8.0 to 4.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2041
+* build(deps): bump serde from 1.0.205 to 1.0.206 by @dependabot in https://github.com/jqnatividad/qsv/pull/2043
+* build(deps): bump serde_json from 1.0.122 to 1.0.124 by @dependabot in https://github.com/jqnatividad/qsv/pull/2045
+* build(deps): bump serde from 1.0.206 to 1.0.207 by @dependabot in https://github.com/jqnatividad/qsv/pull/2047
+* build(deps): bump indexmap from 2.3.0 to 2.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2049
+* `deps`: bump polars from 0.41.3 to 0.42.0 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2051
+* build(deps): bump serde_json from 1.0.124 to 1.0.125 by @dependabot in https://github.com/jqnatividad/qsv/pull/2052
+* build(deps): bump serde from 1.0.207 to 1.0.208 by @dependabot in https://github.com/jqnatividad/qsv/pull/2054
+* stats caching refactor by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2055
+* make process_input helper handle stdin better by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2058
+* `search` &  `searchset`: add `--literal` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2060
+* `contrib(completions)`: add `--literal` for `search` and `searchset` by @rzmk in https://github.com/jqnatividad/qsv/pull/2061
+* `contrib(completions)`: add `--literal` completion to `replace` by @rzmk in https://github.com/jqnatividad/qsv/pull/2062
+* rename `stats --stats-json` option to `stats --stats-jsonl` by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2063
+* `stats`: fix `--output` delimiter inferencing based on file extension by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2065
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.131.1...0.132.0
+
 ## [0.131.1] - 2024-08-09
 
 ### Changed
