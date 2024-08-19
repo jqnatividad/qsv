@@ -123,6 +123,9 @@ xattr -d com.apple.quarantine qsv
 
 An additional benefit of using the prebuilt binaries is that they have the `self_update` feature enabled, allowing you to quickly update qsv to the latest version with a simple `qsv --update`. For further security, the `self_update` feature only fetches [releases from this GitHub repo](https://github.com/jqnatividad/qsv/releases) and automatically verifies the signature of the downloaded zip archive before installing the update.
 
+> **_NOTE:_** For `unknown-linux-musl` prebuilt binaries, we cross-compile using GitHub Action Runners using Ubuntu 20.04 LTS with the [musl libc](https://musl.libc.org/) toolchain. However, Ubuntu is a glibc-based, not a musl-based distro. We get around this by cross-compiling.
+Unfortunately, this prevents us from compiling binaries with the `luau` feature enabled. If you need the `luau` feature, you will need to compile from source on your own musl-based Linux Distro (e.g. Alpine, Void, [etc.](https://wiki.musl-libc.org/projects-using-musl)).
+
 #### Manually verifying the Integrity of the Prebuilt Binaries Zip Archives
 All prebuilt binaries zip archives are signed with [zipsign](https://github.com/Kijewski/zipsign#zipsign) with the following public key [qsv-zipsign-public.key](https://github.com/jqnatividad/qsv/raw/master/src/qsv-zipsign-public.key). To verify the integrity of the downloaded zip archives:
 
