@@ -106,6 +106,30 @@
 
 ## Installation Options
 
+### Option 0: TLDR Quick Install
+[qsv pro](https://qsvpro.dathere.com) will be available in the App Stores soon (Microsoft is currently reviewing v1.0 for Windows; Apple App Store for v2.0)! In the meantime, you can quickly install qsv using these package manager one-liners[^1]:
+
+[^1]: Option 0 is actually a quick-start version of Option 2. Of course, the package manager has to be installed first.  
+
+```bash
+# using Homebrew on macOS/Linux (https://formulae.brew.sh/formula/qsv#default)
+brew install qsv
+
+# using Scoop on Windows (https://scoop.sh/#/apps?q=qsv)
+scoop bucket add main
+scoop install main/qsv
+
+# using MacPorts on macOS (https://ports.macports.org/port/qsv/)
+sudo port install qsv
+
+## using other Linux package managers
+# Arch Linux AUR (https://aur.archlinux.org/packages/qsv)
+yay -S qsv
+
+# Void Linux (https://voidlinux.org/packages/?arch=x86_64&q=qsv)
+sudo xbps-install qsv
+```
+
 ### Option 1: Download Prebuilt Binaries
 
 Full-featured prebuilt [binary variants](#variants) of the latest qsv version for Linux, macOS & Windows are available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
@@ -150,11 +174,15 @@ Note that qsv provided by these package managers/distros enable different featur
 
 To find out what features are enabled in a package/distro's qsv, run `qsv --version` ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#version-details)).
 
+In the true spirit of open source, these packages are maintained by volunteers who wanted to make qsv easier to install in various environments. They are much appreciated, and we loosely collaborate with the package maintainers through GitHub, but know that these packages are maintained by third-parties.
+
+datHere is currently working on a publishing workflow to create an Ubuntu package on release. This package will target the latest Ubuntu LTS on x86_64 architecture.
+
 ### Option 3: Install with Rust
 
-If you have [Rust installed](https://www.rust-lang.org/tools/install), you can also install from source using Rust's cargo command[^1]:
+If you have [Rust installed](https://www.rust-lang.org/tools/install), you can also install from source using Rust's cargo command[^2]:
 
-[^1]: Of course, you'll also need a linker & a C compiler. Linux users should generally install GCC or Clang, according to their distribution’s documentation.
+[^2]: Of course, you'll also need a linker & a C compiler. Linux users should generally install GCC or Clang, according to their distribution’s documentation.
 For example, if you use Ubuntu, you can install the `build-essential` package. On macOS, you can get a C compiler by running `$ xcode-select --install`.
 For Windows, this means installing [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/). When prompted for workloads, include "Desktop Development with C++",
 the Windows 10 or 11 SDK & the English language pack, along with any other language packs your require.
@@ -221,14 +249,14 @@ cargo build --release --locked --bin qsvdp -F datapusher_plus,luau,polars
 
 There are four binary variants of qsv:
 
-* `qsv` - [feature](#feature-flags)-capable(✨), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^2]
+* `qsv` - [feature](#feature-flags)-capable(✨), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^3]
 * `qsvpy` - same as `qsv` but with the Python feature enabled. Three subvariants are available - qsvpy310, qsvpy311 & qsvpy312 - which are compiled with the latest patch version of Python 3.10, 3.11 & 3.12 respectively.
 * `qsvlite` - all features disabled (~13% of the size of `qsv`)
 * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus) with only DataPusher+ relevant commands; an embedded [`luau`](#luau_deeplink) interpreter; [`applydp`](#applydp_deeplink), a slimmed-down version of the `apply` feature; the `--progressbar` option disabled; and the self-update only checking for new releases, requiring an explicit `--update` (~12% of the the size of `qsv`).
 
 > **_NOTE:_** There are "portable" subvariants of qsv available with the "p" suffix - `qsvp`, `qsvplite` and `qsvpdp`. These subvariants are compiled without any CPU features enabled. Use these subvariants if you're getting "Illegal instruction" errors when running the regular qsv binaries.
 
-[^2]: The `luau`feature is enabled by default on the prebuilt binaries if the platform supports it.  
+[^3]: The `luau`feature is enabled by default on the prebuilt binaries if the platform supports it.  
 
 ### Shell Completion
 qsv has extensive, extendable [shell completion](https://en.wikipedia.org/wiki/Command-line_completion) support. It currently supports the following shells: `bash`, `zsh`, `powershell`, `fish`, `nushell`, `fig` & `elvish`.
