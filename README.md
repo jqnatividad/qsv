@@ -256,7 +256,7 @@ There are four binary variants of qsv:
 
 > **_NOTE:_** There are "portable" subvariants of qsv available with the "p" suffix - `qsvp`, `qsvplite` and `qsvpdp`. These subvariants are compiled without any CPU features enabled. Use these subvariants if you're getting "Illegal instruction" errors when running the regular qsv binaries.
 
-[^3]: The `luau`feature is enabled by default on the prebuilt binaries if the platform supports it.  
+[^3]: The `luau`feature is NOT enabled by default on the prebuilt binaries for musl platforms. We use GitHub's glibc-based Action Runners to cross-compile the musl binaries, and the `luau` feature requires statically linking the host OS libc library. This is not possible with glibc runners cross-compiling to musl targets.  
 
 ### Shell Completion
 qsv has extensive, extendable [shell completion](https://en.wikipedia.org/wiki/Command-line_completion) support. It currently supports the following shells: `bash`, `zsh`, `powershell`, `fish`, `nushell`, `fig` & `elvish`.
