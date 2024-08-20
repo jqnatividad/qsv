@@ -28,8 +28,8 @@ replace options:
     -i, --ignore-case      Case insensitive search. This is equivalent to
                            prefixing the regex with '(?i)'.
     --literal              Treat the regex pattern as a literal string. This allows
-                           you to search for exact matches that even contain special
-                           regex characters without escaping them.
+                           you to search for exact matches that even contain
+                           regex special characters.
     -s, --select <arg>     Select the columns to search. See 'qsv select -h'
                            for the full syntax.
     -u, --unicode          Enable unicode support. When enabled, character classes
