@@ -17,7 +17,7 @@ pub fn stats_cmd() -> Command {
         arg!(--"prefer-dmy"),
         arg!(--force),
         arg!(--jobs),
-        arg!(--"stats-binout"),
+        arg!(--"stats-jsonl"),
         arg!(--"cache-threshold"),
         arg!(--output),
         arg!(--"no-headers"),

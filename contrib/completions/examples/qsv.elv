@@ -929,7 +929,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --prefer-dmy 'prefer-dmy'
             cand --force 'force'
             cand --jobs 'jobs'
-            cand --stats-jsonl 'stats-binout'
+            cand --stats-jsonl 'stats-jsonl'
             cand --cache-threshold 'cache-threshold'
             cand --output 'output'
             cand --no-headers 'no-headers'
