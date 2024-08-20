@@ -282,9 +282,9 @@ sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
                 QsvExitCode::Bad
             },
             Err(CliError::Io(ref err)) if err.kind() == io::ErrorKind::BrokenPipe => {
-                werr!("broken pipe error: {err}");
+                wwarn!("broken pipe warning");
                 util::log_end(qsv_args, now);
-                QsvExitCode::Abort
+                QsvExitCode::Warning
             },
             Err(CliError::Io(err)) => {
                 werr!("io error: {err}");

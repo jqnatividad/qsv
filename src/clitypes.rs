@@ -131,7 +131,7 @@ pub enum QsvExitCode {
     NetworkError   = 3,
     OutOfMemory    = 4,
     EncodingError  = 5,
-    Abort          = 255,
+    Warning        = 255,
 }
 
 impl Termination for QsvExitCode {
