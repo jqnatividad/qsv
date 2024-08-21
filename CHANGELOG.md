@@ -6,25 +6,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.132.0] - 2024-08-19
+## [0.132.0] - 2024-08-21
 
-## What's Changed
-* build(deps): bump actix-web from 4.8.0 to 4.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2041
-* build(deps): bump serde from 1.0.205 to 1.0.206 by @dependabot in https://github.com/jqnatividad/qsv/pull/2043
-* build(deps): bump serde_json from 1.0.122 to 1.0.124 by @dependabot in https://github.com/jqnatividad/qsv/pull/2045
-* build(deps): bump serde from 1.0.206 to 1.0.207 by @dependabot in https://github.com/jqnatividad/qsv/pull/2047
-* build(deps): bump indexmap from 2.3.0 to 2.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2049
-* `deps`: bump polars from 0.41.3 to 0.42.0 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2051
-* build(deps): bump serde_json from 1.0.124 to 1.0.125 by @dependabot in https://github.com/jqnatividad/qsv/pull/2052
-* build(deps): bump serde from 1.0.207 to 1.0.208 by @dependabot in https://github.com/jqnatividad/qsv/pull/2054
-* stats caching refactor by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2055
-* make process_input helper handle stdin better by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2058
-* `search` &  `searchset`: add `--literal` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2060
+### Highlights
+With this release, we finally finish the `stats` caching refactor started in 0.131.0, replacing the binary encoded stats cache with a simpler JSONL cache. The `stats` cache stores the necessary statistical metadata to make several key commands smarter & faster, and provides the foundation for even more "smart" features and commands in the future.   
+It also has the added side-benefit of adding a way to produce JSONL stats cache files that can be used for other purposes beyond qsv.
+
+The `search`, `searchset`, and `replace` commands now also have a `--literal` option that allows you to search for and replace strings with regex special/reserved characters. This makes it easier to search for and replace strings that contain special characters without having to escape them.
+
+---
+
+### Added
+* `search`, `searchset` & `replace`: add `--literal` option https://github.com/jqnatividad/qsv/pull/2060 & https://github.com/jqnatividad/qsv/commit/7196053b36c8886092fe25fd030ccf1cf765ed6a
+* `slice`: added usage text examples https://github.com/jqnatividad/qsv/commit/04afaa3d5a6e51c75f3f9041515c1d7986c45777
+* `publish`: added workflow to build "portable" binaries with CPU features disabled
 * `contrib(completions)`: add `--literal` for `search` and `searchset` by @rzmk in https://github.com/jqnatividad/qsv/pull/2061
 * `contrib(completions)`: add `--literal` completion to `replace` by @rzmk in https://github.com/jqnatividad/qsv/pull/2062
-* rename `stats --stats-json` option to `stats --stats-jsonl` by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2063
-* `stats`: fix `--output` delimiter inferencing based on file extension by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2065
+* add more polars metadata in `--version` info https://github.com/jqnatividad/qsv/pull/2073
+* `docs`: added more info to SECURITY.md https://github.com/jqnatividad/qsv/commit/609d4df61c93de6959f07e8d972009ae6cd12b78
+* `docs`: expanded Goals/Non-Goals https://github.com/jqnatividad/qsv/commit/54998e36eb4608a1fba7938836e5985b699e32ff
+* `docs`: added Installation "Option 0" quick start https://github.com/jqnatividad/qsv/commit/bf5bf82105397436d901de247398fce3e808b122
+* added `search --literal` benchmark
 
+### Changed
+* `stats`, `schema`, `frequency` & `tojsonl`: stats caching refactor, replacing binary encoded stats cache with a simpler JSONL cache https://github.com/jqnatividad/qsv/pull/2055
+* rename `stats --stats-json` option to `stats --stats-jsonl` https://github.com/jqnatividad/qsv/pull/2063
+* changed "broken pipe" error to a warning https://github.com/jqnatividad/qsv/commit/73532759a8dad2d643f283296aa402950765b648
+* `docs`: update multithreading and caching sections of PERFORMANCE.md https://github.com/jqnatividad/qsv/commit/5e6bc455bc544003535e18f99493cc1a20c4a2ce
+* `deps`: switch to our qsv-optimized fork of csv crate https://github.com/jqnatividad/qsv/commit/3fc1e82c83b5dec23d3ba610e3d0f9bbd2924788
+* `deps`: bump polars from 0.41.3 to 0.42.0 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2051
+* build(deps): bump actix-web from 4.8.0 to 4.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2041
+* build(deps): bump flate2 from 1.0.31 to 1.0.32 by @dependabot in https://github.com/jqnatividad/qsv/pull/2071
+
+* build(deps): bump indexmap from 2.3.0 to 2.4.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2049
+* build(deps): bump reqwest from 0.12.6 to 0.12.7 by @dependabot in https://github.com/jqnatividad/qsv/pull/2070
+* build(deps): bump rust_decimal from 1.35.0 to 1.36.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2068
+* build(deps): bump serde from 1.0.205 to 1.0.206 by @dependabot in https://github.com/jqnatividad/qsv/pull/2043
+* build(deps): bump serde from 1.0.206 to 1.0.207 by @dependabot in https://github.com/jqnatividad/qsv/pull/2047
+* build(deps): bump serde from 1.0.207 to 1.0.208 by @dependabot in https://github.com/jqnatividad/qsv/pull/2054
+* build(deps): bump serde_json from 1.0.122 to 1.0.124 by @dependabot in https://github.com/jqnatividad/qsv/pull/2045
+* build(deps): bump serde_json from 1.0.124 to 1.0.125 by @dependabot in https://github.com/jqnatividad/qsv/pull/2052
+* apply select clippy lint suggestions
+* updated several indirect dependencies
+* made various usage text improvements
+
+### Fixed
+* `stats`: fix `--output` delimiter inferencing based on file extension https://github.com/jqnatividad/qsv/pull/2065
+* make process_input helper handle stdin better https://github.com/jqnatividad/qsv/pull/2058
+* `docs`: fix completions for `--stats-jsonl` and qsv pro installation text update by @rzmk in https://github.com/jqnatividad/qsv/pull/2072
+* `docs`: added Note about why `luau` feature is disabled in musl binaries - https://github.com/jqnatividad/qsv/commit/ffa2bc5a3f397b406347d14d0d4fb4ead49cb470 & https://github.com/jqnatividad/qsv/commit/27d0f8e1c2e43c00b99abf98dfa01a4758cf9bad
+
+### Removed
+* Removed bincode dependency now that we're using JSONL stats cache https://github.com/jqnatividad/qsv/pull/2055 https://github.com/jqnatividad/qsv/commit/babd92bbae473ed63f44f593bc1ab0ad1bc17761
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.131.1...0.132.0
 
