@@ -325,3 +325,14 @@ fn prop_count_noheaders_indexed_env() {
     }
     qcheck(p as fn(CsvData) -> bool);
 }
+
+#[test]
+fn show_version() {
+    let wrk = Workdir::new("show_version");
+    let mut cmd = wrk.command("");
+    cmd.arg("--version");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = format!(" {}", env!("CARGO_PKG_VERSION"));
+    assert!(got.contains(&expected));
+}
