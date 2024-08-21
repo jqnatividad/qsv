@@ -107,7 +107,7 @@
 ## Installation Options
 
 ### Option 0: TLDR Quick Install
-[qsv pro](https://qsvpro.dathere.com) will be available in the App Stores soon (Microsoft is currently reviewing v1.0 for Windows; Apple App Store for v2.0)! In the meantime, you can quickly install qsv using these package manager one-liners[^1]:
+[qsv pro](https://qsvpro.dathere.com) is already available for download from its website, and is also planned for availability within the Microsoft Store and Apple App Store at later dates! In the meantime, you can quickly install qsv using these package manager one-liners[^1]:
 
 [^1]: Option 0 is actually a quick-start version of Option 2. Of course, the package manager has to be installed first.  
 

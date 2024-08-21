@@ -1013,7 +1013,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--prefer-dmy', 'prefer-dmy', [CompletionResultType]::ParameterName, 'prefer-dmy')
             [CompletionResult]::new('--force', 'force', [CompletionResultType]::ParameterName, 'force')
             [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
-            [CompletionResult]::new('--stats-jsonl', 'stats-binout', [CompletionResultType]::ParameterName, 'stats-binout')
+            [CompletionResult]::new('--stats-jsonl', 'stats-jsonl', [CompletionResultType]::ParameterName, 'stats-jsonl')
             [CompletionResult]::new('--cache-threshold', 'cache-threshold', [CompletionResultType]::ParameterName, 'cache-threshold')
             [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
             [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')

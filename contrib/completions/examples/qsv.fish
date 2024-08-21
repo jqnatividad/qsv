@@ -709,7 +709,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand stats" -l infer-dates
 complete -c qsv -n "__fish_qsv_using_subcommand stats" -l prefer-dmy
 complete -c qsv -n "__fish_qsv_using_subcommand stats" -l force
 complete -c qsv -n "__fish_qsv_using_subcommand stats" -l jobs
-complete -c qsv -n "__fish_qsv_using_subcommand stats" -l stats-binout
+complete -c qsv -n "__fish_qsv_using_subcommand stats" -l stats-jsonl
 complete -c qsv -n "__fish_qsv_using_subcommand stats" -l cache-threshold
 complete -c qsv -n "__fish_qsv_using_subcommand stats" -l output
 complete -c qsv -n "__fish_qsv_using_subcommand stats" -l no-headers
