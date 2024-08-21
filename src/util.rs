@@ -90,6 +90,12 @@ const QSV_KIND: &str = match option_env!("QSV_KIND") {
     None => "installed",
 };
 
+#[cfg(feature = "polars")]
+const QSV_POLARS_REV: &str = match option_env!("QSV_POLARS_REV") {
+    Some(rev) => rev,
+    None => "",
+};
+
 fn default_user_agent() -> String {
     let unknown_command = "Unknown".to_string();
     let current_command = CURRENT_COMMAND.get().unwrap_or(&unknown_command);
@@ -219,7 +225,7 @@ pub fn version() -> String {
     #[cfg(all(feature = "to", not(feature = "lite")))]
     enabled_features.push_str("to;");
     #[cfg(all(feature = "polars", not(feature = "lite")))]
-    enabled_features.push_str(format!("polars-{};", polars::VERSION).as_str());
+    enabled_features.push_str(format!("polars-{}-{};", polars::VERSION, QSV_POLARS_REV).as_str());
     #[cfg(feature = "self_update")]
     enabled_features.push_str("self_update");
     enabled_features.push('-');
