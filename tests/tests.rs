@@ -49,6 +49,8 @@ mod test_dedup;
 mod test_describegpt;
 mod test_diff;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
+mod test_edit;
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_enumerate;
 mod test_excel;
 mod test_exclude;

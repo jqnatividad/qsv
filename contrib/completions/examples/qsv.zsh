@@ -301,6 +301,14 @@ _arguments "${_arguments_options[@]}" : \
 '--help[Print help]' \
 && ret=0
 ;;
+(edit)
+_arguments "${_arguments_options[@]}" : \
+'--output[]' \
+'--no-headers[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
 (enum)
 _arguments "${_arguments_options[@]}" : \
 '--new-column[]' \
@@ -1264,6 +1272,10 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
+(edit)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
 (enum)
 _arguments "${_arguments_options[@]}" : \
 && ret=0
@@ -1513,6 +1525,7 @@ _qsv_commands() {
 'dedup:' \
 'describegpt:' \
 'diff:' \
+'edit:' \
 'enum:' \
 'excel:' \
 'exclude:' \
@@ -1723,6 +1736,11 @@ _qsv__diff_commands() {
     local commands; commands=()
     _describe -t commands 'qsv diff commands' commands "$@"
 }
+(( $+functions[_qsv__edit_commands] )) ||
+_qsv__edit_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv edit commands' commands "$@"
+}
 (( $+functions[_qsv__enum_commands] )) ||
 _qsv__enum_commands() {
     local commands; commands=()
@@ -1815,6 +1833,7 @@ _qsv__help_commands() {
 'dedup:' \
 'describegpt:' \
 'diff:' \
+'edit:' \
 'enum:' \
 'excel:' \
 'exclude:' \
@@ -1956,6 +1975,11 @@ _qsv__help__describegpt_commands() {
 _qsv__help__diff_commands() {
     local commands; commands=()
     _describe -t commands 'qsv help diff commands' commands "$@"
+}
+(( $+functions[_qsv__help__edit_commands] )) ||
+_qsv__help__edit_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help edit commands' commands "$@"
 }
 (( $+functions[_qsv__help__enum_commands] )) ||
 _qsv__help__enum_commands() {

@@ -37,6 +37,7 @@
 | [dedup](/src/cmd/dedup.rs#L2)<br>🤯🚀👆 | Remove duplicate rows (See also `extdedup`, `extsort`, `sort` & `sortcheck` commands). |
 | [describegpt](/src/cmd/describegpt.rs#L2)<br>🌐🤖🪄 | Infer extended metadata about a CSV using a GPT model from [OpenAI's API](https://platform.openai.com/docs/introduction) or an LLM from another API compatible with the OpenAI API specification such as [Ollama](https://ollama.com) or [Jan](https://jan.ai). |
 | [diff](/src/cmd/diff.rs#L2)<br>🚀 | Find the difference between two CSVs with ludicrous speed!<br/>e.g. _compare two CSVs with 1M rows x 9 columns in under 600ms!_ |
+| [edit](/src/cmd/edit.rs#L2) | Replace the value of a cell specified by its row and column. |
 | [enum](/src/cmd/enumerate.rs#L2)<br>👆 | Add a new column enumerating rows by adding a column of incremental or uuid identifiers. Can also be used to copy a column or fill a new column with a constant value.  |
 | [excel](/src/cmd/excel.rs#L2)<br>🚀 | Exports a specified Excel/ODS sheet to a CSV file. |
 | [exclude](/src/cmd/exclude.rs#L2)<br>📇👆 | Removes a set of CSV data from another set based on the specified columns.  |
