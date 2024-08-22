@@ -89,14 +89,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut current_row: usize = if no_headers { 1 } else { 0 };
     while rdr.read_byte_record(&mut record)? {
         if row + 1 == current_row {
-            let mut current_col: usize = 0;
-            for field in record.iter() {
+            for (current_col, field) in record.iter().enumerate() {
                 if column_index == Some(current_col) {
                     wtr.write_field(&value)?;
                 } else {
                     wtr.write_field(field)?;
                 }
-                current_col += 1;
             }
             wtr.write_record(None::<&[u8]>)?;
         } else {
