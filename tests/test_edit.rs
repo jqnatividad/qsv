@@ -92,3 +92,25 @@ b,2,y"
         .to_string();
     assert_eq!(got, expected);
 }
+
+#[test]
+fn edit_by_col_underscore() {
+    let wrk = Workdir::new("edit_by_col_underscore");
+    wrk.create(
+        "data.csv",
+        vec![svec!["letter", "number"], svec!["a", "1"], svec!["b", "2"]],
+    );
+
+    let mut cmd = wrk.command("edit");
+    cmd.arg("data.csv");
+    cmd.arg("_");
+    cmd.arg("0");
+    cmd.arg("3");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "letter,number
+a,3
+b,2"
+    .to_string();
+    assert_eq!(got, expected);
+}

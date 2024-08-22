@@ -69,7 +69,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.headers()?;
     let mut column_index: Option<usize> = None;
-    if column == "_".to_string() {
+    if column == "_" {
         column_index = Some(headers.len() - 1)
     } else if let Ok(c) = column.parse::<usize>() {
         column_index = Some(c);
@@ -96,13 +96,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 } else {
                     wtr.write_field(field)?;
                 }
-                current_col = current_col + 1;
+                current_col += 1;
             }
             wtr.write_record(None::<&[u8]>)?;
         } else {
             wtr.write_byte_record(&record)?;
         }
-        current_row = current_row + 1;
+        current_row += 1;
     }
 
     Ok(wtr.flush()?)
