@@ -176,7 +176,7 @@ To find out what features are enabled in a package/distro's qsv, run `qsv --vers
 
 In the true spirit of open source, these packages are maintained by volunteers who wanted to make qsv easier to install in various environments. They are much appreciated, and we loosely collaborate with the package maintainers through GitHub, but know that these packages are maintained by third-parties.
 
-datHere is currently working on a publishing workflow to create an Ubuntu package on release. This package will target the latest Ubuntu LTS on x86_64 architecture.
+datHere is currently working on a publishing workflow to create a Debian package on release. This package will target the latest Ubuntu LTS on x86_64 architecture.
 
 ### Option 3: Install with Rust
 
