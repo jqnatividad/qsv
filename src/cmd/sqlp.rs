@@ -594,17 +594,20 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         None
     };
 
-    let mut optimization_state = polars::lazy::frame::OptState::default();
-    optimization_state |= OptState::PROJECTION_PUSHDOWN
-        | OptState::PREDICATE_PUSHDOWN
-        | OptState::CLUSTER_WITH_COLUMNS
-        | OptState::TYPE_COERCION
-        | OptState::SIMPLIFY_EXPR
-        | OptState::FILE_CACHING
-        | OptState::SLICE_PUSHDOWN
-        | OptState::COMM_SUBEXPR_ELIM
-        | OptState::FAST_PROJECTION
-        | OptState::ROW_ESTIMATE;
+    let mut optimization_state = if args.flag_no_optimizations {
+        OptState::empty()
+    } else {
+        OptState::PROJECTION_PUSHDOWN
+            | OptState::PREDICATE_PUSHDOWN
+            | OptState::CLUSTER_WITH_COLUMNS
+            | OptState::TYPE_COERCION
+            | OptState::SIMPLIFY_EXPR
+            | OptState::FILE_CACHING
+            | OptState::SLICE_PUSHDOWN
+            | OptState::COMM_SUBEXPR_ELIM
+            | OptState::FAST_PROJECTION
+            | OptState::ROW_ESTIMATE
+    };
 
     if args.flag_streaming {
         optimization_state |= OptState::NEW_STREAMING;
