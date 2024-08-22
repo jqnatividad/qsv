@@ -1,12 +1,13 @@
 mod cli;
 mod cmd;
+use std::{io, process::exit};
+
 use clap_complete::{
     generate,
     shells::{Bash, Elvish, Fish, PowerShell, Zsh},
 };
 use clap_complete_fig::Fig;
 use clap_complete_nushell::Nushell;
-use std::{io, process::exit};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();

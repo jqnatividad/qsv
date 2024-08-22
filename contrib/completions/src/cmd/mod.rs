@@ -7,6 +7,7 @@ pub mod datefmt;
 pub mod dedup;
 pub mod describegpt;
 pub mod diff;
+pub mod edit;
 pub mod enumerate;
 pub mod excel;
 pub mod exclude;

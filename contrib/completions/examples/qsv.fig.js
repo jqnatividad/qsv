@@ -438,6 +438,21 @@ const completion: Fig.Spec = {
       ],
     },
     {
+      name: "edit",
+      options: [
+        {
+          name: "--output",
+        },
+        {
+          name: "--no-headers",
+        },
+        {
+          name: ["-h", "--help"],
+          description: "Print help",
+        },
+      ],
+    },
+    {
       name: "enum",
       options: [
         {
@@ -2484,6 +2499,9 @@ const completion: Fig.Spec = {
         },
         {
           name: "diff",
+        },
+        {
+          name: "edit",
         },
         {
           name: "enum",

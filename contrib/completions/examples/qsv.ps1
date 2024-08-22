@@ -37,6 +37,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('dedup', 'dedup', [CompletionResultType]::ParameterValue, 'dedup')
             [CompletionResult]::new('describegpt', 'describegpt', [CompletionResultType]::ParameterValue, 'describegpt')
             [CompletionResult]::new('diff', 'diff', [CompletionResultType]::ParameterValue, 'diff')
+            [CompletionResult]::new('edit', 'edit', [CompletionResultType]::ParameterValue, 'edit')
             [CompletionResult]::new('enum', 'enum', [CompletionResultType]::ParameterValue, 'enum')
             [CompletionResult]::new('excel', 'excel', [CompletionResultType]::ParameterValue, 'excel')
             [CompletionResult]::new('exclude', 'exclude', [CompletionResultType]::ParameterValue, 'exclude')
@@ -298,6 +299,13 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--sort-columns', 'sort-columns', [CompletionResultType]::ParameterName, 'sort-columns')
             [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
             [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;edit' {
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
@@ -1102,6 +1110,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('dedup', 'dedup', [CompletionResultType]::ParameterValue, 'dedup')
             [CompletionResult]::new('describegpt', 'describegpt', [CompletionResultType]::ParameterValue, 'describegpt')
             [CompletionResult]::new('diff', 'diff', [CompletionResultType]::ParameterValue, 'diff')
+            [CompletionResult]::new('edit', 'edit', [CompletionResultType]::ParameterValue, 'edit')
             [CompletionResult]::new('enum', 'enum', [CompletionResultType]::ParameterValue, 'enum')
             [CompletionResult]::new('excel', 'excel', [CompletionResultType]::ParameterValue, 'excel')
             [CompletionResult]::new('exclude', 'exclude', [CompletionResultType]::ParameterValue, 'exclude')
@@ -1207,6 +1216,9 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             break
         }
         'qsv;help;diff' {
+            break
+        }
+        'qsv;help;edit' {
             break
         }
         'qsv;help;enum' {

@@ -34,6 +34,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand dedup 'dedup'
             cand describegpt 'describegpt'
             cand diff 'diff'
+            cand edit 'edit'
             cand enum 'enum'
             cand excel 'excel'
             cand exclude 'exclude'
@@ -268,6 +269,12 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --sort-columns 'sort-columns'
             cand --jobs 'jobs'
             cand --output 'output'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;edit'= {
+            cand --output 'output'
+            cand --no-headers 'no-headers'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -1012,6 +1019,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand dedup 'dedup'
             cand describegpt 'describegpt'
             cand diff 'diff'
+            cand edit 'edit'
             cand enum 'enum'
             cand excel 'excel'
             cand exclude 'exclude'
@@ -1101,6 +1109,8 @@ set edit:completion:arg-completer[qsv] = {|@words|
         &'qsv;help;describegpt'= {
         }
         &'qsv;help;diff'= {
+        }
+        &'qsv;help;edit'= {
         }
         &'qsv;help;enum'= {
         }

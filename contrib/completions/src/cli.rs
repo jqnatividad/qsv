@@ -1,12 +1,14 @@
+use clap::{arg, Command};
+
 use crate::cmd::{
     apply::apply_cmd, behead::behead_cmd, cat::cat_cmd, clipboard::clipboard_cmd, count::count_cmd,
     datefmt::datefmt_cmd, dedup::dedup_cmd, describegpt::describegpt_cmd, diff::diff_cmd,
-    enumerate::enum_cmd, excel::excel_cmd, exclude::exclude_cmd, explode::explode_cmd,
-    extdedup::extdedup_cmd, extsort::extsort_cmd, fetch::fetch_cmd, fetchpost::fetchpost_cmd,
-    fill::fill_cmd, fixlengths::fixlengths_cmd, flatten::flatten_cmd, fmt::fmt_cmd,
-    foreach::foreach_cmd, frequency::frequency_cmd, geocode::geocode_cmd, headers::headers_cmd,
-    index::index_cmd, input::input_cmd, join::join_cmd, joinp::joinp_cmd, json::json_cmd,
-    jsonl::jsonl_cmd, luau::luau_cmd, partition::partition_cmd, prompt::prompt_cmd,
+    edit::edit_cmd, enumerate::enum_cmd, excel::excel_cmd, exclude::exclude_cmd,
+    explode::explode_cmd, extdedup::extdedup_cmd, extsort::extsort_cmd, fetch::fetch_cmd,
+    fetchpost::fetchpost_cmd, fill::fill_cmd, fixlengths::fixlengths_cmd, flatten::flatten_cmd,
+    fmt::fmt_cmd, foreach::foreach_cmd, frequency::frequency_cmd, geocode::geocode_cmd,
+    headers::headers_cmd, index::index_cmd, input::input_cmd, join::join_cmd, joinp::joinp_cmd,
+    json::json_cmd, jsonl::jsonl_cmd, luau::luau_cmd, partition::partition_cmd, prompt::prompt_cmd,
     pseudo::pseudo_cmd, python::py_cmd, rename::rename_cmd, replace::replace_cmd,
     reverse::reverse_cmd, safenames::safenames_cmd, sample::sample_cmd, schema::schema_cmd,
     search::search_cmd, searchset::searchset_cmd, select::select_cmd, slice::slice_cmd,
@@ -14,7 +16,6 @@ use crate::cmd::{
     split::split_cmd, sqlp::sqlp_cmd, stats::stats_cmd, table::table_cmd, to::to_cmd,
     tojsonl::tojsonl_cmd, transpose::transpose_cmd, validate::validate_cmd,
 };
-use clap::{arg, Command};
 
 pub fn build_cli() -> Command {
     Command::new("qsv")
@@ -35,6 +36,7 @@ pub fn build_cli() -> Command {
             dedup_cmd(),
             describegpt_cmd(),
             diff_cmd(),
+            edit_cmd(),
             enum_cmd(),
             excel_cmd(),
             exclude_cmd(),

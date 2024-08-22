@@ -14,6 +14,8 @@ pub mod dedup;
 pub mod describegpt;
 pub mod diff;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
+pub mod edit;
+#[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod enumerate;
 pub mod excel;
 pub mod exclude;

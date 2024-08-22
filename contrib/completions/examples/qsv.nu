@@ -192,6 +192,12 @@ module completions {
     --help(-h)                # Print help
   ]
 
+  export extern "qsv edit" [
+    --output
+    --no-headers
+    --help(-h)                # Print help
+  ]
+
   export extern "qsv enum" [
     --new-column
     --start
@@ -971,6 +977,9 @@ module completions {
   ]
 
   export extern "qsv help diff" [
+  ]
+
+  export extern "qsv help edit" [
   ]
 
   export extern "qsv help enum" [
