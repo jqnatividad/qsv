@@ -27,6 +27,7 @@ macro_rules! command_list {
     dedup       Remove redundant rows
     describegpt Infer extended metadata using a LLM
     diff        Find the difference between two CSVs
+    edit        Replace a cell's value specified by row and column
     enum        Add a new column enumerating CSV lines
     excel       Exports an Excel sheet to a CSV
     exclude     Excludes the records in one CSV from another
