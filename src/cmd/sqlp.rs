@@ -203,6 +203,8 @@ sqlp options:
                               will be skipped. If not set, the query will fail.
                               Only use this when debugging queries, as Polars does batched
                               parsing and will skip the entire batch where the error occurred.
+                              To get more detailed error messages, set the environment variable
+                              POLARS_BACKTRACE_IN_ERR=1 before running the query.
     --rnull-values <arg>      The comma-delimited list of case-sensitive strings to consider as
                               null values when READING CSV files (e.g. NULL, NONE, <empty string>).
                               Use "<empty string>" to consider an empty string a null value.
