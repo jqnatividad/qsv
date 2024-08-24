@@ -23,21 +23,23 @@ fn main() {
         let cargo_toml_path = Path::new("Cargo.toml");
         let cargo_toml_content =
             fs::read_to_string(cargo_toml_path).expect("Failed to read Cargo.toml");
-        let polars_rev =
-            cargo_toml_content
-                .find(QSV_POLARS_REV)
-                .map_or_else(String::new, |index| {
-                    let start_index = index + QSV_POLARS_REV.len();
-                    let end_index = cargo_toml_content[start_index..]
-                        .find('\n')
-                        .map_or(cargo_toml_content.len(), |i| start_index + i);
-                    cargo_toml_content[start_index..end_index]
-                        .trim()
-                        .to_string()
-                });
-        println!(
-            "cargo:rustc-env=QSV_POLARS_REV={}",
-            std::env::var("QSV_POLARS_REV").unwrap_or(polars_rev)
+        let polars_rev = cargo_toml_content.find(QSV_POLARS_REV).map_or_else(
+            || "-unknown".to_string(),
+            |index| {
+                let start_index = index + QSV_POLARS_REV.len();
+                let end_index = cargo_toml_content[start_index..]
+                    .find('\n')
+                    .map_or(cargo_toml_content.len(), |i| start_index + i);
+                let final_rev = cargo_toml_content[start_index..end_index]
+                    .trim()
+                    .to_string();
+                if final_rev.is_empty() {
+                    "-release".to_string()
+                } else {
+                    final_rev
+                }
+            },
         );
+        println!("cargo:rustc-env=QSV_POLARS_REV={polars_rev}");
     }
 }
