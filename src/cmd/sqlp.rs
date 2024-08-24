@@ -612,7 +612,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     if args.flag_streaming {
-        optimization_state |= OptState::NEW_STREAMING;
+        optimization_state |= OptState::STREAMING;
     }
 
     // check if the input is a SQL script (ends with .sql)

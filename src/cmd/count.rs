@@ -250,7 +250,7 @@ pub fn polars_count_input(
             | OptState::SLICE_PUSHDOWN
             | OptState::COMM_SUBEXPR_ELIM
             | OptState::FAST_PROJECTION
-            | OptState::NEW_STREAMING;
+            | OptState::STREAMING;
         ctx.register("sql_lf", lazy_df.with_optimizations(optimization_state));
         "SELECT COUNT(*) FROM sql_lf".to_string()
     };

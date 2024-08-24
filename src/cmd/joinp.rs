@@ -414,7 +414,7 @@ impl JoinStruct {
 
         let mut optimization_state = polars::lazy::frame::OptState::default();
         if self.streaming {
-            optimization_state |= OptState::NEW_STREAMING;
+            optimization_state |= OptState::STREAMING;
         }
         if self.no_optimizations {
             optimization_state = OptState::from_bits_truncate(0) | OptState::TYPE_COERCION;
