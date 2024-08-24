@@ -318,6 +318,11 @@ pub fn show_env_vars() {
             env_var_set = true;
             woutinfo!("{env_var}: {v:?}");
         }
+        #[cfg(feature = "polars")]
+        if env_var.starts_with("POLARS_") {
+            env_var_set = true;
+            woutinfo!("{env_var}: {v:?}");
+        }
     }
     if !env_var_set {
         woutinfo!("No qsv-relevant environment variables set.");
