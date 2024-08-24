@@ -100,6 +100,8 @@ joinp options:
                            will be skipped. If not set, the query will fail.
                            Only use this when debugging queries, as polars does batched
                            parsing and will skip the entire batch where the error occurred.
+                           To get more detailed error messages, set the environment variable
+                           POLARS_BACKTRACE_IN_ERR=1 before running the join.
     --decimal-comma        Use comma as the decimal separator when parsing CSVs.
                            Otherwise, use period as the decimal separator.
                            Note that you'll need to set --delimiter to an alternate delimiter
