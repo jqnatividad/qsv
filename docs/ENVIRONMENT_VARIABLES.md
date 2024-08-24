@@ -48,6 +48,13 @@ Several dependencies also have environment variables that influence qsv's perfor
     
 * Network Access ([reqwest](https://docs.rs/reqwest/latest/reqwest/))   
   qsv uses reqwest and will honor [proxy settings](https://docs.rs/reqwest/latest/reqwest/index.html#proxies) set through the `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` & `NO_PROXY` environment variables.
+
+* Polars   
+  qsv uses [polars](https://github.com/pola.rs/polars) for several commands - currently `count`, `joinp` and `sqlp`. Polars has its own set of environment variables that can be set to influence its behavior (see [here](https://github.com/pola-rs/polars/blob/dd1fc86b65ae39b741f46edc6da01d024bed50b6/crates/polars/src/lib.rs#L366-L408)). The most relevant ones are:
+
+  * `POLARS_VERBOSE` - if set to 1, polars will output logging messages to stderr.
+  * `POLARS_PANIC_ON_ERR` - if set to 1, panics on polars-related errors, instead of returning an error.
+  * `POLARS_BACKTRACE_IN_ERR` - if set to 1, includes backtrace in polars-related error messages.
   
 > ℹ️ **NOTE:** To get a list of all active qsv-relevant environment variables, run `qsv --envlist`.
 Relevant env vars are defined as anything that starts with `QSV_`, `MIMALLOC_`, `JEMALLOC_`, `MALLOC_CONF` & the proxy variables listed above.
