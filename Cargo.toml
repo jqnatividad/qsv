@@ -163,6 +163,7 @@ polars = { version = "0.42", features = [
     "semi_anti_join",
     "serde-lazy",
     "sql",
+    "streaming",
     "timezones",
 ], optional = true }
 pyo3 = { version = "0.22", features = [
@@ -275,9 +276,9 @@ local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", br
 # or a specific commit if more revisions have been made since the latest polars/py-polars release.
 # BUILD NOTE: Be sure to set QSV_POLARS_REV below to the latest commit short hash or tag 
 # of polars/py-polars before building qsv. This allows us to show the polars rev/tag in --version.
-# QSV_POLARS_REV=380db32
+# QSV_POLARS_REV=5cfc1f0
 # polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.4.1" }
-polars = { git = "https://github.com/pola-rs/polars", rev = "380db32" }
+polars = { git = "https://github.com/pola-rs/polars", rev = "5cfc1f0" }
 
 
 [features]
