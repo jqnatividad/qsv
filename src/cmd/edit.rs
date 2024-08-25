@@ -70,7 +70,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let headers = rdr.headers()?;
     let mut column_index: Option<usize> = None;
     if column == "_" {
-        column_index = Some(headers.len() - 1)
+        column_index = Some(headers.len() - 1);
     } else if let Ok(c) = column.parse::<usize>() {
         column_index = Some(c);
     } else {
@@ -86,6 +86,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut record = csv::ByteRecord::new();
+    #[allow(clippy::bool_to_int_with_if)]
     let mut current_row: usize = if no_headers { 1 } else { 0 };
     while rdr.read_byte_record(&mut record)? {
         if row + 1 == current_row {
