@@ -210,8 +210,20 @@ jobs:
         base64-encoded-secret: ${{ secrets.QSV_ZIPSIGN_PRIV_KEY }}
         filename: "qsvpriv.key"
         is-executable: false
-        working-directory: "."        
-    - name: zipsign binary
+        working-directory: "."
+    - name: Download latest release zip
+      uses: robinraju/release-downloader@v1.11
+      with:
+        repository: "jqnatividad/qsv"
+        latest: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fileName: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+    - name: remove zipsign signature from zip archive
+      run: |
+        zipsign unsign zip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip
+    - name: add/update portable files to zip
+      run: 7z u -tzip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip ./qsv-${{ needs.analyze-tags.outputs.previous-tag }}/qsv* -mx=9 -mmt=on
+    - name: re-zipsign zip archive
       run: |
         zipsign sign zip qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip qsvpriv.key
     - name: Upload zipped binaries to release
