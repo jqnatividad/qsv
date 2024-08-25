@@ -117,8 +117,7 @@
 brew install qsv
 
 # using Scoop on Windows (https://scoop.sh/#/apps?q=qsv)
-scoop bucket add main
-scoop install main/qsv
+scoop install qsv
 
 # using MacPorts on macOS (https://ports.macports.org/port/qsv/)
 sudo port install qsv
