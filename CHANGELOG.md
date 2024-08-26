@@ -9,8 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.132.0] - 2024-08-21
 
 ### Highlights
-With this release, we finally finish the `stats` caching refactor started in 0.131.0, replacing the binary encoded stats cache with a simpler JSONL cache. The `stats` cache stores the necessary statistical metadata to make several key commands smarter & faster, and provides the foundation for even more "smart" features and commands in the future.   
-It also has the added side-benefit of adding a way to produce JSONL stats cache files that can be used for other purposes beyond qsv.
+With this release, we finally finish the `stats` caching refactor started in 0.131.0, replacing the binary encoded stats cache with a simpler JSONL cache. The `stats` cache stores the necessary statistical metadata to make several key commands smarter & faster. Per the [benchmarks](https://qsv.dathere.com/benchmarks):
+
+- `frequency` is 6x faster (`frequency_index_stats_mode_auto`).   
+Not only is it faster, it now doesn't need to compile a hashmap for columns with ALL unique values (e.g. ID columns) - practically, making it able to handle "real-world" datasets of any size (that is, unless all the columns have ALL unique cardinalities. In that case, the entire CSV will have to fit into memory).
+- `tojsonl` is 2.67x faster (`tojsonl_index`)
+- `schema` is two orders of magnitude (100x) faster!!! (`schema_index`)
+
+The stats cache also provides the foundation for even more "smart" features and commands in the future.  It also has the side-benefit of adding a way to produce stats in JSONL  format that can be used for other purposes beyond qsv.
 
 The `search`, `searchset`, and `replace` commands now also have a `--literal` option that allows you to search for and replace strings with regex special/reserved characters. This makes it easier to search for and replace strings that contain special characters without having to escape them.
 
@@ -34,7 +40,7 @@ The `search`, `searchset`, and `replace` commands now also have a `--literal` op
 * changed "broken pipe" error to a warning https://github.com/jqnatividad/qsv/commit/73532759a8dad2d643f283296aa402950765b648
 * `docs`: update multithreading and caching sections of PERFORMANCE.md https://github.com/jqnatividad/qsv/commit/5e6bc455bc544003535e18f99493cc1a20c4a2ce
 * `deps`: switch to our qsv-optimized fork of csv crate https://github.com/jqnatividad/qsv/commit/3fc1e82c83b5dec23d3ba610e3d0f9bbd2924788
-* `deps`: bump polars from 0.41.3 to 0.42.0 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2051
+* `deps`: bump polars from 0.41.3 to 0.42.0 https://github.com/jqnatividad/qsv/pull/2051
 * build(deps): bump actix-web from 4.8.0 to 4.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2041
 * build(deps): bump flate2 from 1.0.31 to 1.0.32 by @dependabot in https://github.com/jqnatividad/qsv/pull/2071
 
