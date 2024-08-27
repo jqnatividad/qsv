@@ -250,7 +250,7 @@ assert-json-diff = "2.0"
 newline-converter = "0.3"
 postgres = "0.19"
 quickcheck = { version = "1", default-features = false }
-rusqlite = { version = "0.31", features = ["bundled"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
 serial_test = { version = "3.1", features = ["file_locks"] }
 
 [patch.crates-io]
@@ -259,6 +259,7 @@ serial_test = { version = "3.1", features = ["file_locks"] }
 csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
+csvs_convert = { git = "https://github.com/jqnatividad/csvs_convert", branch = "bump-more-dependencies" }
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
@@ -277,9 +278,9 @@ local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", br
 # BUILD NOTE: Be sure to set QSV_POLARS_REV below to the latest commit short hash or tag 
 # of polars/py-polars before building qsv. This allows us to show the polars rev/tag in --version.
 # if we are using a release version of Rust Polars, leave QSV_POLARS_REV empty
-# QSV_POLARS_REV=5cfc1f0
+# QSV_POLARS_REV=6f5851d
 # polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.4.1" }
-polars = { git = "https://github.com/pola-rs/polars", rev = "5cfc1f0" }
+polars = { git = "https://github.com/pola-rs/polars", rev = "6f5851d" }
 
 
 [features]
