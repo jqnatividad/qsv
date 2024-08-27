@@ -295,7 +295,6 @@ distrib_features = [
     "polars",
     "python",
     "to",
-    "to_parquet",
 ]
 all_features = ["distrib_features", "self_update"]
 apply = [
@@ -337,7 +336,6 @@ geocode = [
 luau = ["mlua", "sanitize-filename", "simple-expand-tilde"]
 python = ["pyo3"]
 to = ["csvs_convert"]
-to_parquet = ["csvs_convert/parquet"]
 lite = []
 datapusher_plus = ["self_update"]
 polars = ["dep:polars", "smartstring"]
