@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=4.10.0
+bm_version=4.11.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -646,7 +646,6 @@ run --index stats_everything_index_j1_with_cache "$qsv_bin" stats "$data" --ever
 run table "$qsv_bin" table "$data"
 run to_xlsx "$qsv_bin" to xlsx benchmark_work.xlsx "$data"
 run to_sqlite "$qsv_bin" to sqlite benchmark_work.db "$data"
-run to_parquet "$qsv_bin" to parquet benchmark_work "$data"
 run to_datapackage "$qsv_bin" to datapackage benchmark_work.json "$data"
 run tojsonl "$qsv_bin" tojsonl "$data"
 run tojsonl_batchall "$qsv_bin" tojsonl --batch 0 "$data"
