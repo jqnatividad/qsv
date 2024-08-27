@@ -190,7 +190,7 @@ fn main() -> QsvExitCode {
 
     #[cfg(all(feature = "to", feature = "feature_capable"))]
     enabled_commands
-        .push_str("    to          Convert CSVs to PostgreSQL/XLSX/Parquet/SQLite/Data Package\n");
+        .push_str("    to          Convert CSVs to PostgreSQL/XLSX/SQLite/Data Package\n");
 
     enabled_commands.push_str(
         "    transpose   Transpose rows/columns of CSV data
