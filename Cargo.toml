@@ -259,16 +259,23 @@ serial_test = { version = "3.1", features = ["file_locks"] }
 csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
+
+# upstream csvs_convert has some old dependencies
 csvs_convert = { git = "https://github.com/jqnatividad/csvs_convert", branch = "bump-more-dependencies" }
+
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
+
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "6a78534" }
-# calamine 0.25.0 with unreleased fixes
-calamine = { git = "https://github.com/tafia/calamine", rev = "a90e877" }
+
+# use our fork of calamine 0.25.0 with unreleased fixes and select clippy lints
+calamine = { git = "https://github.com/jqnatividad/calamine", branch = "select-clippy-lints" } 
+
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
+
 # Polars has a much higher release tempo for its Python bindings compared
 # to its underlying Rust library. See https://github.com/pola-rs/polars/releases
 # It's qsv's policy to use the latest upstream of polars/py-polars
@@ -278,9 +285,9 @@ local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", br
 # BUILD NOTE: Be sure to set QSV_POLARS_REV below to the latest commit short hash or tag 
 # of polars/py-polars before building qsv. This allows us to show the polars rev/tag in --version.
 # if we are using a release version of Rust Polars, leave QSV_POLARS_REV empty
-# QSV_POLARS_REV=6f5851d
+# QSV_POLARS_REV=d12131a
 # polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.4.1" }
-polars = { git = "https://github.com/pola-rs/polars", rev = "6f5851d" }
+polars = { git = "https://github.com/pola-rs/polars", rev = "d12131a" }
 
 
 [features]
