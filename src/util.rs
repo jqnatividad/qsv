@@ -13,6 +13,7 @@ use std::{
 
 use csv::ByteRecord;
 use docopt::Docopt;
+use filetime::FileTime;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{info, log_enabled};
@@ -1949,14 +1950,13 @@ pub fn get_stats_records(
 
         let input_metadata = std::fs::metadata(args.arg_input.clone().unwrap())?;
 
-        if statsdata_metadata.modified()? > input_metadata.modified()? {
+        let statsdata_mtime = FileTime::from_last_modification_time(&statsdata_metadata);
+        let input_mtime = FileTime::from_last_modification_time(&input_metadata);
+        if statsdata_mtime > input_mtime {
             info!("Valid stats.csv.data.jsonl file found!");
             true
         } else {
-            info!(
-                "stats.csv.data.jsonl file is older than input file. Regenerating stats jsonl \
-                 file."
-            );
+            info!("stats.csv.data.jsonl file is older than input file. Regenerating stats jsonl.");
             false
         }
     } else {
