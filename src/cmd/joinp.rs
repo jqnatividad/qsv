@@ -412,10 +412,11 @@ impl JoinStruct {
             JoinCoalesce::JoinSpecific
         };
 
-        let mut optflags = if self.no_optimizations {
-            OptFlags::from_bits_truncate(0) | OptFlags::TYPE_COERCION
+        let mut optflags = OptFlags::from_bits_truncate(0);
+        if self.no_optimizations {
+            optflags |= OptFlags::TYPE_COERCION;
         } else {
-            OptFlags::PROJECTION_PUSHDOWN
+            optflags |= OptFlags::PROJECTION_PUSHDOWN
                 | OptFlags::PREDICATE_PUSHDOWN
                 | OptFlags::CLUSTER_WITH_COLUMNS
                 | OptFlags::TYPE_COERCION
@@ -425,8 +426,8 @@ impl JoinStruct {
                 | OptFlags::COMM_SUBPLAN_ELIM
                 | OptFlags::COMM_SUBEXPR_ELIM
                 | OptFlags::ROW_ESTIMATE
-                | OptFlags::FAST_PROJECTION
-        };
+                | OptFlags::FAST_PROJECTION;
+        }
 
         optflags.set(OptFlags::STREAMING, self.streaming);
 
