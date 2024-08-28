@@ -265,7 +265,7 @@ use polars::{
     io::avro::{AvroWriter, Compression as AvroCompression},
     prelude::{
         CsvWriter, DataFrame, GzipLevel, IpcCompression, IpcWriter, JsonFormat, JsonWriter,
-        LazyCsvReader, LazyFileListReader, NullValues, OptState, ParquetCompression, ParquetWriter,
+        LazyCsvReader, LazyFileListReader, NullValues, OptFlags, ParquetCompression, ParquetWriter,
         SerWriter, StatisticsOptions, ZstdLevel,
     },
     sql::SQLContext,
@@ -596,24 +596,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         None
     };
 
-    let mut optimization_state = if args.flag_no_optimizations {
-        OptState::empty()
+    let mut optflags = if args.flag_no_optimizations {
+        OptFlags::from_bits_truncate(0) | OptFlags::TYPE_COERCION
     } else {
-        OptState::PROJECTION_PUSHDOWN
-            | OptState::PREDICATE_PUSHDOWN
-            | OptState::CLUSTER_WITH_COLUMNS
-            | OptState::TYPE_COERCION
-            | OptState::SIMPLIFY_EXPR
-            | OptState::FILE_CACHING
-            | OptState::SLICE_PUSHDOWN
-            | OptState::COMM_SUBEXPR_ELIM
-            | OptState::FAST_PROJECTION
-            | OptState::ROW_ESTIMATE
+        OptFlags::PROJECTION_PUSHDOWN
+            | OptFlags::PREDICATE_PUSHDOWN
+            | OptFlags::CLUSTER_WITH_COLUMNS
+            | OptFlags::TYPE_COERCION
+            | OptFlags::SIMPLIFY_EXPR
+            | OptFlags::FILE_CACHING
+            | OptFlags::SLICE_PUSHDOWN
+            | OptFlags::COMM_SUBPLAN_ELIM
+            | OptFlags::COMM_SUBEXPR_ELIM
+            | OptFlags::ROW_ESTIMATE
+            | OptFlags::FAST_PROJECTION
     };
 
-    if args.flag_streaming {
-        optimization_state |= OptState::STREAMING;
-    }
+    optflags.set(OptFlags::STREAMING, args.flag_streaming);
 
     // check if the input is a SQL script (ends with .sql)
     let is_sql_script = std::path::Path::new(&args.arg_sql)
@@ -638,7 +637,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // for the optimization state struct
     let debuglog_flag = log::log_enabled!(log::Level::Debug);
     if debuglog_flag {
-        log::debug!("Optimization state: {optimization_state:?}");
+        log::debug!("Optimization state: {optflags:?}");
         log::debug!(
             "Delimiter: {delim} Infer_schema_len: {infer_len} try_parse_dates: {parse_dates} \
              ignore_errors: {ignore_errors}, low_memory: {low_memory}, float_precision: \
@@ -747,7 +746,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 .with_decimal_comma(args.flag_decimal_comma)
                 .with_low_memory(args.flag_low_memory)
                 .finish()?;
-            ctx.register(table_name, lf.with_optimizations(optimization_state));
+            ctx.register(table_name, lf.with_optimizations(optflags));
         }
     }
 
