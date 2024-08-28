@@ -285,9 +285,9 @@ local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", br
 # BUILD NOTE: Be sure to set QSV_POLARS_REV below to the latest commit short hash or tag 
 # of polars/py-polars before building qsv. This allows us to show the polars rev/tag in --version.
 # if we are using a release version of Rust Polars, leave QSV_POLARS_REV empty
-# QSV_POLARS_REV=d12131a
+# QSV_POLARS_REV=37a492e
 # polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.4.1" }
-polars = { git = "https://github.com/pola-rs/polars", rev = "d12131a" }
+polars = { git = "https://github.com/pola-rs/polars", rev = "37a492e" }
 
 
 [features]

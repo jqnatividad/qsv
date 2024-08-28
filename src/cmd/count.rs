@@ -179,7 +179,7 @@ pub fn polars_count_input(
     low_memory: bool,
 ) -> Result<(u64, usize), crate::clitypes::CliError> {
     use polars::{
-        lazy::frame::{LazyFrame, OptState},
+        lazy::frame::{LazyFrame, OptFlags},
         prelude::*,
         sql::SQLContext,
     };
@@ -240,18 +240,19 @@ pub fn polars_count_input(
                 return Ok((count_regular, 0));
             },
         };
-        let mut optimization_state = OptState::default();
-        optimization_state |= OptState::PROJECTION_PUSHDOWN
-            | OptState::PREDICATE_PUSHDOWN
-            | OptState::CLUSTER_WITH_COLUMNS
-            | OptState::TYPE_COERCION
-            | OptState::SIMPLIFY_EXPR
-            | OptState::FILE_CACHING
-            | OptState::SLICE_PUSHDOWN
-            | OptState::COMM_SUBEXPR_ELIM
-            | OptState::FAST_PROJECTION
-            | OptState::STREAMING;
-        ctx.register("sql_lf", lazy_df.with_optimizations(optimization_state));
+        let optflags = OptFlags::from_bits_truncate(0)
+            | OptFlags::PROJECTION_PUSHDOWN
+            | OptFlags::PREDICATE_PUSHDOWN
+            | OptFlags::CLUSTER_WITH_COLUMNS
+            | OptFlags::TYPE_COERCION
+            | OptFlags::SIMPLIFY_EXPR
+            | OptFlags::FILE_CACHING
+            | OptFlags::SLICE_PUSHDOWN
+            | OptFlags::COMM_SUBPLAN_ELIM
+            | OptFlags::COMM_SUBEXPR_ELIM
+            | OptFlags::FAST_PROJECTION
+            | OptFlags::STREAMING;
+        ctx.register("sql_lf", lazy_df.with_optimizations(optflags));
         "SELECT COUNT(*) FROM sql_lf".to_string()
     };
 

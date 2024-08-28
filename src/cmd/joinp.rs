@@ -412,22 +412,33 @@ impl JoinStruct {
             JoinCoalesce::JoinSpecific
         };
 
-        let mut optimization_state = polars::lazy::frame::OptState::default();
-        if self.streaming {
-            optimization_state |= OptState::STREAMING;
-        }
+        let mut optflags = OptFlags::from_bits_truncate(0);
         if self.no_optimizations {
-            optimization_state = OptState::from_bits_truncate(0) | OptState::TYPE_COERCION;
+            optflags |= OptFlags::TYPE_COERCION;
+        } else {
+            optflags |= OptFlags::PROJECTION_PUSHDOWN
+                | OptFlags::PREDICATE_PUSHDOWN
+                | OptFlags::CLUSTER_WITH_COLUMNS
+                | OptFlags::TYPE_COERCION
+                | OptFlags::SIMPLIFY_EXPR
+                | OptFlags::FILE_CACHING
+                | OptFlags::SLICE_PUSHDOWN
+                | OptFlags::COMM_SUBPLAN_ELIM
+                | OptFlags::COMM_SUBEXPR_ELIM
+                | OptFlags::ROW_ESTIMATE
+                | OptFlags::FAST_PROJECTION;
         }
 
-        log::debug!("Optimization state: {optimization_state:?}");
+        optflags.set(OptFlags::STREAMING, self.streaming);
+
+        // log::debug!("Optimization state: {optimization_state:?}");
 
         let join_results = if jointype == JoinType::Cross {
             // cross join doesn't need join columns
             self.left_lf
-                .with_optimizations(optimization_state)
+                .with_optimizations(optflags)
                 .join_builder()
-                .with(self.right_lf.with_optimizations(optimization_state))
+                .with(self.right_lf.with_optimizations(optflags))
                 .how(JoinType::Cross)
                 .coalesce(coalesce_flag)
                 .allow_parallel(true)
@@ -453,9 +464,9 @@ impl JoinStruct {
             }
 
             self.left_lf
-                .with_optimizations(optimization_state)
+                .with_optimizations(optflags)
                 .join_builder()
-                .with(self.right_lf.with_optimizations(optimization_state))
+                .with(self.right_lf.with_optimizations(optflags))
                 .left_on(left_selcols)
                 .right_on(right_selcols)
                 .how(jointype)
