@@ -270,6 +270,7 @@ use polars::{
     },
     sql::SQLContext,
 };
+use polars_utils::pl_str::PlSmallStr;
 use regex::Regex;
 use serde::Deserialize;
 
@@ -561,15 +562,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let rnull_values = if args.flag_rnull_values == "<empty string>" {
-        vec![String::new()]
+        vec![PlSmallStr::const_default()]
     } else {
         args.flag_rnull_values
             .split(',')
             .map(|value| {
                 if value == "<empty string>" {
-                    String::new()
+                    PlSmallStr::const_default()
                 } else {
-                    value.to_string()
+                    PlSmallStr::from_str(value)
                 }
             })
             .collect()
@@ -591,7 +592,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let comment_char = if let Ok(comment_char) = env::var("QSV_COMMENT_CHAR") {
-        Some(comment_char)
+        Some(PlSmallStr::from_string(comment_char))
     } else {
         None
     };
@@ -737,7 +738,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let lf = LazyCsvReader::new(table)
                 .with_has_header(true)
                 .with_missing_is_null(true)
-                .with_comment_prefix(comment_char.as_deref())
+                .with_comment_prefix(comment_char.clone())
                 .with_null_values(Some(NullValues::AllColumns(rnull_values.clone())))
                 .with_separator(tsvssv_delim(table, delim))
                 .with_infer_schema_length(Some(args.flag_infer_len))
