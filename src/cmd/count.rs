@@ -208,7 +208,7 @@ pub fn polars_count_input(
     let mut comment_char = String::new();
     let comment_prefix = if let Some(c) = conf.comment {
         comment_char.push(c as char);
-        Some(comment_char.as_str())
+        Some(PlSmallStr::from_str(comment_char.as_str()))
     } else {
         None
     };

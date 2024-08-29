@@ -193,7 +193,6 @@ use std::{
 
 use polars::{datatypes::AnyValue, prelude::*, sql::SQLContext};
 use serde::Deserialize;
-use smartstring::SmartString;
 use tempfile::tempdir;
 
 use crate::{cmd::sqlp::compress_output_if_needed, config::Delimiter, util, CliResult};
@@ -335,7 +334,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     args.flag_left_by
                         .unwrap()
                         .split(',')
-                        .map(smartstring::SmartString::from)
+                        .map(PlSmallStr::from_str)
                         .collect(),
                 );
             }
@@ -344,7 +343,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     args.flag_right_by
                         .unwrap()
                         .split(',')
-                        .map(smartstring::SmartString::from)
+                        .map(PlSmallStr::from_str)
                         .collect(),
                 );
             }
@@ -448,15 +447,18 @@ impl JoinStruct {
         } else {
             if asof_join {
                 // sort by the asof columns, as asof joins require sorted join column data
-                let left_selcols_smartsvec: Vec<SmartString<smartstring::LazyCompact>> =
-                    self.left_sel.split(',').map(SmartString::from).collect();
+                let left_selcols_smartsvec: Vec<PlSmallStr> =
+                    self.left_sel.split(',').map(PlSmallStr::from_str).collect();
 
                 self.left_lf = self
                     .left_lf
                     .sort(&left_selcols_smartsvec, SortMultipleOptions::default());
 
-                let right_selcols_smartsvec: Vec<SmartString<smartstring::LazyCompact>> =
-                    self.right_sel.split(',').map(SmartString::from).collect();
+                let right_selcols_smartsvec: Vec<PlSmallStr> = self
+                    .right_sel
+                    .split(',')
+                    .map(PlSmallStr::from_str)
+                    .collect();
 
                 self.right_lf = self
                     .right_lf
@@ -534,7 +536,7 @@ impl Args {
         };
 
         let comment_char = if let Ok(comment_char) = env::var("QSV_COMMENT_CHAR") {
-            Some(comment_char)
+            Some(PlSmallStr::from_string(comment_char))
         } else {
             None
         };
@@ -567,7 +569,7 @@ impl Args {
             LazyCsvReader::new(&self.arg_input1)
                 .with_has_header(true)
                 .with_missing_is_null(self.flag_nulls)
-                .with_comment_prefix(comment_char.as_deref())
+                .with_comment_prefix(comment_char.clone())
                 .with_separator(tsvssv_delim(&self.arg_input1, delim))
                 .with_infer_schema_length(num_rows)
                 .with_try_parse_dates(try_parsedates)
@@ -593,7 +595,7 @@ impl Args {
             LazyCsvReader::new(&self.arg_input2)
                 .with_has_header(true)
                 .with_missing_is_null(self.flag_nulls)
-                .with_comment_prefix(comment_char.as_deref())
+                .with_comment_prefix(comment_char)
                 .with_separator(tsvssv_delim(&self.arg_input2, delim))
                 .with_infer_schema_length(num_rows)
                 .with_try_parse_dates(try_parsedates)
