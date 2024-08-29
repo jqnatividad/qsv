@@ -1625,11 +1625,11 @@ fn sqlp_div_sign() {
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["a_div_b", "a_floordiv_b", "b_sign"],
-        svec!["-0.09950248756218906", "-1", "-1"],
-        svec!["2.857142857142857", "2", "1"],
-        svec!["12.0", "12", "1"],
+        svec!["-0.09950248756218906", "-1", "-1.0"],
+        svec!["2.857142857142857", "2", "1.0"],
+        svec!["12.0", "12", "1.0"],
         svec!["", "", ""],
-        svec!["-15.92356687898089", "-16", "-1"],
+        svec!["-15.92356687898089", "-16", "-1.0"],
     ];
 
     assert_eq!(got, expected);
@@ -2748,3 +2748,52 @@ IT	Rome,Milan,Turin,Naples,Venice
 
     assert_eq!(got, expected);
 }
+
+// #[test]
+// fn sqlp_generate_graphviz_plan() {
+//     let wrk = Workdir::new("sqlp_generate_graphviz_plan");
+
+//     wrk.create(
+//         "data.csv",
+//         vec![
+//             svec!["a", "b", "c"],
+//             svec!["1", "2", "3"],
+//             svec!["4", "5", "6"],
+//             svec!["7", "8", "9"],
+//         ],
+//     );
+
+//     let output_dotfile = wrk.path("output.dot").to_string_lossy().to_string();
+//     std::env::set_var("POLARS_VISUALIZE_PHYSICAL_PLAN", output_dotfile.as_str());
+
+//     let mut cmd = wrk.command("sqlp");
+//     cmd.arg("data.csv").arg(
+//         r#"
+//         SELECT a, b, c
+//         FROM data
+//         WHERE a > 2
+//         ORDER BY a DESC
+//     "#,
+//     ).arg("--streaming");
+
+//     wrk.assert_success(&mut cmd);
+
+//     // assert!(std::path::Path::new(&output_dotfile).exists());
+
+//     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+//     let expected = vec![
+//         svec!["a", "b", "c"],
+//         svec!["7", "8", "9"],
+//         svec!["4", "5", "6"],
+//     ];
+
+//     assert_eq!(got, expected);
+
+//     let got_dot = wrk.read_to_string(&output_dotfile);
+//     let expected_dot = r#"digraph {
+//     "Projection" -> "Filter";
+//     "Filter" -> "CsvScan";
+// }"#;
+
+//     assert_eq!(got_dot, expected_dot);
+// }
