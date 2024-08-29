@@ -447,14 +447,14 @@ impl JoinStruct {
         } else {
             if asof_join {
                 // sort by the asof columns, as asof joins require sorted join column data
-                let left_selcols_smartsvec: Vec<PlSmallStr> =
+                let left_selcols_vec: Vec<PlSmallStr> =
                     self.left_sel.split(',').map(PlSmallStr::from_str).collect();
 
                 self.left_lf = self
                     .left_lf
-                    .sort(&left_selcols_smartsvec, SortMultipleOptions::default());
+                    .sort(&left_selcols_vec, SortMultipleOptions::default());
 
-                let right_selcols_smartsvec: Vec<PlSmallStr> = self
+                let right_selcols_vec: Vec<PlSmallStr> = self
                     .right_sel
                     .split(',')
                     .map(PlSmallStr::from_str)
@@ -462,7 +462,7 @@ impl JoinStruct {
 
                 self.right_lf = self
                     .right_lf
-                    .sort(&right_selcols_smartsvec, SortMultipleOptions::default());
+                    .sort(&right_selcols_vec, SortMultipleOptions::default());
             }
 
             self.left_lf
