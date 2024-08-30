@@ -430,7 +430,7 @@ impl JoinStruct {
 
         optflags.set(OptFlags::STREAMING, self.streaming);
 
-        // log::debug!("Optimization state: {optimization_state:?}");
+        // log::debug!("Optimization flags: {optimization_flags:?}");
 
         let join_results = if jointype == JoinType::Cross {
             // cross join doesn't need join columns
@@ -452,7 +452,7 @@ impl JoinStruct {
 
                 self.left_lf = self
                     .left_lf
-                    .sort(&left_selcols_vec, SortMultipleOptions::default());
+                    .sort(left_selcols_vec, SortMultipleOptions::default());
 
                 let right_selcols_vec: Vec<PlSmallStr> = self
                     .right_sel
@@ -462,7 +462,7 @@ impl JoinStruct {
 
                 self.right_lf = self
                     .right_lf
-                    .sort(&right_selcols_vec, SortMultipleOptions::default());
+                    .sort(right_selcols_vec, SortMultipleOptions::default());
             }
 
             self.left_lf
