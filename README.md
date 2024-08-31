@@ -32,7 +32,7 @@
 | [behead](/src/cmd/behead.rs#L2) | Drop headers from a CSV.  |
 | [cat](/src/cmd/cat.rs#L2)<br>🗄️ | Concatenate CSV files by row or by column. |
 | [clipboard](/src/cmd/clipboard.rs#L2) | Provide input from the clipboard or save output to the clipboard. |
-| [count](/src/cmd/count.rs#L2)<br>📇🏎️🐻‍❄️ | Count the rows in a CSV file. (11.87 seconds for a 15gb, 27m row NYC 311 dataset without an index. Instantaneous with an index.) If the `polars` feature is enabled, uses Polars' multithreaded, mem-mapped CSV reader for fast counts even without an index |
+| [count](/src/cmd/count.rs#L3)<br>📇🏎️🐻‍❄️ | Count the rows and optionally compile record width statistics of a CSV file. (11.87 seconds for a 15gb, 27m row NYC 311 dataset without an index. Instantaneous with an index.) If the `polars` feature is enabled, uses Polars' multithreaded, mem-mapped CSV reader for fast counts even without an index |
 | [datefmt](/src/cmd/datefmt.rs#L2)<br>🚀👆 | Formats recognized date fields ([19 formats recognized](https://docs.rs/qsv-dateparser/latest/qsv_dateparser/#accepted-date-formats)) to a specified date format using [strftime date format specifiers](https://docs.rs/chrono/latest/chrono/format/strftime/). |
 | [dedup](/src/cmd/dedup.rs#L2)<br>🤯🚀👆 | Remove duplicate rows (See also `extdedup`, `extsort`, `sort` & `sortcheck` commands). |
 | [describegpt](/src/cmd/describegpt.rs#L2)<br>🌐🤖🪄 | Infer extended metadata about a CSV using a GPT model from [OpenAI's API](https://platform.openai.com/docs/introduction) or an LLM from another API compatible with the OpenAI API specification such as [Ollama](https://ollama.com) or [Jan](https://jan.ai). |
