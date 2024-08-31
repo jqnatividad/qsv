@@ -124,7 +124,91 @@ fn count_width() {
     cmd.arg("--width").arg("in.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = "4;18";
+    let expected = "4;16-15-15-13-1.5-1.2247-1";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
+fn count_width_json() {
+    let wrk = Workdir::new("count_width");
+    wrk.create_indexed(
+        "in.csv",
+        vec![
+            svec!["letter", "number", "flag"],
+            svec!["alphabetic", "13", "true"],
+            svec!["beta", "24", "false"],
+            svec!["gamma", "37.1", "true"],
+            svec!("delta", "42.5", "false"),
+        ],
+    );
+    let mut cmd = wrk.command("count");
+    cmd.arg("--width").arg("--json").arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"count":4,"max":16,"avg":15,"median":15,"min":13,"variance":1.5,"stddev":1.2247,"mad":1}"#;
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
+fn count_width_no_delims() {
+    let wrk = Workdir::new("count_width_no_delims");
+    wrk.create_indexed(
+        "in.csv",
+        vec![
+            svec!["letter", "number", "flag"],
+            svec!["alphabetic", "13", "true"],
+            svec!["beta", "24", "false"],
+            svec!["gamma", "37.1", "true"],
+            svec!("delta", "42.5", "false"),
+        ],
+    );
+    let mut cmd = wrk.command("count");
+    cmd.arg("--width-no-delims").arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "4;16-13.5-13-11-3.25-1.8028-1.5";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
+fn count_width_no_delims_human_readable() {
+    let wrk = Workdir::new("count_width_no_delims_human_readable");
+    wrk.create_indexed(
+        "in.csv",
+        vec![
+            svec!["letter", "number", "flag"],
+            svec!["alphabetic", "13", "true"],
+            svec!["beta", "24", "false"],
+            svec!["gamma", "37.1", "true"],
+            svec!("delta", "42.5", "false"),
+        ],
+    );
+    let mut cmd = wrk.command("count");
+    cmd.arg("--width-no-delims").arg("-H").arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "4;max:16 avg:13.5 median:13 min:11 variance:3.25 stddev:1.8028 mad:1.5";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
+fn count_width_human_readable() {
+    let wrk = Workdir::new("count_width_human_readable");
+    wrk.create_indexed(
+        "in.csv",
+        vec![
+            svec!["letter", "number", "flag"],
+            svec!["alphabetic", "13", "true"],
+            svec!["beta", "24", "false"],
+            svec!["gamma", "37.1", "true"],
+            svec!("delta", "42.5", "false"),
+        ],
+    );
+    let mut cmd = wrk.command("count");
+    cmd.arg("--width").arg("-H").arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "4;max:16 avg:15 median:15 min:13 variance:1.5 stddev:1.2247 mad:1";
     assert_eq!(got, expected.to_string());
 }
 
@@ -150,7 +234,7 @@ fn count_width_custom_delimiter() {
     cmd.arg("--width").arg("in.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = "4;18";
+    let expected = "4;18-15.5-15-13-3.25-1.8028-1.5";
 
     // unset the environment variable
     std::env::remove_var("QSV_CUSTOM_DELIMITER");
