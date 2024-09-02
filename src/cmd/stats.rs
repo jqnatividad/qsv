@@ -1,16 +1,16 @@
 static USAGE: &str = r#"
 Compute summary statistics & infers data types for each column in a CSV. 
 
-Summary statistics includes sum, min/max/range, min/max length, mean, standard error of the mean (SEM),
-stddev, variance, coefficient of variation (CV), nullcount, max_precision, sparsity, quartiles,
-interquartile range (IQR), lower/upper fences, skewness, median, cardinality, mode/s & "antimode/s", 
-and median absolute deviation (MAD). Note that some statistics require loading the entire file into
-memory, so they must be enabled explicitly. 
+Summary statistics includes sum, min/max/range, sort order, min/max length, mean, standard error of
+the mean (SEM), stddev, variance, coefficient of variation (CV), nullcount, max_precision, sparsity,
+quartiles, interquartile range (IQR), lower/upper fences, skewness, median, cardinality, mode/s &
+"antimode/s", and median absolute deviation (MAD). Note that some statistics require loading the
+entire file into memory, so they must be enabled explicitly. 
 
 By default, the following "streaming" statistics are reported for *every* column:
-sum, min/max/range values, min/max length, mean, sem, stddev, variance, cv, nullcount, max_precision
-and sparsity. The default set of statistics corresponds to ones that can be computed efficiently
-on a stream of data (i.e., constant memory) and works with arbitrarily large CSV files.
+sum, min/max/range values, sort order, min/max length, mean, sem, stddev, variance, cv, nullcount,
+max_precision and sparsity. The default set of statistics corresponds to ones that can be computed
+efficiently on a stream of data (i.e., constant memory) and works with arbitrarily large CSV files.
 
 The following additional "non-streaming" statistics require loading the entire file into memory:
 cardinality, mode/antimode, median, MAD, quartiles and its related measures (IQR,
@@ -331,6 +331,7 @@ pub struct StatsData {
     pub min:                  Option<String>,
     pub max:                  Option<String>,
     pub range:                Option<f64>,
+    pub sort_order:           Option<String>,
     pub min_length:           Option<usize>,
     pub max_length:           Option<usize>,
     pub mean:                 Option<f64>,
@@ -370,7 +371,7 @@ pub enum JsonTypes {
 
 // we use this to serialize the StatsData data structure
 // to a JSONL file using serde_json
-pub static STATSDATA_TYPES_ARRAY: [JsonTypes; 34] = [
+pub static STATSDATA_TYPES_ARRAY: [JsonTypes; MAX_STAT_COLUMNS] = [
     JsonTypes::String, //field
     JsonTypes::String, //type
     JsonTypes::Bool,   //is_ascii
@@ -378,6 +379,7 @@ pub static STATSDATA_TYPES_ARRAY: [JsonTypes; 34] = [
     JsonTypes::String, //min
     JsonTypes::String, //max
     JsonTypes::Float,  //range
+    JsonTypes::String, //sort_order
     JsonTypes::Int,    //min_length
     JsonTypes::Int,    //max_length
     JsonTypes::Float,  //mean
@@ -418,7 +420,7 @@ const MS_IN_DAY_INT: i64 = 86_400_000;
 const DAY_DECIMAL_PLACES: u32 = 5;
 
 // maximum number of output columns
-const MAX_STAT_COLUMNS: usize = 34;
+const MAX_STAT_COLUMNS: usize = 35;
 
 // maximum number of antimodes to display
 const MAX_ANTIMODES: usize = 10;
@@ -969,7 +971,7 @@ impl Args {
             return csv::StringRecord::from(vec!["field", "type"]);
         }
 
-        // with --everything, we have 34 columns at most
+        // with --everything, we have 35 columns at most
         let mut fields = Vec::with_capacity(MAX_STAT_COLUMNS);
         fields.extend_from_slice(&[
             "field",
@@ -979,6 +981,7 @@ impl Args {
             "min",
             "max",
             "range",
+            "sort_order",
             "min_length",
             "max_length",
             "mean",
@@ -1303,7 +1306,7 @@ impl Stats {
 
         let typ = self.typ;
         // prealloc memory for performance
-        // we have 34 columns at most with --everything
+        // we have 35 columns at most with --everything
         let mut pieces = Vec::with_capacity(MAX_STAT_COLUMNS);
 
         let empty = String::new;
@@ -1386,10 +1389,10 @@ impl Stats {
             },
         }
 
-        // min/max/range
+        // min/max/range/sort_order
         // we also do this before --infer-boolean because we need to know the min/max values
         // to determine if the range is equal to the supported boolean ranges (0/1, f/t, n/y)
-        let mut minmax_range_pieces = Vec::with_capacity(3);
+        let mut minmax_range_sortorder_pieces = Vec::with_capacity(4);
         let mut minval_lower: char = '\0';
         let mut maxval_lower: char = '\0';
         if let Some(mm) = self
@@ -1400,9 +1403,9 @@ impl Stats {
             // get first character of min/max values
             minval_lower = mm.0.chars().next().unwrap_or_default().to_ascii_lowercase();
             maxval_lower = mm.1.chars().next().unwrap_or_default().to_ascii_lowercase();
-            minmax_range_pieces.extend_from_slice(&[mm.0, mm.1, mm.2]);
+            minmax_range_sortorder_pieces.extend_from_slice(&[mm.0, mm.1, mm.2, mm.3]);
         } else {
-            minmax_range_pieces.extend_from_slice(&[empty(), empty(), empty()]);
+            minmax_range_sortorder_pieces.extend_from_slice(&[empty(), empty(), empty(), empty()]);
         }
 
         // type
@@ -1447,9 +1450,9 @@ impl Stats {
             pieces.push(empty());
         }
 
-        // min/max/range
+        // min/max/range/sort_order
         // actually append it here - to preserve legacy ordering of columns
-        pieces.extend_from_slice(&minmax_range_pieces);
+        pieces.extend_from_slice(&minmax_range_sortorder_pieces);
 
         // min/max length
         if typ == FieldType::TDate || typ == FieldType::TDateTime {
@@ -1876,8 +1879,8 @@ impl Commute for TypedSum {
     }
 }
 
-/// `TypedMinMax` keeps track of minimum/maximum/range values for each possible type
-/// where min/max/range makes sense.
+/// `TypedMinMax` keeps track of minimum/maximum/range/sort_order values for each possible type
+/// where min/max/range/sort_order makes sense.
 #[derive(Clone, Default, Serialize, Deserialize, PartialEq)]
 struct TypedMinMax {
     strings:  MinMax<Vec<u8>>,
@@ -1934,44 +1937,61 @@ impl TypedMinMax {
     }
 
     #[inline]
-    fn show(&self, typ: FieldType, round_places: u32) -> Option<(String, String, String)> {
+    fn show(&self, typ: FieldType, round_places: u32) -> Option<(String, String, String, String)> {
         match typ {
             TNull => None,
             TString => {
-                if let (Some(min), Some(max)) = (self.strings.min(), self.strings.max()) {
+                if let (Some(min), Some(max), sort_order) = (
+                    self.strings.min(),
+                    self.strings.max(),
+                    self.strings.sort_order(),
+                ) {
                     let min = String::from_utf8_lossy(min).to_string();
                     let max = String::from_utf8_lossy(max).to_string();
-                    Some((min, max, String::new()))
+                    let sort_order = sort_order.to_string();
+                    Some((min, max, String::new(), sort_order))
                 } else {
                     None
                 }
             },
             TInteger => {
-                if let (Some(min), Some(max)) = (self.integers.min(), self.integers.max()) {
+                if let (Some(min), Some(max), sort_order) = (
+                    self.integers.min(),
+                    self.integers.max(),
+                    self.integers.sort_order(),
+                ) {
                     let mut buffer = itoa::Buffer::new();
                     Some((
                         buffer.format(*min).to_owned(),
                         buffer.format(*max).to_owned(),
                         buffer.format(*max - *min).to_owned(),
+                        sort_order.to_string(),
                     ))
                 } else {
                     None
                 }
             },
             TFloat => {
-                if let (Some(min), Some(max)) = (self.floats.min(), self.floats.max()) {
+                if let (Some(min), Some(max), sort_order) = (
+                    self.floats.min(),
+                    self.floats.max(),
+                    self.floats.sort_order(),
+                ) {
                     let mut buffer = ryu::Buffer::new();
                     Some((
                         buffer.format(*min).to_owned(),
                         buffer.format(*max).to_owned(),
                         util::round_num(*max - *min, round_places),
+                        sort_order.to_string(),
                     ))
                 } else {
                     None
                 }
             },
             TDateTime | TDate => {
-                if let (Some(min), Some(max)) = (self.dates.min(), self.dates.max()) {
+                if let (Some(min), Some(max), sort_order) =
+                    (self.dates.min(), self.dates.max(), self.dates.sort_order())
+                {
                     Some((
                         timestamp_ms_to_rfc3339(*min, typ),
                         timestamp_ms_to_rfc3339(*max, typ),
@@ -1981,6 +2001,7 @@ impl TypedMinMax {
                             (*max - *min) as f64 / MS_IN_DAY,
                             u32::max(round_places, 5),
                         ),
+                        sort_order.to_string(),
                     ))
                 } else {
                     None
