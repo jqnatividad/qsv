@@ -562,13 +562,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let rnull_values = if args.flag_rnull_values == "<empty string>" {
-        vec![PlSmallStr::const_default()]
+        vec![PlSmallStr::EMPTY]
     } else {
         args.flag_rnull_values
             .split(',')
             .map(|value| {
                 if value == "<empty string>" {
-                    PlSmallStr::const_default()
+                    PlSmallStr::EMPTY
                 } else {
                     PlSmallStr::from_str(value)
                 }
@@ -636,10 +636,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // gated by log::log_enabled!(log::Level::Debug) to avoid the
     // relatively expensive overhead of generating the debug string
-    // for the optimization state struct
+    // for the optimization flags struct
     let debuglog_flag = log::log_enabled!(log::Level::Debug);
     if debuglog_flag {
-        log::debug!("Optimization state: {optflags:?}");
+        log::debug!("Optimization flags: {optflags:?}");
         log::debug!(
             "Delimiter: {delim} Infer_schema_len: {infer_len} try_parse_dates: {parse_dates} \
              ignore_errors: {ignore_errors}, low_memory: {low_memory}, float_precision: \
