@@ -622,7 +622,7 @@ fn stats_prefer_dmy() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-10,15-").arg("in2.csv");
+    cmd.arg("1-11,16-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
@@ -647,7 +647,7 @@ fn stats_prefer_mdy() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-10,15-").arg("in2.csv");
+    cmd.arg("1-11,16-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
 
@@ -672,7 +672,7 @@ fn stats_rounding() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-10,15-").arg("in2.csv");
+    cmd.arg("1-11,16-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-8places-stats.csv");
@@ -715,7 +715,7 @@ fn stats_no_date_inference() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-10,15-").arg("in2.csv");
+    cmd.arg("1-11,16-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-nodate-stats.csv");
@@ -741,7 +741,7 @@ fn stats_with_date_inference() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-10,15-").arg("in2.csv");
+    cmd.arg("1-11,16-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-date-stats.csv");
@@ -813,7 +813,7 @@ fn stats_with_date_type() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-10,15-").arg("in2.csv");
+    cmd.arg("1-11,16-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-everything-datenotime-stats.csv");
@@ -927,7 +927,7 @@ fn stats_cache() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-10,15-").arg("in2.csv");
+    cmd.arg("1-11,16-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
@@ -964,7 +964,7 @@ fn stats_cache_negative_threshold() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-10,15-").arg("in2.csv");
+    cmd.arg("1-11,16-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
@@ -1001,7 +1001,7 @@ fn stats_cache_negative_threshold_unmet() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-10,15-").arg("in2.csv");
+    cmd.arg("1-11,16-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
@@ -1040,7 +1040,7 @@ fn stats_cache_negative_threshold_five() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-10,15-").arg("in2.csv");
+    cmd.arg("1-11,16-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-stats.csv");
@@ -1101,7 +1101,6 @@ fn stats_typesonly_infer_boolean_t_f() {
 fn stats_is_ascii() {
     let wrk = Workdir::new("stats_is_ascii");
     let test_file = wrk.load_test_file("boston311-100-with-nonascii.csv");
-
     let mut cmd = wrk.command("stats");
     cmd.arg(test_file);
 
@@ -1111,7 +1110,7 @@ fn stats_is_ascii() {
 
     // removed variance & stddev columns as its causing flaky CI test for float values
     let mut cmd = wrk.command("select");
-    cmd.arg("1-10,15-").arg("in2.csv");
+    cmd.arg("1-11,16-").arg("in2.csv");
 
     let got2: String = wrk.stdout(&mut cmd);
     let expected2 = wrk.load_test_resource("boston311-100-with-nonascii-stats.csv");
@@ -1195,6 +1194,7 @@ fn stats_zero_cv() {
             "min",
             "max",
             "range",
+            "sort_order",
             "min_length",
             "max_length",
             "mean",
@@ -1207,20 +1207,68 @@ fn stats_zero_cv() {
             "sparsity"
         ],
         svec![
-            "col1", "Integer", "", "15", "1", "5", "4", "1", "1", "3", "0.6325", "1.4142", "2",
-            "47.1405", "0", "", "0"
+            "col1",
+            "Integer",
+            "",
+            "15",
+            "1",
+            "5",
+            "4",
+            "Ascending",
+            "1",
+            "1",
+            "3",
+            "0.6325",
+            "1.4142",
+            "2",
+            "47.1405",
+            "0",
+            "",
+            "0"
         ],
         svec![
-            "col2", "Integer", "", "0", "-10", "10", "20", "1", "3", "0", "3.1623", "7.0711", "50",
-            "", "0", "", "0"
+            "col2",
+            "Integer",
+            "",
+            "0",
+            "-10",
+            "10",
+            "20",
+            "Ascending",
+            "1",
+            "3",
+            "0",
+            "3.1623",
+            "7.0711",
+            "50",
+            "",
+            "0",
+            "",
+            "0"
         ],
         svec![
-            "col3", "Float", "", "0", "-100.0", "100.0", "200", "3", "6", "0", "28.8472",
-            "64.5043", "4160.801", "", "0", "2", "0"
+            "col3",
+            "Float",
+            "",
+            "0",
+            "-100.0",
+            "100.0",
+            "200",
+            "Ascending",
+            "3",
+            "6",
+            "0",
+            "28.8472",
+            "64.5043",
+            "4160.801",
+            "",
+            "0",
+            "2",
+            "0"
         ],
         svec![
-            "col4", "Integer", "", "935", "-900", "1000", "1900", "1", "4", "187", "304.3603",
-            "680.5703", "463176", "363.9414", "0", "", "0"
+            "col4", "Integer", "", "935", "-900", "1000", "1900", "Unsorted", "1", "4", "187",
+            "304.3603", "680.5703", "463176", "363.9414", "0", "", "0"
         ],
     ];
     assert_eq!(got, expected);
@@ -1250,10 +1298,10 @@ fn stats_output_tab_delimited() {
     wrk.assert_success(&mut cmd);
 
     let got = std::fs::read_to_string(out_file).unwrap();
-    let expected = r#"field	type	is_ascii	sum	min	max	range	min_length	max_length	mean	sem	stddev	variance	cv	nullcount	max_precision	sparsity
-col1	Integer		15	1	5	4	1	1	3	0.6325	1.4142	2	47.1405	0		0
-col2	Integer		10644	0	4321	4321	1	4	2128.8	685.6979	1533.267	2350907.76	72.0249	0		0
-col3	String	true		01	10		2	2						0		0
+    let expected = r#"field	type	is_ascii	sum	min	max	range	sort_order	min_length	max_length	mean	sem	stddev	variance	cv	nullcount	max_precision	sparsity
+col1	Integer		15	1	5	4	Ascending	1	1	3	0.6325	1.4142	2	47.1405	0		0
+col2	Integer		10644	0	4321	4321	Descending	1	4	2128.8	685.6979	1533.267	2350907.76	72.0249	0		0
+col3	String	true		01	10		Ascending	2	2						0		0
 "#;
     assert_eq!(got, expected);
 }
@@ -1282,10 +1330,10 @@ fn stats_output_ssv_delimited() {
     wrk.assert_success(&mut cmd);
 
     let got = std::fs::read_to_string(out_file).unwrap();
-    let expected = r#"field;type;is_ascii;sum;min;max;range;min_length;max_length;mean;sem;stddev;variance;cv;nullcount;max_precision;sparsity
-col1;Integer;;15;1;5;4;1;1;3;0.6325;1.4142;2;47.1405;0;;0
-col2;Integer;;10644;0;4321;4321;1;4;2128.8;685.6979;1533.267;2350907.76;72.0249;0;;0
-col3;String;true;;01;10;;2;2;;;;;;0;;0
+    let expected = r#"field;type;is_ascii;sum;min;max;range;sort_order;min_length;max_length;mean;sem;stddev;variance;cv;nullcount;max_precision;sparsity
+col1;Integer;;15;1;5;4;Ascending;1;1;3;0.6325;1.4142;2;47.1405;0;;0
+col2;Integer;;10644;0;4321;4321;Descending;1;4;2128.8;685.6979;1533.267;2350907.76;72.0249;0;;0
+col3;String;true;;01;10;;Ascending;2;2;;;;;;0;;0
 "#;
     assert_eq!(got, expected);
 }
@@ -1317,10 +1365,11 @@ fn stats_output_csvsz_delimited() {
     cmd.arg("decompress").arg(out_file.clone());
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = "field,type,is_ascii,sum,min,max,range,min_length,max_length,mean,sem,stddev,\
-                    variance,cv,nullcount,max_precision,sparsity\ncol1,Integer,,15,1,5,4,1,1,3,0.\
-                    6325,1.4142,2,47.1405,0,,0\ncol2,Integer,,10644,0,4321,4321,1,4,2128.8,685.\
-                    6979,1533.267,2350907.76,72.0249,0,,0\ncol3,String,true,,01,10,,2,2,,,,,,0,,0";
+    let expected = "field,type,is_ascii,sum,min,max,range,sort_order,min_length,max_length,mean,\
+                    sem,stddev,variance,cv,nullcount,max_precision,sparsity\ncol1,Integer,,15,1,5,\
+                    4,Ascending,1,1,3,0.6325,1.4142,2,47.1405,0,,0\ncol2,Integer,,10644,0,4321,\
+                    4321,Descending,1,4,2128.8,685.6979,1533.267,2350907.76,72.0249,0,,0\ncol3,\
+                    String,true,,01,10,,Ascending,2,2,,,,,,0,,0";
     assert_eq!(got, expected);
 }
 
