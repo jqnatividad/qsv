@@ -41,9 +41,9 @@ fn index_outdated_stats() {
         "in.csv",
         vec![
             svec!["letter", "number"],
-            svec!["a", "1"],
+            svec!["a", "3"],
             svec!["b", "2"],
-            svec!["c", "3"],
+            svec!["c", "1"],
         ],
     );
 
@@ -54,6 +54,8 @@ fn index_outdated_stats() {
         future_time(FileTime::from_last_modification_time(&md)),
     )
     .unwrap();
+
+    std::thread::sleep(std::time::Duration::from_secs(1));
 
     // even if the index is stale, stats should succeed
     // as the index is automatically updated
@@ -110,7 +112,7 @@ fn index_outdated_stats() {
             "1",
             "3",
             "2",
-            "Ascending",
+            "Descending",
             "1",
             "1",
             "2",
