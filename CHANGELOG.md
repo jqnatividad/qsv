@@ -56,6 +56,7 @@ Other highlights include:
 ### Removed
 * removed `to parquet` subcommand as its redundant with the `sqlp`'s ability to create parquet file. This also removes the HUGE duckdb dependency, which should markedly make compile times shorter and binaries much smaller https://github.com/jqnatividad/qsv/pull/2088
 * removed `smartstring` dependency now that Polars has its own compact inlined string type https://github.com/jqnatividad/qsv/commit/47f047e6ee10916b5caa19ee829471e9fb6f4bea
+* remove `to parquet` benchmark
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.132.0...0.133.0
 
