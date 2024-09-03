@@ -231,17 +231,15 @@ vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
 
-[target.'cfg(not(target_arch = "aarch64"))'.dependencies]
-simdutf8    = "0.1"
-
-# enable hardware lock elision on x86_64
+# enable parking_lot hardware lock elision on x86_64
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
-
 # otherwise, on non-x86_64, use the default
 [target.'cfg(not(target_arch = "x86_64"))'.dependencies]
 parking_lot = "0.12"
 
+[target.'cfg(not(target_arch = "aarch64"))'.dependencies]
+simdutf8    = "0.1"
 # use SIMD on aarch64 (Apple Silicon, Raspberry Pi 4, etc.)
 [target.'cfg(target_arch = "aarch64")'.dependencies]
 simdutf8 = { version = "0.1", features = ["aarch64_neon"] }
