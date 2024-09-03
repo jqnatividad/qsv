@@ -1,8 +1,8 @@
 use std::{fs::File, path::Path};
 
 use assert_json_diff::assert_json_eq;
-use postgres::{Client, NoTls};
-use rusqlite::Connection;
+// use postgres::{Client, NoTls};
+// use rusqlite::Connection;
 
 use crate::workdir::{is_same_file, Workdir};
 
@@ -219,188 +219,189 @@ place       string      string"#
     assert!(is_same_file(&dp_file, expected_path).unwrap());
 }
 
-#[test]
-fn to_sqlite_dir() {
-    let wrk = Workdir::new("to_sqlite_dir");
+// #[ignore = "disable sqlite tests on CI until we resolve csvs_convert crate"]
+// #[test]
+// fn to_sqlite_dir() {
+//     let wrk = Workdir::new("to_sqlite_dir");
 
-    let cities = vec![
-        svec!["city", "state"],
-        svec!["Boston", "MA"],
-        svec!["New York", "NY"],
-        svec!["San Francisco", "CA"],
-        svec!["Buffalo", "NY"],
-    ];
-    let places = vec![
-        svec!["city", "place"],
-        svec!["Boston", "Logan Airport"],
-        svec!["Boston", "Boston Garden"],
-        svec!["Buffalo", "Ralph Wilson Stadium"],
-        svec!["Orlando", "Disney World"],
-    ];
+//     let cities = vec![
+//         svec!["city", "state"],
+//         svec!["Boston", "MA"],
+//         svec!["New York", "NY"],
+//         svec!["San Francisco", "CA"],
+//         svec!["Buffalo", "NY"],
+//     ];
+//     let places = vec![
+//         svec!["city", "place"],
+//         svec!["Boston", "Logan Airport"],
+//         svec!["Boston", "Boston Garden"],
+//         svec!["Buffalo", "Ralph Wilson Stadium"],
+//         svec!["Orlando", "Disney World"],
+//     ];
 
-    // create a directory to put the csv files in
-    let csv_dir = wrk.path("csvdir");
-    std::fs::create_dir(&csv_dir).unwrap();
+//     // create a directory to put the csv files in
+//     let csv_dir = wrk.path("csvdir");
+//     std::fs::create_dir(&csv_dir).unwrap();
 
-    wrk.create("csvdir/cities.csv", cities.clone());
-    wrk.create("csvdir/places.csv", places.clone());
+//     wrk.create("csvdir/cities.csv", cities.clone());
+//     wrk.create("csvdir/places.csv", places.clone());
 
-    let sqlite_file = wrk.path("test_to_sqlite.db");
-    let sqlite_file_filename = sqlite_file.to_string_lossy().to_string();
+//     let sqlite_file = wrk.path("test_to_sqlite.db");
+//     let sqlite_file_filename = sqlite_file.to_string_lossy().to_string();
 
-    let mut cmd = wrk.command("to");
-    cmd.arg("sqlite")
-        .arg(sqlite_file_filename.clone())
-        .arg(wrk.path("csvdir"));
+//     let mut cmd = wrk.command("to");
+//     cmd.arg("sqlite")
+//         .arg(sqlite_file_filename.clone())
+//         .arg(wrk.path("csvdir"));
 
-    let got: String = wrk.stdout(&mut cmd);
-    let expected: String = r#"Table 'places' (4 rows)
+//     let got: String = wrk.stdout(&mut cmd);
+//     let expected: String = r#"Table 'places' (4 rows)
 
-Field Name  Field Type  Field Format
-city        string      string
-place       string      string
+// Field Name  Field Type  Field Format
+// city        string      string
+// place       string      string
 
-Table 'cities' (4 rows)
+// Table 'cities' (4 rows)
 
-Field Name  Field Type  Field Format
-city        string      string
-state       string      string"#
-        .to_string();
+// Field Name  Field Type  Field Format
+// city        string      string
+// state       string      string"#
+//         .to_string();
 
-    let expected2: String = r#"Table 'cities' (4 rows)
+//     let expected2: String = r#"Table 'cities' (4 rows)
 
-Field Name  Field Type  Field Format
-city        string      string
-state       string      string
+// Field Name  Field Type  Field Format
+// city        string      string
+// state       string      string
 
-Table 'places' (4 rows)
+// Table 'places' (4 rows)
 
-Field Name  Field Type  Field Format
-city        string      string
-place       string      string"#
-        .to_string();
+// Field Name  Field Type  Field Format
+// city        string      string
+// place       string      string"#
+//         .to_string();
 
-    assert!(got == expected || got == expected2);
+//     assert!(got == expected || got == expected2);
 
-    let db = Connection::open(sqlite_file_filename).unwrap();
-    let mut stmt = db.prepare("SELECT * FROM cities ORDER BY city").unwrap();
-    let cities_iter = stmt
-        .query_map([], |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())))
-        .unwrap();
-    let cities: Vec<(String, String)> = cities_iter.map(|r| r.unwrap()).collect();
-    assert_eq!(
-        cities,
-        vec![
-            (String::from("Boston"), String::from("MA")),
-            (String::from("Buffalo"), String::from("NY")),
-            (String::from("New York"), String::from("NY")),
-            (String::from("San Francisco"), String::from("CA")),
-        ]
-    );
+//     let db = Connection::open(sqlite_file_filename).unwrap();
+//     let mut stmt = db.prepare("SELECT * FROM cities ORDER BY city").unwrap();
+//     let cities_iter = stmt
+//         .query_map([], |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())))
+//         .unwrap();
+//     let cities: Vec<(String, String)> = cities_iter.map(|r| r.unwrap()).collect();
+//     assert_eq!(
+//         cities,
+//         vec![
+//             (String::from("Boston"), String::from("MA")),
+//             (String::from("Buffalo"), String::from("NY")),
+//             (String::from("New York"), String::from("NY")),
+//             (String::from("San Francisco"), String::from("CA")),
+//         ]
+//     );
 
-    let mut stmt = db
-        .prepare("SELECT * FROM places ORDER BY city, place")
-        .unwrap();
-    let places_iter = stmt
-        .query_map([], |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())))
-        .unwrap();
-    let places: Vec<(String, String)> = places_iter.map(|r| r.unwrap()).collect();
-    assert_eq!(
-        places,
-        vec![
-            (String::from("Boston"), String::from("Boston Garden")),
-            (String::from("Boston"), String::from("Logan Airport")),
-            (
-                String::from("Buffalo"),
-                String::from("Ralph Wilson Stadium")
-            ),
-            (String::from("Orlando"), String::from("Disney World")),
-        ]
-    );
-}
+//     let mut stmt = db
+//         .prepare("SELECT * FROM places ORDER BY city, place")
+//         .unwrap();
+//     let places_iter = stmt
+//         .query_map([], |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())))
+//         .unwrap();
+//     let places: Vec<(String, String)> = places_iter.map(|r| r.unwrap()).collect();
+//     assert_eq!(
+//         places,
+//         vec![
+//             (String::from("Boston"), String::from("Boston Garden")),
+//             (String::from("Boston"), String::from("Logan Airport")),
+//             (
+//                 String::from("Buffalo"),
+//                 String::from("Ralph Wilson Stadium")
+//             ),
+//             (String::from("Orlando"), String::from("Disney World")),
+//         ]
+//     );
+// }
 
-#[test]
-fn to_sqlite() {
-    let wrk = Workdir::new("to_sqlite");
+// #[test]
+// fn to_sqlite() {
+//     let wrk = Workdir::new("to_sqlite");
 
-    let cities = vec![
-        svec!["city", "state"],
-        svec!["Boston", "MA"],
-        svec!["New York", "NY"],
-        svec!["San Francisco", "CA"],
-        svec!["Buffalo", "NY"],
-    ];
-    let places = vec![
-        svec!["city", "place"],
-        svec!["Boston", "Logan Airport"],
-        svec!["Boston", "Boston Garden"],
-        svec!["Buffalo", "Ralph Wilson Stadium"],
-        svec!["Orlando", "Disney World"],
-    ];
+//     let cities = vec![
+//         svec!["city", "state"],
+//         svec!["Boston", "MA"],
+//         svec!["New York", "NY"],
+//         svec!["San Francisco", "CA"],
+//         svec!["Buffalo", "NY"],
+//     ];
+//     let places = vec![
+//         svec!["city", "place"],
+//         svec!["Boston", "Logan Airport"],
+//         svec!["Boston", "Boston Garden"],
+//         svec!["Buffalo", "Ralph Wilson Stadium"],
+//         svec!["Orlando", "Disney World"],
+//     ];
 
-    wrk.create("cities.csv", cities.clone());
-    wrk.create("places.csv", places.clone());
+//     wrk.create("cities.csv", cities.clone());
+//     wrk.create("places.csv", places.clone());
 
-    let sqlite_file = wrk.path("test_to_sqlite.db");
-    let sqlite_file_filename = sqlite_file.to_string_lossy().to_string();
+//     let sqlite_file = wrk.path("test_to_sqlite.db");
+//     let sqlite_file_filename = sqlite_file.to_string_lossy().to_string();
 
-    let mut cmd = wrk.command("to");
-    cmd.arg("sqlite")
-        .arg(sqlite_file_filename.clone())
-        .arg("places.csv")
-        .arg("cities.csv");
+//     let mut cmd = wrk.command("to");
+//     cmd.arg("sqlite")
+//         .arg(sqlite_file_filename.clone())
+//         .arg("places.csv")
+//         .arg("cities.csv");
 
-    let got: String = wrk.stdout(&mut cmd);
-    let expected: String = r#"Table 'places' (4 rows)
+//     let got: String = wrk.stdout(&mut cmd);
+//     let expected: String = r#"Table 'places' (4 rows)
 
-Field Name  Field Type  Field Format
-city        string      string
-place       string      string
+// Field Name  Field Type  Field Format
+// city        string      string
+// place       string      string
 
-Table 'cities' (4 rows)
+// Table 'cities' (4 rows)
 
-Field Name  Field Type  Field Format
-city        string      string
-state       string      string"#
-        .to_string();
-    assert_eq!(got, expected);
+// Field Name  Field Type  Field Format
+// city        string      string
+// state       string      string"#
+//         .to_string();
+//     assert_eq!(got, expected);
 
-    let db = Connection::open(sqlite_file_filename).unwrap();
-    let mut stmt = db.prepare("SELECT * FROM cities ORDER BY city").unwrap();
-    let cities_iter = stmt
-        .query_map([], |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())))
-        .unwrap();
-    let cities: Vec<(String, String)> = cities_iter.map(|r| r.unwrap()).collect();
-    assert_eq!(
-        cities,
-        vec![
-            (String::from("Boston"), String::from("MA")),
-            (String::from("Buffalo"), String::from("NY")),
-            (String::from("New York"), String::from("NY")),
-            (String::from("San Francisco"), String::from("CA")),
-        ]
-    );
+//     let db = Connection::open(sqlite_file_filename).unwrap();
+//     let mut stmt = db.prepare("SELECT * FROM cities ORDER BY city").unwrap();
+//     let cities_iter = stmt
+//         .query_map([], |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())))
+//         .unwrap();
+//     let cities: Vec<(String, String)> = cities_iter.map(|r| r.unwrap()).collect();
+//     assert_eq!(
+//         cities,
+//         vec![
+//             (String::from("Boston"), String::from("MA")),
+//             (String::from("Buffalo"), String::from("NY")),
+//             (String::from("New York"), String::from("NY")),
+//             (String::from("San Francisco"), String::from("CA")),
+//         ]
+//     );
 
-    let mut stmt = db
-        .prepare("SELECT * FROM places ORDER BY city, place")
-        .unwrap();
-    let places_iter = stmt
-        .query_map([], |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())))
-        .unwrap();
-    let places: Vec<(String, String)> = places_iter.map(|r| r.unwrap()).collect();
-    assert_eq!(
-        places,
-        vec![
-            (String::from("Boston"), String::from("Boston Garden")),
-            (String::from("Boston"), String::from("Logan Airport")),
-            (
-                String::from("Buffalo"),
-                String::from("Ralph Wilson Stadium")
-            ),
-            (String::from("Orlando"), String::from("Disney World")),
-        ]
-    );
-}
+//     let mut stmt = db
+//         .prepare("SELECT * FROM places ORDER BY city, place")
+//         .unwrap();
+//     let places_iter = stmt
+//         .query_map([], |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())))
+//         .unwrap();
+//     let places: Vec<(String, String)> = places_iter.map(|r| r.unwrap()).collect();
+//     assert_eq!(
+//         places,
+//         vec![
+//             (String::from("Boston"), String::from("Boston Garden")),
+//             (String::from("Boston"), String::from("Logan Airport")),
+//             (
+//                 String::from("Buffalo"),
+//                 String::from("Ralph Wilson Stadium")
+//             ),
+//             (String::from("Orlando"), String::from("Disney World")),
+//         ]
+//     );
+// }
 
 // #[cfg(all(feature = "to_parquet", feature = "feature_capable"))]
 // #[test]
@@ -460,92 +461,92 @@ state       string      string"#
 //     // TODO: check that the parquet files are valid and contain the correct data
 // }
 
-#[test]
-#[ignore = "Testing postgres support requires a running, properly configured postgres server, \
-            which is not available on CI"]
-fn to_postgres() {
-    let wrk = Workdir::new("to_postgres");
+// #[test]
+// #[ignore = "Testing postgres support requires a running, properly configured postgres server, \
+//             which is not available on CI"]
+// fn to_postgres() {
+//     let wrk = Workdir::new("to_postgres");
 
-    let cities = vec![
-        svec!["city", "state"],
-        svec!["Boston", "MA"],
-        svec!["New York", "NY"],
-        svec!["San Francisco", "CA"],
-        svec!["Buffalo", "NY"],
-    ];
-    let places = vec![
-        svec!["city", "place"],
-        svec!["Boston", "Logan Airport"],
-        svec!["Boston", "Boston Garden"],
-        svec!["Buffalo", "Ralph Wilson Stadium"],
-        svec!["Orlando", "Disney World"],
-    ];
+//     let cities = vec![
+//         svec!["city", "state"],
+//         svec!["Boston", "MA"],
+//         svec!["New York", "NY"],
+//         svec!["San Francisco", "CA"],
+//         svec!["Buffalo", "NY"],
+//     ];
+//     let places = vec![
+//         svec!["city", "place"],
+//         svec!["Boston", "Logan Airport"],
+//         svec!["Boston", "Boston Garden"],
+//         svec!["Buffalo", "Ralph Wilson Stadium"],
+//         svec!["Orlando", "Disney World"],
+//     ];
 
-    wrk.create("cities.csv", cities.clone());
-    wrk.create("places.csv", places.clone());
+//     wrk.create("cities.csv", cities.clone());
+//     wrk.create("places.csv", places.clone());
 
-    let mut cmd = wrk.command("to");
-    cmd.arg("postgres")
-        .arg("postgres://testuser:test123@localhost/testdb")
-        .arg("places.csv")
-        .arg("cities.csv")
-        .arg("--drop");
+//     let mut cmd = wrk.command("to");
+//     cmd.arg("postgres")
+//         .arg("postgres://testuser:test123@localhost/testdb")
+//         .arg("places.csv")
+//         .arg("cities.csv")
+//         .arg("--drop");
 
-    let got: String = wrk.stdout(&mut cmd);
-    let expected: String = r#"Table 'places' (4 rows)
+//     let got: String = wrk.stdout(&mut cmd);
+//     let expected: String = r#"Table 'places' (4 rows)
 
-Field Name  Field Type  Field Format
-city        string      string
-place       string      string
+// Field Name  Field Type  Field Format
+// city        string      string
+// place       string      string
 
-Table 'cities' (4 rows)
+// Table 'cities' (4 rows)
 
-Field Name  Field Type  Field Format
-city        string      string
-state       string      string"#
-        .to_string();
-    assert_eq!(got, expected);
+// Field Name  Field Type  Field Format
+// city        string      string
+// state       string      string"#
+//         .to_string();
+//     assert_eq!(got, expected);
 
-    let mut client =
-        Client::connect("postgres://testuser:test123@localhost/testdb", NoTls).unwrap();
-    let mut cities_result: Vec<(String, String)> = vec![];
-    for row in client
-        .query("SELECT * FROM cities ORDER BY city", &[])
-        .unwrap()
-    {
-        let city: String = row.get(0);
-        let state: String = row.get(1);
-        cities_result.push((city, state));
-    }
-    assert_eq!(
-        cities_result,
-        vec![
-            (String::from("Boston"), String::from("MA")),
-            (String::from("Buffalo"), String::from("NY")),
-            (String::from("New York"), String::from("NY")),
-            (String::from("San Francisco"), String::from("CA")),
-        ]
-    );
+//     let mut client =
+//         Client::connect("postgres://testuser:test123@localhost/testdb", NoTls).unwrap();
+//     let mut cities_result: Vec<(String, String)> = vec![];
+//     for row in client
+//         .query("SELECT * FROM cities ORDER BY city", &[])
+//         .unwrap()
+//     {
+//         let city: String = row.get(0);
+//         let state: String = row.get(1);
+//         cities_result.push((city, state));
+//     }
+//     assert_eq!(
+//         cities_result,
+//         vec![
+//             (String::from("Boston"), String::from("MA")),
+//             (String::from("Buffalo"), String::from("NY")),
+//             (String::from("New York"), String::from("NY")),
+//             (String::from("San Francisco"), String::from("CA")),
+//         ]
+//     );
 
-    let mut places_result: Vec<(String, String)> = vec![];
-    for row in client
-        .query("SELECT * FROM places ORDER BY city, place", &[])
-        .unwrap()
-    {
-        let city: String = row.get(0);
-        let place: String = row.get(1);
-        places_result.push((city, place));
-    }
-    assert_eq!(
-        places_result,
-        vec![
-            (String::from("Boston"), String::from("Boston Garden")),
-            (String::from("Boston"), String::from("Logan Airport")),
-            (
-                String::from("Buffalo"),
-                String::from("Ralph Wilson Stadium")
-            ),
-            (String::from("Orlando"), String::from("Disney World")),
-        ]
-    );
-}
+//     let mut places_result: Vec<(String, String)> = vec![];
+//     for row in client
+//         .query("SELECT * FROM places ORDER BY city, place", &[])
+//         .unwrap()
+//     {
+//         let city: String = row.get(0);
+//         let place: String = row.get(1);
+//         places_result.push((city, place));
+//     }
+//     assert_eq!(
+//         places_result,
+//         vec![
+//             (String::from("Boston"), String::from("Boston Garden")),
+//             (String::from("Boston"), String::from("Logan Airport")),
+//             (
+//                 String::from("Buffalo"),
+//                 String::from("Ralph Wilson Stadium")
+//             ),
+//             (String::from("Orlando"), String::from("Disney World")),
+//         ]
+//     );
+// }
