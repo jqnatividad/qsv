@@ -6,6 +6,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.133.0] - 2024-09-03
+
+## What's Changed
+* `edit`: add `qsv edit` command by @rzmk in https://github.com/jqnatividad/qsv/pull/2074
+* build(deps): bump sysinfo from 0.31.2 to 0.31.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2077
+* build(deps): bump serde_json from 1.0.125 to 1.0.127 by @dependabot in https://github.com/jqnatividad/qsv/pull/2079
+* build(deps): bump serde from 1.0.208 to 1.0.209 by @dependabot in https://github.com/jqnatividad/qsv/pull/2082
+* build(deps): bump jsonschema from 0.18.0 to 0.18.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2084
+* build(deps): bump flate2 from 1.0.32 to 1.0.33 by @dependabot in https://github.com/jqnatividad/qsv/pull/2085
+* build(deps): bump flexi_logger from 0.28.5 to 0.29.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2086
+* remove `to parquet` subcommand by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2088
+* Optimize polars optflags by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2089
+* `deps`: bump polars 0.42.0 to py-polars-1.6.0 tag by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2090
+* bump polars to latest upstream, removing smartstring dependency by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2091
+* build(deps): bump actions/setup-python from 5.1.1 to 5.2.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2094
+* build(deps): bump tokio from 1.39.3 to 1.40.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2095
+* build(deps): bump indexmap from 2.4.0 to 2.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2096
+* `count`: major refactor by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2099
+* build(deps): bump qsv-stats from 0.18.0 to 0.19.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2100
+* `stats`: add `sort_order` streaming statistic by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2101
+* `fixlengths`: added `--quote` and `--escape` options by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2104
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.132.0...0.133.0
+
 ## [0.132.0] - 2024-08-21
 
 ### Highlights
