@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.133.0] - 2024-09-03
 
+### Highlights
+This release doubles down on Polars' capabilities, as we now, as a matter of [policy track the latest polars upstream](https://github.com/jqnatividad/qsv/blob/3dc95c129b36110740585f051b536c48f158beea/Cargo.toml#L283-L294). If you think qsv has a torrid release schedule, you should [see Polars](https://github.com/pola-rs/polars/releases)!  
+They're constantly fixing bugs, adding new features and optimizations.
+To keep up, we've added Polars revision info to the `--version` output, and the `--envlist` option now includes Polars relevant env vars. We've also added a new `POLARS_BACKTRACE_IN_ERR` env var to control whether Polars backtraces are included in error messages.  
+We also removed the `to parquet` subcommand as its redundant with the Polars-powered `sqlp`'s ability to create parquet files. This also removes the HUGE duckdb dependency, which should markedly make compile times shorter and binaries much smaller.
+
+Other highlights include:
+- New `edit` command that allows you to edit CSV files.
+- The `count` command's `--width` option now includes record width stats beyond max length (avg, median, min, variance, stddev & MAD).
+- The `fixlengths` command now has `--quote` and `--escape` options.
+- The `stats` command adds a `sort_order` streaming statistic.
+
+---
+
 ### Added
 * `count`: expanded `--width` options, adding record width stats beyond max length (avg, median, min, variance, stddev & MAD). Also added `--json` output when using `--width`  https://github.com/jqnatividad/qsv/pull/2099
 * `edit`: add `qsv edit` command by @rzmk in https://github.com/jqnatividad/qsv/pull/2074
@@ -18,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `polars`: add & document `POLARS_BACKTRACE_IN_ERR` env var https://github.com/jqnatividad/qsv/commit/f9cc5595664d4665f0b610fcbac93c30fa445056
 
 ### Changed
-* Optimize polars optflags by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2089
+* Optimize polars optflags https://github.com/jqnatividad/qsv/pull/2089
 * `deps`: bump polars 0.42.0 to latest upstream at time of release https://github.com/jqnatividad/qsv/commit/3b7af519343f08919f114c7307f0f561d04f93e8
 * bump polars to latest upstream, removing smartstring https://github.com/jqnatividad/qsv/pull/2091
 * build(deps): bump actions/setup-python from 5.1.1 to 5.2.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2094
@@ -242,7 +256,7 @@ DP+ is our next-gen, high-speed data ingestion tool for CKAN. Its not only a rob
 * `diff`: clarify `--key` usage examples, resolves #1998 by @rzmk in https://github.com/jqnatividad/qsv/pull/2001
 * `json`: refactored so it didn't need to use threads to spawn `qsv select` to order the columns. Had to do this as sometimes intermediate output was sent to stdout before the final output was ready https://github.com/jqnatividad/qsv/commit/0f25deff98139b574dfd61c6e9bf58d36ea16618
 * `py`: replace row with col in usage text by @allen-chin in https://github.com/jqnatividad/qsv/pull/2008
-* `reverse`: fix indexed bug by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2007
+* `reverse`: fix indexed bug https://github.com/jqnatividad/qsv/pull/2007
 * `validate`: properly auto-detect tab delimiter when file extension is TSV or TAB https://github.com/jqnatividad/qsv/pull/1975
 * fix panic when process_input helper fn receives unexpected input from stdin https://github.com/jqnatividad/qsv/commit/152fec486c0e7b16242f3967930e9654ff2bdf3c
 
