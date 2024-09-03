@@ -1,9 +1,6 @@
 name: Publish Portable - no CPU features
 
 on:
-  push:
-    tags:
-      - '*'
   workflow_dispatch:
 
 env:
