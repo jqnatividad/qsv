@@ -6,11 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.133.0] - 2024-09-03
+## [0.133.1] - 2024-09-03
 
 ### Highlights
-This release doubles down on Polars' capabilities, as we now, as a matter of [policy track the latest polars upstream](https://github.com/jqnatividad/qsv/blob/3dc95c129b36110740585f051b536c48f158beea/Cargo.toml#L283-L294). If you think qsv has a torrid release schedule, you should [see Polars](https://github.com/pola-rs/polars/releases)!  
-They're constantly fixing bugs, adding new features and optimizations.
+This release doubles down on Polars' capabilities, as we now, as a matter of [policy track the latest polars upstream](https://github.com/jqnatividad/qsv/blob/0801f678fd55af01ff53f80ee6b22b508e7c3dfb/Cargo.toml#L283-L294). If you think qsv has a torrid release schedule, you should [see Polars](https://github.com/pola-rs/polars/releases). They're constantly fixing bugs, adding new features and optimizations!  
 To keep up, we've added Polars revision info to the `--version` output, and the `--envlist` option now includes Polars relevant env vars. We've also added a new `POLARS_BACKTRACE_IN_ERR` env var to control whether Polars backtraces are included in error messages.  
 We also removed the `to parquet` subcommand as its redundant with the Polars-powered `sqlp`'s ability to create parquet files. This also removes the HUGE duckdb dependency, which should markedly make compile times shorter and binaries much smaller.
 
@@ -54,11 +53,11 @@ Other highlights include:
 * Ensure portable binaries are "added" to the publish zip archive, instead of replacing all the binaries with just the portable version. Fixes #2083. https://github.com/jqnatividad/qsv/commit/34ad2067007a86ffad6355f7244163c4105a98f2
 
 ### Removed
-* removed `to parquet` subcommand as its redundant with the `sqlp`'s ability to create parquet file. This also removes the HUGE duckdb dependency, which should markedly make compile times shorter and binaries much smaller https://github.com/jqnatividad/qsv/pull/2088
+* removed `to parquet` subcommand as its redundant with `sqlp`'s ability to create parquet files. This also removes the HUGE duckdb dependency, which should markedly make compile times shorter and binaries much smaller https://github.com/jqnatividad/qsv/pull/2088
 * removed `smartstring` dependency now that Polars has its own compact inlined string type https://github.com/jqnatividad/qsv/commit/47f047e6ee10916b5caa19ee829471e9fb6f4bea
 * remove `to parquet` benchmark
 
-**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.132.0...0.133.0
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.132.0...0.133.1
 
 ## [0.132.0] - 2024-08-21
 
