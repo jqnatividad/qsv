@@ -59,6 +59,9 @@ Other highlights include:
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.132.0...0.133.1
 
+## [0.133.0] - 2024-09-03
+SKIPPED because `cargo publish` was not publishing to crates.io because of a dev dependency issue with `csvs_convert` crate.
+
 ## [0.132.0] - 2024-08-21
 
 ### Highlights
