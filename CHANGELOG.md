@@ -8,26 +8,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.133.0] - 2024-09-03
 
-## What's Changed
+### Added
+* `count`: expanded `--width` options, adding record width stats beyond max length (avg, median, min, variance, stddev & MAD). Also added `--json` output when using `--width`  https://github.com/jqnatividad/qsv/pull/2099
 * `edit`: add `qsv edit` command by @rzmk in https://github.com/jqnatividad/qsv/pull/2074
-* build(deps): bump sysinfo from 0.31.2 to 0.31.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2077
-* build(deps): bump serde_json from 1.0.125 to 1.0.127 by @dependabot in https://github.com/jqnatividad/qsv/pull/2079
-* build(deps): bump serde from 1.0.208 to 1.0.209 by @dependabot in https://github.com/jqnatividad/qsv/pull/2082
-* build(deps): bump jsonschema from 0.18.0 to 0.18.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2084
+* `fixlengths`: added `--quote` and `--escape` options https://github.com/jqnatividad/qsv/pull/2104
+* `stats`: add `sort_order` streaming statistic https://github.com/jqnatividad/qsv/pull/2101
+* `polars`: add polars revision info to `--version` output https://github.com/jqnatividad/qsv/commit/e60e44f99061c37758bd53dfa8511c16d49ceed5
+* `polars`: added Polars relevant env vars to `--envlist` option https://github.com/jqnatividad/qsv/commit/0ad68fed94f7b5059cca6cf96cec4a3b55638e60
+* `polars`: add & document `POLARS_BACKTRACE_IN_ERR` env var https://github.com/jqnatividad/qsv/commit/f9cc5595664d4665f0b610fcbac93c30fa445056
+
+### Changed
+* Optimize polars optflags by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2089
+* `deps`: bump polars 0.42.0 to latest upstream at time of release https://github.com/jqnatividad/qsv/commit/3b7af519343f08919f114c7307f0f561d04f93e8
+* bump polars to latest upstream, removing smartstring https://github.com/jqnatividad/qsv/pull/2091
+* build(deps): bump actions/setup-python from 5.1.1 to 5.2.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2094
 * build(deps): bump flate2 from 1.0.32 to 1.0.33 by @dependabot in https://github.com/jqnatividad/qsv/pull/2085
 * build(deps): bump flexi_logger from 0.28.5 to 0.29.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2086
-* remove `to parquet` subcommand by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2088
-* Optimize polars optflags by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2089
-* `deps`: bump polars 0.42.0 to py-polars-1.6.0 tag by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2090
-* bump polars to latest upstream, removing smartstring dependency by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2091
-* build(deps): bump actions/setup-python from 5.1.1 to 5.2.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2094
-* build(deps): bump tokio from 1.39.3 to 1.40.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2095
 * build(deps): bump indexmap from 2.4.0 to 2.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2096
-* `count`: major refactor by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2099
+* build(deps): bump jsonschema from 0.18.0 to 0.18.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2084
+* build(deps): bump serde from 1.0.208 to 1.0.209 by @dependabot in https://github.com/jqnatividad/qsv/pull/2082
+* build(deps): bump serde_json from 1.0.125 to 1.0.127 by @dependabot in https://github.com/jqnatividad/qsv/pull/2079
+* build(deps): bump sysinfo from 0.31.2 to 0.31.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2077
 * build(deps): bump qsv-stats from 0.18.0 to 0.19.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2100
-* `stats`: add `sort_order` streaming statistic by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2101
-* `fixlengths`: added `--quote` and `--escape` options by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2104
+* build(deps): bump tokio from 1.39.3 to 1.40.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2095
+* apply select clippy lint suggestions
+* updated several indirect dependencies
+* made various doc and usage text improvements
+* pin Rust nightly to 2024-08-26 from 2024-07-26, aligning with Polars pinned nightly
 
+### Fixed
+* Ensure portable binaries are "added" to the publish zip archive, instead of replacing all the binaries with just the portable version. Fixes #2083. https://github.com/jqnatividad/qsv/commit/34ad2067007a86ffad6355f7244163c4105a98f2
+
+### Removed
+* removed `to parquet` subcommand as its redundant with the `sqlp`'s ability to create parquet file. This also removes the HUGE duckdb dependency, which should markedly make compile times shorter and binaries much smaller https://github.com/jqnatividad/qsv/pull/2088
+* removed `smartstring` dependency now that Polars has its own compact inlined string type https://github.com/jqnatividad/qsv/commit/47f047e6ee10916b5caa19ee829471e9fb6f4bea
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.132.0...0.133.0
 
