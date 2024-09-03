@@ -262,6 +262,7 @@ use std::{
 };
 
 use polars::{
+    datatypes::PlSmallStr,
     io::avro::{AvroWriter, Compression as AvroCompression},
     prelude::{
         CsvWriter, DataFrame, GzipLevel, IpcCompression, IpcWriter, JsonFormat, JsonWriter,
@@ -270,7 +271,6 @@ use polars::{
     },
     sql::SQLContext,
 };
-use polars_utils::pl_str::PlSmallStr;
 use regex::Regex;
 use serde::Deserialize;
 
