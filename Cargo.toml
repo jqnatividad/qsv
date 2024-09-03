@@ -1,6 +1,6 @@
 [package]
 name = "qsv"
-version = "0.133.0" #:version
+version = "0.133.1" #:version
 authors = ["Joel Natividad <joel@datHere.com>"]
 description = "A high performance CSV data-wrangling toolkit."
 documentation = "https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
@@ -239,7 +239,7 @@ parking_lot = { version = "0.12", features = ["hardware-lock-elision"] }
 parking_lot = "0.12"
 
 [target.'cfg(not(target_arch = "aarch64"))'.dependencies]
-simdutf8    = "0.1"
+simdutf8 = "0.1"
 # use SIMD on aarch64 (Apple Silicon, Raspberry Pi 4, etc.)
 [target.'cfg(target_arch = "aarch64")'.dependencies]
 simdutf8 = { version = "0.1", features = ["aarch64_neon"] }
@@ -252,9 +252,13 @@ actix-web = { version = "4.9", default-features = false, features = [
 ] }
 assert-json-diff = "2.0"
 newline-converter = "0.3"
-postgres = "0.19"
+
+# disable these dev dependencies for testing to commands
+# as they are expensive and slow down the build/CI tests
+# postgres = "0.19"
+# rusqlite = { version = "0.32", features = ["bundled"] }
+
 quickcheck = { version = "1", default-features = false }
-rusqlite = { version = "0.31", features = ["bundled"] }
 serial_test = { version = "3.1", features = ["file_locks"] }
 
 [patch.crates-io]
@@ -275,7 +279,7 @@ dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_
 grex = { git = "https://github.com/pemistahl/grex", rev = "6a78534" }
 
 # use our fork of calamine 0.25.0 with unreleased fixes and select clippy lints
-calamine = { git = "https://github.com/jqnatividad/calamine", branch = "select-clippy-lints" } 
+calamine = { git = "https://github.com/jqnatividad/calamine", branch = "select-clippy-lints" }
 
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }

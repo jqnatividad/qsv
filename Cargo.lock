@@ -1423,8 +1423,7 @@ dependencies = [
 [[package]]
 name = "csvs_convert"
 version = "0.8.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7633dcaa54b3ab40e9d81a58d525f03c4e936f39ba672908b5e90f4f61fd969"
+source = "git+https://github.com/jqnatividad/csvs_convert?branch=bump-more-dependencies#edc136f7c006e3c24b0c117bda4d4169d703412a"
 dependencies = [
  "chrono",
  "counter",
@@ -3098,9 +3097,9 @@ dependencies = [
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.28.0"
+version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c10584274047cb335c23d3e61bcef8e323adae7c5c8c760540f73610177fc3f"
+checksum = "2e99fb7a497b1e3339bc746195567ed8d3e24945ecd636e3619d20b9de9e9149"
 dependencies = [
  "cc",
  "pkg-config",
@@ -4804,7 +4803,7 @@ dependencies = [
 
 [[package]]
 name = "qsv"
-version = "0.133.0"
+version = "0.133.1"
 dependencies = [
  "actix-governor",
  "actix-web",
@@ -4868,7 +4867,6 @@ dependencies = [
  "parking_lot 0.12.3",
  "phf 0.11.2",
  "polars",
- "postgres",
  "pyo3",
  "qsv-dateparser",
  "qsv-sniffer",
@@ -4884,7 +4882,6 @@ dependencies = [
  "regex",
  "reqwest",
  "rfd",
- "rusqlite",
  "rust_decimal",
  "ryu",
  "sanitize-filename",
@@ -5453,9 +5450,9 @@ dependencies = [
 
 [[package]]
 name = "rusqlite"
-version = "0.31.0"
+version = "0.32.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b838eba278d213a8beaf485bd313fd580ca4505a00d5871caeb1457c55322cae"
+checksum = "7753b721174eb8ff87a9a0e799e2d7bc3749323e773db92e0984debb00019d6e"
 dependencies = [
  "bitflags 2.6.0",
  "fallible-iterator 0.3.0",
@@ -6524,18 +6521,18 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "typed-builder"
-version = "0.19.1"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a06fbd5b8de54c5f7c91f6fe4cebb949be2125d7758e630bb58b1d831dbce600"
+checksum = "7e14ed59dc8b7b26cacb2a92bad2e8b1f098806063898ab42a3bd121d7d45e75"
 dependencies = [
  "typed-builder-macro",
 ]
 
 [[package]]
 name = "typed-builder-macro"
-version = "0.19.1"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9534daa9fd3ed0bd911d462a37f172228077e7abf18c18a5f67199d959205f8"
+checksum = "560b82d656506509d43abe30e0ba64c56b1953ab3d4fe7ba5902747a7a3cedd5"
 dependencies = [
  "proc-macro2",
  "quote",
