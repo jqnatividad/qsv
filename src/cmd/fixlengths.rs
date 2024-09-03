@@ -24,6 +24,9 @@ fixlengths options:
                            is inserted from the END of each record going backwards.
                            If <pos> is positive, it is inserted from the BEGINNING
                            of each record going forward. [default: 0]
+    --quote <arg>          The quote character to use. [default: "]
+    --escape <arg>         The escape character to use. When not specified,
+                           quotes are escaped by doubling them.
 
 Common options:
     -h, --help             Display this message
@@ -46,22 +49,32 @@ struct Args {
     arg_input:      Option<String>,
     flag_length:    Option<usize>,
     flag_insert:    i16,
+    flag_quote:     Delimiter,
+    flag_escape:    Option<Delimiter>,
     flag_output:    Option<String>,
     flag_delimiter: Option<Delimiter>,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let config = Config::new(&args.arg_input)
+    let mut config = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
+        .quote(args.flag_quote.as_byte())
         .no_headers(true)
         .flexible(true);
+
+    if let Some(escape) = args.flag_escape {
+        config = config.escape(Some(escape.as_byte())).double_quote(false);
+    }
+
     let length = if let Some(length) = args.flag_length {
         if length == 0 {
             return fail_incorrectusage_clierror!("Length must be greater than 0.");
         }
         length
     } else {
+        // --length not set, so we need to determine the length of the longest record
+        // by scanning the entire file
         if config.is_stdin() {
             return fail_incorrectusage_clierror!(
                 "<stdin> cannot be used in this command. Please specify a file path."
@@ -94,7 +107,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         args.flag_insert
     };
-    log::debug!("length: {length} insert_pos: {insert_pos}");
+    // log::debug!("length: {length} insert_pos: {insert_pos}");
 
     while rdr.read_byte_record(&mut record)? {
         if length >= record.len() {
@@ -122,7 +135,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         record_work.push_field(b"");
                     }
                 }
-                record = record_work.clone();
+                record.clone_from(&record_work);
             }
         } else {
             record.truncate(length);
