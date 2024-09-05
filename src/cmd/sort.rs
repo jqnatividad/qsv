@@ -166,8 +166,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 RngKind::Faster => {
                     let mut rng = match args.flag_seed {
                         None => Xoshiro256Plus::from_rng(rand::thread_rng()).unwrap(),
-                        Some(seed) => Xoshiro256Plus::seed_from_u64(seed), /* DevSkim: ignore
-                                                                            * DS148264 */
+                        Some(sd) => Xoshiro256Plus::seed_from_u64(sd), // DevSkim: ignore DS148264
                     };
                     SliceRandom::shuffle(&mut *all, &mut rng); //DevSkim: ignore DS148264
                 },
