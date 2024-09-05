@@ -253,7 +253,7 @@ fn count_input(conf: &Config, count_delims_mode: CountDelimsMode) -> CliResult<(
             .try_reserve(if use_index_count {
                 count as usize
             } else {
-                1_000
+                1_000 // reasonable default to minimize reallocations
             })
             .map_err(|e| CliError::OutOfMemory(e.to_string()))?;
 
