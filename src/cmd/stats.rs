@@ -114,6 +114,7 @@ Prompt for both INPUT and OUTPUT files in the ~/Documents dir with custom prompt
       qsv prompt -m 'Save summary to...' -d ~/Documents --fd-output --save-fname summarystats.csv
 
 For more examples, see https://github.com/jqnatividad/qsv/tree/master/resources/test
+For more info, see https://github.com/jqnatividad/qsv/wiki/Supplemental#stats-command-output-explanation
 
 Usage:
     qsv stats [options] [<input>]
