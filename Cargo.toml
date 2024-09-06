@@ -148,6 +148,7 @@ polars = { version = "0.42", features = [
     "asof_join",
     "avro",
     "avx512",
+    "aws",
     "binary_encoding",
     "cloud",
     "coalesce",
@@ -160,6 +161,7 @@ polars = { version = "0.42", features = [
     "object",
     "parquet",
     "performant",
+    "pivot",
     "semi_anti_join",
     "serde-lazy",
     "sql",
@@ -294,9 +296,9 @@ local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", br
 # BUILD NOTE: Be sure to set QSV_POLARS_REV below to the latest commit short hash or tag 
 # of polars/py-polars before building qsv. This allows us to show the polars rev/tag in --version.
 # if we are using a release version of Rust Polars, leave QSV_POLARS_REV empty
-# QSV_POLARS_REV=c85b338
+# QSV_POLARS_REV=e09cd0b
 # polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.6.0" }
-polars = { git = "https://github.com/pola-rs/polars", rev = "c85b338" }
+polars = { git = "https://github.com/pola-rs/polars", rev = "e09cd0b" }
 
 [features]
 default = ["mimalloc"]
