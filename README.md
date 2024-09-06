@@ -122,6 +122,9 @@ scoop install qsv
 # using MacPorts on macOS (https://ports.macports.org/port/qsv/)
 sudo port install qsv
 
+# using Nixpkgs on Linux/macOS (https://search.nixos.org/packages?channel=unstable&show=qsv&from=0&size=50&sort=relevance&type=packages&query=qsv)
+nix-shell -p qsv
+
 ## using other Linux package managers
 # Arch Linux AUR (https://aur.archlinux.org/packages/qsv)
 yay -S qsv
