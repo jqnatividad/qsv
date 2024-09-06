@@ -1,5 +1,7 @@
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use std::borrow::Cow;
+#[cfg(target_family = "unix")]
+use std::os::unix::process::ExitStatusExt;
 use std::{
     cmp::min,
     env, fs,
@@ -2080,7 +2082,33 @@ pub fn get_stats_records(
         let qsv_bin = std::env::current_exe().unwrap();
         let mut stats_cmd = std::process::Command::new(qsv_bin);
         stats_cmd.args(stats_args_vec);
-        let _stats_output = stats_cmd.output()?;
+        let status = stats_cmd.output()?.status;
+        if !status.success() {
+            let status_code = status.code();
+            if let Some(code) = status_code {
+                return Err(CliError::Other(
+                    format!("qsv stats exited with code: {}", code).to_string(),
+                ));
+            }
+            #[cfg(target_family = "unix")]
+            {
+                if let Some(signal) = status.signal() {
+                    return Err(CliError::Other(
+                        format!("qsv stats terminated with signal: {}", signal).to_string(),
+                    ));
+                } else {
+                    return Err(CliError::Other(
+                        "qsv stats terminated by unknown cause".to_string(),
+                    ));
+                }
+            }
+            #[cfg(not(target_family = "unix"))]
+            {
+                return Err(CliError::Other(
+                    "qsv stats terminated by unknown cause".to_string(),
+                ));
+            }
+        }
 
         // create a statsdatajon from the output of the stats command
         csv_to_jsonl(
