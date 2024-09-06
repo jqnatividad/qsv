@@ -1,16 +1,12 @@
 static USAGE: &str = r#"
-Interact with qsv pro API.
+Interact with qsv pro API. Learn more about qsv pro at: https://qsvpro.dathere.com.
 
-Notes:
-
-- You must have an activated qsv pro instance (free trial or purchased) to use this command.
-- Your device must be connected to the Internet (to verify activated instance of qsv pro).
-- qsv pro must be running for this command to work as intended.
-- You may learn more about qsv pro at: https://qsvpro.dathere.com.
+- qsv pro must be running for this command to work as described.
+- Some features of this command require a paid plan of qsv pro and may require an Internet connection.
 
 The qsv pro command has subcommands:
     lens:     Run csvlens on a local file in a new Alacritty terminal emulator window (Windows only).
-    workflow: Import a local file into the qsv pro Workflow.
+    workflow: Import a local file into the qsv pro Workflow (Workflow must be open).
 
 Usage:
     qsv pro lens [options] [<input>]
@@ -23,7 +19,7 @@ pro arguments:
                           Workflow supports: CSV, TSV, SSV, TAB, XLSX, XLS, XLSB, XLSM, ODS.
 
 Common options:
-    -h, --help             Display this message
+    -h, --help            Display this message
 "#;
 
 use std::path::PathBuf;
@@ -65,11 +61,19 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[derive(Deserialize)]
     struct Status {
         success: bool,
+        message: Option<String>,
     }
-    if res.json::<Status>()?.success {
+
+    let status = res.json::<Status>()?;
+
+    if status.success {
         println!("Successfully interacted with qsv pro API.");
     } else {
         println!("Error while interacting with qsv pro API.");
+    }
+
+    if let Some(message) = status.message {
+        println!("{message}")
     }
 
     Ok(())
