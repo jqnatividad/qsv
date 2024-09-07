@@ -401,9 +401,9 @@ dependencies = [
 
 [[package]]
 name = "async-executor"
-version = "1.13.0"
+version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7ebdfa2ebdab6b1760375fa7d6f382b9f486eac35fc994625a00e89280bdbb7"
+checksum = "30ca9a001c1e8ba5149f91a74362376cc6bc5b919d92d988668657bd570bdcec"
 dependencies = [
  "async-task",
  "concurrent-queue",
@@ -1380,18 +1380,19 @@ dependencies = [
 [[package]]
 name = "csv"
 version = "1.3.0"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#23ec4fad43167750b7c56c1f74c00f3d51f0f002"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#9d5f5ae25ad354fca99fa971f0afc5f3ca7508d3"
 dependencies = [
  "csv-core",
  "itoa",
  "ryu",
  "serde",
+ "simdutf8",
 ]
 
 [[package]]
 name = "csv-core"
 version = "0.1.11"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#23ec4fad43167750b7c56c1f74c00f3d51f0f002"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#9d5f5ae25ad354fca99fa971f0afc5f3ca7508d3"
 dependencies = [
  "memchr",
 ]
@@ -1414,7 +1415,7 @@ dependencies = [
 [[package]]
 name = "csv-index"
 version = "0.1.6"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#23ec4fad43167750b7c56c1f74c00f3d51f0f002"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#9d5f5ae25ad354fca99fa971f0afc5f3ca7508d3"
 dependencies = [
  "byteorder",
  "csv",
@@ -3837,9 +3838,9 @@ checksum = "b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39"
 
 [[package]]
 name = "parking"
-version = "2.2.0"
+version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb813b8af86854136c6922af0598d719255ecb2179515e6e7730d468f05c9cae"
+checksum = "f38d5652c16fde515bb1ecef450ab0f6a219d619a7274976324d5e377f7dceba"
 
 [[package]]
 name = "parking_lot"
