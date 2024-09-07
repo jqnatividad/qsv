@@ -2028,7 +2028,7 @@ pub fn get_stats_records(
 
         let mut stats_args_str = if mode == StatsMode::Schema {
             // mode is GetStatsMode::Schema
-            // we're generating schema, so we cardinality and to infer-dates
+            // we're generating schema, so we need cardinality and to infer-dates
             format!(
                 "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
                  --cardinality --stats-jsonl --force --output {output}",
