@@ -147,6 +147,9 @@ fn main() -> QsvExitCode {
     jsonl       Convert newline-delimited JSON files to CSV\n",
     );
 
+    #[cfg(all(feature = "lens", feature = "feature_capable"))]
+    enabled_commands.push_str("    lens        View a CSV file interactively\n");
+
     #[cfg(all(feature = "luau", feature = "feature_capable"))]
     enabled_commands.push_str("    luau        Execute Luau script on CSV data\n");
 
@@ -362,6 +365,8 @@ enum Command {
     JoinP,
     Json,
     Jsonl,
+    #[cfg(all(feature = "lens", feature = "feature_capable"))]
+    Lens,
     #[cfg(all(feature = "luau", feature = "feature_capable"))]
     Luau,
     Partition,
@@ -454,6 +459,8 @@ impl Command {
             Command::JoinP => cmd::joinp::run(argv),
             Command::Json => cmd::json::run(argv),
             Command::Jsonl => cmd::jsonl::run(argv),
+            #[cfg(all(feature = "lens", feature = "feature_capable"))]
+            Command::Lens => cmd::lens::run(argv),
             #[cfg(all(feature = "luau", feature = "feature_capable"))]
             Command::Luau => cmd::luau::run(argv),
             Command::Partition => cmd::partition::run(argv),
