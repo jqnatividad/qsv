@@ -1458,7 +1458,7 @@ impl Stats {
             },
             Some(ref mut v) => {
                 if self.which.cardinality {
-                    cardinality = v.cardinality(column_sorted);
+                    cardinality = v.cardinality(column_sorted, 1);
                     let mut buffer = itoa::Buffer::new();
                     mc_pieces.push(buffer.format(cardinality).to_owned());
                 }
