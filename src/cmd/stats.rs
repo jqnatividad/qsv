@@ -322,7 +322,7 @@ struct StatsArgs {
 }
 
 impl StatsArgs {
-    /// this is for deserializing the stats.csv.jsonl file
+    // this is for deserializing the stats.csv.jsonl file
     fn from_owned_value(value: &OwnedValue) -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Self {
             arg_input:            value["arg_input"].as_str().unwrap_or_default().to_string(),
