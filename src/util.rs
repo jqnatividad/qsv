@@ -2087,14 +2087,14 @@ pub fn get_stats_records(
             let status_code = status.code();
             if let Some(code) = status_code {
                 return Err(CliError::Other(
-                    format!("qsv stats exited with code: {}", code).to_string(),
+                    format!("qsv stats exited with code: {code}").to_string(),
                 ));
             }
             #[cfg(target_family = "unix")]
             {
                 if let Some(signal) = status.signal() {
                     return Err(CliError::Other(
-                        format!("qsv stats terminated with signal: {}", signal).to_string(),
+                        format!("qsv stats terminated with signal: {signal}").to_string(),
                     ));
                 } else {
                     return Err(CliError::Other(
