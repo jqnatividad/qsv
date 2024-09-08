@@ -1549,11 +1549,18 @@ impl Stats {
         } else if let Some(mm) = self.minmax.as_ref().and_then(TypedMinMax::len_range) {
             pieces.extend_from_slice(&[mm.0, mm.1]);
             if stotlen > 0 {
-                pieces.push(stotlen.to_string());
-                pieces.push(util::round_num(
-                    stotlen as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64,
-                    4,
-                ));
+                // if we saturated the sum, it means we had an overflow
+                // so we return empty for sum and avg length
+                if stotlen < u64::MAX {
+                    let mut buffer = itoa::Buffer::new();
+                    pieces.push(buffer.format(stotlen).to_owned());
+                    pieces.push(util::round_num(
+                        stotlen as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64,
+                        4,
+                    ));
+                } else {
+                    pieces.extend_from_slice(&[empty(), empty()]);
+                }
             } else {
                 pieces.extend_from_slice(&[empty(), empty()]);
             }
