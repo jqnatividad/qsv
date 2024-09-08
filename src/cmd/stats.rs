@@ -1,16 +1,16 @@
 static USAGE: &str = r#"
 Compute summary statistics & infers data types for each column in a CSV. 
 
-Summary statistics includes sum, min/max/range, sort order, min/max length, mean, standard error of
-the mean (SEM), stddev, variance, coefficient of variation (CV), nullcount, max_precision, sparsity,
-quartiles, interquartile range (IQR), lower/upper fences, skewness, median, cardinality, mode/s &
-"antimode/s", and median absolute deviation (MAD). Note that some statistics require loading the
-entire file into memory, so they must be enabled explicitly. 
+Summary statistics includes sum, min/max/range, sort order, min/max/sum/avg length, mean,
+standard error of the mean (SEM), stddev, variance, coefficient of variation (CV), nullcount,
+max_precision, sparsity, quartiles, interquartile range (IQR), lower/upper fences, skewness, median,
+cardinality, mode/s & "antimode/s", and median absolute deviation (MAD). Note that some statistics
+require loading theentire file into memory, so they must be enabled explicitly. 
 
 By default, the following "streaming" statistics are reported for *every* column:
-sum, min/max/range values, sort order, min/max length, mean, sem, stddev, variance, cv, nullcount,
-max_precision and sparsity. The default set of statistics corresponds to ones that can be computed
-efficiently on a stream of data (i.e., constant memory) and works with arbitrarily large CSV files.
+sum, min/max/range values, sort order, min/max/sum/avg length, mean, sem, stddev, variance, cv,
+nullcount, max_precision & sparsity. The default set of statistics corresponds to ones that can be
+computed efficiently on a stream of data (i.e., constant memory) and works with arbitrarily large CSVs.
 
 The following additional "non-streaming" statistics require loading the entire file into memory:
 cardinality, mode/antimode, median, MAD, quartiles and its related measures (IQR,
@@ -388,6 +388,8 @@ pub struct StatsData {
     pub sort_order:           Option<String>,
     pub min_length:           Option<usize>,
     pub max_length:           Option<usize>,
+    pub sum_length:           Option<usize>,
+    pub avg_length:           Option<f64>,
     pub mean:                 Option<f64>,
     pub sem:                  Option<f64>,
     pub stddev:               Option<f64>,
@@ -436,6 +438,8 @@ pub static STATSDATA_TYPES_ARRAY: [JsonTypes; MAX_STAT_COLUMNS] = [
     JsonTypes::String, //sort_order
     JsonTypes::Int,    //min_length
     JsonTypes::Int,    //max_length
+    JsonTypes::Int,    //sum_length
+    JsonTypes::Float,  //avg_length
     JsonTypes::Float,  //mean
     JsonTypes::Float,  //sem
     JsonTypes::Float,  //stddev
@@ -474,7 +478,7 @@ const MS_IN_DAY_INT: i64 = 86_400_000;
 const DAY_DECIMAL_PLACES: u32 = 5;
 
 // maximum number of output columns
-const MAX_STAT_COLUMNS: usize = 35;
+const MAX_STAT_COLUMNS: usize = 37;
 
 // maximum number of antimodes to display
 const MAX_ANTIMODES: usize = 10;
@@ -1047,7 +1051,7 @@ impl Args {
             return csv::StringRecord::from(vec!["field", "type"]);
         }
 
-        // with --everything, we have 35 columns at most
+        // with --everything, we have MAX_STAT_COLUMNS columns at most
         let mut fields = Vec::with_capacity(MAX_STAT_COLUMNS);
         fields.extend_from_slice(&[
             "field",
@@ -1060,6 +1064,8 @@ impl Args {
             "sort_order",
             "min_length",
             "max_length",
+            "sum_length",
+            "avg_length",
             "mean",
             "sem",
             "stddev",
@@ -1198,6 +1204,7 @@ pub struct Stats {
     typ:           FieldType,
     is_ascii:      bool,
     sum:           Option<TypedSum>,
+    sum_stotlen:   u64,
     minmax:        Option<TypedMinMax>,
     online:        Option<OnlineStats>,
     nullcount:     u64,
@@ -1251,6 +1258,7 @@ impl Stats {
             typ: FieldType::default(),
             is_ascii: true,
             sum,
+            sum_stotlen: 0,
             minmax,
             online,
             nullcount: 0,
@@ -1382,7 +1390,7 @@ impl Stats {
 
         let typ = self.typ;
         // prealloc memory for performance
-        // we have 35 columns at most with --everything
+        // we have MAX_STAT_COLUMNS columns at most with --everything
         let mut pieces = Vec::with_capacity(MAX_STAT_COLUMNS);
 
         let empty = String::new;
@@ -1512,33 +1520,52 @@ impl Stats {
         }
 
         // sum
-        if let Some(sum) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
-            if typ == FieldType::TFloat {
-                if let Ok(f64_val) = sum.parse::<f64>() {
-                    pieces.push(util::round_num(f64_val, round_places));
+        let stotlen =
+            if let Some((stotlen_work, sum)) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
+                if typ == FieldType::TFloat {
+                    if let Ok(f64_val) = sum.parse::<f64>() {
+                        pieces.push(util::round_num(f64_val, round_places));
+                    } else {
+                        pieces.push(format!("ERROR: Cannot convert {sum} to a float."));
+                    }
                 } else {
-                    pieces.push(format!("ERROR: Cannot convert {sum} to a float."));
+                    pieces.push(sum.clone());
                 }
+                stotlen_work
             } else {
-                pieces.push(sum);
-            }
-        } else {
-            pieces.push(empty());
-        }
+                pieces.push(empty());
+                0
+            };
 
         // min/max/range/sort_order
         // actually append it here - to preserve legacy ordering of columns
         pieces.extend_from_slice(&minmax_range_sortorder_pieces);
 
-        // min/max length
+        // min/max/sum/avg length
         if typ == FieldType::TDate || typ == FieldType::TDateTime {
             // returning min/max length for dates doesn't make sense
             // especially since we convert the date stats to rfc3339 format
-            pieces.extend_from_slice(&[empty(), empty()]);
+            pieces.extend_from_slice(&[empty(), empty(), empty(), empty()]);
         } else if let Some(mm) = self.minmax.as_ref().and_then(TypedMinMax::len_range) {
             pieces.extend_from_slice(&[mm.0, mm.1]);
+            if stotlen > 0 {
+                // if we saturated the sum, it means we had an overflow
+                // so we return empty for sum and avg length
+                if stotlen < u64::MAX {
+                    let mut buffer = itoa::Buffer::new();
+                    pieces.push(buffer.format(stotlen).to_owned());
+                    pieces.push(util::round_num(
+                        stotlen as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64,
+                        4,
+                    ));
+                } else {
+                    pieces.extend_from_slice(&[empty(), empty()]);
+                }
+            } else {
+                pieces.extend_from_slice(&[empty(), empty()]);
+            }
         } else {
-            pieces.extend_from_slice(&[empty(), empty()]);
+            pieces.extend_from_slice(&[empty(), empty(), empty(), empty()]);
         }
 
         // mean, sem, stddev, variance & cv
@@ -1737,6 +1764,7 @@ impl Commute for Stats {
         self.typ.merge(other.typ);
         self.is_ascii &= other.is_ascii;
         self.sum.merge(other.sum);
+        self.sum_stotlen = self.sum_stotlen.saturating_add(other.sum_stotlen);
         self.minmax.merge(other.minmax);
         self.online.merge(other.online);
         self.nullcount += other.nullcount;
@@ -1880,9 +1908,11 @@ impl fmt::Debug for FieldType {
 
 /// `TypedSum` keeps a rolling sum of the data seen.
 /// It sums integers until it sees a float, at which point it sums floats.
+/// It also counts the total length of strings.
 #[derive(Clone, Default, Serialize, Deserialize, PartialEq)]
 struct TypedSum {
     integer: i64,
+    stotlen: u64, // sum of the total length of strings
     float:   Option<f64>,
 }
 
@@ -1895,6 +1925,7 @@ impl TypedSum {
         #[allow(clippy::cast_precision_loss)]
         match typ {
             TFloat => {
+                self.stotlen = self.stotlen.saturating_add(sample.len() as u64);
                 let float: f64 = from_bytes::<f64>(sample).unwrap();
                 match self.float {
                     None => {
@@ -1906,6 +1937,7 @@ impl TypedSum {
                 }
             },
             TInteger => {
+                self.stotlen = self.stotlen.saturating_add(sample.len() as u64);
                 if let Some(ref mut float) = self.float {
                     *float += from_bytes::<f64>(sample).unwrap();
                 } else {
@@ -1915,29 +1947,36 @@ impl TypedSum {
                         .saturating_add(atoi_simd::parse::<i64>(sample).unwrap());
                 }
             },
+            TString => {
+                self.stotlen = self.stotlen.saturating_add(sample.len() as u64);
+            },
             _ => {},
         }
     }
 
-    fn show(&self, typ: FieldType) -> Option<String> {
+    fn show(&self, typ: FieldType) -> Option<(u64, String)> {
         match typ {
-            TNull | TString | TDate | TDateTime => None,
+            TNull | TDate | TDateTime => None,
             TInteger => {
                 match self.integer {
                     // with saturating_add, if this is equal to i64::MAX or i64::MIN
                     // we overflowed/underflowed
-                    i64::MAX => Some("OVERFLOW".to_string()),
-                    i64::MIN => Some("UNDERFLOW".to_string()),
+                    i64::MAX => Some((self.stotlen, "OVERFLOW".to_string())),
+                    i64::MIN => Some((self.stotlen, "UNDERFLOW".to_string())),
                     _ => {
                         let mut buffer = itoa::Buffer::new();
-                        Some(buffer.format(self.integer).to_owned())
+                        Some((self.stotlen, buffer.format(self.integer).to_owned()))
                     },
                 }
             },
             TFloat => {
-                let mut buffer = ryu::Buffer::new();
-                Some(buffer.format(self.float.unwrap_or(0.0)).to_owned())
+                let mut fbuffer = ryu::Buffer::new();
+                Some((
+                    self.stotlen,
+                    fbuffer.format(self.float.unwrap_or(0.0)).to_owned(),
+                ))
             },
+            TString => Some((self.stotlen, String::new())),
         }
     }
 }
@@ -1952,6 +1991,7 @@ impl Commute for TypedSum {
             (None, Some(f2)) => self.float = Some((self.integer as f64) + f2),
             (None, None) => self.integer = self.integer.saturating_add(other.integer),
         }
+        self.stotlen = self.stotlen.saturating_add(other.stotlen);
     }
 }
 

@@ -1197,6 +1197,8 @@ fn stats_zero_cv() {
             "sort_order",
             "min_length",
             "max_length",
+            "sum_length",
+            "avg_length",
             "mean",
             "sem",
             "stddev",
@@ -1216,6 +1218,8 @@ fn stats_zero_cv() {
             "4",
             "Ascending",
             "1",
+            "1",
+            "5",
             "1",
             "3",
             "0.6325",
@@ -1237,6 +1241,8 @@ fn stats_zero_cv() {
             "Ascending",
             "1",
             "3",
+            "9",
+            "1.8",
             "0",
             "3.1623",
             "7.0711",
@@ -1257,6 +1263,8 @@ fn stats_zero_cv() {
             "Ascending",
             "3",
             "6",
+            "25",
+            "5",
             "0",
             "28.8472",
             "64.5043",
@@ -1267,8 +1275,8 @@ fn stats_zero_cv() {
             "0"
         ],
         svec![
-            "col4", "Integer", "", "935", "-900", "1000", "1900", "Unsorted", "1", "4", "187",
-            "304.3603", "680.5703", "463176", "363.9414", "0", "", "0"
+            "col4", "Integer", "", "935", "-900", "1000", "1900", "Unsorted", "1", "4", "14",
+            "2.8", "187", "304.3603", "680.5703", "463176", "363.9414", "0", "", "0"
         ],
     ];
     assert_eq!(got, expected);
@@ -1298,10 +1306,10 @@ fn stats_output_tab_delimited() {
     wrk.assert_success(&mut cmd);
 
     let got = std::fs::read_to_string(out_file).unwrap();
-    let expected = r#"field	type	is_ascii	sum	min	max	range	sort_order	min_length	max_length	mean	sem	stddev	variance	cv	nullcount	max_precision	sparsity
-col1	Integer		15	1	5	4	Ascending	1	1	3	0.6325	1.4142	2	47.1405	0		0
-col2	Integer		10644	0	4321	4321	Descending	1	4	2128.8	685.6979	1533.267	2350907.76	72.0249	0		0
-col3	String	true		01	10		Ascending	2	2						0		0
+    let expected = r#"field	type	is_ascii	sum	min	max	range	sort_order	min_length	max_length	sum_length	avg_length	mean	sem	stddev	variance	cv	nullcount	max_precision	sparsity
+col1	Integer		15	1	5	4	Ascending	1	1	5	1	3	0.6325	1.4142	2	47.1405	0		0
+col2	Integer		10644	0	4321	4321	Descending	1	4	17	3.4	2128.8	685.6979	1533.267	2350907.76	72.0249	0		0
+col3	String	true		01	10		Ascending	2	2	10	2						0		0
 "#;
     assert_eq!(got, expected);
 }
@@ -1330,11 +1338,12 @@ fn stats_output_ssv_delimited() {
     wrk.assert_success(&mut cmd);
 
     let got = std::fs::read_to_string(out_file).unwrap();
-    let expected = r#"field;type;is_ascii;sum;min;max;range;sort_order;min_length;max_length;mean;sem;stddev;variance;cv;nullcount;max_precision;sparsity
-col1;Integer;;15;1;5;4;Ascending;1;1;3;0.6325;1.4142;2;47.1405;0;;0
-col2;Integer;;10644;0;4321;4321;Descending;1;4;2128.8;685.6979;1533.267;2350907.76;72.0249;0;;0
-col3;String;true;;01;10;;Ascending;2;2;;;;;;0;;0
-"#;
+    let expected = "field;type;is_ascii;sum;min;max;range;sort_order;min_length;max_length;\
+                    sum_length;avg_length;mean;sem;stddev;variance;cv;nullcount;max_precision;\
+                    sparsity\ncol1;Integer;;15;1;5;4;Ascending;1;1;5;1;3;0.6325;1.4142;2;47.1405;\
+                    0;;0\ncol2;Integer;;10644;0;4321;4321;Descending;1;4;17;3.4;2128.8;685.6979;\
+                    1533.267;2350907.76;72.0249;0;;0\ncol3;String;true;;01;10;;Ascending;2;2;10;2;\
+                    ;;;;;0;;0\n";
     assert_eq!(got, expected);
 }
 
@@ -1365,11 +1374,12 @@ fn stats_output_csvsz_delimited() {
     cmd.arg("decompress").arg(out_file.clone());
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = "field,type,is_ascii,sum,min,max,range,sort_order,min_length,max_length,mean,\
-                    sem,stddev,variance,cv,nullcount,max_precision,sparsity\ncol1,Integer,,15,1,5,\
-                    4,Ascending,1,1,3,0.6325,1.4142,2,47.1405,0,,0\ncol2,Integer,,10644,0,4321,\
-                    4321,Descending,1,4,2128.8,685.6979,1533.267,2350907.76,72.0249,0,,0\ncol3,\
-                    String,true,,01,10,,Ascending,2,2,,,,,,0,,0";
+    let expected = "field,type,is_ascii,sum,min,max,range,sort_order,min_length,max_length,\
+                    sum_length,avg_length,mean,sem,stddev,variance,cv,nullcount,max_precision,\
+                    sparsity\ncol1,Integer,,15,1,5,4,Ascending,1,1,5,1,3,0.6325,1.4142,2,47.1405,\
+                    0,,0\ncol2,Integer,,10644,0,4321,4321,Descending,1,4,17,3.4,2128.8,685.6979,\
+                    1533.267,2350907.76,72.0249,0,,0\ncol3,String,true,,01,10,,Ascending,2,2,10,2,\
+                    ,,,,,0,,0";
     assert_eq!(got, expected);
 }
 
