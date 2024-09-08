@@ -30,6 +30,11 @@ Find the difference between two CSVs, comparing records that have the same value
 in the first two columns and sort the result by the first two columns:
     qsv diff -k 0,1 --sort-columns 0,1 left.csv right.csv
 
+Find the difference between two CSVs, but do not output equal field values
+in the result (equal field values are replaced with the empty string). Key
+field values _will_ appear in the output:
+    qsv diff --drop-equal-fields left.csv right.csv
+
 Find the difference between two CSVs, but do not output headers in the result:
     qsv diff --no-headers-output left.csv right.csv
 
@@ -81,6 +86,9 @@ diff options:
                                 left CSV's headers are used to match the column names
                                 and it is assumed that the right CSV has the same
                                 selected column names in the same order as the left CSV.
+    --drop-equal-fields         Drop values of equal fields in modified rows of the CSV
+                                diff result (and replace them with the empty string).
+                                Key field values will not be dropped.
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number
                                 of CPUs detected.
@@ -92,6 +100,7 @@ Common options:
 
 use std::io::{self, Write};
 
+use csv::ByteRecord;
 use csv_diff::{
     csv_diff::CsvByteDiffBuilder, csv_headers::Headers, diff_result::DiffByteRecords,
     diff_row::DiffByteRecord,
@@ -119,6 +128,7 @@ struct Args {
     flag_delimiter_output:  Option<Delimiter>,
     flag_key:               Option<String>,
     flag_sort_columns:      Option<String>,
+    flag_drop_equal_fields: bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -242,7 +252,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     util::njobs(args.flag_jobs);
 
     let Ok(csv_diff) = CsvByteDiffBuilder::new()
-        .primary_key_columns(primary_key_cols)
+        .primary_key_columns(primary_key_cols.clone())
         .build()
     else {
         return fail_clierror!("Cannot instantiate diff");
@@ -263,24 +273,38 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         },
     }
 
-    let mut csv_diff_writer = CsvDiffWriter::new(wtr, args.flag_no_headers_output);
+    let mut csv_diff_writer = CsvDiffWriter::new(
+        wtr,
+        args.flag_no_headers_output,
+        args.flag_drop_equal_fields,
+        primary_key_cols,
+    );
     Ok(csv_diff_writer.write_diff_byte_records(diff_byte_records)?)
 }
 
 struct CsvDiffWriter<W: Write> {
-    csv_writer: csv::Writer<W>,
-    no_headers: bool,
+    csv_writer:        csv::Writer<W>,
+    no_headers:        bool,
+    drop_equal_fields: bool,
+    key_fields:        Vec<usize>,
 }
 
 impl<W: Write> CsvDiffWriter<W> {
-    const fn new(csv_writer: csv::Writer<W>, no_headers: bool) -> Self {
+    fn new(
+        csv_writer: csv::Writer<W>,
+        no_headers: bool,
+        drop_equal_fields: bool,
+        key_fields: impl IntoIterator<Item = usize>,
+    ) -> Self {
         Self {
             csv_writer,
             no_headers,
+            drop_equal_fields,
+            key_fields: key_fields.into_iter().collect(),
         }
     }
 
-    fn write_headers(&mut self, headers: &Headers, num_columns: Option<usize>) -> csv::Result<()> {
+    fn write_headers(&mut self, headers: &Headers, num_columns: Option<&usize>) -> csv::Result<()> {
         match (headers.headers_left(), headers.headers_right()) {
             (Some(lbh), Some(_rbh)) => {
                 // currently, `diff` can only handle two CSVs that have the same
@@ -296,7 +320,8 @@ impl<W: Write> CsvDiffWriter<W> {
                 }
             },
             (None, None) => {
-                if let (Some(num_cols), false) = (num_columns.filter(|&c| c > 0), self.no_headers) {
+                if let (Some(&num_cols), false) = (num_columns.filter(|&&c| c > 0), self.no_headers)
+                {
                     let headers_generic = rename_headers_all_generic(num_cols);
                     let mut new_rdr = csv::Reader::from_reader(headers_generic.as_bytes());
                     let new_headers = new_rdr.byte_headers()?;
@@ -309,7 +334,10 @@ impl<W: Write> CsvDiffWriter<W> {
     }
 
     fn write_diff_byte_records(&mut self, diff_byte_records: DiffByteRecords) -> io::Result<()> {
-        self.write_headers(diff_byte_records.headers(), diff_byte_records.num_columns())?;
+        self.write_headers(
+            diff_byte_records.headers(),
+            diff_byte_records.num_columns().as_ref(),
+        )?;
         for dbr in diff_byte_records {
             self.write_diff_byte_record(&dbr)?;
         }
@@ -330,16 +358,34 @@ impl<W: Write> CsvDiffWriter<W> {
             DiffByteRecord::Modify {
                 delete,
                 add,
-                // TODO: this should be used in the future to highlight the column where differences
-                // occur
-                field_indices: _field_indices,
+                field_indices,
             } => {
-                let mut vec_del = vec![remove_sign];
-                vec_del.extend(delete.byte_record());
+                let vec_del = if self.drop_equal_fields {
+                    self.fill_modified_and_drop_equal_fields(
+                        remove_sign,
+                        delete.byte_record(),
+                        field_indices.as_slice(),
+                    )
+                } else {
+                    let mut tmp = vec![remove_sign];
+                    tmp.extend(delete.byte_record());
+                    tmp
+                };
+
                 self.csv_writer.write_record(vec_del)?;
 
-                let mut vec_add = vec![add_sign];
-                vec_add.extend(add.byte_record());
+                let vec_add = if self.drop_equal_fields {
+                    self.fill_modified_and_drop_equal_fields(
+                        add_sign,
+                        add.byte_record(),
+                        field_indices.as_slice(),
+                    )
+                } else {
+                    let mut tmp = vec![add_sign];
+                    tmp.extend(add.byte_record());
+                    tmp
+                };
+
                 self.csv_writer.write_record(vec_add)
             },
             DiffByteRecord::Delete(del) => {
@@ -348,6 +394,28 @@ impl<W: Write> CsvDiffWriter<W> {
                 self.csv_writer.write_record(vec)
             },
         }
+    }
+
+    fn fill_modified_and_drop_equal_fields<'a>(
+        &self,
+        prefix: &'a [u8],
+        byte_record: &'a ByteRecord,
+        modified_field_indices: &[usize],
+    ) -> Vec<&'a [u8]> {
+        let mut vec_to_fill = {
+            // We start out with all fields set to an empty byte slice
+            // (which end up as our equal fields).
+            let mut tmp = vec![&b""[..]; byte_record.len() + 1 /* + 1, because we need to store our additional prefix*/];
+            tmp.as_mut_slice()[0] = prefix;
+            tmp
+        };
+        // key field values and modified field values should appear in the output
+        for &key_field in self.key_fields.iter().chain(modified_field_indices) {
+            // + 1 here, because of the prefix value (see above)
+            vec_to_fill[key_field + 1] = &byte_record[key_field];
+        }
+
+        vec_to_fill
     }
 }
 
