@@ -547,6 +547,148 @@ diffresult;h1;h2;h3
     assert_eq!(got.as_str(), expected);
 }
 
+#[test]
+fn diff_drop_equal_fields_flag_on_modified_rows_one_row_modified() {
+    let wrk = Workdir::new("diff_drop_equal_fields_flag_on_modified_rows_one_row_modified");
+
+    let left = vec![
+        svec!["h1", "h2", "h3"],
+        svec!["1", "deleted", "row"],
+        svec!["2", "baz", "quux"],
+        svec!["3", "corge", "grault"],
+    ];
+    wrk.create("left.csv", left);
+
+    let right = vec![
+        svec!["h1", "h2", "h3"],
+        svec!["2", "baz", "quux_modified"],
+        svec!["3", "corge", "grault"],
+        svec!["4", "added", "row"],
+    ];
+    wrk.create("right.csv", right);
+
+    let mut cmd = wrk.command("diff");
+    cmd.args(["left.csv", "right.csv", "--drop-equal-fields"]);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "\
+diffresult,h1,h2,h3
+-,1,deleted,row
+-,2,,quux
++,2,,quux_modified
++,4,added,row";
+    assert_eq!(got.as_str(), expected);
+}
+
+#[test]
+fn diff_drop_equal_fields_flag_on_modified_rows_multiple_fields_on_one_row_equal() {
+    let wrk = Workdir::new(
+        "diff_drop_equal_fields_flag_on_modified_rows_multiple_fields_on_one_row_equal",
+    );
+
+    let left = vec![
+        svec!["h1", "h2", "h3", "h4"],
+        svec!["1", "deleted", "row", "foo"],
+        svec!["2", "baz", "quux", "drix"],
+        svec!["3", "corge", "grault", "bar"],
+    ];
+    wrk.create("left.csv", left);
+
+    let right = vec![
+        svec!["h1", "h2", "h3", "h4"],
+        svec!["2", "baz", "quux", "drix_modified"],
+        svec!["3", "corge", "grault", "bar"],
+        svec!["4", "added", "row", "new"],
+    ];
+    wrk.create("right.csv", right);
+
+    let mut cmd = wrk.command("diff");
+    cmd.args(["left.csv", "right.csv", "--drop-equal-fields"]);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "\
+diffresult,h1,h2,h3,h4
+-,1,deleted,row,foo
+-,2,,,drix
++,2,,,drix_modified
++,4,added,row,new";
+    assert_eq!(got.as_str(), expected);
+}
+
+#[test]
+fn diff_drop_equal_fields_flag_on_modified_rows_multiple_rows_modified_in_different_columns() {
+    let wrk = Workdir::new(
+        "diff_drop_equal_fields_flag_on_modified_rows_multiple_rows_modified_in_different_columns",
+    );
+
+    let left = vec![
+        svec!["h1", "h2", "h3"],
+        svec!["1", "deleted", "row"],
+        svec!["2", "baz", "quux"],
+        svec!["3", "corge", "grault"],
+    ];
+    wrk.create("left.csv", left);
+
+    let right = vec![
+        svec!["h1", "h2", "h3"],
+        svec!["2", "baz", "quux_modified"],
+        svec!["3", "corge_modified", "grault"],
+        svec!["4", "added", "row"],
+    ];
+    wrk.create("right.csv", right);
+
+    let mut cmd = wrk.command("diff");
+    cmd.args(["left.csv", "right.csv", "--drop-equal-fields"]);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "\
+diffresult,h1,h2,h3
+-,1,deleted,row
+-,2,,quux
++,2,,quux_modified
+-,3,corge,
++,3,corge_modified,
++,4,added,row";
+    assert_eq!(got.as_str(), expected);
+}
+
+#[test]
+fn diff_drop_equal_fields_flag_on_modified_rows_multiple_key_fields_far_apart() {
+    let wrk =
+        Workdir::new("diff_drop_equal_fields_flag_on_modified_rows_multiple_key_fields_far_apart");
+
+    let left = vec![
+        svec!["h1", "h2", "h3", "h4"],
+        svec!["1", "deleted", "row", "id1"],
+        svec!["2", "baz", "quux", "id2"],
+        svec!["3", "corge", "grault", "id3"],
+    ];
+    wrk.create("left.csv", left);
+
+    let right = vec![
+        svec!["h1", "h2", "h3", "h4"],
+        svec!["2", "baz", "quux_modified", "id2"],
+        svec!["3", "corge_modified", "grault", "id3"],
+        svec!["3", "added", "row", "id_new"],
+    ];
+    wrk.create("right.csv", right);
+
+    let mut cmd = wrk.command("diff");
+    // here, first and last columns are our key fields
+    cmd.args(["left.csv", "right.csv", "--drop-equal-fields", "-k", "0,3"]);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "\
+diffresult,h1,h2,h3,h4
+-,1,deleted,row,id1
+-,2,,quux,id2
++,2,,quux_modified,id2
+-,3,corge,,id3
++,3,corge_modified,,id3
++,3,added,row,id_new";
+    assert_eq!(got.as_str(), expected);
+}
+
 fn create_file_with_delim(wrk: &Workdir, file_path_new: &str, file_path: &str, delimiter: u8) {
     let mut select_cmd = wrk.command("select");
     select_cmd.args(["1-", file_path]);
