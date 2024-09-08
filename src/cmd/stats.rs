@@ -1557,7 +1557,7 @@ impl Stats {
                         pieces.push(format!("ERROR: Cannot convert {sum} to a float."));
                     }
                 } else {
-                    pieces.push(sum.clone());
+                    pieces.push(sum);
                 }
                 stotlen_work
             } else {

@@ -2086,16 +2086,16 @@ pub fn get_stats_records(
         if !status.success() {
             let status_code = status.code();
             if let Some(code) = status_code {
-                return Err(CliError::Other(
-                    format!("qsv stats exited with code: {code}").to_string(),
-                ));
+                return Err(CliError::Other(format!(
+                    "qsv stats exited with code: {code}"
+                )));
             }
             #[cfg(target_family = "unix")]
             {
                 if let Some(signal) = status.signal() {
-                    return Err(CliError::Other(
-                        format!("qsv stats terminated with signal: {signal}").to_string(),
-                    ));
+                    return Err(CliError::Other(format!(
+                        "qsv stats terminated with signal: {signal}"
+                    )));
                 }
                 return Err(CliError::Other(
                     "qsv stats terminated by unknown cause".to_string(),
