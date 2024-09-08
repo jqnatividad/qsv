@@ -2096,11 +2096,10 @@ pub fn get_stats_records(
                     return Err(CliError::Other(
                         format!("qsv stats terminated with signal: {signal}").to_string(),
                     ));
-                } else {
-                    return Err(CliError::Other(
-                        "qsv stats terminated by unknown cause".to_string(),
-                    ));
                 }
+                return Err(CliError::Other(
+                    "qsv stats terminated by unknown cause".to_string(),
+                ));
             }
             #[cfg(not(target_family = "unix"))]
             {
