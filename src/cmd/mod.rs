@@ -52,6 +52,8 @@ pub mod joinp;
 pub mod json;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod jsonl;
+#[cfg(feature = "lens")]
+pub mod lens;
 #[cfg(feature = "luau")]
 pub mod luau;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
