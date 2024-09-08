@@ -462,7 +462,7 @@ stats_tests!(
         "1",
         "2"
     ],
-    "OVERFLOW"
+    "*OVERFLOW*"
 );
 stats_tests!(
     stats_sum_negative_overflow,
@@ -475,7 +475,7 @@ stats_tests!(
         "-1",
         "-2"
     ],
-    "UNDERFLOW"
+    "*UNDERFLOW*"
 );
 
 stats_tests!(stats_min, "min", &["2", "1.1"], "1.1");

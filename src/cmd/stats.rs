@@ -470,6 +470,9 @@ pub static STATSDATA_TYPES_ARRAY: [JsonTypes; MAX_STAT_COLUMNS] = [
 static INFER_DATE_FLAGS: OnceLock<Vec<bool>> = OnceLock::new();
 static RECORD_COUNT: OnceLock<u64> = OnceLock::new();
 
+pub const OVERFLOW_STRING: &str = "*OVERFLOW*";
+pub const UNDERFLOW_STRING: &str = "*UNDERFLOW*";
+
 // number of milliseconds per day
 const MS_IN_DAY: f64 = 86_400_000.0;
 const MS_IN_DAY_INT: i64 = 86_400_000;
@@ -1559,7 +1562,10 @@ impl Stats {
                         4,
                     ));
                 } else {
-                    pieces.extend_from_slice(&[empty(), empty()]);
+                    pieces.extend_from_slice(&[
+                        OVERFLOW_STRING.to_string(),
+                        OVERFLOW_STRING.to_string(),
+                    ]);
                 }
             } else {
                 pieces.extend_from_slice(&[empty(), empty()]);
@@ -1961,8 +1967,8 @@ impl TypedSum {
                 match self.integer {
                     // with saturating_add, if this is equal to i64::MAX or i64::MIN
                     // we overflowed/underflowed
-                    i64::MAX => Some((self.stotlen, "OVERFLOW".to_string())),
-                    i64::MIN => Some((self.stotlen, "UNDERFLOW".to_string())),
+                    i64::MAX => Some((self.stotlen, OVERFLOW_STRING.to_string())),
+                    i64::MIN => Some((self.stotlen, UNDERFLOW_STRING.to_string())),
                     _ => {
                         let mut buffer = itoa::Buffer::new();
                         Some((self.stotlen, buffer.format(self.integer).to_owned()))
