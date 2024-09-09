@@ -34,7 +34,7 @@ jobs:
             os-name: macos
             target: aarch64-apple-darwin
             architecture: aarch64
-            addl-build-args: --features=apply,fetch,foreach,self_update,luau,polars,to,geocode,python
+            addl-build-args: --features=apply,fetch,foreach,self_update,luau,polars,to,geocode,python,lens
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau

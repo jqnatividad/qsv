@@ -41,4 +41,4 @@ jobs:
     - name: Run tests
       env:
         RUSTFLAGS: -C target-cpu=native
-      run: cargo test --verbose --locked --features=apply,fetch,foreach,geocode,luau,python,polars,to,feature_capable
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,geocode,luau,python,polars,to,feature_capable,lens
