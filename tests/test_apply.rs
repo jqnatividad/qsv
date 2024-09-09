@@ -2669,3 +2669,29 @@ fn apply_emptyreplace_all_columns() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn apply_crc32() {
+    let wrk = Workdir::new("apply_crc32");
+    wrk.create(
+        "data.csv",
+        vec![svec!["name"], svec!["John"], svec!["Sue"], svec!["Hopkins"]],
+    );
+    let mut cmd = wrk.command("apply");
+    cmd.arg("operations")
+        .arg("crc32")
+        .arg("name")
+        .arg("--new-column")
+        .arg("crc32_hash")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name", "crc32_hash"],
+        svec!["John", "2437433000"],
+        svec!["Sue", "4264251807"],
+        svec!["Hopkins", "1940610850"],
+    ];
+
+    assert_eq!(got, expected);
+}
