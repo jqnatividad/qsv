@@ -3,7 +3,7 @@ Apply a series of transformation functions to given CSV column/s. This can be us
 perform typical data-wrangling tasks and/or to harmonize some values, etc.
 
 It has four subcommands:
- 1. operations*   - 37 string, format, currency, regex & NLP operators.
+ 1. operations*   - 40 string, format, currency, regex & NLP operators.
  2. emptyreplace* - replace empty cells with <--replacement> string.
  3. dynfmt        - Dynamically constructs a new column from other columns using
                     the <--formatstr> template.
@@ -28,7 +28,7 @@ number of transformed columns with the --rename option is the same. e.g.:
 
  $ qsv apply operations trim,upper col1,col2,col3 -r newcol1,newcol2,newcol3 file.csv
 
-It has 38 supported operations:
+It has 40 supported operations:
 
   * len: Return string length
   * lower: Transform to lowercase
@@ -48,6 +48,7 @@ It has 38 supported operations:
   * decode62: base62 decode
   * encode64: base64 encode
   * decode64: base64 decode
+  * crc32: crc32 checksum
   * replace: Replace all matches of a pattern (using --comparand)
       with a string (using --replacement) (Rust replace)
   * regex_replace: Replace all regex matches in --comparand w/ --replacement.
@@ -303,6 +304,7 @@ use std::{str::FromStr, sync::OnceLock};
 use base62;
 use censor::{Censor, Sex, Zealous};
 use cpc::{eval, units::Unit};
+use crc32fast;
 use data_encoding::BASE64;
 use dynfmt::Format;
 use eudex::Hash;
@@ -345,6 +347,7 @@ enum Operations {
     Censor_Check,
     Censor_Count,
     Copy,
+    Crc32,
     Currencytonum,
     Decode62,
     Decode64,
@@ -405,6 +408,7 @@ struct Args {
 }
 
 static CENSOR: OnceLock<Censor> = OnceLock::new();
+static CRC32: OnceLock<crc32fast::Hasher> = OnceLock::new();
 static EUDEX_COMPARAND_HASH: OnceLock<eudex::Hash> = OnceLock::new();
 static REGEX_REPLACE: OnceLock<Regex> = OnceLock::new();
 static SENTIMENT_ANALYZER: OnceLock<SentimentIntensityAnalyzer> = OnceLock::new();
@@ -880,6 +884,11 @@ fn validate_operations(
                     return fail!("Cannot initialize Round precision.");
                 };
             },
+            Operations::Crc32 => {
+                if CRC32.set(crc32fast::Hasher::new()).is_err() {
+                    return fail!("Cannot initialize CRC32 Hasher.");
+                }
+            },
             Operations::Whatlang => {
                 if flag_new_column.is_none() {
                     return fail_incorrectusage_clierror!(
@@ -1025,6 +1034,17 @@ fn apply_operations(
                     Ok(decoded) => decoded.to_string(),
                     Err(e) => format!("decode62 error: {e:?}"),
                 };
+            },
+            Operations::Crc32 => {
+                // safety: we set CRC32 in validate_operations()
+                // this approach is still better than using the simple hash() function
+                // despite the use of clone(), because it allows us to use the
+                // same hasher for multiple columns.
+                // OTOH, the simple hash() function keeps creating a new hasher for every call,
+                // including selection of the best algorithm repeatedly at runtime
+                let mut crc32_hasher = CRC32.get().unwrap().clone();
+                crc32_hasher.update(cell.as_bytes());
+                *cell = crc32_hasher.finalize().to_string();
             },
             Operations::Gender_Guess => {
                 let gender_detector = gender_guesser::Detector::new();
