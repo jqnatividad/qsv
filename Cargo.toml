@@ -285,7 +285,7 @@ csvs_convert = { git = "https://github.com/jqnatividad/csvs_convert", branch = "
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 
 # needed to get latest dependencies and unreleased fixes
-grex = { git = "https://github.com/pemistahl/grex", rev = "6a78534" }
+grex = { git = "https://github.com/pemistahl/grex", rev = "ff8533d" }
 
 # use our fork of calamine 0.25.0 with unreleased fixes and select clippy lints
 calamine = { git = "https://github.com/jqnatividad/calamine", branch = "select-clippy-lints" }
@@ -366,11 +366,12 @@ lite = []
 datapusher_plus = ["self_update"]
 feature_capable = []
 nightly = [
-    "rand/nightly",
-    "pyo3/nightly",
+    "crc32fast/nightly",
     "hashbrown/nightly",
     "polars/nightly",
     "polars/simd",
+    "pyo3/nightly",
+    "rand/nightly",
 ]
 
 [package.metadata.deb]
