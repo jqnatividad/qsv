@@ -63,12 +63,17 @@ Common options:
                            without an index.
     -n, --no-headers       When set, the first row will be included in
                            the count.
+    -d, --delimiter <arg>  The delimiter to use when reading CSV data.
+                           Must be a single character. [default: ,]
 "#;
 
 use log::info;
 use serde::Deserialize;
 
-use crate::{config::Config, util, CliError, CliResult};
+use crate::{
+    config::{Config, Delimiter},
+    util, CliError, CliResult,
+};
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
@@ -82,6 +87,7 @@ struct Args {
     flag_low_memory:      bool,
     flag_flexible:        bool,
     flag_no_headers:      bool,
+    flag_delimiter:       Option<Delimiter>,
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -109,7 +115,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // we also want to count the quotes when computing width
         .quoting(!args.flag_width || !args.flag_width_no_delims)
         // and ignore differing column counts as well
-        .flexible(args.flag_flexible);
+        .flexible(args.flag_flexible)
+        .delimiter(args.flag_delimiter);
 
     // this comment left here for Logging.md example
     // log::debug!(
@@ -144,8 +151,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     (idx.count(), empty_record_stats)
                 },
                 None => {
-                    // if --no-polars or its a snappy compressed file, use the
-                    // regular CSV reader
+                    // if --no-polars or its a snappy compressed file, use the regular CSV reader
                     #[cfg(feature = "polars")]
                     if args.flag_no_polars || conf.is_snappy() {
                         count_input(&conf, count_delims_mode)?

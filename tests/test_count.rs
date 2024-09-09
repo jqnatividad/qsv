@@ -411,6 +411,29 @@ fn prop_count_noheaders_indexed_env() {
 }
 
 #[test]
+fn count_custom_delimiter() {
+    let wrk = Workdir::new("count_custom_delimiter");
+    wrk.create_with_delim(
+        "in.csv",
+        vec![
+            svec!["letter", "number", "flag"],
+            svec!["alphabetic", "13", "true"],
+            svec!["beta", "24", "false"],
+            svec!["gamma", "37.1", "true"],
+            svec!("delta", "42.5", "false"),
+        ],
+        b';',
+    );
+
+    let mut cmd = wrk.command("count");
+    cmd.arg("--delimiter").arg(";").arg("in.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "4";
+    assert_eq!(got, expected.to_string());
+}
+
+#[test]
 fn show_version() {
     let wrk = Workdir::new("show_version");
     let mut cmd = wrk.command("");
