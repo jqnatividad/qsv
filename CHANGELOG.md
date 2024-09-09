@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.134.0] - 2024-09-10
+
+## What's Changed
+* build(deps): bump serde_json from 1.0.127 to 1.0.128 by @dependabot in https://github.com/jqnatividad/qsv/pull/2106
+* build(deps): bump qsv-stats from 0.19.0 to 0.19.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2107
+* build(deps): bump serde from 1.0.209 to 1.0.210 by @dependabot in https://github.com/jqnatividad/qsv/pull/2111
+* `schema`: Print an error if the `qsv stats` invocation fails by @abrauchli in https://github.com/jqnatividad/qsv/pull/2110
+* build(deps): bump qsv-stats from 0.19.1 to 0.20.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2112
+* `stats`: add `sum_length` and `avg_length` columns by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2113
+* `diff`: add flag `--drop-equal-fields` by @janriemer in https://github.com/jqnatividad/qsv/pull/2114
+* `lens`: new command to interactively view CSVs using the csvlens crate by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2117
+* `count`: add --delimiter option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2120
+* `apply`: add crc32 operation by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2121
+
+## New Contributors
+* @abrauchli made their first contribution in https://github.com/jqnatividad/qsv/pull/2110
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.133.1...0.134.0
+
 ## [0.133.1] - 2024-09-03
 
 ### Highlights
