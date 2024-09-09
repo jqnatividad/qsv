@@ -82,7 +82,7 @@ cached = { version = "0.53", features = [
 calamine = { version = "0.25", features = ["dates"] }
 censor = { version = "0.3", optional = true }
 chrono = { version = "0.4", default-features = false }
-chrono-tz = "0.9"
+chrono-tz = "0.10"
 console = { version = "0.15", optional = true }
 cpc = { version = "1.9", optional = true }
 crc32fast = { version = "1.4", optional = true }
