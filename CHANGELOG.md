@@ -6,19 +6,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.134.0] - 2024-09-10
+## [0.134.0] - 2024-09-09
 
-## What's Changed
-* build(deps): bump serde_json from 1.0.127 to 1.0.128 by @dependabot in https://github.com/jqnatividad/qsv/pull/2106
-* build(deps): bump qsv-stats from 0.19.0 to 0.19.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2107
-* build(deps): bump serde from 1.0.209 to 1.0.210 by @dependabot in https://github.com/jqnatividad/qsv/pull/2111
-* `schema`: Print an error if the `qsv stats` invocation fails by @abrauchli in https://github.com/jqnatividad/qsv/pull/2110
-* build(deps): bump qsv-stats from 0.19.1 to 0.20.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2112
-* `stats`: add `sum_length` and `avg_length` columns by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2113
+### Added
+* `lens`: new command to interactively view CSVs using the [csvlens](https://github.com/YS-L/csvlens) crate https://github.com/jqnatividad/qsv/pull/2117
+* `apply`: add crc32 operation https://github.com/jqnatividad/qsv/pull/2121
+* `count`: add --delimiter option https://github.com/jqnatividad/qsv/pull/2120
 * `diff`: add flag `--drop-equal-fields` by @janriemer in https://github.com/jqnatividad/qsv/pull/2114
-* `lens`: new command to interactively view CSVs using the csvlens crate by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2117
-* `count`: add --delimiter option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2120
-* `apply`: add crc32 operation by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2121
+* `stats`: add `sum_length` and `avg_length` columns https://github.com/jqnatividad/qsv/pull/2113
+* `stats`: smarter cardinality computation - added new parallel algorithm for large datasets (10,000+ rows) and updated sequential algorithm for smaller datasets https://github.com/jqnatividad/qsv/commit/4e63fec61a394ef2ddfa499c0cdd0958e677ad17
+
+### Changed
+* `count`: added comment to justify magic number https://github.com/jqnatividad/qsv/commit/5241e3972c05f024a0791be04632d03a06b2f9ce
+* `stats`: use simdjson for faster JSONL parsing; micro-optimize `compute` hot loop https://github.com/jqnatividad/qsv/commit/0e8b73451999a3e95bfd52246b1088aecd64b88f
+* `stats`: standardized OVERFLOW and UNDERFLOW messages https://github.com/jqnatividad/qsv/commit/38c61285704e5064a63c9dbb1ac866f18fa130fd
+* `sort`: renamed symbol so eliminate devskim lint false positive warning https://github.com/jqnatividad/qsv/commit/12db7397f68d3199e3311f402d5c7afed586b88c
+* enable `lens` feature in GH workflows https://github.com/jqnatividad/qsv/pull/2122
+* `deps`: bump polars 0.42.0 to latest upstream at time of release https://github.com/jqnatividad/qsv/commit/3c17ed12c3c763d644d9713afcc8442964f22de3
+* `deps`: use our own optimized fork of csv crate, with simdutf8 validation and other minor perf tweaks https://github.com/jqnatividad/qsv/commit/e4bcd7123172fa8d8094c305d7780e151c120db1
+* build(deps): bump serde from 1.0.209 to 1.0.210 by @dependabot in https://github.com/jqnatividad/qsv/pull/2111
+* build(deps): bump serde_json from 1.0.127 to 1.0.128 by @dependabot in https://github.com/jqnatividad/qsv/pull/2106
+* build(deps): bump qsv-stats from 0.19.0 to 0.22.0 https://github.com/jqnatividad/qsv/pull/2107 https://github.com/jqnatividad/qsv/pull/2112 https://github.com/jqnatividad/qsv/commit/cb1eb60a0a9fb3b9ba381183a2c29909f82efa42
+* apply select clippy lint suggestions
+* updated several indirect dependencies
+* made various doc and usage text improvements
+
+### Fixed
+* `schema`: Print an error if the `qsv stats` invocation fails by @abrauchli in https://github.com/jqnatividad/qsv/pull/2110
 
 ## New Contributors
 * @abrauchli made their first contribution in https://github.com/jqnatividad/qsv/pull/2110
