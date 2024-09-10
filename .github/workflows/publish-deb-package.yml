@@ -5,7 +5,7 @@ on:
 
 jobs:                
   analyze-tags:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       previous-tag: ${{ steps.previoustag.outputs.tag }}
     steps:
@@ -18,7 +18,7 @@ jobs:
 
   build:
     needs: analyze-tags
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,36 +37,3 @@ jobs:
         with:
           name: qsv-deb
           path: target/debian/*
-      
-  push:
-    needs: build
-    runs-on: ubuntu-20.04
-    permissions: write-all
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: tino097/qsv-deb-releases
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: main
-          fetch-depth: 0
-      
-
-      - name: Download Debian Package
-        uses: actions/download-artifact@v2
-        with:
-          name: qsv-deb
-          path: target/debian
-
-      - name: Commit and Push
-        id: push_deb_package
-        uses: cpina/github-action-push-to-another-repository@main
-        
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-        with:
-          source_directory: target/debian
-          destination-github-username: 'tino097'
-          user_email: 'tino097@gmail.com'
-          destination-repository-name: 'qsv-deb-releases'
-          commit_message: 'Add Debian Package'
-          target_branch: main
