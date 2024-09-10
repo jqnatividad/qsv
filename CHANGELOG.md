@@ -11,14 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## qsv pro v1 is here! 🎉
 If you've been using qsv for a while, even if you're a command-line ninja, you'll find a lot of new capabilities in qsv pro that can make your data wrangling experience even better!
 
-Apart from making qsv easier to use, qsv pro has a multitude of features including: view interactive data tables; browse stats/frequency/metadata; run recipes and tools (scripts); run Polars SQL queries; an interface using Retrieval Augmented Generation (RAG) techniques to convert Natural Language queries to Polars SQL; regular expression search; export to multiple file formats; download/upload from/to compatible CKAN instances; design custom node-based flows and data pipelines; interact with a local API from external programs including the qsv pro command, and run various qsv commands in a graphical user interface; and the list goes on!
+Apart from making qsv easier to use, qsv pro has a multitude of features including: view interactive data tables; browse stats/frequency/metadata; run recipes and tools (scripts); run Polars SQL queries; an interface using Retrieval Augmented Generation (RAG) techniques to attempt converting Natural Language queries to Polars SQL; regular expression search; export to multiple file formats; download/upload from/to compatible CKAN instances; design custom node-based flows and data pipelines; interact with a local API from external programs including the qsv pro command; run various qsv commands in a graphical user interface; and the list goes on!
 
-That's just the beginning, there's more to come more to come! You just have to try it!
+That's just the beginning, there's more to come! You just have to try it!
 
-Download qsv pro v1 now at [qsvpro.dathere.com](https://qsvpro.dathere.com/.
+Download qsv pro v1 now at [qsvpro.dathere.com](https://qsvpro.dathere.com/).
 
 Other highlights include:
-`pro`: new command to allow qsv to interact with the qsv pro API to tap qsv pro exclusive features
+
+- `pro`: new command to allow qsv to interact with the qsv pro API to tap qsv pro exclusive features
 - `lens`: new command to interactively view CSVs using the [csvlens](https://github.com/YS-L/csvlens) crate.
 - The ludicrously fast `diff` command is now easier to use with its `--drop-equal-fields` option. @janriemer continues to work on his `csv-diff` crate, and there's more `diff` UX improvements coming soon!
 - `stats` adds `sum_length` and `avg_length` "streaming" statistics in addition to the existing `min_length` and `max_length` metrics. These are especially useful for datasets with a lot of "free text" columns.
