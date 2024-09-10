@@ -55,16 +55,16 @@ jobs:
             addl-qsvlite-features:
             addl-qsvdp-features:
             addl-rustflags: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+avx2,+fma,+bmi1,+bmi2,+lzcnt,+pclmulqdq
-          - os: ubuntu-22.04
-            os-name: linux
-            target: i686-unknown-linux-gnu
-            architecture: i686
-            use-cross: true
-            addl-build-args: --features=apply,fetch,foreach,self_update
-            default-features:
-            addl-qsvlite-features:
-            addl-qsvdp-features:
-            addl-rustflags:
+          # - os: ubuntu-22.04
+          #   os-name: linux
+          #   target: i686-unknown-linux-gnu
+          #   architecture: i686
+          #   use-cross: true
+          #   addl-build-args: --features=apply,fetch,foreach,self_update
+          #   default-features:
+          #   addl-qsvlite-features:
+          #   addl-qsvdp-features:
+          #   addl-rustflags:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-msvc
@@ -75,16 +75,16 @@ jobs:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
             addl-rustflags: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+avx2,+fma,+bmi1,+bmi2,+lzcnt,+pclmulqdq
-          - os: windows-latest
-            os-name: windows
-            target: i686-pc-windows-msvc
-            architecture: i686
-            use-cross: true
-            addl-build-args: --features=apply,fetch,self_update
-            default-features:
-            addl-qsvlite-features:
-            addl-qsvdp-features:
-            addl-rustflags:
+          # - os: windows-latest
+          #   os-name: windows
+          #   target: i686-pc-windows-msvc
+          #   architecture: i686
+          #   use-cross: true
+          #   addl-build-args: --features=apply,fetch,self_update
+          #   default-features:
+          #   addl-qsvlite-features:
+          #   addl-qsvdp-features:
+          #   addl-rustflags:
           - os: windows-latest
             os-name: windows
             target: x86_64-pc-windows-gnu
