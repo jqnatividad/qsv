@@ -3,9 +3,9 @@ name: qsv Debian Package
 on:
   workflow_dispatch:
 
-jobs:
+jobs:                
   analyze-tags:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       previous-tag: ${{ steps.previoustag.outputs.tag }}
     steps:
@@ -18,11 +18,13 @@ jobs:
 
   build:
     needs: analyze-tags
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
+          token: ${{ secrets.GITHUB_TOKEN }}
   
       - name: Install Cargo Deb
         run: cargo install cargo-deb
@@ -31,11 +33,7 @@ jobs:
         run: cargo deb
 
       - name: Upload Debian Package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: qsv-deb
           path: target/debian/*
-      
-
-
-
