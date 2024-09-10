@@ -60,7 +60,7 @@ jobs:
             target: i686-unknown-linux-gnu
             architecture: i686
             use-cross: true
-            addl-build-args: --features=apply,fetch,foreach,self_update,lens
+            addl-build-args: --features=apply,fetch,foreach,self_update
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
@@ -80,7 +80,7 @@ jobs:
             target: i686-pc-windows-msvc
             architecture: i686
             use-cross: true
-            addl-build-args: --features=apply,fetch,self_update,lens
+            addl-build-args: --features=apply,fetch,self_update
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
