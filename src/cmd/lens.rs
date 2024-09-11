@@ -53,7 +53,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if let Some(delimiter) = &args.flag_delimiter {
-        lens_args.push(format!("--delimiter={delimiter}"));
+        lens_args.extend_from_slice(&["--delimiter".to_string(), delimiter.to_string()]);
     }
 
     if args.flag_tab_separated {
@@ -65,15 +65,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if let Some(columns) = &args.flag_columns {
-        lens_args.push(format!("--columns={columns}"));
+        lens_args.extend_from_slice(&["--columns".to_string(), columns.to_string()]);
     }
 
     if let Some(filter) = &args.flag_filter {
-        lens_args.push(format!("--filter={filter}"));
+        lens_args.extend_from_slice(&["--filter".to_string(), filter.to_string()]);
     }
 
     if let Some(find) = &args.flag_find {
-        lens_args.push(format!("--find={find}"));
+        lens_args.extend_from_slice(&["--find".to_string(), find.to_string()]);
     }
 
     if args.flag_ignore_case {
@@ -81,7 +81,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if let Some(echo_column) = &args.flag_echo_column {
-        lens_args.push(format!("--echo-column {echo_column}"));
+        lens_args.extend_from_slice(&["--echo-column".to_string(), echo_column.to_string()]);
     }
 
     if args.flag_debug {
