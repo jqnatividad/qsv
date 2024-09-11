@@ -48,17 +48,17 @@ jobs:
       - name: Build Debian Package
         run: cargo deb
 
-      # - name: Upload Debian Package
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: qsv-deb
-      #     path: target/debian/*
-
-      - name: Upload zipped binaries to release
-        uses: svenstaro/upload-release-action@v2
+      - name: Upload Debian Package
+        uses: actions/upload-artifact@v3
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/debian/qsv_${{ needs.analyze-tags.outputs.previous-tag }}-1_x86_64-unknown-linux-gnu.deb
-          asset_name: qsv_${{ needs.analyze-tags.outputs.previous-tag }}-1_x86_64-unknown-linux-gnu.deb
-          overwrite: true
-          tag: ${{ needs.analyze-tags.outputs.previous-tag }}
+          name: qsv-deb
+          path: target/debian/*
+
+      # - name: Upload zipped binaries to release
+      #   uses: svenstaro/upload-release-action@v2
+      #   with:
+      #     repo_token: ${{ secrets.GITHUB_TOKEN }}
+      #     file: target/debian/qsv_${{ needs.analyze-tags.outputs.previous-tag }}-1_x86_64-unknown-linux-gnu.deb
+      #     asset_name: qsv_${{ needs.analyze-tags.outputs.previous-tag }}-1_x86_64-unknown-linux-gnu.deb
+      #     overwrite: true
+      #     tag: ${{ needs.analyze-tags.outputs.previous-tag }}
