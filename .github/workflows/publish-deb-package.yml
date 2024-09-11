@@ -46,7 +46,7 @@ jobs:
         run: cargo install cargo-deb
 
       - name: Build Debian Package
-        run: cargo deb
+        run: cargo deb --target=x86_64-unknown-linux-gnu
 
       - name: Upload Debian Package
         uses: actions/upload-artifact@v3
