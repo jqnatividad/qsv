@@ -146,7 +146,7 @@ mlua = { version = "0.9", features = [
 num_cpus = "1"
 odht = "0.3"
 phf = { version = "0.11", features = ["macros"], optional = true }
-polars = { version = "0.42", features = [
+polars = { version = "0.43", features = [
     "asof_join",
     "avro",
     "avx512",
@@ -303,9 +303,9 @@ local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", br
 # BUILD NOTE: Be sure to set QSV_POLARS_REV below to the latest commit short hash or tag 
 # of polars/py-polars before building qsv. This allows us to show the polars rev/tag in --version.
 # if we are using a release version of Rust Polars, leave QSV_POLARS_REV empty
-# QSV_POLARS_REV=fe04390
+# QSV_POLARS_REV=
 # polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.6.0" }
-polars = { git = "https://github.com/pola-rs/polars", rev = "fe04390" }
+# polars = { git = "https://github.com/pola-rs/polars", rev = "fe04390" }
 
 [features]
 default = ["mimalloc"]
