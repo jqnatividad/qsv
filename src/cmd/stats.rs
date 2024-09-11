@@ -5,7 +5,7 @@ Summary statistics includes sum, min/max/range, sort order, min/max/sum/avg leng
 standard error of the mean (SEM), stddev, variance, coefficient of variation (CV), nullcount,
 max_precision, sparsity, quartiles, interquartile range (IQR), lower/upper fences, skewness, median,
 cardinality, mode/s & "antimode/s", and median absolute deviation (MAD). Note that some statistics
-require loading theentire file into memory, so they must be enabled explicitly. 
+require loading the entire file into memory, so they must be enabled explicitly. 
 
 By default, the following "streaming" statistics are reported for *every* column:
 sum, min/max/range values, sort order, min/max/sum/avg length, mean, sem, stddev, variance, cv,
