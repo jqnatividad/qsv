@@ -6431,9 +6431,9 @@ checksum = "f27f6278552951f1f2b8cf9da965d10969b2efdea95a6ec47987ab46edfe263a"
 
 [[package]]
 name = "simple-expand-tilde"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "faedb3ba93be480c554003ab3b52e20c738e4537d6acd92eec66ca5a96e5da14"
+checksum = "c5df0142d515cb22bebfdd940296ebeaae687989e35ffabc8c18bfb69da168c6"
 dependencies = [
  "simple-home-dir",
 ]
