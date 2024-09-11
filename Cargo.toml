@@ -275,7 +275,8 @@ csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-opt
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 
 # use our fork of csvlens with latest dependencies to minimize the dependency tree
-csvlens = { git = "https://github.com/jqnatividad/csvlens", branch = "bump-deps-for-qsv" }
+# csvlens = { git = "https://github.com/jqnatividad/csvlens", branch = "bump-deps-for-qsv" }
+csvlens = { git = "https://github.com/YS-L/csvlens", rev = "abc8e43" }
 
 # upstream csvs_convert has some old dependencies
 csvs_convert = { git = "https://github.com/jqnatividad/csvs_convert", branch = "bump-more-dependencies" }
