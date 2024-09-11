@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=4.11.0
+bm_version=4.12.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -75,7 +75,7 @@ filestem="${data_filename%.*}"
 # check if qsv is installed
 if ! command -v "$qsv_bin" &>/dev/null; then
   echo "qsv could not be found"
-  echo "Please install Quicksilver (qsv) from https://qsv.dathere.com"
+  echo "Please install qsv from https://qsv.dathere.com"
   exit
 fi
 
@@ -88,7 +88,7 @@ benchmarker_version=$("$qsv_benchmarker_bin" --version)
 
 # if arg_pat is equal to "help", show usage
 if [[ "$arg_pat" == "help" ]]; then
-  echo "Quicksilver (qsv) Benchmark Script v$bm_version"
+  echo "qsv Benchmark Script v$bm_version"
   echo ""
   echo "Usage: ./benchmarks.sh <argument>"
   echo ""
@@ -522,6 +522,8 @@ run frequency_notrim "$qsv_bin" frequency --no-trim "$data"
 run --index frequency_notrim_index "$qsv_bin" frequency --no-trim "$data"
 run frequency_limit20 "$qsv_bin" frequency --limit 20 "$data"
 run --index frequency_limit20_index "$qsv_bin" frequency --limit 20 "$data"
+run frequency_sorted "$qsv_bin" frequency data_sorted.csv
+run --index frequency_sorted_index "$qsv_bin" frequency data_sorted.csv
 run geocode_suggest "$qsv_bin" geocode suggest City --new-column geocoded_city "$data"
 run geocode_suggest_batchall "$qsv_bin" geocode suggest City --new-column geocoded_city --batch 0 "$data"
 run geocode_reverse "$qsv_bin" geocode reverse Location --new-column geocoded_location "$data"
@@ -637,12 +639,14 @@ run stats_everything "$qsv_bin" stats "$data" --force --everything
 run stats_everything_create_cache "$qsv_bin" stats "$data" --force --everything
 run stats_everything_infer_dates "$qsv_bin" stats "$data" --force --everything --infer-dates
 run stats_everything_j1 "$qsv_bin" stats "$data" --force --everything -j 1
+run stats_everything_sorted "$qsv_bin" stats data_sorted.csv --force --everything
 run --index stats_everything_index "$qsv_bin" stats "$data" --force --everything
 run --index stats_everything_index_with_cache "$qsv_bin" stats "$data" --everything
 run --index stats_everything_infer_dates_index "$qsv_bin" stats "$data" --force --everything --infer-dates
 run --index stats_everything_infer_dates_index_with_cache "$qsv_bin" stats "$data" --everything --infer-dates
 run --index stats_everything_index_j1 "$qsv_bin" stats "$data" --force --everything -j 1
 run --index stats_everything_index_j1_with_cache "$qsv_bin" stats "$data" --everything -j 1
+run --index stats_everything_sorted_index "$qsv_bin" stats data_sorted.csv --force --everything
 run table "$qsv_bin" table "$data"
 run to_xlsx "$qsv_bin" to xlsx benchmark_work.xlsx "$data"
 run to_sqlite "$qsv_bin" to sqlite benchmark_work.db "$data"
