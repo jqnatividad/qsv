@@ -57,8 +57,10 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand joinp 'joinp'
             cand json 'json'
             cand jsonl 'jsonl'
+            cand lens 'lens'
             cand luau 'luau'
             cand partition 'partition'
+            cand pro 'pro'
             cand prompt 'prompt'
             cand pseudo 'pseudo'
             cand py 'py'
@@ -194,10 +196,13 @@ set edit:completion:arg-completer[qsv] = {|@words|
         &'qsv;count'= {
             cand --human-readable 'human-readable'
             cand --width 'width'
+            cand --width-no-delims 'width-no-delims'
+            cand --json 'json'
             cand --no-polars 'no-polars'
             cand --low-memory 'low-memory'
             cand --flexible 'flexible'
             cand --no-headers 'no-headers'
+            cand --delimiter 'delimiter'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -267,6 +272,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --delimiter-output 'delimiter-output'
             cand --key 'key'
             cand --sort-columns 'sort-columns'
+            cand --drop-equal-fields 'drop-equal-fields'
             cand --jobs 'jobs'
             cand --output 'output'
             cand -h 'Print help'
@@ -415,6 +421,8 @@ set edit:completion:arg-completer[qsv] = {|@words|
         &'qsv;fixlengths'= {
             cand --length 'length'
             cand --insert 'insert'
+            cand --quote 'quote'
+            cand --escape 'escape'
             cand --output 'output'
             cand --delimiter 'delimiter'
             cand -h 'Print help'
@@ -463,6 +471,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --other-text 'other-text'
             cand --asc 'asc'
             cand --no-trim 'no-trim'
+            cand --no-nulls 'no-nulls'
             cand --ignore-case 'ignore-case'
             cand --stats-mode 'stats-mode'
             cand --all-unique-text 'all-unique-text'
@@ -496,6 +505,92 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --progressbar 'progressbar'
             cand -h 'Print help'
             cand --help 'Print help'
+            cand suggest 'suggest'
+            cand suggestnow 'suggestnow'
+            cand reverse 'reverse'
+            cand reversenow 'reversenow'
+            cand countryinfo 'countryinfo'
+            cand countryinfonow 'countryinfonow'
+            cand index-load 'index-load'
+            cand index-check 'index-check'
+            cand index-update 'index-update'
+            cand index-reset 'index-reset'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'qsv;geocode;suggest'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;geocode;suggestnow'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;geocode;reverse'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;geocode;reversenow'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;geocode;countryinfo'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;geocode;countryinfonow'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;geocode;index-load'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;geocode;index-check'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;geocode;index-update'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;geocode;index-reset'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;geocode;help'= {
+            cand suggest 'suggest'
+            cand suggestnow 'suggestnow'
+            cand reverse 'reverse'
+            cand reversenow 'reversenow'
+            cand countryinfo 'countryinfo'
+            cand countryinfonow 'countryinfonow'
+            cand index-load 'index-load'
+            cand index-check 'index-check'
+            cand index-update 'index-update'
+            cand index-reset 'index-reset'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'qsv;geocode;help;suggest'= {
+        }
+        &'qsv;geocode;help;suggestnow'= {
+        }
+        &'qsv;geocode;help;reverse'= {
+        }
+        &'qsv;geocode;help;reversenow'= {
+        }
+        &'qsv;geocode;help;countryinfo'= {
+        }
+        &'qsv;geocode;help;countryinfonow'= {
+        }
+        &'qsv;geocode;help;index-load'= {
+        }
+        &'qsv;geocode;help;index-check'= {
+        }
+        &'qsv;geocode;help;index-update'= {
+        }
+        &'qsv;geocode;help;index-reset'= {
+        }
+        &'qsv;geocode;help;help'= {
         }
         &'qsv;headers'= {
             cand --just-names 'just-names'
@@ -530,6 +625,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
         }
         &'qsv;join'= {
             cand --ignore-case 'ignore-case'
+            cand --left 'left'
             cand --left-anti 'left-anti'
             cand --left-semi 'left-semi'
             cand --right 'right'
@@ -594,11 +690,25 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand -h 'Print help'
             cand --help 'Print help'
         }
+        &'qsv;lens'= {
+            cand --delimiter 'delimiter'
+            cand --tab-separated 'tab-separated'
+            cand --no-headers 'no-headers'
+            cand --columns 'columns'
+            cand --filter 'filter'
+            cand --find 'find'
+            cand --ignore-case 'ignore-case'
+            cand --echo-column 'echo-column'
+            cand --debug 'debug'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
         &'qsv;luau'= {
             cand --no-globals 'no-globals'
             cand --colindex 'colindex'
             cand --remap 'remap'
             cand --begin 'begin'
+            cand --end 'end'
             cand --luau-path 'luau-path'
             cand --max-errors 'max-errors'
             cand --timeout 'timeout'
@@ -611,6 +721,28 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --progressbar 'progressbar'
             cand -h 'Print help'
             cand --help 'Print help'
+            cand map 'map'
+            cand filter 'filter'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'qsv;luau;map'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;luau;filter'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;luau;help'= {
+            cand map 'map'
+            cand filter 'filter'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'qsv;luau;help;map'= {
+        }
+        &'qsv;luau;help;filter'= {
+        }
+        &'qsv;luau;help;help'= {
         }
         &'qsv;partition'= {
             cand --filename 'filename'
@@ -620,6 +752,32 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --delimiter 'delimiter'
             cand -h 'Print help'
             cand --help 'Print help'
+        }
+        &'qsv;pro'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+            cand lens 'lens'
+            cand workflow 'workflow'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'qsv;pro;lens'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;pro;workflow'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;pro;help'= {
+            cand lens 'lens'
+            cand workflow 'workflow'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'qsv;pro;help;lens'= {
+        }
+        &'qsv;pro;help;workflow'= {
+        }
+        &'qsv;pro;help;help'= {
         }
         &'qsv;prompt'= {
             cand --msg 'msg'
@@ -637,6 +795,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --start 'start'
             cand --increment 'increment'
             cand --formatstr 'formatstr'
+            cand --output 'output'
             cand --no-headers 'no-headers'
             cand --delimiter 'delimiter'
             cand -h 'Print help'
@@ -651,6 +810,28 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --progressbar 'progressbar'
             cand -h 'Print help'
             cand --help 'Print help'
+            cand map 'map'
+            cand filter 'filter'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'qsv;py;map'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;py;filter'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;py;help'= {
+            cand map 'map'
+            cand filter 'filter'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'qsv;py;help;map'= {
+        }
+        &'qsv;py;help;filter'= {
+        }
+        &'qsv;py;help;help'= {
         }
         &'qsv;rename'= {
             cand --output 'output'
@@ -752,9 +933,9 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --quick 'quick'
             cand --count 'count'
             cand --json 'json'
-            cand --not-one 'not-one'
             cand --size-limit 'size-limit'
             cand --dfa-size-limit 'dfa-size-limit'
+            cand --not-one 'not-one'
             cand --output 'output'
             cand --no-headers 'no-headers'
             cand --delimiter 'delimiter'
@@ -933,6 +1114,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --round 'round'
             cand --nulls 'nulls'
             cand --infer-dates 'infer-dates'
+            cand --dates-whitelist 'dates-whitelist'
             cand --prefer-dmy 'prefer-dmy'
             cand --force 'force'
             cand --jobs 'jobs'
@@ -971,6 +1153,44 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --delimiter 'delimiter'
             cand -h 'Print help'
             cand --help 'Print help'
+            cand postgres 'postgres'
+            cand sqlite 'sqlite'
+            cand xlsx 'xlsx'
+            cand datapackage 'datapackage'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'qsv;to;postgres'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;to;sqlite'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;to;xlsx'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;to;datapackage'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'qsv;to;help'= {
+            cand postgres 'postgres'
+            cand sqlite 'sqlite'
+            cand xlsx 'xlsx'
+            cand datapackage 'datapackage'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'qsv;to;help;postgres'= {
+        }
+        &'qsv;to;help;sqlite'= {
+        }
+        &'qsv;to;help;xlsx'= {
+        }
+        &'qsv;to;help;datapackage'= {
+        }
+        &'qsv;to;help;help'= {
         }
         &'qsv;tojsonl'= {
             cand --trim 'trim'
@@ -1042,8 +1262,10 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand joinp 'joinp'
             cand json 'json'
             cand jsonl 'jsonl'
+            cand lens 'lens'
             cand luau 'luau'
             cand partition 'partition'
+            cand pro 'pro'
             cand prompt 'prompt'
             cand pseudo 'pseudo'
             cand py 'py'
@@ -1141,6 +1363,36 @@ set edit:completion:arg-completer[qsv] = {|@words|
         &'qsv;help;frequency'= {
         }
         &'qsv;help;geocode'= {
+            cand suggest 'suggest'
+            cand suggestnow 'suggestnow'
+            cand reverse 'reverse'
+            cand reversenow 'reversenow'
+            cand countryinfo 'countryinfo'
+            cand countryinfonow 'countryinfonow'
+            cand index-load 'index-load'
+            cand index-check 'index-check'
+            cand index-update 'index-update'
+            cand index-reset 'index-reset'
+        }
+        &'qsv;help;geocode;suggest'= {
+        }
+        &'qsv;help;geocode;suggestnow'= {
+        }
+        &'qsv;help;geocode;reverse'= {
+        }
+        &'qsv;help;geocode;reversenow'= {
+        }
+        &'qsv;help;geocode;countryinfo'= {
+        }
+        &'qsv;help;geocode;countryinfonow'= {
+        }
+        &'qsv;help;geocode;index-load'= {
+        }
+        &'qsv;help;geocode;index-check'= {
+        }
+        &'qsv;help;geocode;index-update'= {
+        }
+        &'qsv;help;geocode;index-reset'= {
         }
         &'qsv;help;headers'= {
         }
@@ -1156,15 +1408,37 @@ set edit:completion:arg-completer[qsv] = {|@words|
         }
         &'qsv;help;jsonl'= {
         }
+        &'qsv;help;lens'= {
+        }
         &'qsv;help;luau'= {
+            cand map 'map'
+            cand filter 'filter'
+        }
+        &'qsv;help;luau;map'= {
+        }
+        &'qsv;help;luau;filter'= {
         }
         &'qsv;help;partition'= {
+        }
+        &'qsv;help;pro'= {
+            cand lens 'lens'
+            cand workflow 'workflow'
+        }
+        &'qsv;help;pro;lens'= {
+        }
+        &'qsv;help;pro;workflow'= {
         }
         &'qsv;help;prompt'= {
         }
         &'qsv;help;pseudo'= {
         }
         &'qsv;help;py'= {
+            cand map 'map'
+            cand filter 'filter'
+        }
+        &'qsv;help;py;map'= {
+        }
+        &'qsv;help;py;filter'= {
         }
         &'qsv;help;rename'= {
         }
@@ -1215,6 +1489,18 @@ set edit:completion:arg-completer[qsv] = {|@words|
         &'qsv;help;table'= {
         }
         &'qsv;help;to'= {
+            cand postgres 'postgres'
+            cand sqlite 'sqlite'
+            cand xlsx 'xlsx'
+            cand datapackage 'datapackage'
+        }
+        &'qsv;help;to;postgres'= {
+        }
+        &'qsv;help;to;sqlite'= {
+        }
+        &'qsv;help;to;xlsx'= {
+        }
+        &'qsv;help;to;datapackage'= {
         }
         &'qsv;help;tojsonl'= {
         }

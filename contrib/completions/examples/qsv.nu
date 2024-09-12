@@ -114,10 +114,13 @@ module completions {
   export extern "qsv count" [
     --human-readable
     --width
+    --width-no-delims
+    --json
     --no-polars
     --low-memory
     --flexible
     --no-headers
+    --delimiter
     --help(-h)                # Print help
   ]
 
@@ -187,6 +190,7 @@ module completions {
     --delimiter-output
     --key
     --sort-columns
+    --drop-equal-fields
     --jobs
     --output
     --help(-h)                # Print help
@@ -335,6 +339,8 @@ module completions {
   export extern "qsv fixlengths" [
     --length
     --insert
+    --quote
+    --escape
     --output
     --delimiter
     --help(-h)                # Print help
@@ -383,6 +389,7 @@ module completions {
     --other-text
     --asc
     --no-trim
+    --no-nulls
     --ignore-case
     --stats-mode
     --all-unique-text
@@ -415,6 +422,84 @@ module completions {
     --delimiter
     --progressbar
     --help(-h)                # Print help
+  ]
+
+  export extern "qsv geocode suggest" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv geocode suggestnow" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv geocode reverse" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv geocode reversenow" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv geocode countryinfo" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv geocode countryinfonow" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv geocode index-load" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv geocode index-check" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv geocode index-update" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv geocode index-reset" [
+    --help(-h)                # Print help
+  ]
+
+  # Print this message or the help of the given subcommand(s)
+  export extern "qsv geocode help" [
+  ]
+
+  export extern "qsv geocode help suggest" [
+  ]
+
+  export extern "qsv geocode help suggestnow" [
+  ]
+
+  export extern "qsv geocode help reverse" [
+  ]
+
+  export extern "qsv geocode help reversenow" [
+  ]
+
+  export extern "qsv geocode help countryinfo" [
+  ]
+
+  export extern "qsv geocode help countryinfonow" [
+  ]
+
+  export extern "qsv geocode help index-load" [
+  ]
+
+  export extern "qsv geocode help index-check" [
+  ]
+
+  export extern "qsv geocode help index-update" [
+  ]
+
+  export extern "qsv geocode help index-reset" [
+  ]
+
+  # Print this message or the help of the given subcommand(s)
+  export extern "qsv geocode help help" [
   ]
 
   export extern "qsv headers" [
@@ -450,6 +535,7 @@ module completions {
 
   export extern "qsv join" [
     --ignore-case
+    --left
     --left-anti
     --left-semi
     --right
@@ -514,11 +600,25 @@ module completions {
     --help(-h)                # Print help
   ]
 
+  export extern "qsv lens" [
+    --delimiter
+    --tab-separated
+    --no-headers
+    --columns
+    --filter
+    --find
+    --ignore-case
+    --echo-column
+    --debug
+    --help(-h)                # Print help
+  ]
+
   export extern "qsv luau" [
     --no-globals
     --colindex
     --remap
     --begin
+    --end
     --luau-path
     --max-errors
     --timeout
@@ -532,6 +632,28 @@ module completions {
     --help(-h)                # Print help
   ]
 
+  export extern "qsv luau map" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv luau filter" [
+    --help(-h)                # Print help
+  ]
+
+  # Print this message or the help of the given subcommand(s)
+  export extern "qsv luau help" [
+  ]
+
+  export extern "qsv luau help map" [
+  ]
+
+  export extern "qsv luau help filter" [
+  ]
+
+  # Print this message or the help of the given subcommand(s)
+  export extern "qsv luau help help" [
+  ]
+
   export extern "qsv partition" [
     --filename
     --prefix-length
@@ -539,6 +661,32 @@ module completions {
     --no-headers
     --delimiter
     --help(-h)                # Print help
+  ]
+
+  export extern "qsv pro" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv pro lens" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv pro workflow" [
+    --help(-h)                # Print help
+  ]
+
+  # Print this message or the help of the given subcommand(s)
+  export extern "qsv pro help" [
+  ]
+
+  export extern "qsv pro help lens" [
+  ]
+
+  export extern "qsv pro help workflow" [
+  ]
+
+  # Print this message or the help of the given subcommand(s)
+  export extern "qsv pro help help" [
   ]
 
   export extern "qsv prompt" [
@@ -557,6 +705,7 @@ module completions {
     --start
     --increment
     --formatstr
+    --output
     --no-headers
     --delimiter
     --help(-h)                # Print help
@@ -570,6 +719,28 @@ module completions {
     --delimiter
     --progressbar
     --help(-h)                # Print help
+  ]
+
+  export extern "qsv py map" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv py filter" [
+    --help(-h)                # Print help
+  ]
+
+  # Print this message or the help of the given subcommand(s)
+  export extern "qsv py help" [
+  ]
+
+  export extern "qsv py help map" [
+  ]
+
+  export extern "qsv py help filter" [
+  ]
+
+  # Print this message or the help of the given subcommand(s)
+  export extern "qsv py help help" [
   ]
 
   export extern "qsv rename" [
@@ -672,9 +843,9 @@ module completions {
     --quick
     --count
     --json
-    --not-one
     --size-limit
     --dfa-size-limit
+    --not-one
     --output
     --no-headers
     --delimiter
@@ -851,6 +1022,7 @@ module completions {
     --round
     --nulls
     --infer-dates
+    --dates-whitelist
     --prefer-dmy
     --force
     --jobs
@@ -888,6 +1060,42 @@ module completions {
     --jobs
     --delimiter
     --help(-h)                # Print help
+  ]
+
+  export extern "qsv to postgres" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv to sqlite" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv to xlsx" [
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv to datapackage" [
+    --help(-h)                # Print help
+  ]
+
+  # Print this message or the help of the given subcommand(s)
+  export extern "qsv to help" [
+  ]
+
+  export extern "qsv to help postgres" [
+  ]
+
+  export extern "qsv to help sqlite" [
+  ]
+
+  export extern "qsv to help xlsx" [
+  ]
+
+  export extern "qsv to help datapackage" [
+  ]
+
+  # Print this message or the help of the given subcommand(s)
+  export extern "qsv to help help" [
   ]
 
   export extern "qsv tojsonl" [
@@ -1027,6 +1235,36 @@ module completions {
   export extern "qsv help geocode" [
   ]
 
+  export extern "qsv help geocode suggest" [
+  ]
+
+  export extern "qsv help geocode suggestnow" [
+  ]
+
+  export extern "qsv help geocode reverse" [
+  ]
+
+  export extern "qsv help geocode reversenow" [
+  ]
+
+  export extern "qsv help geocode countryinfo" [
+  ]
+
+  export extern "qsv help geocode countryinfonow" [
+  ]
+
+  export extern "qsv help geocode index-load" [
+  ]
+
+  export extern "qsv help geocode index-check" [
+  ]
+
+  export extern "qsv help geocode index-update" [
+  ]
+
+  export extern "qsv help geocode index-reset" [
+  ]
+
   export extern "qsv help headers" [
   ]
 
@@ -1048,10 +1286,28 @@ module completions {
   export extern "qsv help jsonl" [
   ]
 
+  export extern "qsv help lens" [
+  ]
+
   export extern "qsv help luau" [
   ]
 
+  export extern "qsv help luau map" [
+  ]
+
+  export extern "qsv help luau filter" [
+  ]
+
   export extern "qsv help partition" [
+  ]
+
+  export extern "qsv help pro" [
+  ]
+
+  export extern "qsv help pro lens" [
+  ]
+
+  export extern "qsv help pro workflow" [
   ]
 
   export extern "qsv help prompt" [
@@ -1061,6 +1317,12 @@ module completions {
   ]
 
   export extern "qsv help py" [
+  ]
+
+  export extern "qsv help py map" [
+  ]
+
+  export extern "qsv help py filter" [
   ]
 
   export extern "qsv help rename" [
@@ -1130,6 +1392,18 @@ module completions {
   ]
 
   export extern "qsv help to" [
+  ]
+
+  export extern "qsv help to postgres" [
+  ]
+
+  export extern "qsv help to sqlite" [
+  ]
+
+  export extern "qsv help to xlsx" [
+  ]
+
+  export extern "qsv help to datapackage" [
   ]
 
   export extern "qsv help tojsonl" [
