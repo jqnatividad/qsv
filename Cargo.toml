@@ -92,7 +92,7 @@ csv-core = "0.1"
 csv-diff = "0.1.0"
 csv-index = "0.1"
 csvlens = { version = "0.10", optional = true }
-csvs_convert = { version = "0.8", default-features = false, features = [
+csvs_convert = { version = "0.8.14", default-features = false, features = [
     "converters",
 ], optional = true }
 data-encoding = { version = "2.6", optional = true }
@@ -279,7 +279,7 @@ csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-opt
 csvlens = { git = "https://github.com/YS-L/csvlens", rev = "abc8e43" }
 
 # upstream csvs_convert has some old dependencies
-csvs_convert = { git = "https://github.com/jqnatividad/csvs_convert", branch = "bump-more-dependencies" }
+# csvs_convert = { git = "https://github.com/jqnatividad/csvs_convert", branch = "bump-more-dependencies" }
 
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
