@@ -14,6 +14,7 @@ pub fn stats_cmd() -> Command {
         arg!(--round),
         arg!(--nulls),
         arg!(--"infer-dates"),
+        arg!(--"dates-whitelist"),
         arg!(--"prefer-dmy"),
         arg!(--force),
         arg!(--jobs),

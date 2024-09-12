@@ -5,6 +5,7 @@ pub fn pseudo_cmd() -> Command {
         arg!(--start),
         arg!(--increment),
         arg!(--formatstr),
+        arg!(--output),
         arg!(--"no-headers"),
         arg!(--delimiter),
     ])

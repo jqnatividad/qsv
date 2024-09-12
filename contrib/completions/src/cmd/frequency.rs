@@ -11,6 +11,7 @@ pub fn frequency_cmd() -> Command {
         arg!(--"other-text"),
         arg!(--asc),
         arg!(--"no-trim"),
+        arg!(--"no-nulls"),
         arg!(--"ignore-case"),
         arg!(--"stats-mode"),
         arg!(--"all-unique-text"),

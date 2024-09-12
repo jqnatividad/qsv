@@ -10,6 +10,7 @@ pub fn diff_cmd() -> Command {
         arg!(--"delimiter-output"),
         arg!(--key),
         arg!(--"sort-columns"),
+        arg!(--"drop-equal-fields"),
         arg!(--jobs),
         arg!(--output),
     ])

@@ -60,8 +60,10 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('joinp', 'joinp', [CompletionResultType]::ParameterValue, 'joinp')
             [CompletionResult]::new('json', 'json', [CompletionResultType]::ParameterValue, 'json')
             [CompletionResult]::new('jsonl', 'jsonl', [CompletionResultType]::ParameterValue, 'jsonl')
+            [CompletionResult]::new('lens', 'lens', [CompletionResultType]::ParameterValue, 'lens')
             [CompletionResult]::new('luau', 'luau', [CompletionResultType]::ParameterValue, 'luau')
             [CompletionResult]::new('partition', 'partition', [CompletionResultType]::ParameterValue, 'partition')
+            [CompletionResult]::new('pro', 'pro', [CompletionResultType]::ParameterValue, 'pro')
             [CompletionResult]::new('prompt', 'prompt', [CompletionResultType]::ParameterValue, 'prompt')
             [CompletionResult]::new('pseudo', 'pseudo', [CompletionResultType]::ParameterValue, 'pseudo')
             [CompletionResult]::new('py', 'py', [CompletionResultType]::ParameterValue, 'py')
@@ -112,21 +114,65 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             break
         }
         'qsv;apply;operations' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--comparand', 'comparand', [CompletionResultType]::ParameterName, 'comparand')
+            [CompletionResult]::new('--replacement', 'replacement', [CompletionResultType]::ParameterName, 'replacement')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'qsv;apply;emptyreplace' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--comparand', 'comparand', [CompletionResultType]::ParameterName, 'comparand')
+            [CompletionResult]::new('--replacement', 'replacement', [CompletionResultType]::ParameterName, 'replacement')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'qsv;apply;dynfmt' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--comparand', 'comparand', [CompletionResultType]::ParameterName, 'comparand')
+            [CompletionResult]::new('--replacement', 'replacement', [CompletionResultType]::ParameterName, 'replacement')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'qsv;apply;calcconv' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--comparand', 'comparand', [CompletionResultType]::ParameterName, 'comparand')
+            [CompletionResult]::new('--replacement', 'replacement', [CompletionResultType]::ParameterName, 'replacement')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
@@ -175,6 +221,9 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         }
         'qsv;cat;rows' {
             [CompletionResult]::new('--flexible', 'flexible', [CompletionResultType]::ParameterName, 'flexible')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
@@ -182,12 +231,18 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         'qsv;cat;rowskey' {
             [CompletionResult]::new('--group', 'group', [CompletionResultType]::ParameterName, 'group')
             [CompletionResult]::new('--group-name', 'group-name', [CompletionResultType]::ParameterName, 'group-name')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'qsv;cat;columns' {
             [CompletionResult]::new('--pad', 'pad', [CompletionResultType]::ParameterName, 'pad')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
@@ -220,10 +275,13 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         'qsv;count' {
             [CompletionResult]::new('--human-readable', 'human-readable', [CompletionResultType]::ParameterName, 'human-readable')
             [CompletionResult]::new('--width', 'width', [CompletionResultType]::ParameterName, 'width')
+            [CompletionResult]::new('--width-no-delims', 'width-no-delims', [CompletionResultType]::ParameterName, 'width-no-delims')
+            [CompletionResult]::new('--json', 'json', [CompletionResultType]::ParameterName, 'json')
             [CompletionResult]::new('--no-polars', 'no-polars', [CompletionResultType]::ParameterName, 'no-polars')
             [CompletionResult]::new('--low-memory', 'low-memory', [CompletionResultType]::ParameterName, 'low-memory')
             [CompletionResult]::new('--flexible', 'flexible', [CompletionResultType]::ParameterName, 'flexible')
             [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
@@ -297,6 +355,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--delimiter-output', 'delimiter-output', [CompletionResultType]::ParameterName, 'delimiter-output')
             [CompletionResult]::new('--key', 'key', [CompletionResultType]::ParameterName, 'key')
             [CompletionResult]::new('--sort-columns', 'sort-columns', [CompletionResultType]::ParameterName, 'sort-columns')
+            [CompletionResult]::new('--drop-equal-fields', 'drop-equal-fields', [CompletionResultType]::ParameterName, 'drop-equal-fields')
             [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
             [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
@@ -456,6 +515,8 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         'qsv;fixlengths' {
             [CompletionResult]::new('--length', 'length', [CompletionResultType]::ParameterName, 'length')
             [CompletionResult]::new('--insert', 'insert', [CompletionResultType]::ParameterName, 'insert')
+            [CompletionResult]::new('--quote', 'quote', [CompletionResultType]::ParameterName, 'quote')
+            [CompletionResult]::new('--escape', 'escape', [CompletionResultType]::ParameterName, 'escape')
             [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
             [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
@@ -508,6 +569,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--other-text', 'other-text', [CompletionResultType]::ParameterName, 'other-text')
             [CompletionResult]::new('--asc', 'asc', [CompletionResultType]::ParameterName, 'asc')
             [CompletionResult]::new('--no-trim', 'no-trim', [CompletionResultType]::ParameterName, 'no-trim')
+            [CompletionResult]::new('--no-nulls', 'no-nulls', [CompletionResultType]::ParameterName, 'no-nulls')
             [CompletionResult]::new('--ignore-case', 'ignore-case', [CompletionResultType]::ParameterName, 'ignore-case')
             [CompletionResult]::new('--stats-mode', 'stats-mode', [CompletionResultType]::ParameterName, 'stats-mode')
             [CompletionResult]::new('--all-unique-text', 'all-unique-text', [CompletionResultType]::ParameterName, 'all-unique-text')
@@ -542,6 +604,304 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('suggest', 'suggest', [CompletionResultType]::ParameterValue, 'suggest')
+            [CompletionResult]::new('suggestnow', 'suggestnow', [CompletionResultType]::ParameterValue, 'suggestnow')
+            [CompletionResult]::new('reverse', 'reverse', [CompletionResultType]::ParameterValue, 'reverse')
+            [CompletionResult]::new('reversenow', 'reversenow', [CompletionResultType]::ParameterValue, 'reversenow')
+            [CompletionResult]::new('countryinfo', 'countryinfo', [CompletionResultType]::ParameterValue, 'countryinfo')
+            [CompletionResult]::new('countryinfonow', 'countryinfonow', [CompletionResultType]::ParameterValue, 'countryinfonow')
+            [CompletionResult]::new('index-load', 'index-load', [CompletionResultType]::ParameterValue, 'index-load')
+            [CompletionResult]::new('index-check', 'index-check', [CompletionResultType]::ParameterValue, 'index-check')
+            [CompletionResult]::new('index-update', 'index-update', [CompletionResultType]::ParameterValue, 'index-update')
+            [CompletionResult]::new('index-reset', 'index-reset', [CompletionResultType]::ParameterValue, 'index-reset')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'qsv;geocode;suggest' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--country', 'country', [CompletionResultType]::ParameterName, 'country')
+            [CompletionResult]::new('--min-score', 'min-score', [CompletionResultType]::ParameterName, 'min-score')
+            [CompletionResult]::new('--admin1', 'admin1', [CompletionResultType]::ParameterName, 'admin1')
+            [CompletionResult]::new('--k_weight', 'k_weight', [CompletionResultType]::ParameterName, 'k_weight')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--language', 'language', [CompletionResultType]::ParameterName, 'language')
+            [CompletionResult]::new('--invalid-result', 'invalid-result', [CompletionResultType]::ParameterName, 'invalid-result')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--cache-dir', 'cache-dir', [CompletionResultType]::ParameterName, 'cache-dir')
+            [CompletionResult]::new('--languages', 'languages', [CompletionResultType]::ParameterName, 'languages')
+            [CompletionResult]::new('--cities-url', 'cities-url', [CompletionResultType]::ParameterName, 'cities-url')
+            [CompletionResult]::new('--force', 'force', [CompletionResultType]::ParameterName, 'force')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;geocode;suggestnow' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--country', 'country', [CompletionResultType]::ParameterName, 'country')
+            [CompletionResult]::new('--min-score', 'min-score', [CompletionResultType]::ParameterName, 'min-score')
+            [CompletionResult]::new('--admin1', 'admin1', [CompletionResultType]::ParameterName, 'admin1')
+            [CompletionResult]::new('--k_weight', 'k_weight', [CompletionResultType]::ParameterName, 'k_weight')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--language', 'language', [CompletionResultType]::ParameterName, 'language')
+            [CompletionResult]::new('--invalid-result', 'invalid-result', [CompletionResultType]::ParameterName, 'invalid-result')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--cache-dir', 'cache-dir', [CompletionResultType]::ParameterName, 'cache-dir')
+            [CompletionResult]::new('--languages', 'languages', [CompletionResultType]::ParameterName, 'languages')
+            [CompletionResult]::new('--cities-url', 'cities-url', [CompletionResultType]::ParameterName, 'cities-url')
+            [CompletionResult]::new('--force', 'force', [CompletionResultType]::ParameterName, 'force')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;geocode;reverse' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--country', 'country', [CompletionResultType]::ParameterName, 'country')
+            [CompletionResult]::new('--min-score', 'min-score', [CompletionResultType]::ParameterName, 'min-score')
+            [CompletionResult]::new('--admin1', 'admin1', [CompletionResultType]::ParameterName, 'admin1')
+            [CompletionResult]::new('--k_weight', 'k_weight', [CompletionResultType]::ParameterName, 'k_weight')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--language', 'language', [CompletionResultType]::ParameterName, 'language')
+            [CompletionResult]::new('--invalid-result', 'invalid-result', [CompletionResultType]::ParameterName, 'invalid-result')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--cache-dir', 'cache-dir', [CompletionResultType]::ParameterName, 'cache-dir')
+            [CompletionResult]::new('--languages', 'languages', [CompletionResultType]::ParameterName, 'languages')
+            [CompletionResult]::new('--cities-url', 'cities-url', [CompletionResultType]::ParameterName, 'cities-url')
+            [CompletionResult]::new('--force', 'force', [CompletionResultType]::ParameterName, 'force')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;geocode;reversenow' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--country', 'country', [CompletionResultType]::ParameterName, 'country')
+            [CompletionResult]::new('--min-score', 'min-score', [CompletionResultType]::ParameterName, 'min-score')
+            [CompletionResult]::new('--admin1', 'admin1', [CompletionResultType]::ParameterName, 'admin1')
+            [CompletionResult]::new('--k_weight', 'k_weight', [CompletionResultType]::ParameterName, 'k_weight')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--language', 'language', [CompletionResultType]::ParameterName, 'language')
+            [CompletionResult]::new('--invalid-result', 'invalid-result', [CompletionResultType]::ParameterName, 'invalid-result')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--cache-dir', 'cache-dir', [CompletionResultType]::ParameterName, 'cache-dir')
+            [CompletionResult]::new('--languages', 'languages', [CompletionResultType]::ParameterName, 'languages')
+            [CompletionResult]::new('--cities-url', 'cities-url', [CompletionResultType]::ParameterName, 'cities-url')
+            [CompletionResult]::new('--force', 'force', [CompletionResultType]::ParameterName, 'force')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;geocode;countryinfo' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--country', 'country', [CompletionResultType]::ParameterName, 'country')
+            [CompletionResult]::new('--min-score', 'min-score', [CompletionResultType]::ParameterName, 'min-score')
+            [CompletionResult]::new('--admin1', 'admin1', [CompletionResultType]::ParameterName, 'admin1')
+            [CompletionResult]::new('--k_weight', 'k_weight', [CompletionResultType]::ParameterName, 'k_weight')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--language', 'language', [CompletionResultType]::ParameterName, 'language')
+            [CompletionResult]::new('--invalid-result', 'invalid-result', [CompletionResultType]::ParameterName, 'invalid-result')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--cache-dir', 'cache-dir', [CompletionResultType]::ParameterName, 'cache-dir')
+            [CompletionResult]::new('--languages', 'languages', [CompletionResultType]::ParameterName, 'languages')
+            [CompletionResult]::new('--cities-url', 'cities-url', [CompletionResultType]::ParameterName, 'cities-url')
+            [CompletionResult]::new('--force', 'force', [CompletionResultType]::ParameterName, 'force')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;geocode;countryinfonow' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--country', 'country', [CompletionResultType]::ParameterName, 'country')
+            [CompletionResult]::new('--min-score', 'min-score', [CompletionResultType]::ParameterName, 'min-score')
+            [CompletionResult]::new('--admin1', 'admin1', [CompletionResultType]::ParameterName, 'admin1')
+            [CompletionResult]::new('--k_weight', 'k_weight', [CompletionResultType]::ParameterName, 'k_weight')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--language', 'language', [CompletionResultType]::ParameterName, 'language')
+            [CompletionResult]::new('--invalid-result', 'invalid-result', [CompletionResultType]::ParameterName, 'invalid-result')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--cache-dir', 'cache-dir', [CompletionResultType]::ParameterName, 'cache-dir')
+            [CompletionResult]::new('--languages', 'languages', [CompletionResultType]::ParameterName, 'languages')
+            [CompletionResult]::new('--cities-url', 'cities-url', [CompletionResultType]::ParameterName, 'cities-url')
+            [CompletionResult]::new('--force', 'force', [CompletionResultType]::ParameterName, 'force')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;geocode;index-load' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--country', 'country', [CompletionResultType]::ParameterName, 'country')
+            [CompletionResult]::new('--min-score', 'min-score', [CompletionResultType]::ParameterName, 'min-score')
+            [CompletionResult]::new('--admin1', 'admin1', [CompletionResultType]::ParameterName, 'admin1')
+            [CompletionResult]::new('--k_weight', 'k_weight', [CompletionResultType]::ParameterName, 'k_weight')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--language', 'language', [CompletionResultType]::ParameterName, 'language')
+            [CompletionResult]::new('--invalid-result', 'invalid-result', [CompletionResultType]::ParameterName, 'invalid-result')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--cache-dir', 'cache-dir', [CompletionResultType]::ParameterName, 'cache-dir')
+            [CompletionResult]::new('--languages', 'languages', [CompletionResultType]::ParameterName, 'languages')
+            [CompletionResult]::new('--cities-url', 'cities-url', [CompletionResultType]::ParameterName, 'cities-url')
+            [CompletionResult]::new('--force', 'force', [CompletionResultType]::ParameterName, 'force')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;geocode;index-check' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--country', 'country', [CompletionResultType]::ParameterName, 'country')
+            [CompletionResult]::new('--min-score', 'min-score', [CompletionResultType]::ParameterName, 'min-score')
+            [CompletionResult]::new('--admin1', 'admin1', [CompletionResultType]::ParameterName, 'admin1')
+            [CompletionResult]::new('--k_weight', 'k_weight', [CompletionResultType]::ParameterName, 'k_weight')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--language', 'language', [CompletionResultType]::ParameterName, 'language')
+            [CompletionResult]::new('--invalid-result', 'invalid-result', [CompletionResultType]::ParameterName, 'invalid-result')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--cache-dir', 'cache-dir', [CompletionResultType]::ParameterName, 'cache-dir')
+            [CompletionResult]::new('--languages', 'languages', [CompletionResultType]::ParameterName, 'languages')
+            [CompletionResult]::new('--cities-url', 'cities-url', [CompletionResultType]::ParameterName, 'cities-url')
+            [CompletionResult]::new('--force', 'force', [CompletionResultType]::ParameterName, 'force')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;geocode;index-update' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--country', 'country', [CompletionResultType]::ParameterName, 'country')
+            [CompletionResult]::new('--min-score', 'min-score', [CompletionResultType]::ParameterName, 'min-score')
+            [CompletionResult]::new('--admin1', 'admin1', [CompletionResultType]::ParameterName, 'admin1')
+            [CompletionResult]::new('--k_weight', 'k_weight', [CompletionResultType]::ParameterName, 'k_weight')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--language', 'language', [CompletionResultType]::ParameterName, 'language')
+            [CompletionResult]::new('--invalid-result', 'invalid-result', [CompletionResultType]::ParameterName, 'invalid-result')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--cache-dir', 'cache-dir', [CompletionResultType]::ParameterName, 'cache-dir')
+            [CompletionResult]::new('--languages', 'languages', [CompletionResultType]::ParameterName, 'languages')
+            [CompletionResult]::new('--cities-url', 'cities-url', [CompletionResultType]::ParameterName, 'cities-url')
+            [CompletionResult]::new('--force', 'force', [CompletionResultType]::ParameterName, 'force')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;geocode;index-reset' {
+            [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
+            [CompletionResult]::new('--rename', 'rename', [CompletionResultType]::ParameterName, 'rename')
+            [CompletionResult]::new('--country', 'country', [CompletionResultType]::ParameterName, 'country')
+            [CompletionResult]::new('--min-score', 'min-score', [CompletionResultType]::ParameterName, 'min-score')
+            [CompletionResult]::new('--admin1', 'admin1', [CompletionResultType]::ParameterName, 'admin1')
+            [CompletionResult]::new('--k_weight', 'k_weight', [CompletionResultType]::ParameterName, 'k_weight')
+            [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--language', 'language', [CompletionResultType]::ParameterName, 'language')
+            [CompletionResult]::new('--invalid-result', 'invalid-result', [CompletionResultType]::ParameterName, 'invalid-result')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--cache-dir', 'cache-dir', [CompletionResultType]::ParameterName, 'cache-dir')
+            [CompletionResult]::new('--languages', 'languages', [CompletionResultType]::ParameterName, 'languages')
+            [CompletionResult]::new('--cities-url', 'cities-url', [CompletionResultType]::ParameterName, 'cities-url')
+            [CompletionResult]::new('--force', 'force', [CompletionResultType]::ParameterName, 'force')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;geocode;help' {
+            [CompletionResult]::new('suggest', 'suggest', [CompletionResultType]::ParameterValue, 'suggest')
+            [CompletionResult]::new('suggestnow', 'suggestnow', [CompletionResultType]::ParameterValue, 'suggestnow')
+            [CompletionResult]::new('reverse', 'reverse', [CompletionResultType]::ParameterValue, 'reverse')
+            [CompletionResult]::new('reversenow', 'reversenow', [CompletionResultType]::ParameterValue, 'reversenow')
+            [CompletionResult]::new('countryinfo', 'countryinfo', [CompletionResultType]::ParameterValue, 'countryinfo')
+            [CompletionResult]::new('countryinfonow', 'countryinfonow', [CompletionResultType]::ParameterValue, 'countryinfonow')
+            [CompletionResult]::new('index-load', 'index-load', [CompletionResultType]::ParameterValue, 'index-load')
+            [CompletionResult]::new('index-check', 'index-check', [CompletionResultType]::ParameterValue, 'index-check')
+            [CompletionResult]::new('index-update', 'index-update', [CompletionResultType]::ParameterValue, 'index-update')
+            [CompletionResult]::new('index-reset', 'index-reset', [CompletionResultType]::ParameterValue, 'index-reset')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'qsv;geocode;help;suggest' {
+            break
+        }
+        'qsv;geocode;help;suggestnow' {
+            break
+        }
+        'qsv;geocode;help;reverse' {
+            break
+        }
+        'qsv;geocode;help;reversenow' {
+            break
+        }
+        'qsv;geocode;help;countryinfo' {
+            break
+        }
+        'qsv;geocode;help;countryinfonow' {
+            break
+        }
+        'qsv;geocode;help;index-load' {
+            break
+        }
+        'qsv;geocode;help;index-check' {
+            break
+        }
+        'qsv;geocode;help;index-update' {
+            break
+        }
+        'qsv;geocode;help;index-reset' {
+            break
+        }
+        'qsv;geocode;help;help' {
             break
         }
         'qsv;headers' {
@@ -580,6 +940,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         }
         'qsv;join' {
             [CompletionResult]::new('--ignore-case', 'ignore-case', [CompletionResultType]::ParameterName, 'ignore-case')
+            [CompletionResult]::new('--left', 'left', [CompletionResultType]::ParameterName, 'left')
             [CompletionResult]::new('--left-anti', 'left-anti', [CompletionResultType]::ParameterName, 'left-anti')
             [CompletionResult]::new('--left-semi', 'left-semi', [CompletionResultType]::ParameterName, 'left-semi')
             [CompletionResult]::new('--right', 'right', [CompletionResultType]::ParameterName, 'right')
@@ -648,11 +1009,49 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
+        'qsv;lens' {
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--tab-separated', 'tab-separated', [CompletionResultType]::ParameterName, 'tab-separated')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--columns', 'columns', [CompletionResultType]::ParameterName, 'columns')
+            [CompletionResult]::new('--filter', 'filter', [CompletionResultType]::ParameterName, 'filter')
+            [CompletionResult]::new('--find', 'find', [CompletionResultType]::ParameterName, 'find')
+            [CompletionResult]::new('--ignore-case', 'ignore-case', [CompletionResultType]::ParameterName, 'ignore-case')
+            [CompletionResult]::new('--echo-column', 'echo-column', [CompletionResultType]::ParameterName, 'echo-column')
+            [CompletionResult]::new('--debug', 'debug', [CompletionResultType]::ParameterName, 'debug')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
         'qsv;luau' {
             [CompletionResult]::new('--no-globals', 'no-globals', [CompletionResultType]::ParameterName, 'no-globals')
             [CompletionResult]::new('--colindex', 'colindex', [CompletionResultType]::ParameterName, 'colindex')
             [CompletionResult]::new('--remap', 'remap', [CompletionResultType]::ParameterName, 'remap')
             [CompletionResult]::new('--begin', 'begin', [CompletionResultType]::ParameterName, 'begin')
+            [CompletionResult]::new('--end', 'end', [CompletionResultType]::ParameterName, 'end')
+            [CompletionResult]::new('--luau-path', 'luau-path', [CompletionResultType]::ParameterName, 'luau-path')
+            [CompletionResult]::new('--max-errors', 'max-errors', [CompletionResultType]::ParameterName, 'max-errors')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--ckan-api', 'ckan-api', [CompletionResultType]::ParameterName, 'ckan-api')
+            [CompletionResult]::new('--ckan-token', 'ckan-token', [CompletionResultType]::ParameterName, 'ckan-token')
+            [CompletionResult]::new('--cache-dir', 'cache-dir', [CompletionResultType]::ParameterName, 'cache-dir')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('map', 'map', [CompletionResultType]::ParameterValue, 'map')
+            [CompletionResult]::new('filter', 'filter', [CompletionResultType]::ParameterValue, 'filter')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'qsv;luau;map' {
+            [CompletionResult]::new('--no-globals', 'no-globals', [CompletionResultType]::ParameterName, 'no-globals')
+            [CompletionResult]::new('--colindex', 'colindex', [CompletionResultType]::ParameterName, 'colindex')
+            [CompletionResult]::new('--remap', 'remap', [CompletionResultType]::ParameterName, 'remap')
+            [CompletionResult]::new('--begin', 'begin', [CompletionResultType]::ParameterName, 'begin')
+            [CompletionResult]::new('--end', 'end', [CompletionResultType]::ParameterName, 'end')
             [CompletionResult]::new('--luau-path', 'luau-path', [CompletionResultType]::ParameterName, 'luau-path')
             [CompletionResult]::new('--max-errors', 'max-errors', [CompletionResultType]::ParameterName, 'max-errors')
             [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
@@ -667,6 +1066,41 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
+        'qsv;luau;filter' {
+            [CompletionResult]::new('--no-globals', 'no-globals', [CompletionResultType]::ParameterName, 'no-globals')
+            [CompletionResult]::new('--colindex', 'colindex', [CompletionResultType]::ParameterName, 'colindex')
+            [CompletionResult]::new('--remap', 'remap', [CompletionResultType]::ParameterName, 'remap')
+            [CompletionResult]::new('--begin', 'begin', [CompletionResultType]::ParameterName, 'begin')
+            [CompletionResult]::new('--end', 'end', [CompletionResultType]::ParameterName, 'end')
+            [CompletionResult]::new('--luau-path', 'luau-path', [CompletionResultType]::ParameterName, 'luau-path')
+            [CompletionResult]::new('--max-errors', 'max-errors', [CompletionResultType]::ParameterName, 'max-errors')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--ckan-api', 'ckan-api', [CompletionResultType]::ParameterName, 'ckan-api')
+            [CompletionResult]::new('--ckan-token', 'ckan-token', [CompletionResultType]::ParameterName, 'ckan-token')
+            [CompletionResult]::new('--cache-dir', 'cache-dir', [CompletionResultType]::ParameterName, 'cache-dir')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;luau;help' {
+            [CompletionResult]::new('map', 'map', [CompletionResultType]::ParameterValue, 'map')
+            [CompletionResult]::new('filter', 'filter', [CompletionResultType]::ParameterValue, 'filter')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'qsv;luau;help;map' {
+            break
+        }
+        'qsv;luau;help;filter' {
+            break
+        }
+        'qsv;luau;help;help' {
+            break
+        }
         'qsv;partition' {
             [CompletionResult]::new('--filename', 'filename', [CompletionResultType]::ParameterName, 'filename')
             [CompletionResult]::new('--prefix-length', 'prefix-length', [CompletionResultType]::ParameterName, 'prefix-length')
@@ -675,6 +1109,39 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;pro' {
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('lens', 'lens', [CompletionResultType]::ParameterValue, 'lens')
+            [CompletionResult]::new('workflow', 'workflow', [CompletionResultType]::ParameterValue, 'workflow')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'qsv;pro;lens' {
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;pro;workflow' {
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;pro;help' {
+            [CompletionResult]::new('lens', 'lens', [CompletionResultType]::ParameterValue, 'lens')
+            [CompletionResult]::new('workflow', 'workflow', [CompletionResultType]::ParameterValue, 'workflow')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'qsv;pro;help;lens' {
+            break
+        }
+        'qsv;pro;help;workflow' {
+            break
+        }
+        'qsv;pro;help;help' {
             break
         }
         'qsv;prompt' {
@@ -694,6 +1161,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--start', 'start', [CompletionResultType]::ParameterName, 'start')
             [CompletionResult]::new('--increment', 'increment', [CompletionResultType]::ParameterName, 'increment')
             [CompletionResult]::new('--formatstr', 'formatstr', [CompletionResultType]::ParameterName, 'formatstr')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
             [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
             [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
@@ -709,6 +1177,46 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('map', 'map', [CompletionResultType]::ParameterValue, 'map')
+            [CompletionResult]::new('filter', 'filter', [CompletionResultType]::ParameterValue, 'filter')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'qsv;py;map' {
+            [CompletionResult]::new('--helper', 'helper', [CompletionResultType]::ParameterName, 'helper')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;py;filter' {
+            [CompletionResult]::new('--helper', 'helper', [CompletionResultType]::ParameterName, 'helper')
+            [CompletionResult]::new('--batch', 'batch', [CompletionResultType]::ParameterName, 'batch')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;py;help' {
+            [CompletionResult]::new('map', 'map', [CompletionResultType]::ParameterValue, 'map')
+            [CompletionResult]::new('filter', 'filter', [CompletionResultType]::ParameterValue, 'filter')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'qsv;py;help;map' {
+            break
+        }
+        'qsv;py;help;filter' {
+            break
+        }
+        'qsv;py;help;help' {
             break
         }
         'qsv;rename' {
@@ -818,9 +1326,9 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--quick', 'quick', [CompletionResultType]::ParameterName, 'quick')
             [CompletionResult]::new('--count', 'count', [CompletionResultType]::ParameterName, 'count')
             [CompletionResult]::new('--json', 'json', [CompletionResultType]::ParameterName, 'json')
-            [CompletionResult]::new('--not-one', 'not-one', [CompletionResultType]::ParameterName, 'not-one')
             [CompletionResult]::new('--size-limit', 'size-limit', [CompletionResultType]::ParameterName, 'size-limit')
             [CompletionResult]::new('--dfa-size-limit', 'dfa-size-limit', [CompletionResultType]::ParameterName, 'dfa-size-limit')
+            [CompletionResult]::new('--not-one', 'not-one', [CompletionResultType]::ParameterName, 'not-one')
             [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
             [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
             [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
@@ -871,21 +1379,45 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             break
         }
         'qsv;snappy;compress' {
+            [CompletionResult]::new('--user-agent', 'user-agent', [CompletionResultType]::ParameterName, 'user-agent')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--quiet', 'quiet', [CompletionResultType]::ParameterName, 'quiet')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'qsv;snappy;decompress' {
+            [CompletionResult]::new('--user-agent', 'user-agent', [CompletionResultType]::ParameterName, 'user-agent')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--quiet', 'quiet', [CompletionResultType]::ParameterName, 'quiet')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'qsv;snappy;check' {
+            [CompletionResult]::new('--user-agent', 'user-agent', [CompletionResultType]::ParameterName, 'user-agent')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--quiet', 'quiet', [CompletionResultType]::ParameterName, 'quiet')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'qsv;snappy;validate' {
+            [CompletionResult]::new('--user-agent', 'user-agent', [CompletionResultType]::ParameterName, 'user-agent')
+            [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--quiet', 'quiet', [CompletionResultType]::ParameterName, 'quiet')
+            [CompletionResult]::new('--progressbar', 'progressbar', [CompletionResultType]::ParameterName, 'progressbar')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
@@ -1018,6 +1550,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--round', 'round', [CompletionResultType]::ParameterName, 'round')
             [CompletionResult]::new('--nulls', 'nulls', [CompletionResultType]::ParameterName, 'nulls')
             [CompletionResult]::new('--infer-dates', 'infer-dates', [CompletionResultType]::ParameterName, 'infer-dates')
+            [CompletionResult]::new('--dates-whitelist', 'dates-whitelist', [CompletionResultType]::ParameterName, 'dates-whitelist')
             [CompletionResult]::new('--prefer-dmy', 'prefer-dmy', [CompletionResultType]::ParameterName, 'prefer-dmy')
             [CompletionResult]::new('--force', 'force', [CompletionResultType]::ParameterName, 'force')
             [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
@@ -1058,6 +1591,102 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('postgres', 'postgres', [CompletionResultType]::ParameterValue, 'postgres')
+            [CompletionResult]::new('sqlite', 'sqlite', [CompletionResultType]::ParameterValue, 'sqlite')
+            [CompletionResult]::new('xlsx', 'xlsx', [CompletionResultType]::ParameterValue, 'xlsx')
+            [CompletionResult]::new('datapackage', 'datapackage', [CompletionResultType]::ParameterValue, 'datapackage')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'qsv;to;postgres' {
+            [CompletionResult]::new('--print-package', 'print-package', [CompletionResultType]::ParameterName, 'print-package')
+            [CompletionResult]::new('--dump', 'dump', [CompletionResultType]::ParameterName, 'dump')
+            [CompletionResult]::new('--stats', 'stats', [CompletionResultType]::ParameterName, 'stats')
+            [CompletionResult]::new('--stats-csv', 'stats-csv', [CompletionResultType]::ParameterName, 'stats-csv')
+            [CompletionResult]::new('--quiet', 'quiet', [CompletionResultType]::ParameterName, 'quiet')
+            [CompletionResult]::new('--schema', 'schema', [CompletionResultType]::ParameterName, 'schema')
+            [CompletionResult]::new('--drop', 'drop', [CompletionResultType]::ParameterName, 'drop')
+            [CompletionResult]::new('--evolve', 'evolve', [CompletionResultType]::ParameterName, 'evolve')
+            [CompletionResult]::new('--pipe', 'pipe', [CompletionResultType]::ParameterName, 'pipe')
+            [CompletionResult]::new('--separator', 'separator', [CompletionResultType]::ParameterName, 'separator')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;to;sqlite' {
+            [CompletionResult]::new('--print-package', 'print-package', [CompletionResultType]::ParameterName, 'print-package')
+            [CompletionResult]::new('--dump', 'dump', [CompletionResultType]::ParameterName, 'dump')
+            [CompletionResult]::new('--stats', 'stats', [CompletionResultType]::ParameterName, 'stats')
+            [CompletionResult]::new('--stats-csv', 'stats-csv', [CompletionResultType]::ParameterName, 'stats-csv')
+            [CompletionResult]::new('--quiet', 'quiet', [CompletionResultType]::ParameterName, 'quiet')
+            [CompletionResult]::new('--schema', 'schema', [CompletionResultType]::ParameterName, 'schema')
+            [CompletionResult]::new('--drop', 'drop', [CompletionResultType]::ParameterName, 'drop')
+            [CompletionResult]::new('--evolve', 'evolve', [CompletionResultType]::ParameterName, 'evolve')
+            [CompletionResult]::new('--pipe', 'pipe', [CompletionResultType]::ParameterName, 'pipe')
+            [CompletionResult]::new('--separator', 'separator', [CompletionResultType]::ParameterName, 'separator')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;to;xlsx' {
+            [CompletionResult]::new('--print-package', 'print-package', [CompletionResultType]::ParameterName, 'print-package')
+            [CompletionResult]::new('--dump', 'dump', [CompletionResultType]::ParameterName, 'dump')
+            [CompletionResult]::new('--stats', 'stats', [CompletionResultType]::ParameterName, 'stats')
+            [CompletionResult]::new('--stats-csv', 'stats-csv', [CompletionResultType]::ParameterName, 'stats-csv')
+            [CompletionResult]::new('--quiet', 'quiet', [CompletionResultType]::ParameterName, 'quiet')
+            [CompletionResult]::new('--schema', 'schema', [CompletionResultType]::ParameterName, 'schema')
+            [CompletionResult]::new('--drop', 'drop', [CompletionResultType]::ParameterName, 'drop')
+            [CompletionResult]::new('--evolve', 'evolve', [CompletionResultType]::ParameterName, 'evolve')
+            [CompletionResult]::new('--pipe', 'pipe', [CompletionResultType]::ParameterName, 'pipe')
+            [CompletionResult]::new('--separator', 'separator', [CompletionResultType]::ParameterName, 'separator')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;to;datapackage' {
+            [CompletionResult]::new('--print-package', 'print-package', [CompletionResultType]::ParameterName, 'print-package')
+            [CompletionResult]::new('--dump', 'dump', [CompletionResultType]::ParameterName, 'dump')
+            [CompletionResult]::new('--stats', 'stats', [CompletionResultType]::ParameterName, 'stats')
+            [CompletionResult]::new('--stats-csv', 'stats-csv', [CompletionResultType]::ParameterName, 'stats-csv')
+            [CompletionResult]::new('--quiet', 'quiet', [CompletionResultType]::ParameterName, 'quiet')
+            [CompletionResult]::new('--schema', 'schema', [CompletionResultType]::ParameterName, 'schema')
+            [CompletionResult]::new('--drop', 'drop', [CompletionResultType]::ParameterName, 'drop')
+            [CompletionResult]::new('--evolve', 'evolve', [CompletionResultType]::ParameterName, 'evolve')
+            [CompletionResult]::new('--pipe', 'pipe', [CompletionResultType]::ParameterName, 'pipe')
+            [CompletionResult]::new('--separator', 'separator', [CompletionResultType]::ParameterName, 'separator')
+            [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'qsv;to;help' {
+            [CompletionResult]::new('postgres', 'postgres', [CompletionResultType]::ParameterValue, 'postgres')
+            [CompletionResult]::new('sqlite', 'sqlite', [CompletionResultType]::ParameterValue, 'sqlite')
+            [CompletionResult]::new('xlsx', 'xlsx', [CompletionResultType]::ParameterValue, 'xlsx')
+            [CompletionResult]::new('datapackage', 'datapackage', [CompletionResultType]::ParameterValue, 'datapackage')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'qsv;to;help;postgres' {
+            break
+        }
+        'qsv;to;help;sqlite' {
+            break
+        }
+        'qsv;to;help;xlsx' {
+            break
+        }
+        'qsv;to;help;datapackage' {
+            break
+        }
+        'qsv;to;help;help' {
             break
         }
         'qsv;tojsonl' {
@@ -1133,8 +1762,10 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('joinp', 'joinp', [CompletionResultType]::ParameterValue, 'joinp')
             [CompletionResult]::new('json', 'json', [CompletionResultType]::ParameterValue, 'json')
             [CompletionResult]::new('jsonl', 'jsonl', [CompletionResultType]::ParameterValue, 'jsonl')
+            [CompletionResult]::new('lens', 'lens', [CompletionResultType]::ParameterValue, 'lens')
             [CompletionResult]::new('luau', 'luau', [CompletionResultType]::ParameterValue, 'luau')
             [CompletionResult]::new('partition', 'partition', [CompletionResultType]::ParameterValue, 'partition')
+            [CompletionResult]::new('pro', 'pro', [CompletionResultType]::ParameterValue, 'pro')
             [CompletionResult]::new('prompt', 'prompt', [CompletionResultType]::ParameterValue, 'prompt')
             [CompletionResult]::new('pseudo', 'pseudo', [CompletionResultType]::ParameterValue, 'pseudo')
             [CompletionResult]::new('py', 'py', [CompletionResultType]::ParameterValue, 'py')
@@ -1264,6 +1895,46 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             break
         }
         'qsv;help;geocode' {
+            [CompletionResult]::new('suggest', 'suggest', [CompletionResultType]::ParameterValue, 'suggest')
+            [CompletionResult]::new('suggestnow', 'suggestnow', [CompletionResultType]::ParameterValue, 'suggestnow')
+            [CompletionResult]::new('reverse', 'reverse', [CompletionResultType]::ParameterValue, 'reverse')
+            [CompletionResult]::new('reversenow', 'reversenow', [CompletionResultType]::ParameterValue, 'reversenow')
+            [CompletionResult]::new('countryinfo', 'countryinfo', [CompletionResultType]::ParameterValue, 'countryinfo')
+            [CompletionResult]::new('countryinfonow', 'countryinfonow', [CompletionResultType]::ParameterValue, 'countryinfonow')
+            [CompletionResult]::new('index-load', 'index-load', [CompletionResultType]::ParameterValue, 'index-load')
+            [CompletionResult]::new('index-check', 'index-check', [CompletionResultType]::ParameterValue, 'index-check')
+            [CompletionResult]::new('index-update', 'index-update', [CompletionResultType]::ParameterValue, 'index-update')
+            [CompletionResult]::new('index-reset', 'index-reset', [CompletionResultType]::ParameterValue, 'index-reset')
+            break
+        }
+        'qsv;help;geocode;suggest' {
+            break
+        }
+        'qsv;help;geocode;suggestnow' {
+            break
+        }
+        'qsv;help;geocode;reverse' {
+            break
+        }
+        'qsv;help;geocode;reversenow' {
+            break
+        }
+        'qsv;help;geocode;countryinfo' {
+            break
+        }
+        'qsv;help;geocode;countryinfonow' {
+            break
+        }
+        'qsv;help;geocode;index-load' {
+            break
+        }
+        'qsv;help;geocode;index-check' {
+            break
+        }
+        'qsv;help;geocode;index-update' {
+            break
+        }
+        'qsv;help;geocode;index-reset' {
             break
         }
         'qsv;help;headers' {
@@ -1287,10 +1958,32 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         'qsv;help;jsonl' {
             break
         }
+        'qsv;help;lens' {
+            break
+        }
         'qsv;help;luau' {
+            [CompletionResult]::new('map', 'map', [CompletionResultType]::ParameterValue, 'map')
+            [CompletionResult]::new('filter', 'filter', [CompletionResultType]::ParameterValue, 'filter')
+            break
+        }
+        'qsv;help;luau;map' {
+            break
+        }
+        'qsv;help;luau;filter' {
             break
         }
         'qsv;help;partition' {
+            break
+        }
+        'qsv;help;pro' {
+            [CompletionResult]::new('lens', 'lens', [CompletionResultType]::ParameterValue, 'lens')
+            [CompletionResult]::new('workflow', 'workflow', [CompletionResultType]::ParameterValue, 'workflow')
+            break
+        }
+        'qsv;help;pro;lens' {
+            break
+        }
+        'qsv;help;pro;workflow' {
             break
         }
         'qsv;help;prompt' {
@@ -1300,6 +1993,14 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             break
         }
         'qsv;help;py' {
+            [CompletionResult]::new('map', 'map', [CompletionResultType]::ParameterValue, 'map')
+            [CompletionResult]::new('filter', 'filter', [CompletionResultType]::ParameterValue, 'filter')
+            break
+        }
+        'qsv;help;py;map' {
+            break
+        }
+        'qsv;help;py;filter' {
             break
         }
         'qsv;help;rename' {
@@ -1373,6 +2074,22 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             break
         }
         'qsv;help;to' {
+            [CompletionResult]::new('postgres', 'postgres', [CompletionResultType]::ParameterValue, 'postgres')
+            [CompletionResult]::new('sqlite', 'sqlite', [CompletionResultType]::ParameterValue, 'sqlite')
+            [CompletionResult]::new('xlsx', 'xlsx', [CompletionResultType]::ParameterValue, 'xlsx')
+            [CompletionResult]::new('datapackage', 'datapackage', [CompletionResultType]::ParameterValue, 'datapackage')
+            break
+        }
+        'qsv;help;to;postgres' {
+            break
+        }
+        'qsv;help;to;sqlite' {
+            break
+        }
+        'qsv;help;to;xlsx' {
+            break
+        }
+        'qsv;help;to;datapackage' {
             break
         }
         'qsv;help;tojsonl' {
