@@ -58,24 +58,68 @@ _arguments "${_arguments_options[@]}" : \
         case $line[1] in
             (operations)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--comparand[]' \
+'--replacement[]' \
+'--formatstr[]' \
+'--jobs[]' \
+'--batch[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (emptyreplace)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--comparand[]' \
+'--replacement[]' \
+'--formatstr[]' \
+'--jobs[]' \
+'--batch[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (dynfmt)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--comparand[]' \
+'--replacement[]' \
+'--formatstr[]' \
+'--jobs[]' \
+'--batch[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (calcconv)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--comparand[]' \
+'--replacement[]' \
+'--formatstr[]' \
+'--jobs[]' \
+'--batch[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -148,6 +192,9 @@ _arguments "${_arguments_options[@]}" : \
             (rows)
 _arguments "${_arguments_options[@]}" : \
 '--flexible[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -156,6 +203,9 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 '--group[]' \
 '--group-name[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -163,6 +213,9 @@ _arguments "${_arguments_options[@]}" : \
 (columns)
 _arguments "${_arguments_options[@]}" : \
 '--pad[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -575,60 +628,250 @@ _arguments "${_arguments_options[@]}" : \
         case $line[1] in
             (suggest)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (suggestnow)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (reverse)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (reversenow)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (countryinfo)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (countryinfonow)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (index-load)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (index-check)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (index-update)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (index-reset)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -855,12 +1098,42 @@ _arguments "${_arguments_options[@]}" : \
         case $line[1] in
             (map)
 _arguments "${_arguments_options[@]}" : \
+'--no-globals[]' \
+'--colindex[]' \
+'--remap[]' \
+'--begin[]' \
+'--end[]' \
+'--luau-path[]' \
+'--max-errors[]' \
+'--timeout[]' \
+'--ckan-api[]' \
+'--ckan-token[]' \
+'--cache-dir[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (filter)
 _arguments "${_arguments_options[@]}" : \
+'--no-globals[]' \
+'--colindex[]' \
+'--remap[]' \
+'--begin[]' \
+'--end[]' \
+'--luau-path[]' \
+'--max-errors[]' \
+'--timeout[]' \
+'--ckan-api[]' \
+'--ckan-token[]' \
+'--cache-dir[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -1014,12 +1287,24 @@ _arguments "${_arguments_options[@]}" : \
         case $line[1] in
             (map)
 _arguments "${_arguments_options[@]}" : \
+'--helper[]' \
+'--batch[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (filter)
 _arguments "${_arguments_options[@]}" : \
+'--helper[]' \
+'--batch[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -1231,24 +1516,48 @@ _arguments "${_arguments_options[@]}" : \
         case $line[1] in
             (compress)
 _arguments "${_arguments_options[@]}" : \
+'--user-agent[]' \
+'--timeout[]' \
+'--output[]' \
+'--jobs[]' \
+'--quiet[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (decompress)
 _arguments "${_arguments_options[@]}" : \
+'--user-agent[]' \
+'--timeout[]' \
+'--output[]' \
+'--jobs[]' \
+'--quiet[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (check)
 _arguments "${_arguments_options[@]}" : \
+'--user-agent[]' \
+'--timeout[]' \
+'--output[]' \
+'--jobs[]' \
+'--quiet[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (validate)
 _arguments "${_arguments_options[@]}" : \
+'--user-agent[]' \
+'--timeout[]' \
+'--output[]' \
+'--jobs[]' \
+'--quiet[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -1459,24 +1768,72 @@ _arguments "${_arguments_options[@]}" : \
         case $line[1] in
             (postgres)
 _arguments "${_arguments_options[@]}" : \
+'--print-package[]' \
+'--dump[]' \
+'--stats[]' \
+'--stats-csv[]' \
+'--quiet[]' \
+'--schema[]' \
+'--drop[]' \
+'--evolve[]' \
+'--pipe[]' \
+'--separator[]' \
+'--jobs[]' \
+'--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (sqlite)
 _arguments "${_arguments_options[@]}" : \
+'--print-package[]' \
+'--dump[]' \
+'--stats[]' \
+'--stats-csv[]' \
+'--quiet[]' \
+'--schema[]' \
+'--drop[]' \
+'--evolve[]' \
+'--pipe[]' \
+'--separator[]' \
+'--jobs[]' \
+'--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (xlsx)
 _arguments "${_arguments_options[@]}" : \
+'--print-package[]' \
+'--dump[]' \
+'--stats[]' \
+'--stats-csv[]' \
+'--quiet[]' \
+'--schema[]' \
+'--drop[]' \
+'--evolve[]' \
+'--pipe[]' \
+'--separator[]' \
+'--jobs[]' \
+'--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (datapackage)
 _arguments "${_arguments_options[@]}" : \
+'--print-package[]' \
+'--dump[]' \
+'--stats[]' \
+'--stats-csv[]' \
+'--quiet[]' \
+'--schema[]' \
+'--drop[]' \
+'--evolve[]' \
+'--pipe[]' \
+'--separator[]' \
+'--jobs[]' \
+'--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0

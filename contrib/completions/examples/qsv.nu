@@ -25,18 +25,62 @@ module completions {
   ]
 
   export extern "qsv apply operations" [
+    --new-column
+    --rename
+    --comparand
+    --replacement
+    --formatstr
+    --jobs
+    --batch
+    --output
+    --no-headers
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv apply emptyreplace" [
+    --new-column
+    --rename
+    --comparand
+    --replacement
+    --formatstr
+    --jobs
+    --batch
+    --output
+    --no-headers
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv apply dynfmt" [
+    --new-column
+    --rename
+    --comparand
+    --replacement
+    --formatstr
+    --jobs
+    --batch
+    --output
+    --no-headers
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv apply calcconv" [
+    --new-column
+    --rename
+    --comparand
+    --replacement
+    --formatstr
+    --jobs
+    --batch
+    --output
+    --no-headers
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
@@ -75,17 +119,26 @@ module completions {
 
   export extern "qsv cat rows" [
     --flexible
+    --output
+    --no-headers
+    --delimiter
     --help(-h)                # Print help
   ]
 
   export extern "qsv cat rowskey" [
     --group
     --group-name
+    --output
+    --no-headers
+    --delimiter
     --help(-h)                # Print help
   ]
 
   export extern "qsv cat columns" [
     --pad
+    --output
+    --no-headers
+    --delimiter
     --help(-h)                # Print help
   ]
 
@@ -425,42 +478,232 @@ module completions {
   ]
 
   export extern "qsv geocode suggest" [
+    --new-column
+    --rename
+    --country
+    --min-score
+    --admin1
+    --k_weight
+    --formatstr
+    --language
+    --invalid-result
+    --jobs
+    --batch
+    --timeout
+    --cache-dir
+    --languages
+    --cities-url
+    --force
+    --output
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv geocode suggestnow" [
+    --new-column
+    --rename
+    --country
+    --min-score
+    --admin1
+    --k_weight
+    --formatstr
+    --language
+    --invalid-result
+    --jobs
+    --batch
+    --timeout
+    --cache-dir
+    --languages
+    --cities-url
+    --force
+    --output
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv geocode reverse" [
+    --new-column
+    --rename
+    --country
+    --min-score
+    --admin1
+    --k_weight
+    --formatstr
+    --language
+    --invalid-result
+    --jobs
+    --batch
+    --timeout
+    --cache-dir
+    --languages
+    --cities-url
+    --force
+    --output
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv geocode reversenow" [
+    --new-column
+    --rename
+    --country
+    --min-score
+    --admin1
+    --k_weight
+    --formatstr
+    --language
+    --invalid-result
+    --jobs
+    --batch
+    --timeout
+    --cache-dir
+    --languages
+    --cities-url
+    --force
+    --output
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv geocode countryinfo" [
+    --new-column
+    --rename
+    --country
+    --min-score
+    --admin1
+    --k_weight
+    --formatstr
+    --language
+    --invalid-result
+    --jobs
+    --batch
+    --timeout
+    --cache-dir
+    --languages
+    --cities-url
+    --force
+    --output
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv geocode countryinfonow" [
+    --new-column
+    --rename
+    --country
+    --min-score
+    --admin1
+    --k_weight
+    --formatstr
+    --language
+    --invalid-result
+    --jobs
+    --batch
+    --timeout
+    --cache-dir
+    --languages
+    --cities-url
+    --force
+    --output
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv geocode index-load" [
+    --new-column
+    --rename
+    --country
+    --min-score
+    --admin1
+    --k_weight
+    --formatstr
+    --language
+    --invalid-result
+    --jobs
+    --batch
+    --timeout
+    --cache-dir
+    --languages
+    --cities-url
+    --force
+    --output
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv geocode index-check" [
+    --new-column
+    --rename
+    --country
+    --min-score
+    --admin1
+    --k_weight
+    --formatstr
+    --language
+    --invalid-result
+    --jobs
+    --batch
+    --timeout
+    --cache-dir
+    --languages
+    --cities-url
+    --force
+    --output
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv geocode index-update" [
+    --new-column
+    --rename
+    --country
+    --min-score
+    --admin1
+    --k_weight
+    --formatstr
+    --language
+    --invalid-result
+    --jobs
+    --batch
+    --timeout
+    --cache-dir
+    --languages
+    --cities-url
+    --force
+    --output
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv geocode index-reset" [
+    --new-column
+    --rename
+    --country
+    --min-score
+    --admin1
+    --k_weight
+    --formatstr
+    --language
+    --invalid-result
+    --jobs
+    --batch
+    --timeout
+    --cache-dir
+    --languages
+    --cities-url
+    --force
+    --output
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
@@ -633,10 +876,40 @@ module completions {
   ]
 
   export extern "qsv luau map" [
+    --no-globals
+    --colindex
+    --remap
+    --begin
+    --end
+    --luau-path
+    --max-errors
+    --timeout
+    --ckan-api
+    --ckan-token
+    --cache-dir
+    --output
+    --no-headers
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv luau filter" [
+    --no-globals
+    --colindex
+    --remap
+    --begin
+    --end
+    --luau-path
+    --max-errors
+    --timeout
+    --ckan-api
+    --ckan-token
+    --cache-dir
+    --output
+    --no-headers
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
@@ -722,10 +995,22 @@ module completions {
   ]
 
   export extern "qsv py map" [
+    --helper
+    --batch
+    --output
+    --no-headers
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv py filter" [
+    --helper
+    --batch
+    --output
+    --no-headers
+    --delimiter
+    --progressbar
     --help(-h)                # Print help
   ]
 
@@ -887,18 +1172,42 @@ module completions {
   ]
 
   export extern "qsv snappy compress" [
+    --user-agent
+    --timeout
+    --output
+    --jobs
+    --quiet
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv snappy decompress" [
+    --user-agent
+    --timeout
+    --output
+    --jobs
+    --quiet
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv snappy check" [
+    --user-agent
+    --timeout
+    --output
+    --jobs
+    --quiet
+    --progressbar
     --help(-h)                # Print help
   ]
 
   export extern "qsv snappy validate" [
+    --user-agent
+    --timeout
+    --output
+    --jobs
+    --quiet
+    --progressbar
     --help(-h)                # Print help
   ]
 
@@ -1063,18 +1372,66 @@ module completions {
   ]
 
   export extern "qsv to postgres" [
+    --print-package
+    --dump
+    --stats
+    --stats-csv
+    --quiet
+    --schema
+    --drop
+    --evolve
+    --pipe
+    --separator
+    --jobs
+    --delimiter
     --help(-h)                # Print help
   ]
 
   export extern "qsv to sqlite" [
+    --print-package
+    --dump
+    --stats
+    --stats-csv
+    --quiet
+    --schema
+    --drop
+    --evolve
+    --pipe
+    --separator
+    --jobs
+    --delimiter
     --help(-h)                # Print help
   ]
 
   export extern "qsv to xlsx" [
+    --print-package
+    --dump
+    --stats
+    --stats-csv
+    --quiet
+    --schema
+    --drop
+    --evolve
+    --pipe
+    --separator
+    --jobs
+    --delimiter
     --help(-h)                # Print help
   ]
 
   export extern "qsv to datapackage" [
+    --print-package
+    --dump
+    --stats
+    --stats-csv
+    --quiet
+    --schema
+    --drop
+    --evolve
+    --pipe
+    --separator
+    --jobs
+    --delimiter
     --help(-h)                # Print help
   ]
 

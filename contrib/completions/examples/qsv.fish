@@ -109,9 +109,53 @@ complete -c qsv -n "__fish_qsv_using_subcommand apply; and not __fish_seen_subco
 complete -c qsv -n "__fish_qsv_using_subcommand apply; and not __fish_seen_subcommand_from operations emptyreplace dynfmt calcconv help" -f -a "dynfmt"
 complete -c qsv -n "__fish_qsv_using_subcommand apply; and not __fish_seen_subcommand_from operations emptyreplace dynfmt calcconv help" -f -a "calcconv"
 complete -c qsv -n "__fish_qsv_using_subcommand apply; and not __fish_seen_subcommand_from operations emptyreplace dynfmt calcconv help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from operations" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from operations" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from operations" -l comparand
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from operations" -l replacement
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from operations" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from operations" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from operations" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from operations" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from operations" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from operations" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from operations" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from operations" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from emptyreplace" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from emptyreplace" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from emptyreplace" -l comparand
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from emptyreplace" -l replacement
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from emptyreplace" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from emptyreplace" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from emptyreplace" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from emptyreplace" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from emptyreplace" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from emptyreplace" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from emptyreplace" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from emptyreplace" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from dynfmt" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from dynfmt" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from dynfmt" -l comparand
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from dynfmt" -l replacement
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from dynfmt" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from dynfmt" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from dynfmt" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from dynfmt" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from dynfmt" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from dynfmt" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from dynfmt" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from dynfmt" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from calcconv" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from calcconv" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from calcconv" -l comparand
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from calcconv" -l replacement
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from calcconv" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from calcconv" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from calcconv" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from calcconv" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from calcconv" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from calcconv" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from calcconv" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from calcconv" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from help" -f -a "operations"
 complete -c qsv -n "__fish_qsv_using_subcommand apply; and __fish_seen_subcommand_from help" -f -a "emptyreplace"
@@ -130,11 +174,20 @@ complete -c qsv -n "__fish_qsv_using_subcommand cat; and not __fish_seen_subcomm
 complete -c qsv -n "__fish_qsv_using_subcommand cat; and not __fish_seen_subcommand_from rows rowskey columns help" -f -a "columns"
 complete -c qsv -n "__fish_qsv_using_subcommand cat; and not __fish_seen_subcommand_from rows rowskey columns help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
 complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from rows" -l flexible
+complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from rows" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from rows" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from rows" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from rows" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from rowskey" -l group
 complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from rowskey" -l group-name
+complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from rowskey" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from rowskey" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from rowskey" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from rowskey" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from columns" -l pad
+complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from columns" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from columns" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from columns" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from columns" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from help" -f -a "rows"
 complete -c qsv -n "__fish_qsv_using_subcommand cat; and __fish_seen_subcommand_from help" -f -a "rowskey"
@@ -403,15 +456,205 @@ complete -c qsv -n "__fish_qsv_using_subcommand geocode; and not __fish_seen_sub
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and not __fish_seen_subcommand_from suggest suggestnow reverse reversenow countryinfo countryinfonow index-load index-check index-update index-reset help" -f -a "index-update"
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and not __fish_seen_subcommand_from suggest suggestnow reverse reversenow countryinfo countryinfonow index-load index-check index-update index-reset help" -f -a "index-reset"
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and not __fish_seen_subcommand_from suggest suggestnow reverse reversenow countryinfo countryinfonow index-load index-check index-update index-reset help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l country
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l min-score
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l admin1
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l k_weight
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l language
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l invalid-result
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l cache-dir
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l languages
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l cities-url
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l force
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggest" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l country
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l min-score
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l admin1
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l k_weight
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l language
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l invalid-result
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l cache-dir
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l languages
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l cities-url
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l force
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from suggestnow" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l country
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l min-score
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l admin1
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l k_weight
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l language
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l invalid-result
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l cache-dir
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l languages
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l cities-url
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l force
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reverse" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l country
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l min-score
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l admin1
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l k_weight
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l language
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l invalid-result
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l cache-dir
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l languages
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l cities-url
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l force
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from reversenow" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l country
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l min-score
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l admin1
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l k_weight
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l language
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l invalid-result
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l cache-dir
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l languages
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l cities-url
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l force
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfo" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l country
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l min-score
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l admin1
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l k_weight
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l language
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l invalid-result
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l cache-dir
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l languages
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l cities-url
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l force
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from countryinfonow" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l country
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l min-score
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l admin1
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l k_weight
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l language
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l invalid-result
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l cache-dir
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l languages
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l cities-url
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l force
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-load" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l country
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l min-score
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l admin1
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l k_weight
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l language
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l invalid-result
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l cache-dir
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l languages
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l cities-url
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l force
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-check" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l country
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l min-score
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l admin1
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l k_weight
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l language
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l invalid-result
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l cache-dir
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l languages
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l cities-url
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l force
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-update" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l new-column
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l rename
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l country
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l min-score
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l admin1
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l k_weight
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l formatstr
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l language
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l invalid-result
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l cache-dir
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l languages
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l cities-url
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l force
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from index-reset" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from help" -f -a "suggest"
 complete -c qsv -n "__fish_qsv_using_subcommand geocode; and __fish_seen_subcommand_from help" -f -a "suggestnow"
@@ -530,7 +773,37 @@ complete -c qsv -n "__fish_qsv_using_subcommand luau; and not __fish_seen_subcom
 complete -c qsv -n "__fish_qsv_using_subcommand luau; and not __fish_seen_subcommand_from map filter help" -f -a "map"
 complete -c qsv -n "__fish_qsv_using_subcommand luau; and not __fish_seen_subcommand_from map filter help" -f -a "filter"
 complete -c qsv -n "__fish_qsv_using_subcommand luau; and not __fish_seen_subcommand_from map filter help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l no-globals
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l colindex
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l remap
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l begin
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l end
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l luau-path
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l max-errors
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l ckan-api
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l ckan-token
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l cache-dir
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from map" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l no-globals
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l colindex
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l remap
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l begin
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l end
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l luau-path
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l max-errors
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l ckan-api
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l ckan-token
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l cache-dir
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from filter" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from help" -f -a "map"
 complete -c qsv -n "__fish_qsv_using_subcommand luau; and __fish_seen_subcommand_from help" -f -a "filter"
@@ -576,7 +849,19 @@ complete -c qsv -n "__fish_qsv_using_subcommand py; and not __fish_seen_subcomma
 complete -c qsv -n "__fish_qsv_using_subcommand py; and not __fish_seen_subcommand_from map filter help" -f -a "map"
 complete -c qsv -n "__fish_qsv_using_subcommand py; and not __fish_seen_subcommand_from map filter help" -f -a "filter"
 complete -c qsv -n "__fish_qsv_using_subcommand py; and not __fish_seen_subcommand_from map filter help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
+complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from map" -l helper
+complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from map" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from map" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from map" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from map" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from map" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from map" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from filter" -l helper
+complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from filter" -l batch
+complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from filter" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from filter" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from filter" -l delimiter
+complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from filter" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from filter" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from help" -f -a "map"
 complete -c qsv -n "__fish_qsv_using_subcommand py; and __fish_seen_subcommand_from help" -f -a "filter"
@@ -696,9 +981,33 @@ complete -c qsv -n "__fish_qsv_using_subcommand snappy; and not __fish_seen_subc
 complete -c qsv -n "__fish_qsv_using_subcommand snappy; and not __fish_seen_subcommand_from compress decompress check validate help" -f -a "check"
 complete -c qsv -n "__fish_qsv_using_subcommand snappy; and not __fish_seen_subcommand_from compress decompress check validate help" -f -a "validate"
 complete -c qsv -n "__fish_qsv_using_subcommand snappy; and not __fish_seen_subcommand_from compress decompress check validate help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from compress" -l user-agent
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from compress" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from compress" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from compress" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from compress" -l quiet
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from compress" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from compress" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from decompress" -l user-agent
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from decompress" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from decompress" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from decompress" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from decompress" -l quiet
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from decompress" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from decompress" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from check" -l user-agent
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from check" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from check" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from check" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from check" -l quiet
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from check" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from check" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from validate" -l user-agent
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from validate" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from validate" -l output
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from validate" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from validate" -l quiet
+complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from validate" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from validate" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from help" -f -a "compress"
 complete -c qsv -n "__fish_qsv_using_subcommand snappy; and __fish_seen_subcommand_from help" -f -a "decompress"
@@ -826,9 +1135,57 @@ complete -c qsv -n "__fish_qsv_using_subcommand to; and not __fish_seen_subcomma
 complete -c qsv -n "__fish_qsv_using_subcommand to; and not __fish_seen_subcommand_from postgres sqlite xlsx datapackage help" -f -a "xlsx"
 complete -c qsv -n "__fish_qsv_using_subcommand to; and not __fish_seen_subcommand_from postgres sqlite xlsx datapackage help" -f -a "datapackage"
 complete -c qsv -n "__fish_qsv_using_subcommand to; and not __fish_seen_subcommand_from postgres sqlite xlsx datapackage help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -l print-package
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -l dump
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -l stats
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -l stats-csv
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -l quiet
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -l schema
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -l drop
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -l evolve
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -l pipe
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -l separator
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from postgres" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -l print-package
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -l dump
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -l stats
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -l stats-csv
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -l quiet
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -l schema
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -l drop
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -l evolve
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -l pipe
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -l separator
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from sqlite" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -l print-package
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -l dump
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -l stats
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -l stats-csv
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -l quiet
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -l schema
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -l drop
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -l evolve
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -l pipe
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -l separator
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from xlsx" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -l print-package
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -l dump
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -l stats
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -l stats-csv
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -l quiet
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -l schema
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -l drop
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -l evolve
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -l pipe
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -l separator
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from datapackage" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from help" -f -a "postgres"
 complete -c qsv -n "__fish_qsv_using_subcommand to; and __fish_seen_subcommand_from help" -f -a "sqlite"

@@ -9,6 +9,39 @@ const completion: Fig.Spec = {
           name: "operations",
           options: [
             {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--comparand",
+            },
+            {
+              name: "--replacement",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -17,6 +50,39 @@ const completion: Fig.Spec = {
         {
           name: "emptyreplace",
           options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--comparand",
+            },
+            {
+              name: "--replacement",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -27,6 +93,39 @@ const completion: Fig.Spec = {
           name: "dynfmt",
           options: [
             {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--comparand",
+            },
+            {
+              name: "--replacement",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -35,6 +134,39 @@ const completion: Fig.Spec = {
         {
           name: "calcconv",
           options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--comparand",
+            },
+            {
+              name: "--replacement",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -129,6 +261,15 @@ const completion: Fig.Spec = {
               name: "--flexible",
             },
             {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -144,6 +285,15 @@ const completion: Fig.Spec = {
               name: "--group-name",
             },
             {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -154,6 +304,15 @@ const completion: Fig.Spec = {
           options: [
             {
               name: "--pad",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
             },
             {
               name: ["-h", "--help"],
@@ -1026,6 +1185,63 @@ const completion: Fig.Spec = {
           name: "suggest",
           options: [
             {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -1034,6 +1250,63 @@ const completion: Fig.Spec = {
         {
           name: "suggestnow",
           options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -1044,6 +1317,63 @@ const completion: Fig.Spec = {
           name: "reverse",
           options: [
             {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -1052,6 +1382,63 @@ const completion: Fig.Spec = {
         {
           name: "reversenow",
           options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -1062,6 +1449,63 @@ const completion: Fig.Spec = {
           name: "countryinfo",
           options: [
             {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -1070,6 +1514,63 @@ const completion: Fig.Spec = {
         {
           name: "countryinfonow",
           options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -1080,6 +1581,63 @@ const completion: Fig.Spec = {
           name: "index-load",
           options: [
             {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -1088,6 +1646,63 @@ const completion: Fig.Spec = {
         {
           name: "index-check",
           options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -1098,6 +1713,63 @@ const completion: Fig.Spec = {
           name: "index-update",
           options: [
             {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -1106,6 +1778,63 @@ const completion: Fig.Spec = {
         {
           name: "index-reset",
           options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -1533,6 +2262,51 @@ const completion: Fig.Spec = {
           name: "map",
           options: [
             {
+              name: "--no-globals",
+            },
+            {
+              name: "--colindex",
+            },
+            {
+              name: "--remap",
+            },
+            {
+              name: "--begin",
+            },
+            {
+              name: "--end",
+            },
+            {
+              name: "--luau-path",
+            },
+            {
+              name: "--max-errors",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--ckan-api",
+            },
+            {
+              name: "--ckan-token",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -1541,6 +2315,51 @@ const completion: Fig.Spec = {
         {
           name: "filter",
           options: [
+            {
+              name: "--no-globals",
+            },
+            {
+              name: "--colindex",
+            },
+            {
+              name: "--remap",
+            },
+            {
+              name: "--begin",
+            },
+            {
+              name: "--end",
+            },
+            {
+              name: "--luau-path",
+            },
+            {
+              name: "--max-errors",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--ckan-api",
+            },
+            {
+              name: "--ckan-token",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -1752,6 +2571,24 @@ const completion: Fig.Spec = {
           name: "map",
           options: [
             {
+              name: "--helper",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -1760,6 +2597,24 @@ const completion: Fig.Spec = {
         {
           name: "filter",
           options: [
+            {
+              name: "--helper",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -2184,6 +3039,24 @@ const completion: Fig.Spec = {
           name: "compress",
           options: [
             {
+              name: "--user-agent",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -2192,6 +3065,24 @@ const completion: Fig.Spec = {
         {
           name: "decompress",
           options: [
+            {
+              name: "--user-agent",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -2202,6 +3093,24 @@ const completion: Fig.Spec = {
           name: "check",
           options: [
             {
+              name: "--user-agent",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -2210,6 +3119,24 @@ const completion: Fig.Spec = {
         {
           name: "validate",
           options: [
+            {
+              name: "--user-agent",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -2622,6 +3549,42 @@ const completion: Fig.Spec = {
           name: "postgres",
           options: [
             {
+              name: "--print-package",
+            },
+            {
+              name: "--dump",
+            },
+            {
+              name: "--stats",
+            },
+            {
+              name: "--stats-csv",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--schema",
+            },
+            {
+              name: "--drop",
+            },
+            {
+              name: "--evolve",
+            },
+            {
+              name: "--pipe",
+            },
+            {
+              name: "--separator",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -2630,6 +3593,42 @@ const completion: Fig.Spec = {
         {
           name: "sqlite",
           options: [
+            {
+              name: "--print-package",
+            },
+            {
+              name: "--dump",
+            },
+            {
+              name: "--stats",
+            },
+            {
+              name: "--stats-csv",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--schema",
+            },
+            {
+              name: "--drop",
+            },
+            {
+              name: "--evolve",
+            },
+            {
+              name: "--pipe",
+            },
+            {
+              name: "--separator",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--delimiter",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -2640,6 +3639,42 @@ const completion: Fig.Spec = {
           name: "xlsx",
           options: [
             {
+              name: "--print-package",
+            },
+            {
+              name: "--dump",
+            },
+            {
+              name: "--stats",
+            },
+            {
+              name: "--stats-csv",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--schema",
+            },
+            {
+              name: "--drop",
+            },
+            {
+              name: "--evolve",
+            },
+            {
+              name: "--pipe",
+            },
+            {
+              name: "--separator",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -2648,6 +3683,42 @@ const completion: Fig.Spec = {
         {
           name: "datapackage",
           options: [
+            {
+              name: "--print-package",
+            },
+            {
+              name: "--dump",
+            },
+            {
+              name: "--stats",
+            },
+            {
+              name: "--stats-csv",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--schema",
+            },
+            {
+              name: "--drop",
+            },
+            {
+              name: "--evolve",
+            },
+            {
+              name: "--pipe",
+            },
+            {
+              name: "--separator",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--delimiter",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
