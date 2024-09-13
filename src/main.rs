@@ -271,6 +271,11 @@ sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
                 util::log_end(qsv_args, now);
                 QsvExitCode::Good
             },
+            Err(CliError::Help(usage_text)) => {
+                wout!("{usage_text}");
+                util::log_end(qsv_args, now);
+                QsvExitCode::Good
+            },
             Err(CliError::Flag(err)) => {
                 werr!("{err}");
                 util::log_end(qsv_args, now);
