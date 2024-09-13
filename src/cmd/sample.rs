@@ -10,6 +10,8 @@ which is necessary to provide a uniform random sample (reservoir sampling).
 If you wish to limit the number of records visited, use the 'qsv slice' command
 to pipe into 'qsv sample'.
 
+Also supports sampling from CSVs on remote URLs.
+
 This command is intended to provide a means to sample from a CSV data set that
 is too big to fit into memory (for example, for use with commands like
 'qsv stats' with the '--everything' option). 
@@ -45,6 +47,7 @@ sample options:
                               2.1 GB/s throughput though slow initialization.
                            [default: standard]
 
+                           REMOTE FILE OPTIONS:
     --user-agent <agent>   Specify custom user agent to use when the input is a URL.
                            It supports the following variables -
                            $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME, $QSV_KIND and $QSV_COMMAND.
@@ -52,6 +55,10 @@ sample options:
                            https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
     --timeout <secs>       Timeout for downloading URLs in seconds.
                            [default: 30]
+    --max-size <mb>        Maximum size of the file to download in MB before sampling.
+                           Will download the entire file if not specified.
+                           If the CSV is partially downloaded, the sample will be taken
+                           only from the downloaded portion.
 
 Common options:
     -h, --help             Display this message
@@ -90,6 +97,7 @@ struct Args {
     flag_rng:        String,
     flag_user_agent: Option<String>,
     flag_timeout:    Option<u16>,
+    flag_max_size:   Option<u64>,
 }
 
 #[derive(Debug, EnumString, PartialEq)]
@@ -103,10 +111,6 @@ enum RngKind {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
 
-    if args.arg_sample_size.is_sign_negative() {
-        return fail_incorrectusage_clierror!("Sample size cannot be negative.");
-    }
-
     let Ok(rng_kind) = RngKind::from_str(&args.flag_rng) else {
         return fail_incorrectusage_clierror!(
             "Invalid RNG algorithm `{}`. Supported RNGs are: standard, faster, cryptosecure.",
@@ -119,6 +123,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     args.arg_input = match args.arg_input {
         Some(uri) => {
             if Url::parse(&uri).is_ok() && uri.starts_with("http") {
+                let max_size_bytes = args.flag_max_size.map(|mb| mb * 1024 * 1024);
+
                 // its a remote file, download it first
                 let future = util::download_file(
                     &uri,
@@ -126,7 +132,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     false,
                     args.flag_user_agent,
                     args.flag_timeout,
-                    None,
+                    max_size_bytes,
                 );
                 tokio::runtime::Runtime::new()?.block_on(future)?;
                 // safety: temp_download is a NamedTempFile, so we know it can be converted to a
@@ -143,7 +149,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let rconfig = Config::new(&args.arg_input)
         .delimiter(args.flag_delimiter)
-        .no_headers(args.flag_no_headers);
+        .no_headers(args.flag_no_headers)
+        .flexible(true);
 
     let mut sample_size = args.arg_sample_size;
 
