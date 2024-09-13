@@ -6,6 +6,7 @@ pub fn sample_cmd() -> Command {
         arg!(--rng),
         arg!(--"user-agent"),
         arg!(--timeout),
+        arg!(--"max-size"),
         arg!(--output),
         arg!(--"no-headers"),
         arg!(--delimiter),

@@ -1394,6 +1394,7 @@ _arguments "${_arguments_options[@]}" : \
 '--rng[]' \
 '--user-agent[]' \
 '--timeout[]' \
+'--max-size[]' \
 '--output[]' \
 '--no-headers[]' \
 '--delimiter[]' \

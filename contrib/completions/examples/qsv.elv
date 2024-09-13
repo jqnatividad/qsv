@@ -1162,6 +1162,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --rng 'rng'
             cand --user-agent 'user-agent'
             cand --timeout 'timeout'
+            cand --max-size 'max-size'
             cand --output 'output'
             cand --no-headers 'no-headers'
             cand --delimiter 'delimiter'

@@ -1072,6 +1072,7 @@ module completions {
     --rng
     --user-agent
     --timeout
+    --max-size
     --output
     --no-headers
     --delimiter

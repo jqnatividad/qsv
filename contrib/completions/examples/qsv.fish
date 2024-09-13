@@ -897,6 +897,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand sample" -l seed
 complete -c qsv -n "__fish_qsv_using_subcommand sample" -l rng
 complete -c qsv -n "__fish_qsv_using_subcommand sample" -l user-agent
 complete -c qsv -n "__fish_qsv_using_subcommand sample" -l timeout
+complete -c qsv -n "__fish_qsv_using_subcommand sample" -l max-size
 complete -c qsv -n "__fish_qsv_using_subcommand sample" -l output
 complete -c qsv -n "__fish_qsv_using_subcommand sample" -l no-headers
 complete -c qsv -n "__fish_qsv_using_subcommand sample" -l delimiter
