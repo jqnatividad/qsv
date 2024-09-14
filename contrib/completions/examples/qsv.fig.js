@@ -2784,6 +2784,9 @@ const completion: Fig.Spec = {
           name: "--timeout",
         },
         {
+          name: "--max-size",
+        },
+        {
           name: "--output",
         },
         {

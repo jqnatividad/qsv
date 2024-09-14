@@ -1267,6 +1267,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--rng', 'rng', [CompletionResultType]::ParameterName, 'rng')
             [CompletionResult]::new('--user-agent', 'user-agent', [CompletionResultType]::ParameterName, 'user-agent')
             [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
+            [CompletionResult]::new('--max-size', 'max-size', [CompletionResultType]::ParameterName, 'max-size')
             [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
             [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
             [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')

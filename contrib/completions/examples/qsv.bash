@@ -3462,7 +3462,7 @@ _qsv() {
             return 0
             ;;
         qsv__sample)
-            opts="-h --seed --rng --user-agent --timeout --output --no-headers --delimiter --help"
+            opts="-h --seed --rng --user-agent --timeout --max-size --output --no-headers --delimiter --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
