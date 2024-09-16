@@ -24,10 +24,13 @@ Common options:
     -h, --help      Display this message
 "#;
 
+use std::path::PathBuf;
+
 use csvlens::run_csvlens;
 use serde::Deserialize;
+use tempfile;
 
-use crate::{util, CliError, CliResult};
+use crate::{config::Config, util, CliError, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
@@ -46,14 +49,32 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
+    let config = Config::new(&args.arg_input);
+
     let mut lens_args = Vec::new();
 
-    if let Some(input) = &args.arg_input {
-        lens_args.push(input.to_string());
-    }
+    // Process input file
+    // support stdin and auto-decompress snappy file
+    // stdin/decompressed file is written to a temporary file in tmpdir
+    // which is automatically deleted after the command finishes
+    let tmpdir = tempfile::tempdir()?;
+    let work_input = util::process_input(
+        vec![PathBuf::from(
+            // if no input file is specified, read from stdin "-"
+            args.arg_input.clone().unwrap_or_else(|| "-".to_string()),
+        )],
+        &tmpdir,
+        "",
+    )?;
+    lens_args.push(work_input[0].to_string_lossy().to_string());
 
     if let Some(delimiter) = &args.flag_delimiter {
         lens_args.extend_from_slice(&["--delimiter".to_string(), delimiter.to_string()]);
+    } else {
+        lens_args.extend_from_slice(&[
+            "--delimiter".to_string(),
+            (config.get_delimiter() as char).to_string(),
+        ]);
     }
 
     if args.flag_tab_separated {
