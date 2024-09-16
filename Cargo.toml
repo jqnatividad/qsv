@@ -275,7 +275,7 @@ csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-opt
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 
 # use upstream csvlens with unreleased --echo-column fix
-csvlens = { git = "https://github.com/YS-L/csvlens", rev = "abc8e43" }
+# csvlens = { git = "https://github.com/YS-L/csvlens", rev = "abc8e43" }
 
 # upstream csvs_convert has some old dependencies
 # csvs_convert = { git = "https://github.com/jqnatividad/csvs_convert", branch = "bump-more-dependencies" }
