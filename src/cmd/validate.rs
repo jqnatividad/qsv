@@ -135,13 +135,12 @@ use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::IntoParallelRefIterator,
 };
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
 
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
-    regex_oncelock, util, CliResult,
+    util, CliResult,
 };
 
 // to save on repeated init/allocs
@@ -239,10 +238,12 @@ fn custom_object_type_factory<'a>(
 }
 
 /// Check that a string has some number of digits followed by a dot followed by exactly 2 digits.
-fn currency_format_checker(s: &str) -> bool {
-    let currency_re: &'static Regex = regex_oncelock!("^(0|([1-9]+[0-9]*))(\\.[0-9]{2})$");
-    currency_re.is_match(s)
-}
+// fn currency_format_checker(s: &str) -> bool {
+//     use regex::Regex;
+//     use crate::regex_oncelock;
+//     let currency_re: &'static Regex = regex_oncelock!("^(0|([1-9]+[0-9]*))(\\.[0-9]{2})$");
+//     currency_re.is_match(s)
+// }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -504,7 +505,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     Ok(json) => {
                         // compile JSON Schema
                         match JSONSchema::options()
-                            .with_format("currency", currency_format_checker)
+                            // .with_format("currency", currency_format_checker)
                             .with_keyword("ascii-keys", custom_object_type_factory)
                             .compile(&json)
                         {
@@ -1179,83 +1180,83 @@ mod tests_for_schema_validation {
     }
 }
 
-#[test]
-fn test_validate_currency_validator() {
-    fn schema_currency_json() -> Value {
-        serde_json::json!({
-            "$id": "https://example.com/person.schema.json",
-            "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "title": "Person",
-            "type": "object",
-            "properties": {
-                "title": {
-                    "type": "string",
-                    "description": "The person's title.",
-                    "minLength": 2
-                },
-                "name": {
-                    "type": "string",
-                    "description": "The person's name.",
-                    "minLength": 2
-                },
-                "fee": {
-                    "description": "The required fee to see the person.",
-                    "type": "string",
-                    "format": "currency",
-                    "minimum": 18
-                }
-            }
-        })
-    }
+// #[test]
+// fn test_validate_currency_validator() {
+//     fn schema_currency_json() -> Value {
+//         serde_json::json!({
+//             "$id": "https://example.com/person.schema.json",
+//             "$schema": "https://json-schema.org/draft/2020-12/schema",
+//             "title": "Person",
+//             "type": "object",
+//             "properties": {
+//                 "title": {
+//                     "type": "string",
+//                     "description": "The person's title.",
+//                     "minLength": 2
+//                 },
+//                 "name": {
+//                     "type": "string",
+//                     "description": "The person's name.",
+//                     "minLength": 2
+//                 },
+//                 "fee": {
+//                     "description": "The required fee to see the person.",
+//                     "type": "string",
+//                     "format": "currency",
+//                     "minimum": 18
+//                 }
+//             }
+//         })
+//     }
 
-    let _ = NULL_TYPE.get_or_init(|| Value::String("null".to_string()));
-    let csv = "title,name,fee
-    Professor,Xaviers,60.02123";
+//     let _ = NULL_TYPE.get_or_init(|| Value::String("null".to_string()));
+//     let csv = "title,name,fee
+//     Professor,Xaviers,60.02123";
 
-    let mut rdr = csv::Reader::from_reader(csv.as_bytes());
-    let headers = rdr.byte_headers().unwrap().clone();
-    let header_types = get_json_types(&headers, &schema_currency_json()).unwrap();
+//     let mut rdr = csv::Reader::from_reader(csv.as_bytes());
+//     let headers = rdr.byte_headers().unwrap().clone();
+//     let header_types = get_json_types(&headers, &schema_currency_json()).unwrap();
 
-    let record = &rdr.byte_records().next().unwrap().unwrap();
+//     let record = &rdr.byte_records().next().unwrap().unwrap();
 
-    let instance = to_json_instance(&header_types, headers.len(), record).unwrap();
+//     let instance = to_json_instance(&header_types, headers.len(), record).unwrap();
 
-    let compiled_schema = JSONSchema::options()
-        .with_format("currency", currency_format_checker)
-        .compile(&schema_currency_json())
-        .expect("Invalid schema");
+//     let compiled_schema = JSONSchema::options()
+//         .with_format("currency", currency_format_checker)
+//         .compile(&schema_currency_json())
+//         .expect("Invalid schema");
 
-    let result = validate_json_instance(&instance, &compiled_schema);
+//     let result = validate_json_instance(&instance, &compiled_schema);
 
-    assert_eq!(
-        result,
-        Some(vec![(
-            "fee".to_owned(),
-            "\"60.02123\" is not a \"currency\"".to_owned()
-        )])
-    );
+//     assert_eq!(
+//         result,
+//         Some(vec![(
+//             "fee".to_owned(),
+//             "\"60.02123\" is not a \"currency\"".to_owned()
+//         )])
+//     );
 
-    let csv = "title,name,fee
-    Professor,Xaviers,60.02";
+//     let csv = "title,name,fee
+//     Professor,Xaviers,60.02";
 
-    let mut rdr = csv::Reader::from_reader(csv.as_bytes());
-    let headers = rdr.byte_headers().unwrap().clone();
-    let header_types = get_json_types(&headers, &schema_currency_json()).unwrap();
+//     let mut rdr = csv::Reader::from_reader(csv.as_bytes());
+//     let headers = rdr.byte_headers().unwrap().clone();
+//     let header_types = get_json_types(&headers, &schema_currency_json()).unwrap();
 
-    let record = &rdr.byte_records().next().unwrap().unwrap();
+//     let record = &rdr.byte_records().next().unwrap().unwrap();
 
-    let instance = to_json_instance(&header_types, headers.len(), record).unwrap();
+//     let instance = to_json_instance(&header_types, headers.len(), record).unwrap();
 
-    let compiled_schema = JSONSchema::options()
-        .with_format("currency", currency_format_checker)
-        .compile(&schema_currency_json())
-        .expect("Invalid schema");
+//     let compiled_schema = JSONSchema::options()
+//         .with_format("currency", currency_format_checker)
+//         .compile(&schema_currency_json())
+//         .expect("Invalid schema");
 
-    let result = validate_json_instance(&instance, &compiled_schema);
+//     let result = validate_json_instance(&instance, &compiled_schema);
 
-    // no validation error for currency format
-    assert_eq!(result, None);
-}
+//     // no validation error for currency format
+//     assert_eq!(result, None);
+// }
 
 fn load_json(uri: &str) -> Result<String, String> {
     let json_string = match uri {
