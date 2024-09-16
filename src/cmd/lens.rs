@@ -49,8 +49,6 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    let config = Config::new(&args.arg_input);
-
     let mut lens_args = Vec::new();
 
     // Process input file
@@ -61,12 +59,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let work_input = util::process_input(
         vec![PathBuf::from(
             // if no input file is specified, read from stdin "-"
-            args.arg_input.clone().unwrap_or_else(|| "-".to_string()),
+            args.arg_input.unwrap_or_else(|| "-".to_string()),
         )],
         &tmpdir,
         "",
     )?;
-    lens_args.push(work_input[0].to_string_lossy().to_string());
+    let input = work_input[0].to_string_lossy().to_string();
+    lens_args.push(input.clone());
+
+    // we do config here to get the delimiter, just in case
+    // QSV_SNIFF_DELIMITER or QSV_DELIMITER is set
+    let config: Config = Config::new(&Some(input));
 
     if let Some(delimiter) = &args.flag_delimiter {
         lens_args.extend_from_slice(&["--delimiter".to_string(), delimiter.to_string()]);
