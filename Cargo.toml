@@ -134,7 +134,6 @@ jsonschema = { version = "0.19", features = [
     "resolve-http",
 ], default-features = false }
 jql-runner = { version = "7.1", default-features = false, optional = true }
-lexical-core = "1"
 local-encoding = { version = "0.2", optional = true }
 localzone = { version = "0.3", features = ["auto_validation"] }
 log = "0.4"

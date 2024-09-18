@@ -5425,7 +5425,6 @@ dependencies = [
  "jql-runner",
  "json-objects-to-csv",
  "jsonschema",
- "lexical-core 1.0.1",
  "local-encoding",
  "localzone",
  "log",
