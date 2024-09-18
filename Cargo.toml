@@ -134,6 +134,7 @@ jsonschema = { version = "0.19", features = [
     "resolve-http",
 ], default-features = false }
 jql-runner = { version = "7.1", default-features = false, optional = true }
+lexical-core = "1"
 local-encoding = { version = "0.2", optional = true }
 localzone = { version = "0.3", features = ["auto_validation"] }
 log = "0.4"
@@ -275,7 +276,7 @@ csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-opt
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 
 # use upstream csvlens with unreleased --echo-column fix
-# csvlens = { git = "https://github.com/YS-L/csvlens", rev = "abc8e43" }
+csvlens = { git = "https://github.com/jqnatividad/csvlens", branch = "dependency-upgrades-lexical-core_fix" }
 
 # upstream csvs_convert has some old dependencies
 # csvs_convert = { git = "https://github.com/jqnatividad/csvs_convert", branch = "bump-more-dependencies" }
@@ -289,6 +290,9 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "ff8533d" }
 
 # use calamine 0.25.0 with unreleased fixes and select clippy lints
 calamine = { git = "https://github.com/tafia/calamine", rev = "247c080" }
+
+# use patched lexical core due to https://rustsec.org/advisories/RUSTSEC-2023-0086
+simd-json = { git = "https://github.com/jqnatividad/simd-json", branch = "0.13.10_lexical-core"}
 
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
