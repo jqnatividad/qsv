@@ -592,13 +592,6 @@ enum GeocodeSubCmd {
     IndexReset,
 }
 
-// we need this as geosuggest uses anyhow::Error
-impl From<anyhow::Error> for CliError {
-    fn from(err: anyhow::Error) -> CliError {
-        CliError::Other(format!("Error: {err}"))
-    }
-}
-
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
 
@@ -790,7 +783,8 @@ async fn geocode_main(args: Args) -> CliResult<()> {
             filter_languages: languages_vec.clone(),
         };
 
-        let updater = IndexUpdater::new(indexupdater_settings.clone())?;
+        let updater = IndexUpdater::new(indexupdater_settings.clone())
+            .map_err(|_| CliError::Other("Error initializing IndexUpdater".to_string()))?;
 
         let storage = storage::bincode::Storage::new();
 
@@ -823,7 +817,11 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 eprintln!("Created at: {created_at}");
 
                 match metadata {
-                    Some(m) if updater.has_updates(&m).await? => {
+                    Some(m)
+                        if updater.has_updates(&m).await.map_err(|_| {
+                            CliError::Network("Geonames update check failed.".to_string())
+                        })? =>
+                    {
                         winfo!(
                             "Updates available at Geonames.org. Use `qsv geocode index-update` to \
                              update/rebuild the index.\nPlease use this judiciously as Geonames \
@@ -860,7 +858,9 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         "This will take a while as we need to download data & rebuild the index..."
                     );
 
-                    let engine = updater.build().await?;
+                    let engine = updater.build().await.map_err(|_| {
+                        CliError::Other("Error building geonames index.".to_string())
+                    })?;
                     storage
                         .dump_to(geocode_index_file.clone(), &engine)
                         .map_err(|e| format!("{e}"))?;
@@ -868,12 +868,16 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                 } else {
                     winfo!("Checking main Geonames website for updates...");
 
-                    if updater.has_updates(&metadata.unwrap()).await? {
+                    if updater.has_updates(&metadata.unwrap()).await.map_err(|_| {
+                        CliError::Network("Geonames update check failed.".to_string())
+                    })? {
                         winfo!(
                             "Updating/Rebuilding Geonames index. This will take a while as we \
                              need to download data from Geonames & rebuild the index..."
                         );
-                        let engine = updater.build().await?;
+                        let engine = updater.build().await.map_err(|_| {
+                            CliError::Other("Error updating geonames index.".to_string())
+                        })?;
                         let _ = storage.dump_to(geocode_index_file.clone(), &engine);
                         winfo!("Updates successfully applied: {geocode_index_file}");
                     } else {

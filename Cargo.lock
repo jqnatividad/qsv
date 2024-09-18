@@ -5299,7 +5299,6 @@ dependencies = [
  "actix-governor",
  "actix-web",
  "ahash",
- "anyhow",
  "arboard",
  "arrow",
  "assert-json-diff",

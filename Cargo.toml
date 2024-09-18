@@ -69,7 +69,6 @@ panic    = "abort"
 
 [dependencies]
 ahash = "0.8"
-anyhow = { version = "1.0", optional = true }
 arboard = "3.4.1"
 arrow = {version = "53", default-features = false, features = ["csv"], optional = true}
 atoi_simd = "0.16"
@@ -358,7 +357,6 @@ fetch = [
 ]
 foreach = ["local-encoding"]
 geocode = [
-    "anyhow",
     "cached",
     "geosuggest-core",
     "geosuggest-utils",
