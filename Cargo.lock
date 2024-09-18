@@ -1136,7 +1136,7 @@ checksum = "ade8366b8bd5ba243f0a58f036cc0ca8a2f069cff1a2351ef1cac6b083e16fc0"
 [[package]]
 name = "calamine"
 version = "0.25.0"
-source = "git+https://github.com/jqnatividad/calamine?branch=select-clippy-lints#7d6d77bfb2b6dff74996d8588b646a560218df80"
+source = "git+https://github.com/tafia/calamine?rev=247c080#247c08083134724b700fea9825678fa219482113"
 dependencies = [
  "byteorder",
  "chrono",
