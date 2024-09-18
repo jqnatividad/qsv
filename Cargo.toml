@@ -287,7 +287,7 @@ dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "ff8533d" }
 
-# use our fork of calamine 0.25.0 with unreleased fixes and select clippy lints
+# use calamine 0.25.0 with unreleased fixes and select clippy lints
 calamine = { git = "https://github.com/tafia/calamine", rev = "247c080" }
 
 # use modernized version of local_encoding
