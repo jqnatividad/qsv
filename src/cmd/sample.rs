@@ -135,8 +135,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     max_size_bytes,
                 );
                 tokio::runtime::Runtime::new()?.block_on(future)?;
-                // safety: temp_download is a NamedTempFile, so we know it can be converted to a
-                // string
+                // safety: temp_download is a NamedTempFile, so we know can unwrap.to_string
                 let temp_download_path = temp_download.path().to_str().unwrap().to_string();
                 Some(temp_download_path)
             } else {
