@@ -68,7 +68,11 @@ jobs:
       if: ${{ matrix.job.musl-prep }}
       run: |
         sudo apt-get install musl-tools musl-dev
-        sudo ln -s /usr/bin/g++ /usr/bin/musl-g++        
+        sudo ln -s /usr/bin/g++ /usr/bin/musl-g++
+    - name: apt-get update Ubuntu, libwayland-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get install libwayland-dev
     - name: Build qsv-nightly
       env:
         RUSTFLAGS: --emit=asm

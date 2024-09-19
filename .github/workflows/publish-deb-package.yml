@@ -42,6 +42,11 @@ jobs:
         with:
           ref: ${{ needs.analyze-tags.outputs.previous-tag }}
 
+      - name: apt-get update Ubuntu, libwayland-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install libwayland-dev
+
       - name: Install Cargo Deb
         run: cargo install cargo-deb
 
