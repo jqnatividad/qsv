@@ -127,8 +127,8 @@ use indicatif::{ProgressBar, ProgressDrawTarget};
 use itertools::Itertools;
 use jsonschema::{
     output::BasicOutput,
-    paths::{JSONPointer, JsonPointerNode, PathChunk},
-    ErrorIterator, JSONSchema, Keyword, ValidationError,
+    paths::{JsonPointer, JsonPointerNode, PathChunk},
+    ErrorIterator, Keyword, ValidationError, Validator,
 };
 use log::{debug, info, log_enabled};
 use rayon::{
@@ -198,7 +198,7 @@ impl Keyword for IsAsciiValidator {
         for key in instance.as_object().unwrap().keys() {
             if !key.is_ascii() {
                 let error = ValidationError::custom(
-                    JSONPointer::default(),
+                    JsonPointer::default(),
                     instance_path.into(),
                     instance,
                     "Key is not ASCII",
@@ -222,12 +222,12 @@ impl Keyword for IsAsciiValidator {
 fn custom_object_type_factory<'a>(
     _: &'a Map<String, Value>,
     schema: &'a Value,
-    path: JSONPointer,
+    path: JsonPointer,
 ) -> Result<Box<dyn Keyword>, ValidationError<'a>> {
     const EXPECTED: &str = "ascii-keys";
     if schema.as_str().map_or(true, |key| key != EXPECTED) {
         Err(ValidationError::custom(
-            JSONPointer::default(),
+            JsonPointer::default(),
             path,
             schema,
             "Expected 'ascii-keys'",
@@ -497,17 +497,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let header_len = headers.len();
 
     // parse and compile supplied JSON Schema
-    let (schema_json, schema_compiled): (Value, JSONSchema) =
+    let (schema_json, schema_compiled): (Value, Validator) =
         match load_json(&args.arg_json_schema.unwrap()) {
             Ok(s) => {
                 // parse JSON string
                 match serde_json::from_str(&s) {
                     Ok(json) => {
                         // compile JSON Schema
-                        match JSONSchema::options()
+                        match Validator::options()
                             // .with_format("currency", currency_format_checker)
                             .with_keyword("ascii-keys", custom_object_type_factory)
-                            .compile(&json)
+                            .build(&json)
                         {
                             Ok(schema) => (json, schema),
                             Err(e) => {
@@ -781,7 +781,7 @@ fn do_json_validation(
     header_types: &[(String, JSONtypes)],
     header_len: usize,
     record: &ByteRecord,
-    schema_compiled: &JSONSchema,
+    schema_compiled: &Validator,
 ) -> Option<String> {
     // safety: row number was added as last column. We use can do unwrap safely since we know its
     // there
@@ -1063,7 +1063,7 @@ mod tests_for_csv_to_json_conversion {
 #[inline]
 fn validate_json_instance(
     instance: &Value,
-    schema_compiled: &JSONSchema,
+    schema_compiled: &Validator,
 ) -> Option<Vec<(String, String)>> {
     let validation_output = schema_compiled.apply(instance);
 
@@ -1127,9 +1127,9 @@ mod tests_for_schema_validation {
         })
     }
 
-    fn compiled_schema() -> JSONSchema {
-        JSONSchema::options()
-            .compile(&schema_json())
+    fn compiled_schema() -> Validator {
+        Validator::options()
+            .build(&schema_json())
             .expect("Invalid schema")
     }
 
@@ -1268,7 +1268,6 @@ fn load_json(uri: &str) -> Result<String, String> {
 
             let client = match Client::builder()
                 // safety: we're using a validated QSV_USER_AGENT or if it's not set,
-                // the default user agent
                 .user_agent(util::set_user_agent(None).unwrap())
                 .brotli(true)
                 .gzip(true)
