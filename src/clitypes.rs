@@ -176,7 +176,7 @@ impl fmt::Display for CliError {
 impl From<docopt::Error> for CliError {
     fn from(err: docopt::Error) -> CliError {
         if let docopt::Error::WithProgramUsage(ref errtype, ref usage_text) = err {
-            if let docopt::Error::Help = **errtype {
+            if matches!(**errtype, docopt::Error::Help) {
                 CliError::Help(usage_text.to_string())
             } else {
                 CliError::Flag(err)
