@@ -202,7 +202,7 @@ reqwest = { version = "0.12", features = [
     "stream",
     "zstd",
 ], default-features = false }
-rfd = "0.14"
+rfd = "0.15"
 rust_decimal = { version = "1.36", default-features = false }
 ryu = "1"
 sanitize-filename = { version = "0.5", optional = true }
