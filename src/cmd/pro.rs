@@ -37,6 +37,12 @@ struct Args {
     cmd_workflow: bool,
 }
 
+#[derive(Deserialize)]
+struct Status {
+    success: bool,
+    message: Option<String>,
+}
+
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
@@ -51,18 +57,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         "file_path": file_path
     });
 
+    // Handle response from API
     let endpoint = if args.cmd_lens { "lens" } else { "workflow" };
     let res = reqwest::blocking::Client::new()
-        .post(format!("http://localhost:14462/api/v1/{}", endpoint))
+        .post(format!("http://localhost:14462/api/v1/{endpoint}"))
         .json(&payload)
         .send()?;
-
-    // Handle response from API
-    #[derive(Deserialize)]
-    struct Status {
-        success: bool,
-        message: Option<String>,
-    }
 
     let status = res.json::<Status>()?;
 
@@ -73,7 +73,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if let Some(message) = status.message {
-        println!("{message}")
+        println!("{message}");
     }
 
     Ok(())
