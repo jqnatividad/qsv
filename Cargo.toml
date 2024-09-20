@@ -234,6 +234,7 @@ uuid = { version = "1", features = ["v4", "v7"] }
 url = "2.5"
 vader_sentiment = { version = "0.1", optional = true }
 whatlang = { version = "0.16", optional = true }
+xlsxwriter = { version = "0.6", optional = true }
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
 
 # enable parking_lot hardware lock elision on x86_64
@@ -298,6 +299,9 @@ simd-json = { git = "https://github.com/jqnatividad/simd-json", branch = "0.13.1
 
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
+
+# use of fork of xlsxwriter with bumped bindgen dependency
+xlsxwriter = { git = "https://github.com/jqnatividad/xlsxwriter-rs", branch = "bump-bindgen-to-0.70.1"}
 
 # Polars has a much higher release tempo for its Python bindings compared
 # to its underlying Rust library. See https://github.com/pola-rs/polars/releases
@@ -365,7 +369,7 @@ geocode = [
 ]
 luau = ["mlua", "sanitize-filename", "simple-expand-tilde"]
 python = ["pyo3"]
-to = ["csvs_convert"]
+to = ["csvs_convert", "xlsxwriter"]
 lens = ["arrow", "csvlens"]
 lite = []
 datapusher_plus = ["self_update"]
