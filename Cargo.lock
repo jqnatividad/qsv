@@ -2658,13 +2658,13 @@ dependencies = [
 
 [[package]]
 name = "geosuggest-core"
-version = "0.6.3"
+version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e443eee3f77dd64cbe0079c4c713f8d2c296b4bbee72816270d609fa99ff99c2"
+checksum = "c62b4a71c1aad50a21de40ed45841c85367f2a9eeaabfae2153e089455c45120"
 dependencies = [
  "bincode",
  "csv",
- "itertools 0.12.1",
+ "itertools 0.13.0",
  "kiddo",
  "rayon",
  "serde",
