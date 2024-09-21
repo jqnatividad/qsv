@@ -26,9 +26,10 @@ Usage:
     qsv searchset --help
 
 searchset arguments:
-    <regex>                    Regular expression to match. Uses Rust regex syntax.
+    <regexset-file>            The file containing regular expressions to match, with a 
+                               regular expression on each line.
                                See https://docs.rs/regex/latest/regex/index.html#syntax
-                               or https://regex101.com with the Rust flavor for more info.
+                               or https://regex101.com with the Rust flavor for regex syntax.
     <input>                    The CSV file to read. If not given, reads from stdin.
 
 searchset options:
