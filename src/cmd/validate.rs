@@ -21,8 +21,15 @@ It validates not only the structure of the file, but the data types and domain/r
 fields as well. See https://json-schema.org/draft/2020-12/json-schema-validation.html
 
 qsv has added support for a custom format - `currency`. This format will only accept a valid
-currency string - defined as either 0 or a positive integer followed by a decimal point and
-exactly two digits. It does not allow for leading zeroes in the integer part (except for "0" itself).
+currency, defined as: 
+
+ 1. ISO Currency Symbol (optional): This is the ISO 4217 three-character code or currency symbol
+    (e.g. USD, EUR, JPY, $, €, ¥, etc.)
+ 2. Amount: This is the numerical value of the currency.More than 2 decimal places are allowed.
+ 3. Formats: Valid currency formats include:
+      Standard: $1,000.00 or USD1000.00  
+      Negative amounts: ($100.00) or -$100.00
+      Different styles: 1.000,00 (used in some countries for euros)
 
 You can create a JSON Schema file from a reference CSV file using the `qsv schema` command.
 Once the schema is created, you can fine-tune it to your needs and use it to validate other CSV
@@ -131,6 +138,7 @@ use indicatif::{ProgressBar, ProgressDrawTarget};
 use itertools::Itertools;
 use jsonschema::{output::BasicOutput, paths::PathChunk, Validator};
 use log::{debug, info, log_enabled};
+use qsv_currency::Currency;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::IntoParallelRefIterator,
@@ -187,13 +195,16 @@ struct RFC4180Struct {
     fields:         Vec<String>,
 }
 
-/// Check that a string has some number of digits followed by a dot followed by exactly 2 digits.
+#[inline]
+/// Checks if a string is a valid currency
 fn currency_format_checker(s: &str) -> bool {
-    use regex::Regex;
-
-    use crate::regex_oncelock;
-    let currency_re: &'static Regex = regex_oncelock!("^(0|([1-9]+[0-9]*))(\\.[0-9]{2})$");
-    currency_re.is_match(s)
+    Currency::from_str(s).map_or(false, |c| {
+        if c.symbol().len() > 0 {
+            qsv_currency::Currency::is_iso_currency(&c)
+        } else {
+            false
+        }
+    })
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -1153,7 +1164,6 @@ fn test_validate_currency_validator() {
                     "description": "The required fee to see the person.",
                     "type": "string",
                     "format": "currency",
-                    "minimum": 18
                 }
             }
         })
@@ -1161,7 +1171,7 @@ fn test_validate_currency_validator() {
 
     let _ = NULL_TYPE.get_or_init(|| Value::String("null".to_string()));
     let csv = "title,name,fee
-    Professor,Xaviers,60.02123";
+    Professor,Xaviers,Ð 100.00";
 
     let mut rdr = csv::Reader::from_reader(csv.as_bytes());
     let headers = rdr.byte_headers().unwrap().clone();
@@ -1179,16 +1189,22 @@ fn test_validate_currency_validator() {
 
     let result = validate_json_instance(&instance, &compiled_schema);
 
+    // Dogecoin is not an ISO currency
     assert_eq!(
         result,
         Some(vec![(
             "fee".to_owned(),
-            "\"60.02123\" is not a \"currency\"".to_owned()
+            "\"Ð 100.00\" is not a \"currency\"".to_owned()
         )])
     );
 
     let csv = "title,name,fee
-    Professor,Xaviers,60.02";
+    Professor,Xaviers,USD60.02
+    He-man,Wolverine,$100.00
+    Mr,Deadpool,¥1,000,000.00
+    Mrs,T,-€ 1.000.000,00
+    Madam,X,(EUR 1.999.000,12)
+    It,Vision,1.000.000,00";
 
     let mut rdr = csv::Reader::from_reader(csv.as_bytes());
     let headers = rdr.byte_headers().unwrap().clone();
