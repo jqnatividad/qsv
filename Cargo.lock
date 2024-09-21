@@ -3163,6 +3163,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "iso_country"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20633e788d3948ea7336861fdb09ec247f5dae4267e8f0743fa97de26c28624d"
+dependencies = [
+ "lazy_static",
+]
+
+[[package]]
+name = "iso_currency"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f402cc74ed2fec6f6fed285d45645a8c7c82e1d1fa694898864ef7c0cb047785"
+dependencies = [
+ "iso_country",
+ "proc-macro2",
+ "quote",
+ "strum",
+]
+
+[[package]]
 name = "itertools"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5392,10 +5413,12 @@ dependencies = [
 
 [[package]]
 name = "qsv_currency"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e34b3032b7942a4217f388aeac39a8b2f2d50405d6e21185d06c3c45d1e4ca9e"
+checksum = "3ee20db00fad0bc38941997c53efd2dcb586bc8de05f070156d56b13079ce6d5"
 dependencies = [
+ "ahash",
+ "iso_currency",
  "num",
  "serde",
 ]
