@@ -155,15 +155,13 @@ fn main() -> QsvExitCode {
 
     enabled_commands.push_str(
         "    partition   Partition CSV data based on a column value
-    pro         Interact with the qsv pro API\n"
+    pro         Interact with the qsv pro API\n",
     );
 
     #[cfg(all(feature = "prompt", feature = "feature_capable"))]
     enabled_commands.push_str("    prompt      Open a file dialog to pick a file\n");
 
-    enabled_commands.push_str(
-        "    pseudo      Pseudonymise the values of a column\n",
-    );
+    enabled_commands.push_str("    pseudo      Pseudonymise the values of a column\n");
 
     #[cfg(all(feature = "python", feature = "feature_capable"))]
     enabled_commands.push_str("    py          Evaluate a Python expression on CSV data\n");
