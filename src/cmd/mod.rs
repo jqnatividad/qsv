@@ -60,7 +60,7 @@ pub mod luau;
 pub mod partition;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod pro;
-#[cfg(any(feature = "feature_capable", feature = "lite"))]
+#[cfg(feature = "prompt")]
 pub mod prompt;
 pub mod pseudo;
 #[cfg(all(feature = "python", feature = "feature_capable"))]

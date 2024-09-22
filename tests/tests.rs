@@ -89,6 +89,7 @@ mod test_jsonl;
 mod test_luau;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_partition;
+#[cfg(feature = "prompt")]
 mod test_prompt;
 mod test_pseudo;
 #[cfg(feature = "python")]
