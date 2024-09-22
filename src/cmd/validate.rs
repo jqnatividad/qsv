@@ -196,13 +196,13 @@ struct RFC4180Struct {
 }
 
 #[inline]
-/// Checks if a string is a valid currency
+/// Checks if a given string represents a valid currency format.
 fn currency_format_checker(s: &str) -> bool {
     Currency::from_str(s).map_or(false, |c| {
-        if c.symbol().len() > 0 {
-            qsv_currency::Currency::is_iso_currency(&c)
+        if c.symbol().is_empty() {
+            true // allow empty currency symbol
         } else {
-            false
+            qsv_currency::Currency::is_iso_currency(&c)
         }
     })
 }
