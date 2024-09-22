@@ -216,6 +216,8 @@ pub fn version() -> String {
             Err(e) => enabled_features.push_str(&format!("Luau - cannot retrieve version: {e};")),
         };
     }
+    #[cfg(all(feature = "prompt", feature = "feature_capable"))]
+    enabled_features.push_str("prompt;");
 
     #[cfg(all(feature = "python", not(feature = "lite")))]
     {
