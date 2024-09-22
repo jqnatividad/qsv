@@ -155,9 +155,14 @@ fn main() -> QsvExitCode {
 
     enabled_commands.push_str(
         "    partition   Partition CSV data based on a column value
-    pro         Interact with the qsv pro API
-    prompt      Open a file dialog to pick a file
-    pseudo      Pseudonymise the values of a column\n",
+    pro         Interact with the qsv pro API\n"
+    );
+
+    #[cfg(all(feature = "prompt", feature = "feature_capable"))]
+    enabled_commands.push_str("    prompt      Open a file dialog to pick a file\n");
+
+    enabled_commands.push_str(
+        "    pseudo      Pseudonymise the values of a column\n",
     );
 
     #[cfg(all(feature = "python", feature = "feature_capable"))]
@@ -377,6 +382,7 @@ enum Command {
     Luau,
     Partition,
     Pro,
+    #[cfg(all(feature = "prompt", feature = "feature_capable"))]
     Prompt,
     Pseudo,
     #[cfg(all(feature = "python", feature = "feature_capable"))]
@@ -472,6 +478,7 @@ impl Command {
             Command::Luau => cmd::luau::run(argv),
             Command::Partition => cmd::partition::run(argv),
             Command::Pro => cmd::pro::run(argv),
+            #[cfg(all(feature = "prompt", feature = "feature_capable"))]
             Command::Prompt => cmd::prompt::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
             #[cfg(all(feature = "python", feature = "feature_capable"))]
