@@ -4544,9 +4544,9 @@ dependencies = [
 
 [[package]]
 name = "pkg-config"
-version = "0.3.30"
+version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
+checksum = "953ec861398dccce10c670dfeaf3ec4911ca479e9c02154b3a215178c5f566f2"
 
 [[package]]
 name = "planus"
@@ -4756,7 +4756,7 @@ dependencies = [
  "ryu",
  "serde",
  "serde_json",
- "simd-json",
+ "simd-json 0.13.11",
  "simdutf8",
  "tokio",
  "tokio-util",
@@ -4780,7 +4780,7 @@ dependencies = [
  "polars-error",
  "polars-utils",
  "ryu",
- "simd-json",
+ "simd-json 0.13.11",
  "streaming-iterator",
 ]
 
@@ -5348,7 +5348,7 @@ dependencies = [
  "serde_stacker",
  "serde_urlencoded",
  "serial_test",
- "simd-json",
+ "simd-json 0.14.0",
  "simdutf8",
  "simple-expand-tilde",
  "snap",
@@ -6390,8 +6390,9 @@ checksum = "d66dc143e6b11c1eddc06d5c423cfc97062865baf299914ab64caa38182078fe"
 
 [[package]]
 name = "simd-json"
-version = "0.13.10"
-source = "git+https://github.com/jqnatividad/simd-json?branch=0.13.10_lexical-core#f8f25b72feeb64f0d69bda55dff1c5f0f95be798"
+version = "0.13.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0228a564470f81724e30996bbc2b171713b37b15254a6440c7e2d5449b95691"
 dependencies = [
  "ahash",
  "getrandom",
@@ -6402,7 +6403,22 @@ dependencies = [
  "serde",
  "serde_json",
  "simdutf8",
- "value-trait",
+ "value-trait 0.8.1",
+]
+
+[[package]]
+name = "simd-json"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05f0b376aada35f30a0012f5790e50aed62f91804a0682669aefdbe81c7fcb91"
+dependencies = [
+ "getrandom",
+ "halfbrown",
+ "ref-cast",
+ "serde",
+ "serde_json",
+ "simdutf8",
+ "value-trait 0.10.0",
 ]
 
 [[package]]
@@ -7311,6 +7327,18 @@ name = "value-trait"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dad8db98c1e677797df21ba03fca7d3bf9bec3ca38db930954e4fe6e1ea27eb4"
+dependencies = [
+ "float-cmp",
+ "halfbrown",
+ "itoa",
+ "ryu",
+]
+
+[[package]]
+name = "value-trait"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bcaa56177466248ba59d693a048c0959ddb67f1151b963f904306312548cf392"
 dependencies = [
  "float-cmp",
  "halfbrown",

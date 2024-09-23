@@ -206,7 +206,7 @@ rfd = { version = "0.15", optional = true }
 rust_decimal = { version = "1.36", default-features = false }
 ryu = "1"
 sanitize-filename = { version = "0.5", optional = true }
-simd-json = "0.13"
+simd-json = "0.14"
 self_update = { version = "0.41", features = [
     "archive-zip",
     "compression-zip-deflate",
@@ -293,9 +293,6 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "ff8533d" }
 
 # use calamine 0.25.0 with unreleased fixes and select clippy lints
 calamine = { git = "https://github.com/tafia/calamine", rev = "247c080" }
-
-# use patched lexical core due to https://rustsec.org/advisories/RUSTSEC-2023-0086
-simd-json = { git = "https://github.com/jqnatividad/simd-json", branch = "0.13.10_lexical-core"}
 
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
