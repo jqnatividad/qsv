@@ -6,6 +6,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.135.0] - 2024-09-23
+
+## What's Changed
+* Update ubuntu version for deb package by @tino097 in https://github.com/jqnatividad/qsv/pull/2126
+* build(deps): bump jsonschema from 0.18.1 to 0.18.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2127
+* build(deps): bump simple-expand-tilde from 0.4.0 to 0.4.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2129
+* `deps`: bump to polars 0.43.0 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2130
+* build(deps): bump anyhow from 1.0.87 to 1.0.88 by @dependabot in https://github.com/jqnatividad/qsv/pull/2132
+* build(deps): bump redis from 0.26.1 to 0.27.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2133
+* build(deps): bump jsonschema from 0.18.2 to 0.18.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2134
+* `contrib(completions)`: update completions for qsv v0.134.0 and fix subcommand options by @rzmk in https://github.com/jqnatividad/qsv/pull/2135
+* build(deps): bump qsv_docopt from 1.7.0 to 1.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2136
+* build(deps): bump arboard from 3.4.0 to 3.4.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2137
+* move --help output from stderr to stdout by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2138
+* `contrib(completions)`: add `--max-size` completion for `sample` by @rzmk in https://github.com/jqnatividad/qsv/pull/2142
+* `tests`: add tests for https://100.dathere.com/lessons/2 by @rzmk in https://github.com/jqnatividad/qsv/pull/2141
+* build(deps): bump pyo3 from 0.22.2 to 0.22.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2143
+* build(deps): bump jsonschema from 0.18.3 to 0.19.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2144
+* build(deps): bump actix-governor from 0.5.0 to 0.6.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2146
+* build(deps): bump bytes from 1.7.1 to 1.7.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2148
+* `deps`: remove anyhow dependency by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2150
+* build(deps): bump jsonschema from 0.19.1 to 0.20.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2152
+* build(deps): bump rfd from 0.14.1 to 0.15.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2151
+* build(deps): bump geosuggest-core from 0.6.3 to 0.6.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/2153
+* build(deps): bump geosuggest-utils from 0.6.3 to 0.6.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/2154
+* build(deps): bump qsv_currency from 0.6.0 to 0.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2159
+* gate `prompt` command behind `prompt` feature by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2163
+* build(deps): bump simdutf8 from 0.1.4 to 0.1.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/2164
+* build(deps): bump jql-runner from 7.1.13 to 7.2.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2165
+* `validate`: added `dynenum` custom keyword for dynamic validation lookups by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2166
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.134.0...0.135.0
+
 ## [0.134.0] - 2024-09-10
 
 ## qsv pro v1 is here! 🎉
