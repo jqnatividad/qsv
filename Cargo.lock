@@ -385,7 +385,7 @@ checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 [[package]]
 name = "arrow"
 version = "53.0.0"
-source = "git+https://github.com/apache/arrow-rs?rev=5414f1d#5414f1d7c0683c64d69cf721a83c17d677c78a71"
+source = "git+https://github.com/apache/arrow-rs?rev=b809021#b80902172f7ce23719d45892f3dd8dec592be4bb"
 dependencies = [
  "arrow-arith",
  "arrow-array",
@@ -403,7 +403,7 @@ dependencies = [
 [[package]]
 name = "arrow-arith"
 version = "53.0.0"
-source = "git+https://github.com/apache/arrow-rs?rev=5414f1d#5414f1d7c0683c64d69cf721a83c17d677c78a71"
+source = "git+https://github.com/apache/arrow-rs?rev=b809021#b80902172f7ce23719d45892f3dd8dec592be4bb"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -417,7 +417,7 @@ dependencies = [
 [[package]]
 name = "arrow-array"
 version = "53.0.0"
-source = "git+https://github.com/apache/arrow-rs?rev=5414f1d#5414f1d7c0683c64d69cf721a83c17d677c78a71"
+source = "git+https://github.com/apache/arrow-rs?rev=b809021#b80902172f7ce23719d45892f3dd8dec592be4bb"
 dependencies = [
  "ahash",
  "arrow-buffer",
@@ -432,7 +432,7 @@ dependencies = [
 [[package]]
 name = "arrow-buffer"
 version = "53.0.0"
-source = "git+https://github.com/apache/arrow-rs?rev=5414f1d#5414f1d7c0683c64d69cf721a83c17d677c78a71"
+source = "git+https://github.com/apache/arrow-rs?rev=b809021#b80902172f7ce23719d45892f3dd8dec592be4bb"
 dependencies = [
  "bytes",
  "half",
@@ -442,7 +442,7 @@ dependencies = [
 [[package]]
 name = "arrow-cast"
 version = "53.0.0"
-source = "git+https://github.com/apache/arrow-rs?rev=5414f1d#5414f1d7c0683c64d69cf721a83c17d677c78a71"
+source = "git+https://github.com/apache/arrow-rs?rev=b809021#b80902172f7ce23719d45892f3dd8dec592be4bb"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -461,7 +461,7 @@ dependencies = [
 [[package]]
 name = "arrow-csv"
 version = "53.0.0"
-source = "git+https://github.com/apache/arrow-rs?rev=5414f1d#5414f1d7c0683c64d69cf721a83c17d677c78a71"
+source = "git+https://github.com/apache/arrow-rs?rev=b809021#b80902172f7ce23719d45892f3dd8dec592be4bb"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -479,7 +479,7 @@ dependencies = [
 [[package]]
 name = "arrow-data"
 version = "53.0.0"
-source = "git+https://github.com/apache/arrow-rs?rev=5414f1d#5414f1d7c0683c64d69cf721a83c17d677c78a71"
+source = "git+https://github.com/apache/arrow-rs?rev=b809021#b80902172f7ce23719d45892f3dd8dec592be4bb"
 dependencies = [
  "arrow-buffer",
  "arrow-schema",
@@ -490,7 +490,7 @@ dependencies = [
 [[package]]
 name = "arrow-ord"
 version = "53.0.0"
-source = "git+https://github.com/apache/arrow-rs?rev=5414f1d#5414f1d7c0683c64d69cf721a83c17d677c78a71"
+source = "git+https://github.com/apache/arrow-rs?rev=b809021#b80902172f7ce23719d45892f3dd8dec592be4bb"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -504,7 +504,7 @@ dependencies = [
 [[package]]
 name = "arrow-row"
 version = "53.0.0"
-source = "git+https://github.com/apache/arrow-rs?rev=5414f1d#5414f1d7c0683c64d69cf721a83c17d677c78a71"
+source = "git+https://github.com/apache/arrow-rs?rev=b809021#b80902172f7ce23719d45892f3dd8dec592be4bb"
 dependencies = [
  "ahash",
  "arrow-array",
@@ -517,12 +517,12 @@ dependencies = [
 [[package]]
 name = "arrow-schema"
 version = "53.0.0"
-source = "git+https://github.com/apache/arrow-rs?rev=5414f1d#5414f1d7c0683c64d69cf721a83c17d677c78a71"
+source = "git+https://github.com/apache/arrow-rs?rev=b809021#b80902172f7ce23719d45892f3dd8dec592be4bb"
 
 [[package]]
 name = "arrow-select"
 version = "53.0.0"
-source = "git+https://github.com/apache/arrow-rs?rev=5414f1d#5414f1d7c0683c64d69cf721a83c17d677c78a71"
+source = "git+https://github.com/apache/arrow-rs?rev=b809021#b80902172f7ce23719d45892f3dd8dec592be4bb"
 dependencies = [
  "ahash",
  "arrow-array",
@@ -535,7 +535,7 @@ dependencies = [
 [[package]]
 name = "arrow-string"
 version = "53.0.0"
-source = "git+https://github.com/apache/arrow-rs?rev=5414f1d#5414f1d7c0683c64d69cf721a83c17d677c78a71"
+source = "git+https://github.com/apache/arrow-rs?rev=b809021#b80902172f7ce23719d45892f3dd8dec592be4bb"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
