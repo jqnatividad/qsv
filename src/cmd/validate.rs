@@ -319,25 +319,18 @@ fn dyn_enum_validator_factory<'a>(
         };
 
         // read the first column into a HashSet
-        let mut enum_set = HashSet::new();
-
+        let mut enum_set = HashSet::with_capacity(50);
         let rconfig = Config::new(&Some(dynenum_path));
-        let mut rdr = rconfig.reader()?;
-        let mut record = csv::StringRecord::with_capacity(500, 1);
-
-        'dynenum_loop: loop {
-            let result = rdr.read_record(&mut record);
-            if let Err(e) = result {
-                return fail_validation_error!("Error reading dynenum file: {e}");
-            }
-
-            if result.is_ok_and(|more_data| !more_data) {
-                break 'dynenum_loop;
-            }
-
-            if let Some(value) = record.get(0) {
-                enum_set.insert(value.to_string());
-            }
+        let mut rdr = rconfig.flexible(true).reader()?;
+        for result in rdr.records() {
+            match result {
+                Ok(record) => {
+                    if let Some(value) = record.get(0) {
+                        enum_set.insert(value.to_owned());
+                    }
+                },
+                Err(e) => return fail_validation_error!("Error reading dynenum file: {e}"),
+            };
         }
 
         Ok(Box::new(DynEnumValidator::new(enum_set)))
