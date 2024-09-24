@@ -46,7 +46,10 @@ pub mod index;
 pub mod input;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod join;
-#[cfg(all(feature = "polars", feature = "feature_capable"))]
+#[cfg(all(
+    feature = "polars",
+    any(feature = "feature_capable", feature = "datapusher_plus")
+))]
 pub mod joinp;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod json;
@@ -82,7 +85,10 @@ pub mod sort;
 pub mod sortcheck;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod split;
-#[cfg(all(feature = "polars", feature = "feature_capable"))]
+#[cfg(all(
+    feature = "polars",
+    any(feature = "feature_capable", feature = "datapusher_plus")
+))]
 pub mod sqlp;
 pub mod stats;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
