@@ -8,7 +8,7 @@ The JSON data is expected to be non-empty and non-nested as either:
    B. Values are not objects or arrays.
 2. An object where values are not objects or arrays and the object is as described above.
 
-If there are duplicate keys then the last duplicate key and its values are used.
+Objects with duplicate keys are not recommended as only one key and its values may be used.
 
 If your JSON data is not in the expected format and/or is nested or complex, try using
 the --jaq option to pass a jq-like filter before parsing with the above constraints.
