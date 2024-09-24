@@ -8,8 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.135.0] - 2024-09-24
 
+### Highlights
+JSON Schema validation just got a whole lot more powerful with the introduction of the `dynenum` keyword!
+With `dynenum`, you can now dynamically lookup valid enum values from a CSV (on the filesystem or on a URL), allowing for more flexible and responsive data validation.  
+
+Unlike the standard[`enum` keyword](https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-validation-01#name-enum), `dynenum` does not require hardcoding valid values at schema definition time, and can be used to validate data against a changing set of valid values.  
+
+In an upcoming qsv pro release, we're making `dynenum` even more powerful by allowing you to specify  high-value reference data (e.g. US Census data, World Bank data, etc.) that is maintained at [data.dathere.com](https://data.dathere.com) and other CKAN instances.
+
+This release also add the custom [`currency` JSON Schema format](https://github.com/jqnatividad/qsv/blob/90257bbba6d0b1c59c7a6c104b05beae35ae97e1/src/cmd/validate.rs#L23-L31), which enables currency validation according to the [ISO 4217 standard](https://en.wikipedia.org/wiki/ISO_4217).
+
+The Polars engine was also updated to [0.43.1](https://github.com/pola-rs/polars/releases/tag/rs-0.43.1) at the [py-1.81.1 tag](https://github.com/pola-rs/polars/releases/tag/py-1.81.1) - making for various under-the-hood improvements for the `sqlp`, `joinp` and `count` commands, as we set the stage for more [Polars-powered features in future releases](https://github.com/jqnatividad/qsv/issues?q=is%3Aissue+is%3Aopen+label%3Apolars).
+
+---
+
 ### Added
-* `foreach`: enabled `foreach` command on Windows https://github.com/jqnatividad/qsv/commit/def9c8fa98cd214f0db839b64bcd12764dcfba43
+* `foreach`: enabled `foreach` command on Windows prebuilt binaries https://github.com/jqnatividad/qsv/commit/def9c8fa98cd214f0db839b64bcd12764dcfba43
 * `lens`: added support for QSV_SNIFF_DELIMITER env var and snappy auto-decompression https://github.com/jqnatividad/qsv/commit/8340e8949c4b60669bc95c432c661a8c374ca422
 * `sample`: add `--max-size` option https://github.com/jqnatividad/qsv/commit/e845a3cc1dcbbceda86bb7fe132c5040d23ce78b
 * `validate`: added `dynenum` custom JSON Schema keyword for dynamic validation lookups https://github.com/jqnatividad/qsv/pull/2166
@@ -52,13 +66,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 * `validate`: correct `fail_validation_error!` macro; reformat error messages to use hyphens as the JSONschema error message already starts with "error:" https://github.com/jqnatividad/qsv/commit/9a2552481a07759847efe6025b402297ecba7e19
-* moved --help output from stderr to stdout https://github.com/jqnatividad/qsv/commit/2b7dbdc68d49b67fb80c58cc7678cd3f2c112bd9
-* `lens`: fix parsing of lens options https://github.com/jqnatividad/qsv/commit/1cdd1bcac29fd2411521ac95fa87595de74cbb1b
+* moved `--help` output from stderr to stdout as per [GNU CLI guidelines](https://www.gnu.org/prep/standards/standards.html#g_t_002d_002dhelp) https://github.com/jqnatividad/qsv/commit/2b7dbdc68d49b67fb80c58cc7678cd3f2c112bd9
+* `lens`: fixed parsing of lens options https://github.com/jqnatividad/qsv/commit/1cdd1bcac29fd2411521ac95fa87595de74cbb1b
 * `searchset`: fixed usage text for <regexset-file> https://github.com/jqnatividad/qsv/commit/9a60fb088a326ee97ed1b147c4c3686b6b8aaeeb
+* [used patched forks of `arrow`, `csvlens` and `xlsxwriter` crates](https://github.com/jqnatividad/qsv/blob/90257bbba6d0b1c59c7a6c104b05beae35ae97e1/Cargo.toml#L270-L315) that replaces a dependency on an old version of `lexical-core` with known soundness issues - https://rustsec.org/advisories/RUSTSEC-2023-0086. Once those crates have updated their `lexical-core`dependency, we will revert to the original crates.
 
 ### Removed
 * removed `prompt` command from qsvlite https://github.com/jqnatividad/qsv/pull/2163
-* publish: remove lens feature from i686 targets as it does not compile https://github.com/jqnatividad/qsv/commit/959ca7686f8656c98de9257d11f1f762852bdf9d
+* publish: remove `lens` feature from i686 targets as it does not compile https://github.com/jqnatividad/qsv/commit/959ca7686f8656c98de9257d11f1f762852bdf9d
 * `deps`: remove anyhow dependency https://github.com/jqnatividad/qsv/pull/2150
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.134.0...0.135.0
