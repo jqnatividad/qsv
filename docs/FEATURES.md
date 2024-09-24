@@ -14,14 +14,15 @@
 * `prompt` - enable `prompt` command.
 * `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.7 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're NOT using the `py` command. Check [Python](#python) section for more info. Though Luau is the preferred DSL for qsv for all the reasons stated above, Python is still the lingua franca of data wrangling.
 * `to` - enables the `to` command.
-* `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only check for new releases.
-It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub. You need not worry that your manually built qsv will be overwritten by a self-update.
+* `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only alert you about new releases (it checks GitHub for the latest release 10% of the time upon startup unless the `QSV_NO_UPDATE` environment variable is set). It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub.  
+You need not worry that your manually built qsv will be overwritten by a self-update.  
+To check if your qsv build will have the option to self-update, run `qsv --version`. If you see `self_update` in the enabled features, and QSV_KIND is `prebuilt*` at the end, then you have the option to self-update.
 
 * `feature_capable` - enable to build `qsv` binary variant which is feature-capable.
 * `all_features` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,geocode,lens,luau,polars,prompt,python,to,self_update).
 * `lite` - enable to build `qsvlite` binary variant with all features disabled.
 * `datapusher_plus` - enable to build `qsvdp` binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
-* `nightly` - enable to turn on nightly/unstable features in the `rand`, `hashbrown` & `pyo3` crates when building with Rust nightly/unstable.
+* `nightly` - enable to turn on nightly/unstable features in the `crc32fast`, `hashbrown`, `polars`, `pyo3` & `rand` crates when building with Rust nightly/unstable.
 * `distrib_features` - enable to build `qsv` binary variant with all features enabled except `self_update`. This should make it easier for distro packagers to build `qsv` with all features enabled except `self_update` as qsv removes and adds features over time.
 
 > ℹ️ **NOTE:** `qsvlite`, as the name implies, always has **non-default features disabled**. `qsv` can be built with any combination of the above features using the cargo `--features` & `--no-default-features` flags. The prebuilt `qsv` binaries has **all applicable features valid for the target platform**.
