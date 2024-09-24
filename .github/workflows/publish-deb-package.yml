@@ -51,5 +51,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: qsv-deb
-          path: target/debian/*
+          path: target/x86_64-unknown-linux-gnu/debian/*.deb
 
