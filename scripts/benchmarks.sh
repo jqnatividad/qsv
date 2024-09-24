@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=4.12.0
+bm_version=5.0.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -388,6 +388,7 @@ if [ ! -r searchset_patterns_unicode.txt ]; then
 fi
 
 schema=benchmark_data.csv.schema.json
+dynenum_schema=benchmark_data-dynenum.csv.schema.json
 
 commands_without_index=()
 commands_without_index_name=()
@@ -664,10 +665,18 @@ run validate "$qsv_bin" validate "$data" "$schema"
 run validate_batchall "$qsv_bin" validate --batch 0 "$data" "$schema"
 run validate_no_schema "$qsv_bin" validate "$data"
 run validate_valid_output "$qsv_bin" validate "$data" "$schema" --valid-output -
+run validate_dynenum "$qsv_bin" validate "$data" "$dynenum_schema"
+run validate_dynenum_batchall "$qsv_bin" validate --batch 0 "$data" "$dynenum_schema"
+run validate_dynenum_no_schema "$qsv_bin" validate "$data" "$dynenum_schema"
+run validate_dynenum_valid_output "$qsv_bin" validate "$data" "$dynenum_schema" --valid-output -
 run --index validate_index "$qsv_bin" validate "$data" "$schema"
 run --index validate_batchall_index "$qsv_bin" validate --batch 0 "$data" "$schema"
 run --index validate_no_schema_index "$qsv_bin" validate "$data"
 run --index validate_valid_output_index "$qsv_bin" validate "$data" "$schema" --valid-output -
+run --index validate_dynenum_index "$qsv_bin" validate "$data" "$dynenum_schema"
+run --index validate_dynenum_batchall_index "$qsv_bin" validate --batch 0 "$data" "$dynenum_schema"
+run --index validate_dynenum_no_schema_index "$qsv_bin" validate "$data" "$dynenum_schema"
+run --index validate_dynenum_valid_output_index "$qsv_bin" validate "$data" "$dynenum_schema" --valid-output -
 
 # show count of commands to be benchmarked
 with_index_count=${#commands_with_index[@]}
