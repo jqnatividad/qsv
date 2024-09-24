@@ -179,7 +179,7 @@ macro_rules! fail_validation_error {
             JsonPointer::default(),
             JsonPointer::default(),
             &Value::Null,
-            format!("{}", $($t)*),
+            err,
         ))
     }};
 }
@@ -304,7 +304,7 @@ fn dyn_enum_validator_factory<'a>(
                 None,
             );
             if let Err(e) = tokio::runtime::Runtime::new()?.block_on(future) {
-                return fail_validation_error!("Error downloading dynenum file: {e}");
+                return fail_validation_error!("Error downloading dynenum file - {e}");
             }
 
             temp_download.path().to_str().unwrap().to_string()
@@ -313,7 +313,7 @@ fn dyn_enum_validator_factory<'a>(
             let uri_path = std::path::Path::new(uri);
             let uri_exists = uri_path.exists();
             if !uri_exists {
-                return fail_validation_error!("dynenum file not found: {uri}");
+                return fail_validation_error!("dynenum file not found - {uri}");
             }
             uri_path.to_str().unwrap().to_string()
         };
@@ -329,7 +329,7 @@ fn dyn_enum_validator_factory<'a>(
                         enum_set.insert(value.to_owned());
                     }
                 },
-                Err(e) => return fail_validation_error!("Error reading dynenum file: {e}"),
+                Err(e) => return fail_validation_error!("Error reading dynenum file - {e}"),
             };
         }
 
