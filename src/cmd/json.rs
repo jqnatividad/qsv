@@ -4,9 +4,11 @@ Convert JSON to CSV.
 The JSON data is expected to be non-empty and non-nested as either:
 
 1. An array of objects where:
-   A. All objects are non-empty and have the same keys.
+   A. All objects are non-empty, have non-empty and unique keys, and the same keys are in each object.
    B. Values are not objects or arrays.
-2. An object where values are not objects or arrays.
+2. An object where values are not objects or arrays and the object is as described above.
+
+If there are duplicate keys then the last duplicate key and its values are used.
 
 If your JSON data is not in the expected format and/or is nested or complex, try using
 the --jaq option to pass a jq-like filter before parsing with the above constraints.
@@ -80,8 +82,8 @@ json options:
                            which is identical to the popular JSON command-line tool - jq.
                            https://jqlang.github.io/jq/
                            Note that the filter is applied BEFORE converting JSON to CSV
-    -s, --select <cols>    Select, reorder or drop columns for output. 
-                           Otherwise, all the columns will be output in the same order as 
+    -s, --select <cols>    Select, reorder or drop columns for output.
+                           Otherwise, all the columns will be output in the same order as
                            the first object's keys in the JSON data.
                            See 'qsv select --help' for the full syntax.
                            Note however that <cols> NEED to be a comma-delimited list
@@ -218,6 +220,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     let mut first_dict_headers: Vec<&str> = Vec::new();
     for key in first_dict.keys() {
+        if key.is_empty() {
+            return Err(CliError::Other("Expected a non-empty JSON key".to_string()));
+        }
+        if first_dict_headers.contains(&key.as_str()) {
+            return Err(CliError::Other(format!(
+                "Expected non-duplicate keys, found key: {key}"
+            )));
+        }
         first_dict_headers.push(key.as_str());
     }
 
