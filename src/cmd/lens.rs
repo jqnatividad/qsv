@@ -24,10 +24,13 @@ Common options:
     -h, --help      Display this message
 "#;
 
+use std::path::PathBuf;
+
 use csvlens::run_csvlens;
 use serde::Deserialize;
+use tempfile;
 
-use crate::{util, CliError, CliResult};
+use crate::{config::Config, util, CliError, CliResult};
 
 #[derive(Deserialize)]
 struct Args {
@@ -48,12 +51,33 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut lens_args = Vec::new();
 
-    if let Some(input) = &args.arg_input {
-        lens_args.push(input.to_string());
-    }
+    // Process input file
+    // support stdin and auto-decompress snappy file
+    // stdin/decompressed file is written to a temporary file in tmpdir
+    // which is automatically deleted after the command finishes
+    let tmpdir = tempfile::tempdir()?;
+    let work_input = util::process_input(
+        vec![PathBuf::from(
+            // if no input file is specified, read from stdin "-"
+            args.arg_input.unwrap_or_else(|| "-".to_string()),
+        )],
+        &tmpdir,
+        "",
+    )?;
+    let input = work_input[0].to_string_lossy().to_string();
+    lens_args.push(input.clone());
+
+    // we do config here to get the delimiter, just in case
+    // QSV_SNIFF_DELIMITER or QSV_DELIMITER is set
+    let config: Config = Config::new(&Some(input));
 
     if let Some(delimiter) = &args.flag_delimiter {
-        lens_args.push(format!("--delimiter={delimiter}"));
+        lens_args.extend_from_slice(&["--delimiter".to_string(), delimiter.to_string()]);
+    } else {
+        lens_args.extend_from_slice(&[
+            "--delimiter".to_string(),
+            (config.get_delimiter() as char).to_string(),
+        ]);
     }
 
     if args.flag_tab_separated {
@@ -65,15 +89,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if let Some(columns) = &args.flag_columns {
-        lens_args.push(format!("--columns={columns}"));
+        lens_args.extend_from_slice(&["--columns".to_string(), columns.to_string()]);
     }
 
     if let Some(filter) = &args.flag_filter {
-        lens_args.push(format!("--filter={filter}"));
+        lens_args.extend_from_slice(&["--filter".to_string(), filter.to_string()]);
     }
 
     if let Some(find) = &args.flag_find {
-        lens_args.push(format!("--find={find}"));
+        lens_args.extend_from_slice(&["--find".to_string(), find.to_string()]);
     }
 
     if args.flag_ignore_case {
@@ -81,7 +105,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     if let Some(echo_column) = &args.flag_echo_column {
-        lens_args.push(format!("--echo-column {echo_column}"));
+        lens_args.extend_from_slice(&["--echo-column".to_string(), echo_column.to_string()]);
     }
 
     if args.flag_debug {

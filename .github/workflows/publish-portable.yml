@@ -36,7 +36,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,luau,fetch,foreach,self_update,geocode,polars,to,lens
+            addl-build-args: --features=apply,luau,fetch,foreach,self_update,geocode,polars,to,lens,prompt
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau,polars
@@ -47,7 +47,7 @@ jobs:
             architecture: x86_64
             musl-prep: true
             use-cross: false
-            addl-build-args: --features=apply,fetch,foreach,self_update
+            addl-build-args: --features=apply,fetch,foreach,self_update,prompt
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
@@ -67,7 +67,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,luau,fetch,self_update,geocode,polars,to,lens
+            addl-build-args: --features=apply,luau,fetch,self_update,geocode,polars,to,lens,prompt
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
@@ -87,7 +87,7 @@ jobs:
             target: x86_64-pc-windows-gnu
             architecture: x86_64
             use-cross: false
-            addl-build-args: --features=apply,luau,fetch,self_update,geocode,polars,to,lens
+            addl-build-args: --features=apply,luau,fetch,self_update,geocode,polars,to,lens,prompt
             default-features: --no-default-features
             addl-qsvlite-features:
             addl-qsvdp-features: luau
@@ -115,7 +115,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
             architecture: aarch64
             use-cross: true
-            addl-build-args: --features=apply,fetch,foreach,self_update,lens
+            addl-build-args: --features=apply,fetch,foreach,self_update,lens,prompt
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
@@ -152,6 +152,10 @@ jobs:
       run: |
         sudo apt-get install musl-tools musl-dev
         sudo ln -s /usr/bin/g++ /usr/bin/musl-g++
+    - name: apt-get update Ubuntu, libwayland-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get install libwayland-dev
     - name: Build qsv
       # env:
       #   RUSTFLAGS: --emit=asm

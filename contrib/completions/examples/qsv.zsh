@@ -58,24 +58,68 @@ _arguments "${_arguments_options[@]}" : \
         case $line[1] in
             (operations)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--comparand[]' \
+'--replacement[]' \
+'--formatstr[]' \
+'--jobs[]' \
+'--batch[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (emptyreplace)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--comparand[]' \
+'--replacement[]' \
+'--formatstr[]' \
+'--jobs[]' \
+'--batch[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (dynfmt)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--comparand[]' \
+'--replacement[]' \
+'--formatstr[]' \
+'--jobs[]' \
+'--batch[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (calcconv)
 _arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--comparand[]' \
+'--replacement[]' \
+'--formatstr[]' \
+'--jobs[]' \
+'--batch[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -148,6 +192,9 @@ _arguments "${_arguments_options[@]}" : \
             (rows)
 _arguments "${_arguments_options[@]}" : \
 '--flexible[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -156,6 +203,9 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 '--group[]' \
 '--group-name[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -163,6 +213,9 @@ _arguments "${_arguments_options[@]}" : \
 (columns)
 _arguments "${_arguments_options[@]}" : \
 '--pad[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -214,10 +267,13 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 '--human-readable[]' \
 '--width[]' \
+'--width-no-delims[]' \
+'--json[]' \
 '--no-polars[]' \
 '--low-memory[]' \
 '--flexible[]' \
 '--no-headers[]' \
+'--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -295,6 +351,7 @@ _arguments "${_arguments_options[@]}" : \
 '--delimiter-output[]' \
 '--key[]' \
 '--sort-columns[]' \
+'--drop-equal-fields[]' \
 '--jobs[]' \
 '--output[]' \
 '-h[Print help]' \
@@ -465,6 +522,8 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 '--length[]' \
 '--insert[]' \
+'--quote[]' \
+'--escape[]' \
 '--output[]' \
 '--delimiter[]' \
 '-h[Print help]' \
@@ -521,6 +580,7 @@ _arguments "${_arguments_options[@]}" : \
 '--other-text[]' \
 '--asc[]' \
 '--no-trim[]' \
+'--no-nulls[]' \
 '--ignore-case[]' \
 '--stats-mode[]' \
 '--all-unique-text[]' \
@@ -556,7 +616,329 @@ _arguments "${_arguments_options[@]}" : \
 '--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
+":: :_qsv__geocode_commands" \
+"*::: :->geocode" \
 && ret=0
+
+    case $state in
+    (geocode)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-geocode-command-$line[1]:"
+        case $line[1] in
+            (suggest)
+_arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(suggestnow)
+_arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(reverse)
+_arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(reversenow)
+_arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(countryinfo)
+_arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(countryinfonow)
+_arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(index-load)
+_arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(index-check)
+_arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(index-update)
+_arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(index-reset)
+_arguments "${_arguments_options[@]}" : \
+'--new-column[]' \
+'--rename[]' \
+'--country[]' \
+'--min-score[]' \
+'--admin1[]' \
+'--k_weight[]' \
+'--formatstr[]' \
+'--language[]' \
+'--invalid-result[]' \
+'--jobs[]' \
+'--batch[]' \
+'--timeout[]' \
+'--cache-dir[]' \
+'--languages[]' \
+'--cities-url[]' \
+'--force[]' \
+'--output[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_qsv__geocode__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-geocode-help-command-$line[1]:"
+        case $line[1] in
+            (suggest)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(suggestnow)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(reverse)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(reversenow)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(countryinfo)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(countryinfonow)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(index-load)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(index-check)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(index-update)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(index-reset)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
 ;;
 (headers)
 _arguments "${_arguments_options[@]}" : \
@@ -598,6 +980,7 @@ _arguments "${_arguments_options[@]}" : \
 (join)
 _arguments "${_arguments_options[@]}" : \
 '--ignore-case[]' \
+'--left[]' \
 '--left-anti[]' \
 '--left-semi[]' \
 '--right[]' \
@@ -669,12 +1052,57 @@ _arguments "${_arguments_options[@]}" : \
 '--help[Print help]' \
 && ret=0
 ;;
+(lens)
+_arguments "${_arguments_options[@]}" : \
+'--delimiter[]' \
+'--tab-separated[]' \
+'--no-headers[]' \
+'--columns[]' \
+'--filter[]' \
+'--find[]' \
+'--ignore-case[]' \
+'--echo-column[]' \
+'--debug[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
 (luau)
 _arguments "${_arguments_options[@]}" : \
 '--no-globals[]' \
 '--colindex[]' \
 '--remap[]' \
 '--begin[]' \
+'--end[]' \
+'--luau-path[]' \
+'--max-errors[]' \
+'--timeout[]' \
+'--ckan-api[]' \
+'--ckan-token[]' \
+'--cache-dir[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_qsv__luau_commands" \
+"*::: :->luau" \
+&& ret=0
+
+    case $state in
+    (luau)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-luau-command-$line[1]:"
+        case $line[1] in
+            (map)
+_arguments "${_arguments_options[@]}" : \
+'--no-globals[]' \
+'--colindex[]' \
+'--remap[]' \
+'--begin[]' \
+'--end[]' \
 '--luau-path[]' \
 '--max-errors[]' \
 '--timeout[]' \
@@ -689,6 +1117,59 @@ _arguments "${_arguments_options[@]}" : \
 '--help[Print help]' \
 && ret=0
 ;;
+(filter)
+_arguments "${_arguments_options[@]}" : \
+'--no-globals[]' \
+'--colindex[]' \
+'--remap[]' \
+'--begin[]' \
+'--end[]' \
+'--luau-path[]' \
+'--max-errors[]' \
+'--timeout[]' \
+'--ckan-api[]' \
+'--ckan-token[]' \
+'--cache-dir[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_qsv__luau__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-luau-help-command-$line[1]:"
+        case $line[1] in
+            (map)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(filter)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
 (partition)
 _arguments "${_arguments_options[@]}" : \
 '--filename[]' \
@@ -699,6 +1180,64 @@ _arguments "${_arguments_options[@]}" : \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
+;;
+(pro)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_qsv__pro_commands" \
+"*::: :->pro" \
+&& ret=0
+
+    case $state in
+    (pro)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-pro-command-$line[1]:"
+        case $line[1] in
+            (lens)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(workflow)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_qsv__pro__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-pro-help-command-$line[1]:"
+        case $line[1] in
+            (lens)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(workflow)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
 ;;
 (prompt)
 _arguments "${_arguments_options[@]}" : \
@@ -719,6 +1258,7 @@ _arguments "${_arguments_options[@]}" : \
 '--start[]' \
 '--increment[]' \
 '--formatstr[]' \
+'--output[]' \
 '--no-headers[]' \
 '--delimiter[]' \
 '-h[Print help]' \
@@ -735,7 +1275,71 @@ _arguments "${_arguments_options[@]}" : \
 '--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
+":: :_qsv__py_commands" \
+"*::: :->py" \
 && ret=0
+
+    case $state in
+    (py)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-py-command-$line[1]:"
+        case $line[1] in
+            (map)
+_arguments "${_arguments_options[@]}" : \
+'--helper[]' \
+'--batch[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(filter)
+_arguments "${_arguments_options[@]}" : \
+'--helper[]' \
+'--batch[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
+'--progressbar[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_qsv__py__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-py-help-command-$line[1]:"
+        case $line[1] in
+            (map)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(filter)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
 ;;
 (rename)
 _arguments "${_arguments_options[@]}" : \
@@ -790,6 +1394,7 @@ _arguments "${_arguments_options[@]}" : \
 '--rng[]' \
 '--user-agent[]' \
 '--timeout[]' \
+'--max-size[]' \
 '--output[]' \
 '--no-headers[]' \
 '--delimiter[]' \
@@ -852,9 +1457,9 @@ _arguments "${_arguments_options[@]}" : \
 '--quick[]' \
 '--count[]' \
 '--json[]' \
-'--not-one[]' \
 '--size-limit[]' \
 '--dfa-size-limit[]' \
+'--not-one[]' \
 '--output[]' \
 '--no-headers[]' \
 '--delimiter[]' \
@@ -912,24 +1517,48 @@ _arguments "${_arguments_options[@]}" : \
         case $line[1] in
             (compress)
 _arguments "${_arguments_options[@]}" : \
+'--user-agent[]' \
+'--timeout[]' \
+'--output[]' \
+'--jobs[]' \
+'--quiet[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (decompress)
 _arguments "${_arguments_options[@]}" : \
+'--user-agent[]' \
+'--timeout[]' \
+'--output[]' \
+'--jobs[]' \
+'--quiet[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (check)
 _arguments "${_arguments_options[@]}" : \
+'--user-agent[]' \
+'--timeout[]' \
+'--output[]' \
+'--jobs[]' \
+'--quiet[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (validate)
 _arguments "${_arguments_options[@]}" : \
+'--user-agent[]' \
+'--timeout[]' \
+'--output[]' \
+'--jobs[]' \
+'--quiet[]' \
+'--progressbar[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -1085,6 +1714,7 @@ _arguments "${_arguments_options[@]}" : \
 '--round[]' \
 '--nulls[]' \
 '--infer-dates[]' \
+'--dates-whitelist[]' \
 '--prefer-dmy[]' \
 '--force[]' \
 '--jobs[]' \
@@ -1127,7 +1757,127 @@ _arguments "${_arguments_options[@]}" : \
 '--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
+":: :_qsv__to_commands" \
+"*::: :->to" \
 && ret=0
+
+    case $state in
+    (to)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-to-command-$line[1]:"
+        case $line[1] in
+            (postgres)
+_arguments "${_arguments_options[@]}" : \
+'--print-package[]' \
+'--dump[]' \
+'--stats[]' \
+'--stats-csv[]' \
+'--quiet[]' \
+'--schema[]' \
+'--drop[]' \
+'--evolve[]' \
+'--pipe[]' \
+'--separator[]' \
+'--jobs[]' \
+'--delimiter[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(sqlite)
+_arguments "${_arguments_options[@]}" : \
+'--print-package[]' \
+'--dump[]' \
+'--stats[]' \
+'--stats-csv[]' \
+'--quiet[]' \
+'--schema[]' \
+'--drop[]' \
+'--evolve[]' \
+'--pipe[]' \
+'--separator[]' \
+'--jobs[]' \
+'--delimiter[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(xlsx)
+_arguments "${_arguments_options[@]}" : \
+'--print-package[]' \
+'--dump[]' \
+'--stats[]' \
+'--stats-csv[]' \
+'--quiet[]' \
+'--schema[]' \
+'--drop[]' \
+'--evolve[]' \
+'--pipe[]' \
+'--separator[]' \
+'--jobs[]' \
+'--delimiter[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(datapackage)
+_arguments "${_arguments_options[@]}" : \
+'--print-package[]' \
+'--dump[]' \
+'--stats[]' \
+'--stats-csv[]' \
+'--quiet[]' \
+'--schema[]' \
+'--drop[]' \
+'--evolve[]' \
+'--pipe[]' \
+'--separator[]' \
+'--jobs[]' \
+'--delimiter[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_qsv__to__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-to-help-command-$line[1]:"
+        case $line[1] in
+            (postgres)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(sqlite)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(xlsx)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(datapackage)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
 ;;
 (tojsonl)
 _arguments "${_arguments_options[@]}" : \
@@ -1334,7 +2084,59 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (geocode)
 _arguments "${_arguments_options[@]}" : \
+":: :_qsv__help__geocode_commands" \
+"*::: :->geocode" \
 && ret=0
+
+    case $state in
+    (geocode)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-help-geocode-command-$line[1]:"
+        case $line[1] in
+            (suggest)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(suggestnow)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(reverse)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(reversenow)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(countryinfo)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(countryinfonow)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(index-load)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(index-check)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(index-update)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(index-reset)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
 ;;
 (headers)
 _arguments "${_arguments_options[@]}" : \
@@ -1364,13 +2166,61 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
-(luau)
+(lens)
 _arguments "${_arguments_options[@]}" : \
 && ret=0
+;;
+(luau)
+_arguments "${_arguments_options[@]}" : \
+":: :_qsv__help__luau_commands" \
+"*::: :->luau" \
+&& ret=0
+
+    case $state in
+    (luau)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-help-luau-command-$line[1]:"
+        case $line[1] in
+            (map)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(filter)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
 ;;
 (partition)
 _arguments "${_arguments_options[@]}" : \
 && ret=0
+;;
+(pro)
+_arguments "${_arguments_options[@]}" : \
+":: :_qsv__help__pro_commands" \
+"*::: :->pro" \
+&& ret=0
+
+    case $state in
+    (pro)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-help-pro-command-$line[1]:"
+        case $line[1] in
+            (lens)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(workflow)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
 ;;
 (prompt)
 _arguments "${_arguments_options[@]}" : \
@@ -1382,7 +2232,27 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (py)
 _arguments "${_arguments_options[@]}" : \
+":: :_qsv__help__py_commands" \
+"*::: :->py" \
 && ret=0
+
+    case $state in
+    (py)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-help-py-command-$line[1]:"
+        case $line[1] in
+            (map)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(filter)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
 ;;
 (rename)
 _arguments "${_arguments_options[@]}" : \
@@ -1486,7 +2356,35 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (to)
 _arguments "${_arguments_options[@]}" : \
+":: :_qsv__help__to_commands" \
+"*::: :->to" \
 && ret=0
+
+    case $state in
+    (to)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:qsv-help-to-command-$line[1]:"
+        case $line[1] in
+            (postgres)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(sqlite)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(xlsx)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(datapackage)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
 ;;
 (tojsonl)
 _arguments "${_arguments_options[@]}" : \
@@ -1548,8 +2446,10 @@ _qsv_commands() {
 'joinp:' \
 'json:' \
 'jsonl:' \
+'lens:' \
 'luau:' \
 'partition:' \
+'pro:' \
 'prompt:' \
 'pseudo:' \
 'py:' \
@@ -1813,8 +2713,142 @@ _qsv__frequency_commands() {
 }
 (( $+functions[_qsv__geocode_commands] )) ||
 _qsv__geocode_commands() {
-    local commands; commands=()
+    local commands; commands=(
+'suggest:' \
+'suggestnow:' \
+'reverse:' \
+'reversenow:' \
+'countryinfo:' \
+'countryinfonow:' \
+'index-load:' \
+'index-check:' \
+'index-update:' \
+'index-reset:' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
     _describe -t commands 'qsv geocode commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__countryinfo_commands] )) ||
+_qsv__geocode__countryinfo_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode countryinfo commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__countryinfonow_commands] )) ||
+_qsv__geocode__countryinfonow_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode countryinfonow commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__help_commands] )) ||
+_qsv__geocode__help_commands() {
+    local commands; commands=(
+'suggest:' \
+'suggestnow:' \
+'reverse:' \
+'reversenow:' \
+'countryinfo:' \
+'countryinfonow:' \
+'index-load:' \
+'index-check:' \
+'index-update:' \
+'index-reset:' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'qsv geocode help commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__help__countryinfo_commands] )) ||
+_qsv__geocode__help__countryinfo_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode help countryinfo commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__help__countryinfonow_commands] )) ||
+_qsv__geocode__help__countryinfonow_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode help countryinfonow commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__help__help_commands] )) ||
+_qsv__geocode__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode help help commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__help__index-check_commands] )) ||
+_qsv__geocode__help__index-check_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode help index-check commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__help__index-load_commands] )) ||
+_qsv__geocode__help__index-load_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode help index-load commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__help__index-reset_commands] )) ||
+_qsv__geocode__help__index-reset_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode help index-reset commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__help__index-update_commands] )) ||
+_qsv__geocode__help__index-update_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode help index-update commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__help__reverse_commands] )) ||
+_qsv__geocode__help__reverse_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode help reverse commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__help__reversenow_commands] )) ||
+_qsv__geocode__help__reversenow_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode help reversenow commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__help__suggest_commands] )) ||
+_qsv__geocode__help__suggest_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode help suggest commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__help__suggestnow_commands] )) ||
+_qsv__geocode__help__suggestnow_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode help suggestnow commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__index-check_commands] )) ||
+_qsv__geocode__index-check_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode index-check commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__index-load_commands] )) ||
+_qsv__geocode__index-load_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode index-load commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__index-reset_commands] )) ||
+_qsv__geocode__index-reset_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode index-reset commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__index-update_commands] )) ||
+_qsv__geocode__index-update_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode index-update commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__reverse_commands] )) ||
+_qsv__geocode__reverse_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode reverse commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__reversenow_commands] )) ||
+_qsv__geocode__reversenow_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode reversenow commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__suggest_commands] )) ||
+_qsv__geocode__suggest_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode suggest commands' commands "$@"
+}
+(( $+functions[_qsv__geocode__suggestnow_commands] )) ||
+_qsv__geocode__suggestnow_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv geocode suggestnow commands' commands "$@"
 }
 (( $+functions[_qsv__headers_commands] )) ||
 _qsv__headers_commands() {
@@ -1856,8 +2890,10 @@ _qsv__help_commands() {
 'joinp:' \
 'json:' \
 'jsonl:' \
+'lens:' \
 'luau:' \
 'partition:' \
+'pro:' \
 'prompt:' \
 'pseudo:' \
 'py:' \
@@ -2053,8 +3089,69 @@ _qsv__help__frequency_commands() {
 }
 (( $+functions[_qsv__help__geocode_commands] )) ||
 _qsv__help__geocode_commands() {
-    local commands; commands=()
+    local commands; commands=(
+'suggest:' \
+'suggestnow:' \
+'reverse:' \
+'reversenow:' \
+'countryinfo:' \
+'countryinfonow:' \
+'index-load:' \
+'index-check:' \
+'index-update:' \
+'index-reset:' \
+    )
     _describe -t commands 'qsv help geocode commands' commands "$@"
+}
+(( $+functions[_qsv__help__geocode__countryinfo_commands] )) ||
+_qsv__help__geocode__countryinfo_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help geocode countryinfo commands' commands "$@"
+}
+(( $+functions[_qsv__help__geocode__countryinfonow_commands] )) ||
+_qsv__help__geocode__countryinfonow_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help geocode countryinfonow commands' commands "$@"
+}
+(( $+functions[_qsv__help__geocode__index-check_commands] )) ||
+_qsv__help__geocode__index-check_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help geocode index-check commands' commands "$@"
+}
+(( $+functions[_qsv__help__geocode__index-load_commands] )) ||
+_qsv__help__geocode__index-load_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help geocode index-load commands' commands "$@"
+}
+(( $+functions[_qsv__help__geocode__index-reset_commands] )) ||
+_qsv__help__geocode__index-reset_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help geocode index-reset commands' commands "$@"
+}
+(( $+functions[_qsv__help__geocode__index-update_commands] )) ||
+_qsv__help__geocode__index-update_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help geocode index-update commands' commands "$@"
+}
+(( $+functions[_qsv__help__geocode__reverse_commands] )) ||
+_qsv__help__geocode__reverse_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help geocode reverse commands' commands "$@"
+}
+(( $+functions[_qsv__help__geocode__reversenow_commands] )) ||
+_qsv__help__geocode__reversenow_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help geocode reversenow commands' commands "$@"
+}
+(( $+functions[_qsv__help__geocode__suggest_commands] )) ||
+_qsv__help__geocode__suggest_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help geocode suggest commands' commands "$@"
+}
+(( $+functions[_qsv__help__geocode__suggestnow_commands] )) ||
+_qsv__help__geocode__suggestnow_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help geocode suggestnow commands' commands "$@"
 }
 (( $+functions[_qsv__help__headers_commands] )) ||
 _qsv__help__headers_commands() {
@@ -2096,15 +3193,51 @@ _qsv__help__jsonl_commands() {
     local commands; commands=()
     _describe -t commands 'qsv help jsonl commands' commands "$@"
 }
+(( $+functions[_qsv__help__lens_commands] )) ||
+_qsv__help__lens_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help lens commands' commands "$@"
+}
 (( $+functions[_qsv__help__luau_commands] )) ||
 _qsv__help__luau_commands() {
-    local commands; commands=()
+    local commands; commands=(
+'map:' \
+'filter:' \
+    )
     _describe -t commands 'qsv help luau commands' commands "$@"
+}
+(( $+functions[_qsv__help__luau__filter_commands] )) ||
+_qsv__help__luau__filter_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help luau filter commands' commands "$@"
+}
+(( $+functions[_qsv__help__luau__map_commands] )) ||
+_qsv__help__luau__map_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help luau map commands' commands "$@"
 }
 (( $+functions[_qsv__help__partition_commands] )) ||
 _qsv__help__partition_commands() {
     local commands; commands=()
     _describe -t commands 'qsv help partition commands' commands "$@"
+}
+(( $+functions[_qsv__help__pro_commands] )) ||
+_qsv__help__pro_commands() {
+    local commands; commands=(
+'lens:' \
+'workflow:' \
+    )
+    _describe -t commands 'qsv help pro commands' commands "$@"
+}
+(( $+functions[_qsv__help__pro__lens_commands] )) ||
+_qsv__help__pro__lens_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help pro lens commands' commands "$@"
+}
+(( $+functions[_qsv__help__pro__workflow_commands] )) ||
+_qsv__help__pro__workflow_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help pro workflow commands' commands "$@"
 }
 (( $+functions[_qsv__help__prompt_commands] )) ||
 _qsv__help__prompt_commands() {
@@ -2118,8 +3251,21 @@ _qsv__help__pseudo_commands() {
 }
 (( $+functions[_qsv__help__py_commands] )) ||
 _qsv__help__py_commands() {
-    local commands; commands=()
+    local commands; commands=(
+'map:' \
+'filter:' \
+    )
     _describe -t commands 'qsv help py commands' commands "$@"
+}
+(( $+functions[_qsv__help__py__filter_commands] )) ||
+_qsv__help__py__filter_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help py filter commands' commands "$@"
+}
+(( $+functions[_qsv__help__py__map_commands] )) ||
+_qsv__help__py__map_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help py map commands' commands "$@"
 }
 (( $+functions[_qsv__help__rename_commands] )) ||
 _qsv__help__rename_commands() {
@@ -2238,8 +3384,33 @@ _qsv__help__table_commands() {
 }
 (( $+functions[_qsv__help__to_commands] )) ||
 _qsv__help__to_commands() {
-    local commands; commands=()
+    local commands; commands=(
+'postgres:' \
+'sqlite:' \
+'xlsx:' \
+'datapackage:' \
+    )
     _describe -t commands 'qsv help to commands' commands "$@"
+}
+(( $+functions[_qsv__help__to__datapackage_commands] )) ||
+_qsv__help__to__datapackage_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help to datapackage commands' commands "$@"
+}
+(( $+functions[_qsv__help__to__postgres_commands] )) ||
+_qsv__help__to__postgres_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help to postgres commands' commands "$@"
+}
+(( $+functions[_qsv__help__to__sqlite_commands] )) ||
+_qsv__help__to__sqlite_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help to sqlite commands' commands "$@"
+}
+(( $+functions[_qsv__help__to__xlsx_commands] )) ||
+_qsv__help__to__xlsx_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help to xlsx commands' commands "$@"
 }
 (( $+functions[_qsv__help__tojsonl_commands] )) ||
 _qsv__help__tojsonl_commands() {
@@ -2286,15 +3457,101 @@ _qsv__jsonl_commands() {
     local commands; commands=()
     _describe -t commands 'qsv jsonl commands' commands "$@"
 }
+(( $+functions[_qsv__lens_commands] )) ||
+_qsv__lens_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv lens commands' commands "$@"
+}
 (( $+functions[_qsv__luau_commands] )) ||
 _qsv__luau_commands() {
-    local commands; commands=()
+    local commands; commands=(
+'map:' \
+'filter:' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
     _describe -t commands 'qsv luau commands' commands "$@"
+}
+(( $+functions[_qsv__luau__filter_commands] )) ||
+_qsv__luau__filter_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv luau filter commands' commands "$@"
+}
+(( $+functions[_qsv__luau__help_commands] )) ||
+_qsv__luau__help_commands() {
+    local commands; commands=(
+'map:' \
+'filter:' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'qsv luau help commands' commands "$@"
+}
+(( $+functions[_qsv__luau__help__filter_commands] )) ||
+_qsv__luau__help__filter_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv luau help filter commands' commands "$@"
+}
+(( $+functions[_qsv__luau__help__help_commands] )) ||
+_qsv__luau__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv luau help help commands' commands "$@"
+}
+(( $+functions[_qsv__luau__help__map_commands] )) ||
+_qsv__luau__help__map_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv luau help map commands' commands "$@"
+}
+(( $+functions[_qsv__luau__map_commands] )) ||
+_qsv__luau__map_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv luau map commands' commands "$@"
 }
 (( $+functions[_qsv__partition_commands] )) ||
 _qsv__partition_commands() {
     local commands; commands=()
     _describe -t commands 'qsv partition commands' commands "$@"
+}
+(( $+functions[_qsv__pro_commands] )) ||
+_qsv__pro_commands() {
+    local commands; commands=(
+'lens:' \
+'workflow:' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'qsv pro commands' commands "$@"
+}
+(( $+functions[_qsv__pro__help_commands] )) ||
+_qsv__pro__help_commands() {
+    local commands; commands=(
+'lens:' \
+'workflow:' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'qsv pro help commands' commands "$@"
+}
+(( $+functions[_qsv__pro__help__help_commands] )) ||
+_qsv__pro__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv pro help help commands' commands "$@"
+}
+(( $+functions[_qsv__pro__help__lens_commands] )) ||
+_qsv__pro__help__lens_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv pro help lens commands' commands "$@"
+}
+(( $+functions[_qsv__pro__help__workflow_commands] )) ||
+_qsv__pro__help__workflow_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv pro help workflow commands' commands "$@"
+}
+(( $+functions[_qsv__pro__lens_commands] )) ||
+_qsv__pro__lens_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv pro lens commands' commands "$@"
+}
+(( $+functions[_qsv__pro__workflow_commands] )) ||
+_qsv__pro__workflow_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv pro workflow commands' commands "$@"
 }
 (( $+functions[_qsv__prompt_commands] )) ||
 _qsv__prompt_commands() {
@@ -2308,8 +3565,46 @@ _qsv__pseudo_commands() {
 }
 (( $+functions[_qsv__py_commands] )) ||
 _qsv__py_commands() {
-    local commands; commands=()
+    local commands; commands=(
+'map:' \
+'filter:' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
     _describe -t commands 'qsv py commands' commands "$@"
+}
+(( $+functions[_qsv__py__filter_commands] )) ||
+_qsv__py__filter_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv py filter commands' commands "$@"
+}
+(( $+functions[_qsv__py__help_commands] )) ||
+_qsv__py__help_commands() {
+    local commands; commands=(
+'map:' \
+'filter:' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'qsv py help commands' commands "$@"
+}
+(( $+functions[_qsv__py__help__filter_commands] )) ||
+_qsv__py__help__filter_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv py help filter commands' commands "$@"
+}
+(( $+functions[_qsv__py__help__help_commands] )) ||
+_qsv__py__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv py help help commands' commands "$@"
+}
+(( $+functions[_qsv__py__help__map_commands] )) ||
+_qsv__py__help__map_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv py help map commands' commands "$@"
+}
+(( $+functions[_qsv__py__map_commands] )) ||
+_qsv__py__map_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv py map commands' commands "$@"
 }
 (( $+functions[_qsv__rename_commands] )) ||
 _qsv__rename_commands() {
@@ -2465,8 +3760,70 @@ _qsv__table_commands() {
 }
 (( $+functions[_qsv__to_commands] )) ||
 _qsv__to_commands() {
-    local commands; commands=()
+    local commands; commands=(
+'postgres:' \
+'sqlite:' \
+'xlsx:' \
+'datapackage:' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
     _describe -t commands 'qsv to commands' commands "$@"
+}
+(( $+functions[_qsv__to__datapackage_commands] )) ||
+_qsv__to__datapackage_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv to datapackage commands' commands "$@"
+}
+(( $+functions[_qsv__to__help_commands] )) ||
+_qsv__to__help_commands() {
+    local commands; commands=(
+'postgres:' \
+'sqlite:' \
+'xlsx:' \
+'datapackage:' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'qsv to help commands' commands "$@"
+}
+(( $+functions[_qsv__to__help__datapackage_commands] )) ||
+_qsv__to__help__datapackage_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv to help datapackage commands' commands "$@"
+}
+(( $+functions[_qsv__to__help__help_commands] )) ||
+_qsv__to__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv to help help commands' commands "$@"
+}
+(( $+functions[_qsv__to__help__postgres_commands] )) ||
+_qsv__to__help__postgres_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv to help postgres commands' commands "$@"
+}
+(( $+functions[_qsv__to__help__sqlite_commands] )) ||
+_qsv__to__help__sqlite_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv to help sqlite commands' commands "$@"
+}
+(( $+functions[_qsv__to__help__xlsx_commands] )) ||
+_qsv__to__help__xlsx_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv to help xlsx commands' commands "$@"
+}
+(( $+functions[_qsv__to__postgres_commands] )) ||
+_qsv__to__postgres_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv to postgres commands' commands "$@"
+}
+(( $+functions[_qsv__to__sqlite_commands] )) ||
+_qsv__to__sqlite_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv to sqlite commands' commands "$@"
+}
+(( $+functions[_qsv__to__xlsx_commands] )) ||
+_qsv__to__xlsx_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv to xlsx commands' commands "$@"
 }
 (( $+functions[_qsv__tojsonl_commands] )) ||
 _qsv__tojsonl_commands() {

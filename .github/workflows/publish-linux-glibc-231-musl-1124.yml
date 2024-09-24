@@ -33,7 +33,7 @@ jobs:
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
-            addl-build-args: --features=apply,luau,fetch,foreach,self_update,polars,geocode,lens
+            addl-build-args: --features=apply,luau,fetch,foreach,self_update,polars,geocode,lens,prompt
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features: luau,polars
@@ -43,7 +43,7 @@ jobs:
             target: x86_64-unknown-linux-musl
             architecture: x86_64
             musl-prep: true
-            addl-build-args: --features=apply,fetch,foreach,self_update,lens
+            addl-build-args: --features=apply,fetch,foreach,self_update,lens,prompt
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
@@ -66,7 +66,11 @@ jobs:
       if: ${{ matrix.job.musl-prep }}
       run: |
         sudo apt-get install musl-tools musl-dev
-        sudo ln -s /usr/bin/g++ /usr/bin/musl-g++        
+        sudo ln -s /usr/bin/g++ /usr/bin/musl-g++
+    - name: apt-get update Ubuntu, libwayland-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get install libwayland-dev
     - name: Build qsv
       env:
         RUSTFLAGS: --emit=asm

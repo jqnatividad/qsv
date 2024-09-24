@@ -59,7 +59,7 @@
 | [joinp](/src/cmd/joinp.rs#L2)<br>✨🚀🐻‍❄️ | Inner, outer, right, cross, anti, semi & asof joins using the [Pola.rs](https://www.pola.rs) engine. Unlike the `join` command, `joinp` can process files larger than RAM, is multithreaded, has join key validation, pre-join filtering, supports [asof joins](https://pola-rs.github.io/polars/py-polars/html/reference/dataframe/api/polars.DataFrame.join_asof.html) (which is [particularly useful for time series data](https://github.com/jqnatividad/qsv/blob/30cc920d0812a854fcbfedc5db81788a0600c92b/tests/test_joinp.rs#L509-L983)) & its output columns can be coalesced. However, `joinp` doesn't have an --ignore-case option. |
 | [json](/src/cmd/json.rs#L2)<br>👆 | Convert JSON to CSV.
 | [jsonl](/src/cmd/jsonl.rs#L2)<br>🚀🔣 | Convert newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)) to CSV. See `tojsonl` command to convert CSV to JSONL.
-| [lens](/src/cmd/lens.rs#L2) | Interactively view a CSV using the [csvlens](https://github.com/YS-L/csvlens#csvlens) engine.
+| [lens](/src/cmd/lens.rs#L2) | Interactively view, search & filter a CSV using the [csvlens](https://github.com/YS-L/csvlens#csvlens) engine.
 | <a name="luau_deeplink"></a><br>[luau](/src/cmd/luau.rs#L2) 👑<br>✨📇🌐🔣 ![CKAN](docs/images/ckan.png) | Create multiple new computed columns, filter rows, compute aggregations and build complex data pipelines by executing a [Luau](https://luau-lang.org) [0.640](https://github.com/Roblox/luau/releases/tag/0.640) expression/script for every row of a CSV file ([sequential mode](https://github.com/jqnatividad/qsv/blob/bb72c4ef369d192d85d8b7cc6e972c1b7df77635/tests/test_luau.rs#L254-L298)), or using [random access](https://www.webopedia.com/definitions/random-access/) with an index ([random access mode](https://github.com/jqnatividad/qsv/blob/bb72c4ef369d192d85d8b7cc6e972c1b7df77635/tests/test_luau.rs#L367-L415)).<br>Can process a single Luau expression or [full-fledged data-wrangling scripts using lookup tables](https://github.com/dathere/qsv-lookup-tables#example) with discrete BEGIN, MAIN and END sections.<br> It is not just another qsv command, it is qsv's [Domain-specific Language](https://en.wikipedia.org/wiki/Domain-specific_language) (DSL) with [numerous qsv-specific helper functions](https://github.com/jqnatividad/qsv/blob/113eee17b97882dc368b2e65fec52b86df09f78b/src/cmd/luau.rs#L1356-L2290) to build production data pipelines. |
 | [partition](/src/cmd/partition.rs#L2)<br>👆 | Partition a CSV based on a column value. |
 | [pro](/src/cmd/pro.rs#L2) | Interact with the [qsv pro](https://qsvpro.dathere.com) API. |
@@ -70,7 +70,7 @@
 | [replace](/src/cmd/replace.rs#L2)<br>👆 | Replace CSV data using a regex. Applies the regex to each field individually. |
 | [reverse](/src/cmd/reverse.rs#L2)<br>📇🤯 | Reverse order of rows in a CSV. Unlike the `sort --reverse` command, it preserves the order of rows with the same key. If an index is present, it works with constant memory. Otherwise, it will load all the data into memory. |
 | <a name="safenames_deeplink"></a>[safenames](/src/cmd/safenames.rs#L2)<br>![CKAN](docs/images/ckan.png) | Modify headers of a CSV to only have ["safe" names](/src/cmd/safenames.rs#L5-L14) - guaranteed "database-ready"/"CKAN-ready" names.  |
-| [sample](/src/cmd/sample.rs#L2)<br>📇🌐🏎️ | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling), using memory proportional to the sample size. If an index is present, using random indexing with constant memory. |
+| [sample](/src/cmd/sample.rs#L2)<br>📇🌐🏎️ | Randomly draw rows (with optional seed) from a CSV using [reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling), using memory proportional to the sample size. If an index is present, using random indexing with constant memory. Supports sampling from CSVs on remote URLs. |
 | [schema](/src/cmd/schema.rs#L2)<br>📇😣🏎️👆🪄 | Infer schema from CSV data, replete with data type & domain/range validation & output in [JSON Schema](https://json-schema.org/) format. Uses multithreading to go faster if an index is present. See `validate` command to use the generated JSON Schema to validate if similar CSVs comply with the schema. |
 | [search](/src/cmd/search.rs#L2)<br>👆 | Run a regex over a CSV. Applies the regex to selected fields & shows only matching rows.  |
 | [searchset](/src/cmd/searchset.rs#L2)<br>👆 | _Run multiple regexes over a CSV in a single pass._ Applies the regexes to each field individually & shows only matching rows.  |
@@ -87,7 +87,7 @@
 | [to](/src/cmd/to.rs#L2)<br>✨🚀🗄️ | Convert CSV files to [PostgreSQL](https://www.postgresql.org), [SQLite](https://www.sqlite.org/index.html), XLSX and [Data Package](https://datahub.io/docs/data-packages/tabular). |
 | [tojsonl](/src/cmd/tojsonl.rs#L3)<br>📇😣🚀🔣🪄 | Smartly converts CSV to a newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)). By scanning the CSV first, it "smartly" infers the appropriate JSON data type for each column. See `jsonl` command to convert JSONL to CSV. |
 | [transpose](/src/cmd/transpose.rs#L2)<br>🤯 | Transpose rows/columns of a CSV.  |
-| [validate](/src/cmd/validate.rs#L2)<br>📇🚀🌐 | Validate CSV data blazingly-fast using [JSON Schema Validation](https://json-schema.org/draft/2020-12/json-schema-validation.html) & put invalid records into a separate file with an accompanying detailed validation error report file (e.g. _up to 930,000 rows/second_ using [NYC's 311 schema](https://github.com/jqnatividad/qsv/blob/master/resources/test/311_Service_Requests_from_2010_to_Present-2022-03-04.csv.schema.json) generated by the `schema` command).<br>If no JSON schema file is provided, validates if a CSV conforms to the [RFC 4180 standard](#rfc-4180-csv-standard) and is UTF-8 encoded. |
+| [validate](/src/cmd/validate.rs#L2)<br>📇🚀🌐 | Validate CSV data _blazingly-fast_ using [JSON Schema Validation (Draft 2020-12)](https://json-schema.org/draft/2020-12/json-schema-validation.html) (e.g. _up to 608,273 rows/second_[^1] using [NYC's 311 schema](https://github.com/jqnatividad/qsv/blob/master/resources/test/311_Service_Requests_from_2010_to_Present-2022-03-04.csv.schema.json) generated by the `schema` command) & put invalid records into a separate file with an accompanying detailed validation error report file.<br>Supports a custom `currency` format with [ISO-4217](https://en.wikipedia.org/wiki/ISO_4217) validation, and a custom `dynenum` keyword that supports enum validation against a CSV on the filesystem or on a URL.<br>If no JSON schema file is provided, validates if a CSV conforms to the [RFC 4180 standard](#rfc-4180-csv-standard) and is UTF-8 encoded. |
 
 <div style="text-align: right"><sub><sup>Performance metrics compiled on an M2 Pro 12-core Mac Mini with 32gb RAM</sup></sub></div>
 
@@ -97,7 +97,7 @@
 😣: uses additional memory proportional to the cardinality of the columns in the CSV.  
 🧠: expensive operations are memoized with available inter-session Redis/Disk caching for fetch commands.  
 🗄️: [Extended input support](#extended-input-support).  
-🐻‍❄️: command powered by [![polars 0.42.0 at 6076421 rev](https://img.shields.io/badge/polars-0.42.0-blue) at 6076421 revision](https://github.com/pola-rs/polars/tree/6076421698aced51aaca31ae6f1cbcdcd028dc73).  
+🐻‍❄️: command powered by [![polars 0.43.1 at the py-1.8.1 tag](https://img.shields.io/badge/polars-0.43.1-blue) at py-1.8.1 tag](https://github.com/pola-rs/polars/releases/tag/py-1.8.1).  
 🤖: command uses Natural Language Processing & General AI techniques.  
 🏎️: multithreaded and/or faster when an index (📇) is available.  
 🚀: multithreaded even without an index.  
@@ -107,12 +107,14 @@
 👆: has powerful column selector support. See [`select`](https://github.com/jqnatividad/qsv/blob/master/src/cmd/select.rs#L2) for syntax.  
 🪄: "automagical" commands that uses stats and/or frequencies to work "smarter" and "faster".
 
+[^1]: see [`validate_index` benchmark](https://qsv.dathere.com/benchmarks)
+
 ## Installation Options
 
 ### Option 0: TLDR Quick Install
-[qsv pro](https://qsvpro.dathere.com) is already available for download from its website, and is also planned for availability within the Microsoft Store and Apple App Store at later dates! In the meantime, you can quickly install qsv using these package manager one-liners[^1]:
+[qsv pro](https://qsvpro.dathere.com) is already available for download from its website, and is also planned for availability within the Microsoft Store and Apple App Store at later dates! In the meantime, you can quickly install qsv using these package manager one-liners[^2]:
 
-[^1]: Option 0 is actually a quick-start version of Option 2. Of course, the package manager has to be installed first.  
+[^2]: Option 0 is actually a quick-start version of Option 2. Of course, the package manager has to be installed first.  
 
 ```bash
 # using Homebrew on macOS/Linux (https://formulae.brew.sh/formula/qsv#default)
@@ -135,7 +137,7 @@ yay -S qsv
 sudo xbps-install qsv
 ```
 
-### Option 1: Download Prebuilt Binaries
+### Option 1: Download Prebuilt Binaries (RECOMMENDED)
 
 Full-featured prebuilt [binary variants](#variants) of the latest qsv version for Linux, macOS & Windows are available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
 
@@ -152,7 +154,7 @@ xattr -d com.apple.quarantine qsv
 
 An additional benefit of using the prebuilt binaries is that they have the `self_update` feature enabled, allowing you to quickly update qsv to the latest version with a simple `qsv --update`. For further security, the `self_update` feature only fetches [releases from this GitHub repo](https://github.com/jqnatividad/qsv/releases) and automatically verifies the signature of the downloaded zip archive before installing the update.
 
-> **_NOTE:_** The `luau` feature is not available in `musl` prebuilt binaries[^3].
+> **_NOTE:_** The `luau` feature is not available in `musl` prebuilt binaries[^4].
 
 #### Manually verifying the Integrity of the Prebuilt Binaries Zip Archives
 All prebuilt binaries zip archives are signed with [zipsign](https://github.com/Kijewski/zipsign#zipsign) with the following public key [qsv-zipsign-public.key](https://github.com/jqnatividad/qsv/raw/master/src/qsv-zipsign-public.key). To verify the integrity of the downloaded zip archives:
@@ -170,7 +172,7 @@ zipsign verify zip <PREBUILT-BINARY-ARCHIVE.zip> qsv-zipsign-public.key
 
 ### Option 2: Package Managers & Distributions
 
-qsv is also distributed by several package managers and distros[^1]. Check each package manager's/distro's documentation for installation instructions.
+qsv is also distributed by several package managers and distros[^2]. Check each package manager's/distro's documentation for installation instructions.
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/qsv.svg)](https://repology.org/project/qsv/versions)
 
@@ -184,9 +186,9 @@ datHere is currently working on a publishing workflow to create a Debian package
 
 ### Option 3: Install with Rust
 
-If you have [Rust installed](https://www.rust-lang.org/tools/install), you can also install from source using Rust's cargo command[^2]:
+If you have [Rust installed](https://www.rust-lang.org/tools/install), you can also install from source using Rust's cargo command[^3]:
 
-[^2]: Of course, you'll also need a linker & a C compiler. Linux users should generally install GCC or Clang, according to their distribution’s documentation.
+[^3]: Of course, you'll also need a linker & a C compiler. Linux users should generally install GCC or Clang, according to their distribution’s documentation.
 For example, if you use Ubuntu, you can install the `build-essential` package. On macOS, you can get a C compiler by running `$ xcode-select --install`.
 For Windows, this means installing [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/). When prompted for workloads, include "Desktop Development with C++",
 the Windows 10 or 11 SDK & the English language pack, along with any other language packs your require.
@@ -219,7 +221,7 @@ cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau,polars
 
 ### Option 4: Compile from Source
 
-Compiling from source also works similarly[^2]:
+Compiling from source also works similarly[^3]:
 
 ```bash
 git clone https://github.com/jqnatividad/qsv.git
@@ -253,14 +255,14 @@ cargo build --release --locked --bin qsvdp -F datapusher_plus,luau,polars
 
 There are four binary variants of qsv:
 
-* `qsv` - [feature](#feature-flags)-capable(✨), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^3]
+* `qsv` - [feature](#feature-flags)-capable(✨), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^4]
 * `qsvpy` - same as `qsv` but with the Python feature enabled. Three subvariants are available - qsvpy310, qsvpy311 & qsvpy312 - which are compiled with the latest patch version of Python 3.10, 3.11 & 3.12 respectively.
 * `qsvlite` - all features disabled (~13% of the size of `qsv`)
 * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus) with only DataPusher+ relevant commands; an embedded [`luau`](#luau_deeplink) interpreter; [`applydp`](#applydp_deeplink), a slimmed-down version of the `apply` feature; the `--progressbar` option disabled; and the self-update only checking for new releases, requiring an explicit `--update` (~12% of the the size of `qsv`).
 
 > **_NOTE:_** There are "portable" subvariants of qsv available with the "p" suffix - `qsvp`, `qsvplite` and `qsvpdp`. These subvariants are compiled without any CPU features enabled. Use these subvariants if you're getting "Illegal instruction" errors when running the regular qsv binaries.
 
-[^3]: The `luau`feature is NOT enabled by default on the prebuilt binaries for musl platforms. This is because we cross-compile using GitHub Action Runners using Ubuntu 20.04 LTS with the [musl libc](https://musl.libc.org/) toolchain. However, Ubuntu is a glibc-based, not a musl-based distro. We get around this by [cross-compiling](https://blog.logrocket.com/guide-cross-compilation-rust/).   
+[^4]: The `luau`feature is NOT enabled by default on the prebuilt binaries for musl platforms. This is because we cross-compile using GitHub Action Runners using Ubuntu 20.04 LTS with the [musl libc](https://musl.libc.org/) toolchain. However, Ubuntu is a glibc-based, not a musl-based distro. We get around this by [cross-compiling](https://blog.logrocket.com/guide-cross-compilation-rust/).   
 Unfortunately, this prevents us from cross-compiling binaries with the `luau` feature enabled as doing so requires statically linking the host OS libc library. If you need the `luau` feature on `musl`, you will need to compile from source on your own musl-based Linux Distro (e.g. Alpine, Void, [etc.](https://wiki.musl-libc.org/projects-using-musl)).  
 
 ### Shell Completion
@@ -270,9 +272,9 @@ To enable shell completion, see the [Shell Completion](contrib/completions/READM
 
 ## Regular Expression Syntax
 
-The `--select` option and several commands (`apply`, `applydp`, `datefmt`, `exclude`, `fetchpost`, `replace`, `schema`, `search`, `searchset`, `select`, `sqlp` & `stats`) allow the user to specify regular expressions. We use the [`regex`](https://docs.rs/regex) crate to parse, compile and execute these expressions. [^4]
+The `--select` option and several commands (`apply`, `applydp`, `datefmt`, `exclude`, `fetchpost`, `replace`, `schema`, `search`, `searchset`, `select`, `sqlp` & `stats`) allow the user to specify regular expressions. We use the [`regex`](https://docs.rs/regex) crate to parse, compile and execute these expressions. [^5]
 
-[^4]: This is the same regex engine used by [`ripgrep`](https://github.com/BurntSushi/ripgrep#ripgrep-rg) - the [blazingly fast grep replacement](https://blog.burntsushi.net/ripgrep/) that powers Visual Studio's [magical](https://lab.cccb.org/en/arthur-c-clarke-any-sufficiently-advanced-technology-is-indistinguishable-from-magic/) ["Find in Files"](https://github.com/microsoft/vscode-ripgrep) feature.
+[^5]: This is the same regex engine used by [`ripgrep`](https://github.com/BurntSushi/ripgrep#ripgrep-rg) - the [blazingly fast grep replacement](https://blog.burntsushi.net/ripgrep/) that powers Visual Studio's [magical](https://lab.cccb.org/en/arthur-c-clarke-any-sufficiently-advanced-technology-is-indistinguishable-from-magic/) ["Find in Files"](https://github.com/microsoft/vscode-ripgrep) feature.
 
 Its syntax can be found [here](https://docs.rs/regex/latest/regex/#syntax) and *"is similar to other regex engines, but it lacks several features that are not known how to implement efficiently. This includes, but is not limited to, look-around and backreferences. In exchange, all regex searches in this crate have worst case O(m * n) time complexity, where m is proportional to the size of the regex and n is proportional to the size of the string being searched."*
 

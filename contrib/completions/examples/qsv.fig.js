@@ -9,6 +9,39 @@ const completion: Fig.Spec = {
           name: "operations",
           options: [
             {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--comparand",
+            },
+            {
+              name: "--replacement",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -17,6 +50,39 @@ const completion: Fig.Spec = {
         {
           name: "emptyreplace",
           options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--comparand",
+            },
+            {
+              name: "--replacement",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -27,6 +93,39 @@ const completion: Fig.Spec = {
           name: "dynfmt",
           options: [
             {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--comparand",
+            },
+            {
+              name: "--replacement",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -35,6 +134,39 @@ const completion: Fig.Spec = {
         {
           name: "calcconv",
           options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--comparand",
+            },
+            {
+              name: "--replacement",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -129,6 +261,15 @@ const completion: Fig.Spec = {
               name: "--flexible",
             },
             {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -144,6 +285,15 @@ const completion: Fig.Spec = {
               name: "--group-name",
             },
             {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -154,6 +304,15 @@ const completion: Fig.Spec = {
           options: [
             {
               name: "--pad",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
             },
             {
               name: ["-h", "--help"],
@@ -219,6 +378,12 @@ const completion: Fig.Spec = {
           name: "--width",
         },
         {
+          name: "--width-no-delims",
+        },
+        {
+          name: "--json",
+        },
+        {
           name: "--no-polars",
         },
         {
@@ -229,6 +394,9 @@ const completion: Fig.Spec = {
         },
         {
           name: "--no-headers",
+        },
+        {
+          name: "--delimiter",
         },
         {
           name: ["-h", "--help"],
@@ -424,6 +592,9 @@ const completion: Fig.Spec = {
         },
         {
           name: "--sort-columns",
+        },
+        {
+          name: "--drop-equal-fields",
         },
         {
           name: "--jobs",
@@ -837,6 +1008,12 @@ const completion: Fig.Spec = {
           name: "--insert",
         },
         {
+          name: "--quote",
+        },
+        {
+          name: "--escape",
+        },
+        {
           name: "--output",
         },
         {
@@ -969,6 +1146,9 @@ const completion: Fig.Spec = {
           name: "--no-trim",
         },
         {
+          name: "--no-nulls",
+        },
+        {
           name: "--ignore-case",
         },
         {
@@ -1000,6 +1180,708 @@ const completion: Fig.Spec = {
     },
     {
       name: "geocode",
+      subcommands: [
+        {
+          name: "suggest",
+          options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "suggestnow",
+          options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "reverse",
+          options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "reversenow",
+          options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "countryinfo",
+          options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "countryinfonow",
+          options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "index-load",
+          options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "index-check",
+          options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "index-update",
+          options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "index-reset",
+          options: [
+            {
+              name: "--new-column",
+            },
+            {
+              name: "--rename",
+            },
+            {
+              name: "--country",
+            },
+            {
+              name: "--min-score",
+            },
+            {
+              name: "--admin1",
+            },
+            {
+              name: "--k_weight",
+            },
+            {
+              name: "--formatstr",
+            },
+            {
+              name: "--language",
+            },
+            {
+              name: "--invalid-result",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--languages",
+            },
+            {
+              name: "--cities-url",
+            },
+            {
+              name: "--force",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "help",
+          description: "Print this message or the help of the given subcommand(s)",
+          subcommands: [
+            {
+              name: "suggest",
+            },
+            {
+              name: "suggestnow",
+            },
+            {
+              name: "reverse",
+            },
+            {
+              name: "reversenow",
+            },
+            {
+              name: "countryinfo",
+            },
+            {
+              name: "countryinfonow",
+            },
+            {
+              name: "index-load",
+            },
+            {
+              name: "index-check",
+            },
+            {
+              name: "index-update",
+            },
+            {
+              name: "index-reset",
+            },
+            {
+              name: "help",
+              description: "Print this message or the help of the given subcommand(s)",
+            },
+          ],
+        },
+      ],
       options: [
         {
           name: "--new-column",
@@ -1153,6 +2035,9 @@ const completion: Fig.Spec = {
       options: [
         {
           name: "--ignore-case",
+        },
+        {
+          name: "--left",
         },
         {
           name: "--left-anti",
@@ -1335,7 +2220,169 @@ const completion: Fig.Spec = {
       ],
     },
     {
+      name: "lens",
+      options: [
+        {
+          name: "--delimiter",
+        },
+        {
+          name: "--tab-separated",
+        },
+        {
+          name: "--no-headers",
+        },
+        {
+          name: "--columns",
+        },
+        {
+          name: "--filter",
+        },
+        {
+          name: "--find",
+        },
+        {
+          name: "--ignore-case",
+        },
+        {
+          name: "--echo-column",
+        },
+        {
+          name: "--debug",
+        },
+        {
+          name: ["-h", "--help"],
+          description: "Print help",
+        },
+      ],
+    },
+    {
       name: "luau",
+      subcommands: [
+        {
+          name: "map",
+          options: [
+            {
+              name: "--no-globals",
+            },
+            {
+              name: "--colindex",
+            },
+            {
+              name: "--remap",
+            },
+            {
+              name: "--begin",
+            },
+            {
+              name: "--end",
+            },
+            {
+              name: "--luau-path",
+            },
+            {
+              name: "--max-errors",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--ckan-api",
+            },
+            {
+              name: "--ckan-token",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "filter",
+          options: [
+            {
+              name: "--no-globals",
+            },
+            {
+              name: "--colindex",
+            },
+            {
+              name: "--remap",
+            },
+            {
+              name: "--begin",
+            },
+            {
+              name: "--end",
+            },
+            {
+              name: "--luau-path",
+            },
+            {
+              name: "--max-errors",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--ckan-api",
+            },
+            {
+              name: "--ckan-token",
+            },
+            {
+              name: "--cache-dir",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "help",
+          description: "Print this message or the help of the given subcommand(s)",
+          subcommands: [
+            {
+              name: "map",
+            },
+            {
+              name: "filter",
+            },
+            {
+              name: "help",
+              description: "Print this message or the help of the given subcommand(s)",
+            },
+          ],
+        },
+      ],
       options: [
         {
           name: "--no-globals",
@@ -1348,6 +2395,9 @@ const completion: Fig.Spec = {
         },
         {
           name: "--begin",
+        },
+        {
+          name: "--end",
         },
         {
           name: "--luau-path",
@@ -1410,6 +2460,51 @@ const completion: Fig.Spec = {
       ],
     },
     {
+      name: "pro",
+      subcommands: [
+        {
+          name: "lens",
+          options: [
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "workflow",
+          options: [
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "help",
+          description: "Print this message or the help of the given subcommand(s)",
+          subcommands: [
+            {
+              name: "lens",
+            },
+            {
+              name: "workflow",
+            },
+            {
+              name: "help",
+              description: "Print this message or the help of the given subcommand(s)",
+            },
+          ],
+        },
+      ],
+      options: [
+        {
+          name: ["-h", "--help"],
+          description: "Print help",
+        },
+      ],
+    },
+    {
       name: "prompt",
       options: [
         {
@@ -1455,6 +2550,9 @@ const completion: Fig.Spec = {
           name: "--formatstr",
         },
         {
+          name: "--output",
+        },
+        {
           name: "--no-headers",
         },
         {
@@ -1468,6 +2566,78 @@ const completion: Fig.Spec = {
     },
     {
       name: "py",
+      subcommands: [
+        {
+          name: "map",
+          options: [
+            {
+              name: "--helper",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "filter",
+          options: [
+            {
+              name: "--helper",
+            },
+            {
+              name: "--batch",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--no-headers",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "help",
+          description: "Print this message or the help of the given subcommand(s)",
+          subcommands: [
+            {
+              name: "map",
+            },
+            {
+              name: "filter",
+            },
+            {
+              name: "help",
+              description: "Print this message or the help of the given subcommand(s)",
+            },
+          ],
+        },
+      ],
       options: [
         {
           name: "--helper",
@@ -1612,6 +2782,9 @@ const completion: Fig.Spec = {
         },
         {
           name: "--timeout",
+        },
+        {
+          name: "--max-size",
         },
         {
           name: "--output",
@@ -1773,13 +2946,13 @@ const completion: Fig.Spec = {
           name: "--json",
         },
         {
-          name: "--not-one",
-        },
-        {
           name: "--size-limit",
         },
         {
           name: "--dfa-size-limit",
+        },
+        {
+          name: "--not-one",
         },
         {
           name: "--output",
@@ -1869,6 +3042,24 @@ const completion: Fig.Spec = {
           name: "compress",
           options: [
             {
+              name: "--user-agent",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -1877,6 +3068,24 @@ const completion: Fig.Spec = {
         {
           name: "decompress",
           options: [
+            {
+              name: "--user-agent",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -1887,6 +3096,24 @@ const completion: Fig.Spec = {
           name: "check",
           options: [
             {
+              name: "--user-agent",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--progressbar",
+            },
+            {
               name: ["-h", "--help"],
               description: "Print help",
             },
@@ -1895,6 +3122,24 @@ const completion: Fig.Spec = {
         {
           name: "validate",
           options: [
+            {
+              name: "--user-agent",
+            },
+            {
+              name: "--timeout",
+            },
+            {
+              name: "--output",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--progressbar",
+            },
             {
               name: ["-h", "--help"],
               description: "Print help",
@@ -2235,6 +3480,9 @@ const completion: Fig.Spec = {
           name: "--infer-dates",
         },
         {
+          name: "--dates-whitelist",
+        },
+        {
           name: "--prefer-dmy",
         },
         {
@@ -2299,6 +3547,210 @@ const completion: Fig.Spec = {
     },
     {
       name: "to",
+      subcommands: [
+        {
+          name: "postgres",
+          options: [
+            {
+              name: "--print-package",
+            },
+            {
+              name: "--dump",
+            },
+            {
+              name: "--stats",
+            },
+            {
+              name: "--stats-csv",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--schema",
+            },
+            {
+              name: "--drop",
+            },
+            {
+              name: "--evolve",
+            },
+            {
+              name: "--pipe",
+            },
+            {
+              name: "--separator",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "sqlite",
+          options: [
+            {
+              name: "--print-package",
+            },
+            {
+              name: "--dump",
+            },
+            {
+              name: "--stats",
+            },
+            {
+              name: "--stats-csv",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--schema",
+            },
+            {
+              name: "--drop",
+            },
+            {
+              name: "--evolve",
+            },
+            {
+              name: "--pipe",
+            },
+            {
+              name: "--separator",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "xlsx",
+          options: [
+            {
+              name: "--print-package",
+            },
+            {
+              name: "--dump",
+            },
+            {
+              name: "--stats",
+            },
+            {
+              name: "--stats-csv",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--schema",
+            },
+            {
+              name: "--drop",
+            },
+            {
+              name: "--evolve",
+            },
+            {
+              name: "--pipe",
+            },
+            {
+              name: "--separator",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "datapackage",
+          options: [
+            {
+              name: "--print-package",
+            },
+            {
+              name: "--dump",
+            },
+            {
+              name: "--stats",
+            },
+            {
+              name: "--stats-csv",
+            },
+            {
+              name: "--quiet",
+            },
+            {
+              name: "--schema",
+            },
+            {
+              name: "--drop",
+            },
+            {
+              name: "--evolve",
+            },
+            {
+              name: "--pipe",
+            },
+            {
+              name: "--separator",
+            },
+            {
+              name: "--jobs",
+            },
+            {
+              name: "--delimiter",
+            },
+            {
+              name: ["-h", "--help"],
+              description: "Print help",
+            },
+          ],
+        },
+        {
+          name: "help",
+          description: "Print this message or the help of the given subcommand(s)",
+          subcommands: [
+            {
+              name: "postgres",
+            },
+            {
+              name: "sqlite",
+            },
+            {
+              name: "xlsx",
+            },
+            {
+              name: "datapackage",
+            },
+            {
+              name: "help",
+              description: "Print this message or the help of the given subcommand(s)",
+            },
+          ],
+        },
+      ],
       options: [
         {
           name: "--print-package",
@@ -2547,6 +3999,38 @@ const completion: Fig.Spec = {
         },
         {
           name: "geocode",
+          subcommands: [
+            {
+              name: "suggest",
+            },
+            {
+              name: "suggestnow",
+            },
+            {
+              name: "reverse",
+            },
+            {
+              name: "reversenow",
+            },
+            {
+              name: "countryinfo",
+            },
+            {
+              name: "countryinfonow",
+            },
+            {
+              name: "index-load",
+            },
+            {
+              name: "index-check",
+            },
+            {
+              name: "index-update",
+            },
+            {
+              name: "index-reset",
+            },
+          ],
         },
         {
           name: "headers",
@@ -2570,10 +4054,32 @@ const completion: Fig.Spec = {
           name: "jsonl",
         },
         {
+          name: "lens",
+        },
+        {
           name: "luau",
+          subcommands: [
+            {
+              name: "map",
+            },
+            {
+              name: "filter",
+            },
+          ],
         },
         {
           name: "partition",
+        },
+        {
+          name: "pro",
+          subcommands: [
+            {
+              name: "lens",
+            },
+            {
+              name: "workflow",
+            },
+          ],
         },
         {
           name: "prompt",
@@ -2583,6 +4089,14 @@ const completion: Fig.Spec = {
         },
         {
           name: "py",
+          subcommands: [
+            {
+              name: "map",
+            },
+            {
+              name: "filter",
+            },
+          ],
         },
         {
           name: "rename",
@@ -2654,6 +4168,20 @@ const completion: Fig.Spec = {
         },
         {
           name: "to",
+          subcommands: [
+            {
+              name: "postgres",
+            },
+            {
+              name: "sqlite",
+            },
+            {
+              name: "xlsx",
+            },
+            {
+              name: "datapackage",
+            },
+          ],
         },
         {
           name: "tojsonl",

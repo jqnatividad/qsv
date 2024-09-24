@@ -20,6 +20,10 @@ jobs:
     - uses: actions/setup-python@v5.2.0
       with:
         python-version: '3.12'
+    - name: apt-get update Ubuntu, libwayland-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get install libwayland-dev
     - name: Install and Run Redis
       run: |
         sudo apt-get install redis-server

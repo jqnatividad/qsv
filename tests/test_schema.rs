@@ -31,8 +31,8 @@ fn generate_schema_with_defaults_and_validate_trim_with_no_errors() {
         serde_json::from_str(&output_schema_string).expect("parse schema json");
 
     // make sure it's a valid JSON Schema by compiling with jsonschema library
-    jsonschema::JSONSchema::options()
-        .compile(&output_schema_json)
+    jsonschema::Validator::options()
+        .build(&output_schema_json)
         .expect("valid JSON Schema");
 
     // diff output json with expected json
@@ -42,11 +42,11 @@ fn generate_schema_with_defaults_and_validate_trim_with_no_errors() {
     assert_json_eq!(expected_schema_json, output_schema_json);
 
     // invoke validate command from schema created above
-    let mut cmd2 = wrk.command("validate");
-    cmd2.arg("adur-public-toilets.csv");
-    cmd2.arg("--trim");
-    cmd2.arg("adur-public-toilets.csv.schema.json");
-    wrk.output(&mut cmd2);
+    let mut cmd3 = wrk.command("validate");
+    cmd3.arg("adur-public-toilets.csv");
+    cmd3.arg("--trim");
+    cmd3.arg("adur-public-toilets.csv.schema.json");
+    wrk.output(&mut cmd3);
 
     // not expecting any invalid rows, so confirm there are NO output files generated
     let validation_error_path = &wrk.path("adur-public-toilets.csv.validation-errors.tsv");
@@ -86,8 +86,8 @@ fn generate_schema_with_optional_flags_notrim_and_validate_with_errors() {
         serde_json::from_str(&output_schema_string).expect("parse schema json");
 
     // make sure it's a valid JSON Schema by compiling with jsonschema library
-    jsonschema::JSONSchema::options()
-        .compile(&output_schema_json)
+    jsonschema::Validator::options()
+        .build(&output_schema_json)
         .expect("valid JSON Schema");
 
     // diff output json with expected json
@@ -97,10 +97,10 @@ fn generate_schema_with_optional_flags_notrim_and_validate_with_errors() {
     assert_json_eq!(expected_schema_json, output_schema_json);
 
     // invoke validate command from schema created above
-    let mut cmd2 = wrk.command("validate");
-    cmd2.arg("adur-public-toilets.csv");
-    cmd2.arg("adur-public-toilets.csv.schema.json");
-    wrk.output(&mut cmd2);
+    let mut cmd3 = wrk.command("validate");
+    cmd3.arg("adur-public-toilets.csv");
+    cmd3.arg("adur-public-toilets.csv.schema.json");
+    wrk.output(&mut cmd3);
 
     // validation report
     let validation_errors_expected = r#"row_number	field	error
@@ -139,7 +139,7 @@ fn generate_schema_with_optional_flags_notrim_and_validate_with_errors() {
         validation_errors_expected.to_string(),
         validation_error_output
     );
-    wrk.assert_err(&mut cmd2);
+    wrk.assert_err(&mut cmd3);
 }
 
 #[test]
@@ -171,8 +171,8 @@ fn generate_schema_with_optional_flags_trim_and_validate_with_errors() {
         serde_json::from_str(&output_schema_string).expect("parse schema json");
 
     // make sure it's a valid JSON Schema by compiling with jsonschema library
-    jsonschema::JSONSchema::options()
-        .compile(&output_schema_json)
+    jsonschema::Validator::options()
+        .build(&output_schema_json)
         .expect("valid JSON Schema");
 
     // diff output json with expected json
@@ -182,11 +182,11 @@ fn generate_schema_with_optional_flags_trim_and_validate_with_errors() {
     assert_json_eq!(expected_schema_json, output_schema_json);
 
     // invoke validate command from schema created above
-    let mut cmd2 = wrk.command("validate");
-    cmd2.arg("adur-public-toilets.csv");
-    cmd2.arg("--trim");
-    cmd2.arg("adur-public-toilets.csv.schema.json");
-    wrk.output(&mut cmd2);
+    let mut cmd3 = wrk.command("validate");
+    cmd3.arg("adur-public-toilets.csv");
+    cmd3.arg("--trim");
+    cmd3.arg("adur-public-toilets.csv.schema.json");
+    wrk.output(&mut cmd3);
 
     // validation report
     let validation_errors_expected = r#"row_number	field	error
@@ -224,7 +224,7 @@ fn generate_schema_with_optional_flags_trim_and_validate_with_errors() {
         validation_errors_expected.to_string(),
         validation_error_output
     );
-    wrk.assert_err(&mut cmd2);
+    wrk.assert_err(&mut cmd3);
 }
 
 #[test]

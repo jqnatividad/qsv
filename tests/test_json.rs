@@ -328,3 +328,50 @@ fn json_nested() {
 
     assert_eq!(got, expected);
 }
+
+#[test]
+#[serial]
+fn json_empty_keys_with_jaq() {
+    let wrk = Workdir::new("json_empty_keys_with_jaq");
+    let json_data = serde_json::json!({
+        "data": [
+            {
+                "fruit": "apple",
+                "": 0.50
+            },
+            {
+                "fruit": "banana",
+                "": 1.00
+            }
+        ]
+    });
+    let filter = ".data";
+
+    wrk.create_from_string("data.json", json_data.to_string().as_str());
+    let mut cmd = wrk.command("json");
+    cmd.arg("data.json");
+    cmd.args(vec!["--jaq", filter]);
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
+#[serial]
+fn json_empty_keys() {
+    let wrk = Workdir::new("json_empty_keys");
+    let json_data = serde_json::json!([
+            {
+                "fruit": "apple",
+                "": 0.50
+            },
+            {
+                "fruit": "banana",
+                "": 1.00
+            }
+    ]);
+    wrk.create_from_string("data.json", json_data.to_string().as_str());
+    let mut cmd = wrk.command("json");
+    cmd.arg("data.json");
+
+    wrk.assert_err(&mut cmd);
+}

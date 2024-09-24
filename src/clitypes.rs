@@ -145,6 +145,7 @@ pub type CliResult<T> = Result<T, CliError>;
 #[derive(Debug)]
 pub enum CliError {
     Flag(docopt::Error),
+    Help(String),
     Csv(csv::Error),
     Io(io::Error),
     NoMatch(),
@@ -159,6 +160,7 @@ impl fmt::Display for CliError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             CliError::Flag(ref e) => e.fmt(f),
+            CliError::Help(ref e) => e.fmt(f),
             CliError::Csv(ref e) => e.fmt(f),
             CliError::Io(ref e) => e.fmt(f),
             CliError::NoMatch() => f.write_str("no_match"),
@@ -173,7 +175,15 @@ impl fmt::Display for CliError {
 
 impl From<docopt::Error> for CliError {
     fn from(err: docopt::Error) -> CliError {
-        CliError::Flag(err)
+        if let docopt::Error::WithProgramUsage(ref errtype, ref usage_text) = err {
+            if matches!(**errtype, docopt::Error::Help) {
+                CliError::Help(usage_text.to_string())
+            } else {
+                CliError::Flag(err)
+            }
+        } else {
+            CliError::Flag(err)
+        }
     }
 }
 
@@ -182,9 +192,11 @@ impl From<csv::Error> for CliError {
         if !err.is_io_error() {
             return CliError::Csv(err);
         }
-        match err.into_kind() {
-            csv::ErrorKind::Io(v) => From::from(v),
-            _ => unreachable!(),
+        if let csv::ErrorKind::Io(v) = err.into_kind() {
+            From::from(v)
+        } else {
+            // safety: we checked for !is_io_error above
+            unreachable!()
         }
     }
 }

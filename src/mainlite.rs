@@ -48,7 +48,6 @@ macro_rules! command_list {
     jsonl       Convert newline-delimited JSON files to CSV
     partition   Partition CSV data based on a column value
     pro         Interact with the qsv pro API
-    prompt      Open a file dialog to pick a file
     pseudo      Pseudonymise the values of a column
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
@@ -171,6 +170,11 @@ Please choose one of the following commands:",
                 util::log_end(qsv_args, now);
                 QsvExitCode::Good
             },
+            Err(CliError::Help(usage_text)) => {
+                wout!("{usage_text}");
+                util::log_end(qsv_args, now);
+                QsvExitCode::Good
+            },
             Err(CliError::Flag(err)) => {
                 werr!("{err}");
                 util::log_end(qsv_args, now);
@@ -256,7 +260,6 @@ enum Command {
     Jsonl,
     Partition,
     Pro,
-    Prompt,
     Pseudo,
     Rename,
     Replace,
@@ -328,7 +331,6 @@ impl Command {
             Command::Jsonl => cmd::jsonl::run(argv),
             Command::Partition => cmd::partition::run(argv),
             Command::Pro => cmd::pro::run(argv),
-            Command::Prompt => cmd::prompt::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
             Command::Rename => cmd::rename::run(argv),
             Command::Replace => cmd::replace::run(argv),

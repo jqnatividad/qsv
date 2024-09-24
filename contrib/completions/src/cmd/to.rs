@@ -1,7 +1,7 @@
 use clap::{arg, Command};
 
 pub fn to_cmd() -> Command {
-    Command::new("to").args([
+    let global_args = [
         arg!(--"print-package"),
         arg!(--dump),
         arg!(--stats),
@@ -14,5 +14,13 @@ pub fn to_cmd() -> Command {
         arg!(--separator),
         arg!(--jobs),
         arg!(--delimiter),
-    ])
+    ];
+    Command::new("to")
+        .subcommands([
+            Command::new("postgres").args(&global_args),
+            Command::new("sqlite").args(&global_args),
+            Command::new("xlsx").args(&global_args),
+            Command::new("datapackage").args(&global_args),
+        ])
+        .args(global_args)
 }

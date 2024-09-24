@@ -135,7 +135,7 @@ The `--version` option shows a lot of information about qsv. It displays:
 * memory-related OOM prevention info (max "non-streaming" input file size, free swap memory, available memory & total memory)
 * the target platform
 * the Rust version used to compile qsv
-* QSV_KIND - `prebuilt`, `prebuilt-nightly`, `installed` & `compiled`.
+* QSV_KIND - `prebuilt`, `prebuilt-*`, `installed` & `compiled`.
    The prebuilts are the qsv binaries published on Github with every release. `prebuilt` is built using the current Rust stable at the time of release. `prebuilt-nightly` is built using Rust nightly that passes all CI tests at the time of release.
    `installed` is qsv built using `cargo install`. `compiled` is qsv built using `cargo build`.
 

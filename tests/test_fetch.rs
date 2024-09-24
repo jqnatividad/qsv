@@ -842,7 +842,7 @@ async fn run_webserver(tx: mpsc::Sender<ServerHandle>) -> std::io::Result<()> {
     // Allow bursts with up to five requests per IP address
     // and replenishes one element every 250 ms (4 qps)
     let governor_conf = GovernorConfigBuilder::default()
-        .per_millisecond(250)
+        .milliseconds_per_request(250)
         .burst_size(7)
         .finish()
         .unwrap();

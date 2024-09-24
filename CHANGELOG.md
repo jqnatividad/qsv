@@ -6,6 +6,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.135.0] - 2024-09-24
+
+### Highlights
+JSON Schema validation just got a whole lot more powerful with the introduction of the `dynenum` keyword!
+With `dynenum`, you can now dynamically lookup valid enum values from a CSV (on the filesystem or on a URL), allowing for more flexible and responsive data validation.  
+
+Unlike the standard[`enum` keyword](https://json-schema.org/draft/2020-12/draft-bhutton-json-schema-validation-01#name-enum), `dynenum` does not require hardcoding valid values at schema definition time, and can be used to validate data against a changing set of valid values.  
+
+In an upcoming qsv pro release, we're making `dynenum` even more powerful by allowing you to specify  high-value reference data (e.g. US Census data, World Bank data, etc.) that is maintained at [data.dathere.com](https://data.dathere.com) and other CKAN instances.
+
+This release also add the custom [`currency` JSON Schema format](https://github.com/jqnatividad/qsv/blob/90257bbba6d0b1c59c7a6c104b05beae35ae97e1/src/cmd/validate.rs#L23-L31), which enables currency validation according to the [ISO 4217 standard](https://en.wikipedia.org/wiki/ISO_4217).
+
+The Polars engine was also updated to [0.43.1](https://github.com/pola-rs/polars/releases/tag/rs-0.43.1) at the [py-1.81.1 tag](https://github.com/pola-rs/polars/releases/tag/py-1.81.1) - making for various under-the-hood improvements for the `sqlp`, `joinp` and `count` commands, as we set the stage for more [Polars-powered features in future releases](https://github.com/jqnatividad/qsv/issues?q=is%3Aissue+is%3Aopen+label%3Apolars).
+
+---
+
+### Added
+* `foreach`: enabled `foreach` command on Windows prebuilt binaries https://github.com/jqnatividad/qsv/commit/def9c8fa98cd214f0db839b64bcd12764dcfba43
+* `lens`: added support for QSV_SNIFF_DELIMITER env var and snappy auto-decompression https://github.com/jqnatividad/qsv/commit/8340e8949c4b60669bc95c432c661a8c374ca422
+* `sample`: add `--max-size` option https://github.com/jqnatividad/qsv/commit/e845a3cc1dcbbceda86bb7fe132c5040d23ce78b
+* `validate`: added `dynenum` custom JSON Schema keyword for dynamic validation lookups https://github.com/jqnatividad/qsv/pull/2166
+* `tests`: add tests for https://100.dathere.com/lessons/2 by @rzmk in https://github.com/jqnatividad/qsv/pull/2141
+* added `stats_sorted` and `frequency_sorted` benchmarks
+* added `validate_dynenum` benchmarks
+
+### Changed
+* `json`: add error for empty key and update usage text by @rzmk in https://github.com/jqnatividad/qsv/pull/2167
+* `prompt`: gate `prompt` command behind `prompt` feature https://github.com/jqnatividad/qsv/pull/2163
+* `validate`: expanded `currency` JSON Schema custom format to support ISO 4217 currency codes and alternate formats https://github.com/jqnatividad/qsv/commit/5202508e5c3969b279c20cf80bb1e37d89afd826
+* `validate`: migrate to new `jsonschema` crate api https://github.com/jqnatividad/qsv/commit/5d6505426c652e7db4bb602c1bf9d302e6a09214
+* Update ubuntu version for deb package by @tino097 in https://github.com/jqnatividad/qsv/pull/2126
+* move --help output from stderr to stdout https://github.com/jqnatividad/qsv/pull/2138
+* `contrib(completions)`: update completions for qsv v0.134.0 and fix subcommand options by @rzmk in https://github.com/jqnatividad/qsv/pull/2135
+* `contrib(completions)`: add `--max-size` completion for `sample` by @rzmk in https://github.com/jqnatividad/qsv/pull/2142
+* `deps`: bump to polars 0.43.1 at py-1.81.1 https://github.com/jqnatividad/qsv/pull/2130
+* `deps`: switch back to calamine upstream instead of our fork https://github.com/jqnatividad/qsv/commit/677458faa4439b1b34c8a3556687a031ed184e4e
+* build(deps): bump actix-governor from 0.5.0 to 0.6.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2146
+* build(deps): bump anyhow from 1.0.87 to 1.0.88 by @dependabot in https://github.com/jqnatividad/qsv/pull/2132
+* build(deps): bump arboard from 3.4.0 to 3.4.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2137
+* build(deps): bump bytes from 1.7.1 to 1.7.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2148
+* build(deps): bump geosuggest-core from 0.6.3 to 0.6.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/2153
+* build(deps): bump geosuggest-utils from 0.6.3 to 0.6.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/2154
+* build(deps): bump jql-runner from 7.1.13 to 7.2.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2165
+* build(deps): bump jsonschema from 0.18.1 to 0.18.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2127
+* build(deps): bump jsonschema from 0.18.2 to 0.18.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2134
+* build(deps): bump jsonschema from 0.18.3 to 0.19.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2144
+* build(deps): bump jsonschema from 0.19.1 to 0.20.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2152
+* build(deps): bump pyo3 from 0.22.2 to 0.22.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2143
+* build(deps): bump rfd from 0.14.1 to 0.15.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2151
+* build(deps): bump simple-expand-tilde from 0.4.0 to 0.4.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2129
+* build(deps): bump qsv_currency from 0.6.0 to 0.7.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2159
+* build(deps): bump qsv_docopt from 1.7.0 to 1.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2136
+* build(deps): bump redis from 0.26.1 to 0.27.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2133
+* build(deps): bump simdutf8 from 0.1.4 to 0.1.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/2164
+* bump indirect dependencies
+* apply select clippy lint suggestions
+* several usage text/documentation improvements
+* bump MSRV to 1.81.0
+
+### Fixed
+* `validate`: correct `fail_validation_error!` macro; reformat error messages to use hyphens as the JSONschema error message already starts with "error:" https://github.com/jqnatividad/qsv/commit/9a2552481a07759847efe6025b402297ecba7e19
+* moved `--help` output from stderr to stdout as per [GNU CLI guidelines](https://www.gnu.org/prep/standards/standards.html#g_t_002d_002dhelp) https://github.com/jqnatividad/qsv/commit/2b7dbdc68d49b67fb80c58cc7678cd3f2c112bd9
+* `lens`: fixed parsing of lens options https://github.com/jqnatividad/qsv/commit/1cdd1bcac29fd2411521ac95fa87595de74cbb1b
+* `searchset`: fixed usage text for <regexset-file> https://github.com/jqnatividad/qsv/commit/9a60fb088a326ee97ed1b147c4c3686b6b8aaeeb
+* [used patched forks of `arrow`, `csvlens` and `xlsxwriter` crates](https://github.com/jqnatividad/qsv/blob/90257bbba6d0b1c59c7a6c104b05beae35ae97e1/Cargo.toml#L270-L315) that replaces a dependency on an old version of `lexical-core` with known soundness issues - https://rustsec.org/advisories/RUSTSEC-2023-0086. Once those crates have updated their `lexical-core`dependency, we will revert to the original crates.
+
+### Removed
+* removed `prompt` command from qsvlite https://github.com/jqnatividad/qsv/pull/2163
+* publish: remove `lens` feature from i686 targets as it does not compile https://github.com/jqnatividad/qsv/commit/959ca7686f8656c98de9257d11f1f762852bdf9d
+* `deps`: remove anyhow dependency https://github.com/jqnatividad/qsv/pull/2150
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.134.0...0.135.0
+
 ## [0.134.0] - 2024-09-10
 
 ## qsv pro v1 is here! 🎉
