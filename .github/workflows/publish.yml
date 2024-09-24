@@ -50,7 +50,7 @@ jobs:
             architecture: x86_64
             musl-prep: true
             use-cross: false
-            addl-build-args: --features=apply,fetch,foreach,self_update,lens,prompt
+            addl-build-args: --features=apply,fetch,foreach,self_update,lens
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
