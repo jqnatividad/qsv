@@ -118,7 +118,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
             architecture: aarch64
             use-cross: true
-            addl-build-args: --features=apply,fetch,foreach,self_update,lens,prompt
+            addl-build-args: --features=apply,fetch,foreach,self_update,lens
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:
