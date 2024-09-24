@@ -151,6 +151,7 @@ jobs:
       with:
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
     - name: apt-get update Ubuntu, libwayland-dev
+      if: ${{ matrix.job.os-name == 'linux' }}
       run: |
         sudo apt-get update
         sudo apt-get install libwayland-dev
