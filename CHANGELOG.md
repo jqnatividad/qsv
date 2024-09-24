@@ -32,6 +32,7 @@ The Polars engine was also updated to [0.43.1](https://github.com/pola-rs/polars
 * added `validate_dynenum` benchmarks
 
 ### Changed
+* `json`: add error for empty key and update usage text by @rzmk in https://github.com/jqnatividad/qsv/pull/2167
 * `prompt`: gate `prompt` command behind `prompt` feature https://github.com/jqnatividad/qsv/pull/2163
 * `validate`: expanded `currency` JSON Schema custom format to support ISO 4217 currency codes and alternate formats https://github.com/jqnatividad/qsv/commit/5202508e5c3969b279c20cf80bb1e37d89afd826
 * `validate`: migrate to new `jsonschema` crate api https://github.com/jqnatividad/qsv/commit/5d6505426c652e7db4bb602c1bf9d302e6a09214
