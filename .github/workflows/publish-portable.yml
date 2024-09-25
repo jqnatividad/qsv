@@ -31,7 +31,7 @@ jobs:
       matrix:
         rust: [stable]
         job:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
@@ -110,7 +110,7 @@ jobs:
           #   default-features: --no-default-features
           #   addl-qsvlite-features:
           #   addl-qsvdp-features:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             os-name: linux
             target: aarch64-unknown-linux-gnu
             architecture: aarch64

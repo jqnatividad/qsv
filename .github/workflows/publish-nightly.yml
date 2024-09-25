@@ -29,7 +29,7 @@ jobs:
       matrix:
         rust: [nightly-2024-08-26]
         job:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
@@ -38,7 +38,7 @@ jobs:
             addl-qsvlite-features:
             addl-qsvdp-features: luau,polars
             addl-rustflags: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+avx2,+fma,+bmi1,+bmi2,+lzcnt,+pclmulqdq
-          # - os: ubuntu-latest
+          # - os: ubuntu-22.04
           #   os-name: linux
           #   target: x86_64-unknown-linux-musl
           #   architecture: x86_64
