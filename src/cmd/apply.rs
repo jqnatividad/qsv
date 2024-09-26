@@ -312,6 +312,7 @@ use gender_guesser::Gender;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::debug;
 use qsv_currency::Currency;
+use qsv_vader_sentiment_analysis::SentimentIntensityAnalyzer;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::IntoParallelRefIterator,
@@ -325,7 +326,6 @@ use strsim::{
 use strum_macros::EnumString;
 use thousands::{policies, Separable, SeparatorPolicy};
 use titlecase::titlecase;
-use qsv_vader_sentiment_analysis::SentimentIntensityAnalyzer;
 use whatlang::detect;
 
 use crate::{
@@ -1203,8 +1203,8 @@ fn apply_operations(
             },
             Operations::Sentiment => {
                 // safety: we set SENTIMENT_ANALYZER in validate_operations()
-                let sentiment_analyzer = SENTIMENT_ANALYZER
-                    .get_or_init(SentimentIntensityAnalyzer::new);
+                let sentiment_analyzer =
+                    SENTIMENT_ANALYZER.get_or_init(SentimentIntensityAnalyzer::new);
                 let sentiment_scores = sentiment_analyzer.polarity_scores(cell);
                 *cell = sentiment_scores.get("compound").unwrap_or(&0.0).to_string();
             },
