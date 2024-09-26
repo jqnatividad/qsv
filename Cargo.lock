@@ -3546,6 +3546,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 
 [[package]]
+name = "lit2"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcd0c289759ba04eac993bb32289580c7b37955957f8928cab7b29d54cdf89de"
+
+[[package]]
 name = "local-channel"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3649,12 +3655,6 @@ dependencies = [
  "byteorder",
  "crc 3.2.1",
 ]
-
-[[package]]
-name = "maplit"
-version = "1.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e2e65a1a2e43cfcb47a895c4c8b10d1f4a61097f9f254f183aee60cad9c651d"
 
 [[package]]
 name = "matches"
@@ -5328,6 +5328,7 @@ dependencies = [
  "qsv-stats",
  "qsv_currency",
  "qsv_docopt",
+ "qsv_vader_sentiment_analysis",
  "quickcheck",
  "rand",
  "rand_hc",
@@ -5363,7 +5364,6 @@ dependencies = [
  "tokio",
  "url",
  "uuid",
- "vader_sentiment",
  "whatlang",
  "xlsxwriter",
  "xxhash-rust",
@@ -5432,6 +5432,18 @@ dependencies = [
  "regex",
  "serde",
  "strsim",
+]
+
+[[package]]
+name = "qsv_vader_sentiment_analysis"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c36faa7ffe43c7edbfbb58b46a0c6115672da71c180a922088357be4547f927"
+dependencies = [
+ "lazy_static",
+ "lit2",
+ "regex",
+ "unicase",
 ]
 
 [[package]]
@@ -7280,18 +7292,6 @@ dependencies = [
  "outref",
  "uuid",
  "vsimd",
-]
-
-[[package]]
-name = "vader_sentiment"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f79fb65bbfaf53d62afa05b1d162ff245cda71257d094e5d2de022fa5cff112"
-dependencies = [
- "lazy_static",
- "maplit",
- "regex",
- "unicase",
 ]
 
 [[package]]
