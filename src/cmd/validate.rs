@@ -254,6 +254,7 @@ impl DynEnumValidator {
 }
 
 impl Keyword for DynEnumValidator {
+    #[inline]
     fn validate<'instance>(
         &self,
         instance: &'instance Value,
@@ -272,6 +273,7 @@ impl Keyword for DynEnumValidator {
         }
     }
 
+    #[inline]
     fn is_valid(&self, instance: &Value) -> bool {
         if let Value::String(s) = instance {
             self.dynenum_set.contains(s)
@@ -1195,6 +1197,57 @@ fn validate_json_instance(
     }
 }
 
+fn load_json(uri: &str) -> Result<String, String> {
+    let json_string = match uri {
+        url if url.to_lowercase().starts_with("http") => {
+            use reqwest::blocking::Client;
+
+            let client_timeout =
+                std::time::Duration::from_secs(TIMEOUT_SECS.load(Ordering::Relaxed) as u64);
+
+            let client = match Client::builder()
+                // safety: we're using a validated QSV_USER_AGENT or the default user agent
+                .user_agent(util::set_user_agent(None).unwrap())
+                .brotli(true)
+                .gzip(true)
+                .deflate(true)
+                .zstd(true)
+                .use_rustls_tls()
+                .http2_adaptive_window(true)
+                .connection_verbose(
+                    log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace),
+                )
+                .timeout(client_timeout)
+                .build()
+            {
+                Ok(c) => c,
+                Err(e) => {
+                    return fail_format!("Cannot build reqwest client: {e}.");
+                },
+            };
+
+            match client.get(url).send() {
+                Ok(response) => response.text().unwrap_or_default(),
+                Err(e) => return fail_format!("Cannot read JSON at url {url}: {e}."),
+            }
+        },
+        path => {
+            let mut buffer = String::new();
+            match File::open(path) {
+                Ok(p) => {
+                    BufReader::new(p)
+                        .read_to_string(&mut buffer)
+                        .unwrap_or_default();
+                },
+                Err(e) => return fail_format!("Cannot read JSON file {path}: {e}."),
+            }
+            buffer
+        },
+    };
+
+    Ok(json_string)
+}
+
 #[cfg(test)]
 mod tests_for_schema_validation {
     use super::*;
@@ -1364,57 +1417,6 @@ fn test_validate_currency_validator() {
 
     // no validation error for currency format
     assert_eq!(result, None);
-}
-
-fn load_json(uri: &str) -> Result<String, String> {
-    let json_string = match uri {
-        url if url.to_lowercase().starts_with("http") => {
-            use reqwest::blocking::Client;
-
-            let client_timeout =
-                std::time::Duration::from_secs(TIMEOUT_SECS.load(Ordering::Relaxed) as u64);
-
-            let client = match Client::builder()
-                // safety: we're using a validated QSV_USER_AGENT or the default user agent
-                .user_agent(util::set_user_agent(None).unwrap())
-                .brotli(true)
-                .gzip(true)
-                .deflate(true)
-                .zstd(true)
-                .use_rustls_tls()
-                .http2_adaptive_window(true)
-                .connection_verbose(
-                    log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace),
-                )
-                .timeout(client_timeout)
-                .build()
-            {
-                Ok(c) => c,
-                Err(e) => {
-                    return fail_format!("Cannot build reqwest client: {e}.");
-                },
-            };
-
-            match client.get(url).send() {
-                Ok(response) => response.text().unwrap_or_default(),
-                Err(e) => return fail_format!("Cannot read JSON at url {url}: {e}."),
-            }
-        },
-        path => {
-            let mut buffer = String::new();
-            match File::open(path) {
-                Ok(p) => {
-                    BufReader::new(p)
-                        .read_to_string(&mut buffer)
-                        .unwrap_or_default();
-                },
-                Err(e) => return fail_format!("Cannot read JSON file {path}: {e}."),
-            }
-            buffer
-        },
-    };
-
-    Ok(json_string)
 }
 
 #[test]
