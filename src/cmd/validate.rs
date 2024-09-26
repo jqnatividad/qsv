@@ -241,7 +241,6 @@ fn currency_format_checker(s: &str) -> bool {
     })
 }
 
-#[derive(Debug)]
 struct DynEnumValidator {
     dynenum_set: HashSet<String>,
 }
@@ -645,7 +644,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut invalid_count: u64 = 0;
 
     // amortize memory allocation by reusing record
-    let mut record = csv::ByteRecord::new();
+    let mut record = csv::ByteRecord::with_capacity(500, header_len);
     // reuse batch buffer
     let batch_size = if args.flag_batch == 0 {
         util::count_rows(&rconfig)? as usize
