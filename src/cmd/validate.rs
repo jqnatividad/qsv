@@ -669,19 +669,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut buffer = itoa::Buffer::new();
         for _ in 0..batch_size {
             match rdr.read_byte_record(&mut record) {
-                Ok(has_data) => {
-                    if has_data {
-                        row_number += 1;
-                        record.push_field(buffer.format(row_number).as_bytes());
-                        if flag_trim {
-                            record.trim();
-                        }
-                        batch.push(std::mem::take(&mut record));
-                    } else {
-                        // nothing else to add to batch
-                        break;
+                Ok(true) => {
+                    row_number += 1;
+                    record.push_field(buffer.format(row_number).as_bytes());
+                    if flag_trim {
+                        record.trim();
                     }
+                    batch.push(std::mem::take(&mut record));
                 },
+                Ok(false) => break, // nothing else to add to batch
                 Err(e) => {
                     return fail_clierror!("Error reading row: {row_number}: {e}");
                 },
