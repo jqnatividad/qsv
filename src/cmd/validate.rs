@@ -662,11 +662,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
 
+    // amortize buffer allocation
+    let mut buffer = itoa::Buffer::new();
+
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
     // loop exits when batch is empty.
     'batch_loop: loop {
-        let mut buffer = itoa::Buffer::new();
         for _ in 0..batch_size {
             match rdr.read_byte_record(&mut record) {
                 Ok(true) => {
@@ -675,6 +677,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if flag_trim {
                         record.trim();
                     }
+                    // we use mem::take() to avoid cloning & clearing the record
                     batch.push(std::mem::take(&mut record));
                 },
                 Ok(false) => break, // nothing else to add to batch
