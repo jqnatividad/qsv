@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=5.0.0
+bm_version=5.1.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -449,6 +449,7 @@ run apply_dynfmt "$qsv_bin apply dynfmt --formatstr \"{Created Date} {Complaint 
 run apply_emptyreplace "$qsv_bin" apply emptyreplace \"Bridge Highway Name\" --replacement Unspecified "$data"
 run apply_op_eudex "$qsv_bin apply operations lower,eudex Agency --comparand Queens --new-column Agency_queens_soundex $data"
 run apply_op_string "$qsv_bin apply operations lower Agency $data"
+run apply_op_sentiment "$qsv_bin apply operations sentiment \"Resolution Description\" --new-column Sentiment_Score $data"
 run apply_op_similarity "$qsv_bin apply operations lower,simdln Agency --comparand brooklyn --new-column Agency_sim-brooklyn_score $data"
 run apply_op_similarity_batchall "$qsv_bin apply operations lower,simdln Agency --comparand brooklyn --batch 0 --new-column Agency_sim-brooklyn_score $data"
 run behead "$qsv_bin" behead "$data"
