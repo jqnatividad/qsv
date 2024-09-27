@@ -598,10 +598,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // parse and compile supplied JSON Schema
     let (schema_json, schema_compiled): (Value, Validator) =
+        // safety: we know the schema is_some() because we checked above
         match load_json(&args.arg_json_schema.unwrap()) {
             Ok(s) => {
                 // parse JSON string
-                match serde_json::from_str(&s) {
+                let mut s_slice = s.as_bytes().to_vec();
+                match simd_json::serde::from_slice(&mut s_slice) {
                     Ok(json) => {
                         // compile JSON Schema
                         match Validator::options()
