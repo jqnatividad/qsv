@@ -508,3 +508,109 @@ fn enumerate_uuid7() {
     assert!(got[2][2] < got[3][2]);
     assert!(got[3][2] < got[4][2]);
 }
+
+#[test]
+fn enumerate_constant_issue_2172_new_column() {
+    let wrk = Workdir::new("enumerate_constant_issue_2172_new_column");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "numcol"],
+            svec!["Fred", "0"],
+            svec!["Joe", "1"],
+            svec!["Mary", "2"],
+        ],
+    );
+    let mut cmd = wrk.command("enum");
+    cmd.arg("--constant").arg("test").arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name", "numcol", "constant"],
+        svec!["Fred", "0", "test"],
+        svec!["Joe", "1", "test"],
+        svec!["Mary", "2", "test"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn enumerate_copy_issue_2172_new_column() {
+    let wrk = Workdir::new("enumerate_copy_issue_2172_new_column");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "numcol"],
+            svec!["Fred", "0"],
+            svec!["Joe", "1"],
+            svec!["Mary", "2"],
+        ],
+    );
+    let mut cmd = wrk.command("enum");
+    cmd.args(["--copy", "numcol"])
+        .args(["-c", "chiffre"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name", "numcol", "chiffre"],
+        svec!["Fred", "0", "0"],
+        svec!["Joe", "1", "1"],
+        svec!["Mary", "2", "2"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn enumerate_hash_issue_2172_new_column() {
+    let wrk = Workdir::new("enumerate_hash_issue_2172_new_column");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "hash"],
+            svec!["Fred", "0"],
+            svec!["Joe", "1"],
+            svec!["Mary", "2"],
+        ],
+    );
+    let mut cmd = wrk.command("enum");
+    cmd.args(["--hash", "name"])
+        .args(["--new-column", "id"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name", "id"],
+        svec!["Fred", "7744023578077004230"],
+        svec!["Joe", "1162351066380295090"],
+        svec!["Mary", "13526984025446498287"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn enumerate_hash_issue_2172() {
+    let wrk = Workdir::new("enumerate_hash_issue_2172");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "some_other_column"],
+            svec!["Fred", "0"],
+            svec!["Joe", "1"],
+            svec!["Mary", "2"],
+        ],
+    );
+    let mut cmd = wrk.command("enum");
+    cmd.args(["--hash", "name"])
+        .args(["--new-column", "id"])
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["name", "some_other_column", "id"],
+        svec!["Fred", "0", "7744023578077004230"],
+        svec!["Joe", "1", "1162351066380295090"],
+        svec!["Mary", "2", "13526984025446498287"],
+    ];
+    assert_eq!(got, expected);
+}
