@@ -956,6 +956,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "borrow-or-share"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3eeab4423108c5d7c744f4d234de88d18d636100093ae04caf4825134b9c3a32"
+
+[[package]]
 name = "brotli"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2407,6 +2413,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "fluent-uri"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7bd399b64ddd63a83cf40512c96007dafe9ac26cfc8c89c820a247c6f7d2376"
+dependencies = [
+ "borrow-or-share",
+ "ref-cast",
+ "serde",
+]
+
+[[package]]
 name = "flume"
 version = "0.10.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3324,9 +3341,9 @@ dependencies = [
 
 [[package]]
 name = "jsonschema"
-version = "0.20.0"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2eef4e82b548e08ac880d307c8e8838b45f497a08d3202f3b26c9debaed8058"
+checksum = "507489ad0bb386bda1ff52086877dc5847cc3730b9da5c5a4af75a9e4991eb30"
 dependencies = [
  "ahash",
  "anyhow",
@@ -3337,11 +3354,10 @@ dependencies = [
  "getrandom",
  "iso8601",
  "itoa",
- "memchr",
  "num-cmp",
  "once_cell",
- "parking_lot 0.12.3",
  "percent-encoding",
+ "referencing",
  "regex",
  "reqwest",
  "serde",
@@ -5775,6 +5791,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.79",
+]
+
+[[package]]
+name = "referencing"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc5ad87f9bf7d32f48f98d606085fe5eae4404ad1cc1025c50111b80f53ea029"
+dependencies = [
+ "ahash",
+ "fluent-uri",
+ "once_cell",
+ "percent-encoding",
+ "serde_json",
 ]
 
 [[package]]
