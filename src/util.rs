@@ -46,6 +46,8 @@ macro_rules! regex_oncelock {
 // leave at least 20% of the available memory free
 const DEFAULT_FREEMEMORY_HEADROOM_PCT: u8 = 20;
 
+const DEFAULT_BATCH_SIZE: usize = 50_000;
+
 static ROW_COUNT: OnceLock<Option<u64>> = OnceLock::new();
 
 pub type ByteString = Vec<u8>;
@@ -2205,6 +2207,31 @@ pub fn csv_to_jsonl(
     }
 
     Ok(writer.flush()?)
+}
+
+/// get the optimal batch size
+/// if batch_size is 0, return the number of rows in the CSV, effectively disabling batching
+/// if batch_size is 1, force batch_size to be set to "optimal_size", even though
+/// its not recommended (number of rows is too small for parallel processing)
+/// if batch_size is equal to DEFAULT_BATCH_SIZE, return the optimal_size
+/// failing everything above, return the requested batch_size
+#[inline]
+pub fn optimal_batch_size(rconfig: &Config, batch_size: usize, num_jobs: usize) -> usize {
+    if batch_size < DEFAULT_BATCH_SIZE {
+        return DEFAULT_BATCH_SIZE;
+    }
+
+    let num_rows = count_rows(rconfig).unwrap_or(DEFAULT_BATCH_SIZE as u64) as usize;
+    if batch_size == 0 {
+        num_rows
+    } else if (num_rows > DEFAULT_BATCH_SIZE && (batch_size == DEFAULT_BATCH_SIZE))
+        || batch_size == 1
+    {
+        let optimal_size = (num_rows / num_jobs) + 1;
+        optimal_size
+    } else {
+        batch_size
+    }
 }
 
 // comment out for now as this is still WIP
