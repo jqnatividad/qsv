@@ -30,10 +30,10 @@ qsv supports a custom format - `currency`. This format will only accept a valid 
       Negative amounts: ($100.00) or -$100.00
       Different styles: 1.000,00 (used in some countries for euros)
 
-qsv also supports a custom keyword - `dynenum`. It allows for dynamic validation against a CSV.
-This is useful for validating against a set of values that is not known at the time of schema creation
-or when the set of valid values is dynamic or too large to hardcode into the schema.
-`dynenum` can be used to validate against a CSV file on the local filesystem or on a URL (http/https).
+qsv also supports a custom keyword - `dynamicEnum`. It allows for dynamic validation against a CSV.
+This is useful for validating against a set of values unknown at the time of schema creation or
+when the set of valid values is dynamic or too large to hardcode into the schema.
+`dynamicEnum` can be used to validate against a CSV file on the local filesystem or on a URL (http/https).
 Only the first column of the CSV file is read and used for validation.
 
 You can create a JSON Schema file from a reference CSV file using the `qsv schema` command.
@@ -109,7 +109,7 @@ Validate options:
                                before running in parallel. Set to 0 to load all rows in one batch.
                                [default: 50000]
     --timeout <seconds>        Timeout for downloading json-schemas on URLs and for
-                               'dynenum' lookups on URLs. [default: 30]
+                               'dynamicEnum' lookups on URLs. [default: 30]
 
 Common options:
     -h, --help                 Display this message
@@ -305,7 +305,7 @@ fn dyn_enum_validator_factory<'a>(
                 None,
             );
             if let Err(e) = tokio::runtime::Runtime::new()?.block_on(future) {
-                return fail_validation_error!("Error downloading dynenum file - {e}");
+                return fail_validation_error!("Error downloading dynamicEnum file - {e}");
             }
 
             temp_download.path().to_str().unwrap().to_string()
@@ -314,7 +314,7 @@ fn dyn_enum_validator_factory<'a>(
             let uri_path = std::path::Path::new(uri);
             let uri_exists = uri_path.exists();
             if !uri_exists {
-                return fail_validation_error!("dynenum file not found - {uri}");
+                return fail_validation_error!("dynamicEnum file not found - {uri}");
             }
             uri_path.to_str().unwrap().to_string()
         };
@@ -330,7 +330,7 @@ fn dyn_enum_validator_factory<'a>(
                         enum_set.insert(value.to_owned());
                     }
                 },
-                Err(e) => return fail_validation_error!("Error reading dynenum file - {e}"),
+                Err(e) => return fail_validation_error!("Error reading dynamicEnum file - {e}"),
             };
         }
 
@@ -340,7 +340,7 @@ fn dyn_enum_validator_factory<'a>(
             JsonPointer::default(),
             jsonpointer,
             value,
-            "The 'dynenum' keyword must be set to to a CSV on the local filesystem or on a URL.",
+            "'dynamicEnum' must be set to a CSV file on the local filesystem or on a URL.",
         ))
     }
 }
@@ -608,7 +608,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // compile JSON Schema
                         match Validator::options()
                             .with_format("currency", currency_format_checker)
-                            .with_keyword("dynenum", dyn_enum_validator_factory)
+                            .with_keyword("dynamicEnum", dyn_enum_validator_factory)
                             .should_validate_formats(true)
                             .build(&json)
                         {
@@ -1374,7 +1374,7 @@ fn test_validate_currency_validator() {
 
     let compiled_schema = Validator::options()
         .with_format("currency", currency_format_checker)
-        .with_keyword("dynenum", dyn_enum_validator_factory)
+        .with_keyword("dynamicEnum", dyn_enum_validator_factory)
         .should_validate_formats(true)
         .build(&schema_currency_json())
         .expect("Invalid schema");
@@ -1408,7 +1408,7 @@ fn test_validate_currency_validator() {
 
     let compiled_schema = Validator::options()
         .with_format("currency", currency_format_checker)
-        .with_keyword("dynenum", dyn_enum_validator_factory)
+        .with_keyword("dynamicEnum", dyn_enum_validator_factory)
         .should_validate_formats(true)
         .build(&schema_currency_json())
         .expect("Invalid schema");
@@ -1431,9 +1431,9 @@ fn test_load_json_via_url() {
 
 #[test]
 fn test_dyn_enum_validator() {
-    let schema = json!({"dynenum": "https://raw.githubusercontent.com/jqnatividad/qsv/refs/heads/master/resources/test/fruits.csv", "type": "string"});
+    let schema = json!({"dynamicEnum": "https://raw.githubusercontent.com/jqnatividad/qsv/refs/heads/master/resources/test/fruits.csv", "type": "string"});
     let validator = jsonschema::options()
-        .with_keyword("dynenum", dyn_enum_validator_factory)
+        .with_keyword("dynamicEnum", dyn_enum_validator_factory)
         .build(&schema)
         .unwrap();
 
