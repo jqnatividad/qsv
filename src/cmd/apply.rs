@@ -286,7 +286,9 @@ apply options:
     -j, --jobs <arg>            The number of jobs to run in parallel.
                                 When not set, the number of jobs is set to the number of CPUs detected.
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
-                                Set to 0 to load all rows in one batch.
+                                Automatically determined for CSV files with more than 50000 rows.
+                                Set to 0 to load all rows in one batch. Set to 1 to force batch optimization
+                                even for files with less than 50000 rows.
                                 [default: 50000]
 
 Common options:
@@ -566,17 +568,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut batch_record = csv::StringRecord::new();
 
+    // set RAYON_NUM_THREADS
+    let num_jobs = util::njobs(args.flag_jobs);
+
     // reuse batch buffers
-    let batchsize: usize = if args.flag_batch == 0 {
-        util::count_rows(&rconfig)? as usize
-    } else {
-        args.flag_batch
-    };
+    let batchsize = util::optimal_batch_size(&rconfig, args.flag_batch, num_jobs);
     let mut batch = Vec::with_capacity(batchsize);
     let mut batch_results = Vec::with_capacity(batchsize);
-
-    // set RAYON_NUM_THREADS
-    util::njobs(args.flag_jobs);
 
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
@@ -584,14 +582,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     'batch_loop: loop {
         for _ in 0..batchsize {
             match rdr.read_record(&mut batch_record) {
-                Ok(has_data) => {
-                    if has_data {
-                        batch.push(std::mem::take(&mut batch_record));
-                    } else {
-                        // nothing else to add to batch
-                        break;
-                    }
-                },
+                Ok(true) => batch.push(std::mem::take(&mut batch_record)),
+                Ok(false) => break, // nothing else to add to batch
                 Err(e) => {
                     return fail_clierror!("Error reading file: {e}");
                 },

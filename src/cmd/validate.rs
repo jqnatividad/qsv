@@ -106,8 +106,11 @@ Validate options:
                                When not set, the number of jobs is set to the
                                number of CPUs detected.
     -b, --batch <size>         The number of rows per batch to load into memory,
-                               before running in parallel. Set to 0 to load all rows in one batch.
-                               [default: 50000]
+                               before running in parallel. Automatically determined
+                               for CSV files with more than 50000 rows.
+                               Set to 0 to load all rows in one batch.
+                               Set to 1 to force batch optimization even for files with
+                               less than 50000 rows. [default: 50000]
     --timeout <seconds>        Timeout for downloading json-schemas on URLs and for
                                'dynamicEnum' lookups on URLs. [default: 30]
 
@@ -647,20 +650,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // amortize memory allocation by reusing record
     let mut record = csv::ByteRecord::with_capacity(500, header_len);
+
+    // set RAYON_NUM_THREADS
+    let num_jobs = util::njobs(args.flag_jobs);
+
     // reuse batch buffer
-    let batch_size = if args.flag_batch == 0 {
-        util::count_rows(&rconfig)? as usize
-    } else {
-        args.flag_batch
-    };
+    let batch_size = util::optimal_batch_size(&rconfig, args.flag_batch, num_jobs);
     let mut batch = Vec::with_capacity(batch_size);
     let mut validation_results = Vec::with_capacity(batch_size);
     let mut valid_flags: Vec<bool> = Vec::with_capacity(batch_size);
     let mut validation_error_messages: Vec<String> = Vec::with_capacity(50);
     let flag_trim = args.flag_trim;
-
-    // set RAYON_NUM_THREADS
-    util::njobs(args.flag_jobs);
 
     // amortize buffer allocation
     let mut buffer = itoa::Buffer::new();
