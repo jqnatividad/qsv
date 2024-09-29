@@ -2,7 +2,7 @@
 
 ## Index! Index! Index!
 
-Indexing your CSV files is a game-changer for performance. Here's why:
+Indexing your CSV files is key for performance. Here's why:
 
 1. **Faster Slicing**: `slice` uses the index to directly retrieve relevant rows.
 
@@ -12,7 +12,11 @@ Indexing your CSV files is a game-changer for performance. Here's why:
 
 4. **Random Access**: The `luau` command gains random access capabilities.
 
-5. **Low Overhead**: Creating an index is fast and efficient, even for large files.
+5. **Low Overhead**: Creating an index is fast and efficient, even for very large files.
+
+Even if you're only handling a CSV file once, and its not reference data, indexing still makes sense if you're `slicing`, `counting`, `sampling` or compiling summary statistics with the `stats` and `frequency` commands.
+
+The only time indexing is not useful is when the CSV file is too small to benefit from indexing or when the file is not seekable (e.g. stdin).
 
 To enable automatic indexing:
 - Set the `QSV_AUTOINDEX_SIZE` environment variable
