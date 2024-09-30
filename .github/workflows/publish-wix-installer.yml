@@ -73,7 +73,6 @@ jobs:
           cp target\wix\*.msi qsv-${{ needs.analyze-tags.outputs.previous-tag }}.msi
 
       - name: Sign qsv MSI installer file with Azure Trusted Signing
-        if: matrix.settings.platform == 'windows-latest'
         uses: azure/trusted-signing-action@v0.4.0
         with:
             azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
