@@ -268,8 +268,6 @@ fn generate_schema_with_const_and_enum_constraints() {
     let wrk = Workdir::new("generate_schema_with_const_and_enum_constraints").flexible(true);
     wrk.clear_contents().unwrap();
 
-    // creater a CSV where we can derive an enum constraint from the 10 values
-    // and a const constraint from the first value
     let csv = "first,second,const_col,enum_col
 1,r1,const,alpha
 2,r2,const,beta
