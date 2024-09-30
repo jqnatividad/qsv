@@ -71,7 +71,22 @@ jobs:
           rm wix/main.wxs
           cargo wix -I contrib/wix/app.wxs --nocapture
           cp target\wix\*.msi qsv-${{ needs.analyze-tags.outputs.previous-tag }}.msi
-          
+
+      - name: Sign qsv MSI installer file with Azure Trusted Signing
+        if: matrix.settings.platform == 'windows-latest'
+        uses: azure/trusted-signing-action@v0.4.0
+        with:
+            azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+            endpoint: ${{ secrets.AZURE_ENDPOINT }}
+            trusted-signing-account-name: ${{ secrets.AZURE_TRUSTED_SIGNING_NAME }}
+            certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE_NAME }}
+            files: qsv-${{ needs.analyze-tags.outputs.previous-tag }}.msi
+            file-digest: SHA256
+            timestamp-rfc3161: http://timestamp.acs.microsoft.com
+            timestamp-digest: SHA256
+            
       - name: Upload zipped binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
