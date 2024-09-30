@@ -61,10 +61,12 @@ impl Workdir {
         self
     }
 
+    /// create a file with the default comma delimiter
     pub fn create<T: Csv>(&self, name: &str, rows: T) {
         self.create_with_delim(name, rows, b',')
     }
 
+    /// create a file with the specified delimiter
     pub fn create_with_delim<T: Csv>(&self, name: &str, rows: T, delim: u8) {
         let mut wtr = csv::WriterBuilder::new()
             .flexible(self.flexible)
@@ -77,6 +79,7 @@ impl Workdir {
         wtr.flush().unwrap();
     }
 
+    /// create a file and index it
     pub fn create_indexed<T: Csv>(&self, name: &str, rows: T) {
         self.create(name, rows);
 
@@ -85,6 +88,7 @@ impl Workdir {
         self.run(&mut cmd);
     }
 
+    /// create a file with the specified string data
     pub fn create_from_string(&self, name: &str, data: &str) {
         let filename = &self.path(name);
         let mut file = File::create(filename).unwrap();
@@ -92,6 +96,7 @@ impl Workdir {
         file.flush().unwrap();
     }
 
+    /// read the contents of a file into a string
     pub fn read_to_string(&self, filename: &str) -> String {
         let mut file = File::open(self.path(filename)).unwrap();
         let mut contents = String::new();
@@ -99,6 +104,7 @@ impl Workdir {
         contents
     }
 
+    /// read stdout of a command
     pub fn read_stdout<T: Csv>(&self, cmd: &mut process::Command) -> T {
         let stdout: String = self.stdout(cmd);
         let mut rdr = csv::ReaderBuilder::new()
@@ -216,6 +222,7 @@ impl Workdir {
     }
 
     #[allow(clippy::wrong_self_convention)]
+    /// returns the contents of the file
     pub fn from_str<T: FromStr>(&self, name: &Path) -> T {
         log::debug!("reading file: {name:?}");
         let mut o = String::new();
@@ -226,6 +233,7 @@ impl Workdir {
         o.parse().ok().expect("fromstr")
     }
 
+    /// returns the path to the given filename in the working directory
     pub fn path(&self, name: &str) -> PathBuf {
         self.dir.join(name)
     }
@@ -245,7 +253,7 @@ impl Workdir {
         self.root.join("qsvdp")
     }
 
-    // clear all files in directory
+    /// clear all files in directory
     pub fn clear_contents(&self) -> io::Result<()> {
         for entry in fs::read_dir(&self.dir)? {
             fs::remove_file(entry?.path())?;
