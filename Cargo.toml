@@ -304,6 +304,9 @@ xlsxwriter = { git = "https://github.com/jqnatividad/xlsxwriter-rs", branch = "b
 # use serde_json with unreleased optimizations
 serde_json = { git = "https://github.com/serde-rs/json", rev = "1faf3a1" }
 
+# use our fork of governor with bumped dashmap dependency
+governor = { git = "https://github.com/jqnatividad/governor", branch = "deps-bump-dashmap" }
+
 # Polars has a much higher release tempo for its Python bindings compared
 # to its underlying Rust library. See https://github.com/pola-rs/polars/releases
 # It's qsv's policy to use the latest upstream of polars/py-polars
