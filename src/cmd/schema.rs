@@ -195,15 +195,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
-/// Builds JSON MAP object that corresponds to the "properties" object of JSON Schema (Draft 7) by
-/// looking at CSV value stats Supported JSON Schema validation vocabularies:
+/// Builds JSON MAP object that corresponds to the "properties" object of JSON Schema (Draft 7
+/// 2020-12) by looking at CSV value stats Supported JSON Schema validation vocabularies:
 ///  * type
+///    - "null", "boolean", "number", "integer", or "string", with built-in support for date/datetime
+///      as "string" with "format" constraint (https://json-schema.org/draft/2020-12/json-schema-validation#section-7.3.1)
 ///  * enum
 ///  * const
 ///  * minLength
 ///  * maxLength
-///  * min
-///  * max
+///  * minimum
+///  * maximum
 pub fn infer_schema_from_stats(
     args: &util::SchemaArgs,
     input_filename: &str,
@@ -241,7 +243,7 @@ pub fn infer_schema_from_stats(
     let mut stats_record;
     let mut col_type;
     let mut col_null_count;
-    let empty_string = "".to_string();
+    let empty_string = String::new();
 
     // generate definition for each CSV column/field and add to properties_map
     #[allow(clippy::needless_range_loop)]
@@ -375,8 +377,8 @@ pub fn infer_schema_from_stats(
                 }
             },
             _ => {
+                // we do not support other types like Array or Object, default to JSON String
                 wwarn!("Stats gave unexpected field type '{col_type}', default to JSON String.");
-                // defaults to JSON String
                 type_list.push(Value::String("string".to_string()));
             },
         }
