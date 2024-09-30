@@ -17,9 +17,6 @@
       "maxLength": 55,
       "type": [
         "string"
-      ],
-      "enum": [
-        "http://opendatacommunities.org/id/district-council/adur"
       ]
     },
     "OrganisationLabel": {
@@ -41,9 +38,6 @@
       "maxLength": 32,
       "type": [
         "string"
-      ],
-      "enum": [
-        "http://id.esd.org.uk/service/579"
       ]
     },
     "ServiceTypeLabel": {
@@ -52,9 +46,6 @@
       "maxLength": 14,
       "type": [
         "string"
-      ],
-      "enum": [
-        "Public toilets"
       ]
     },
     "LocationText": {
@@ -148,9 +139,6 @@
       "maxLength": 124,
       "type": [
         "string"
-      ],
-      "enum": [
-        "http://www.ordnancesurvey.co.uk/business-and-government/help-and-support/public-sector/guidance/derived-data-exemptions.html"
       ]
     },
     "Category": {
@@ -195,9 +183,6 @@
       "maxLength": 2,
       "type": [
         "string"
-      ],
-      "enum": [
-        "No"
       ]
     },
     "FamilyToilet": {
@@ -206,9 +191,6 @@
       "maxLength": 2,
       "type": [
         "string"
-      ],
-      "enum": [
-        "No"
       ]
     },
     "ChangingPlace": {
@@ -217,9 +199,6 @@
       "maxLength": 2,
       "type": [
         "string"
-      ],
-      "enum": [
-        "No"
       ]
     },
     "AutomaticPublicConvenience": {
@@ -228,9 +207,6 @@
       "maxLength": 2,
       "type": [
         "string"
-      ],
-      "enum": [
-        "No"
       ]
     },
     "FullTimeStaffing": {
@@ -239,9 +215,6 @@
       "maxLength": 2,
       "type": [
         "string"
-      ],
-      "enum": [
-        "No"
       ]
     },
     "PartOfCommunityScheme": {
@@ -250,9 +223,6 @@
       "maxLength": 2,
       "type": [
         "string"
-      ],
-      "enum": [
-        "No"
       ]
     },
     "CommunitySchemeName": {
@@ -273,9 +243,6 @@
       "maxLength": 66,
       "type": [
         "string"
-      ],
-      "enum": [
-        "http://www.adur-worthing.gov.uk/streets-and-travel/public-toilets/"
       ]
     },
     "OpeningHours": {
@@ -338,9 +305,6 @@
       "maxLength": 12,
       "type": [
         "string"
-      ],
-      "enum": [
-        "01903 221471"
       ]
     },
     "Notes": {
