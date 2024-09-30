@@ -2220,6 +2220,14 @@ pub fn optimal_batch_size(rconfig: &Config, batch_size: usize, num_jobs: usize) 
     if batch_size < DEFAULT_BATCH_SIZE {
         return DEFAULT_BATCH_SIZE;
     }
+    // if ROW_COUNT is not known, even if the input is not indexed, we still determine
+    // optimal batch size if polars is enabled, as its fast even without an index.
+    // Otherwise, we return the default batch size, as the perf hit of counting rows is too high
+    // without an index with polars disabled
+    #[cfg(not(feature = "polars"))]
+    if ROW_COUNT.get().is_none() {
+        return DEFAULT_BATCH_SIZE;
+    }
 
     let num_rows = count_rows(rconfig).unwrap_or(DEFAULT_BATCH_SIZE as u64) as usize;
     if batch_size == 0 {
@@ -2227,8 +2235,14 @@ pub fn optimal_batch_size(rconfig: &Config, batch_size: usize, num_jobs: usize) 
     } else if (num_rows > DEFAULT_BATCH_SIZE && (batch_size == DEFAULT_BATCH_SIZE))
         || batch_size == 1
     {
-        let optimal_size = (num_rows / num_jobs) + 1;
-        optimal_size
+        // the optimal batch size is the number of rows divided by the number of jobs
+        // if there is a remainder, we add 1 to the batch size
+        // this is to ensure that all rows are processed
+        if num_rows % num_jobs != 0 {
+            (num_rows / num_jobs) + 1
+        } else {
+            num_rows / num_jobs
+        }
     } else {
         batch_size
     }
