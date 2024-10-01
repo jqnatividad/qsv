@@ -1655,7 +1655,7 @@ pub fn process_input(
         if path == PathBuf::from("-") {
             if !stdin_file_created {
                 // if stdin was not copied to a file, copy stdin to a file named "stdin"
-                let tmp_filename = tmpdir.path().join("stdin");
+                let tmp_filename = tmpdir.path().join("stdin.csv");
                 let mut tmp_file = std::fs::File::create(&tmp_filename)?;
                 std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
                 tmp_file.flush()?;
