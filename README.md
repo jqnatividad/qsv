@@ -184,6 +184,15 @@ In the true spirit of open source, these packages are maintained by volunteers w
 
 datHere is currently working on a publishing workflow to create a Debian package on release. This package will target the latest Ubuntu LTS on x86_64 architecture.
 
+To install qsv on Ubuntu/Debian, you can use the following commands:
+
+```bash
+wget -O - https://dathere.github.io/qsv-deb-releases/qsv-deb.gpg | sudo gpg --dearmor -o /usr/share/keyrings/qsv-deb.gpg
+echo "deb [signed-by=/usr/share/keyrings/qsv-deb.gpg] https://dathere.github.io/qsv-deb-releases ./" | sudo tee /etc/apt/sources.list.d/qsv.list
+sudo apt update
+sudo apt install qsv
+```
+
 ### Option 3: Install with Rust
 
 If you have [Rust installed](https://www.rust-lang.org/tools/install), you can also install from source using Rust's cargo command[^3]:
