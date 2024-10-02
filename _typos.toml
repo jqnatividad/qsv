@@ -12,8 +12,9 @@ ALLE   = "ALLE"
 ba     = "ba"
 fo     = "fo"
 hel    = "hel"
+inout  = "inout"
 UE     = "UE"
 seeked = "seeked"
 
 [files]
-extend-exclude = ["*.pynb", "*.ipynb", "*.lua"]
+extend-exclude = ["*.pynb", "*.ipynb", "*.lua", "*.csv", "*.jsonl"]

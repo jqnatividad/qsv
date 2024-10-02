@@ -29,7 +29,7 @@ jobs:
       matrix:
         rust: [stable]
         job:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             os-name: linux
             target: x86_64-unknown-linux-gnu
             architecture: x86_64
@@ -38,7 +38,7 @@ jobs:
             addl-qsvlite-features:
             addl-qsvdp-features: luau
             addl-rustflags: -C target-feature=+fxsr,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma
-          # - os: ubuntu-latest
+          # - os: ubuntu-22.04
           #   os-name: linux
           #   target: x86_64-unknown-linux-musl
           #   architecture: x86_64
@@ -88,6 +88,7 @@ jobs:
       with:
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
     - name: apt-get update Ubuntu, libwayland-dev
+      if: ${{ matrix.job.os-name == 'linux' }}
       run: |
         sudo apt-get update
         sudo apt-get install libwayland-dev

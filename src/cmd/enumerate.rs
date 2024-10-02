@@ -54,21 +54,26 @@ enum options:
                              Only applies in Increment mode.
                              (default: 1)
     --constant <value>       Fill a new column with the given value.
-                             Changes the default column name to "constant".
+                             Changes the default column name to "constant" unless
+                             overridden by --new-column.
                              To specify a null value, pass the literal "<NULL>".
     --copy <column>          Name of a column to copy.
-                             Changes the default column name to "{column}_copy".
+                             Changes the default column name to "{column}_copy"
+                             unless overridden by --new-column.
     --uuid4                  When set, the column will be populated with
                              uuids (v4) instead of the incremental identifier.
-                             Changes the default column name to "uuid4".
+                             Changes the default column name to "uuid4" unless
+                             overridden by --new-column.
     --uuid7                  When set, the column will be populated with
                              uuids (v7) instead of the incremental identifier.
                              uuid v7 is a time-based uuid and is monotonically increasing.
                              See https://buildkite.com/blog/goodbye-integers-hello-uuids
-                             Changes the default column name to "uuid7".
+                             Changes the default column name to "uuid7" unless
+                             overridden by --new-column.
     --hash <columns>         Create a new column filled with the hash of the
                              given column/s. Use "1-" to hash all columns.
-                             Changes the default column name to "hash".
+                             Changes the default column name to "hash" unless
+                             overridden by --new-column.
                              Will remove an existing "hash" column if it exists.
 
                              The <columns> argument specify the columns to use
@@ -114,6 +119,7 @@ struct Args {
     flag_delimiter:  Option<Delimiter>,
 }
 
+#[derive(PartialEq)]
 enum EnumOperation {
     Increment,
     Uuid4,
@@ -146,7 +152,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut hash_sel = None;
-    let mut hash_operation = false;
 
     if let Some(hash_columns) = &args.flag_hash {
         // get the index of the column named "hash", if it exists
@@ -178,42 +183,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // Update the configuration with the new selection
         rconfig = rconfig.select(no_hash_column_selection);
         hash_sel = Some(rconfig.selection(&headers)?);
-
-        hash_operation = true;
-    }
-
-    if !rconfig.no_headers {
-        if let Some(column_name) = &args.flag_new_column {
-            headers.push_field(column_name.as_bytes());
-        } else if args.flag_uuid4 {
-            headers.push_field(b"uuid4");
-        } else if args.flag_uuid7 {
-            headers.push_field(b"uuid7");
-        } else if args.flag_constant.is_some() {
-            headers.push_field(b"constant");
-        } else if copy_operation {
-            let current_header = match simdutf8::compat::from_utf8(&headers[copy_index]) {
-                Ok(s) => s,
-                Err(e) => return fail_clierror!("Could not parse header as utf-8!: {e}"),
-            };
-            headers.push_field(format!("{current_header}_copy").as_bytes());
-        } else if hash_operation {
-            // Remove an existing "hash" column from the header, if it exists
-            headers = if let Some(hash_index) = hash_index {
-                headers
-                    .into_iter()
-                    .enumerate()
-                    .filter_map(|(i, field)| if i == hash_index { None } else { Some(field) })
-                    .collect()
-            } else {
-                headers
-            };
-            headers.push_field(b"hash");
-        } else {
-            headers.push_field(b"index");
-        };
-
-        wtr.write_record(&headers)?;
     }
 
     let constant_value = if args.flag_constant == Some(NULL_VALUE.to_string()) {
@@ -235,6 +204,41 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         EnumOperation::Increment
     };
+
+    if !rconfig.no_headers {
+        if enum_operation == EnumOperation::Hash {
+            // Remove an existing "hash" column from the header, if it exists
+            headers = if let Some(hash_index) = hash_index {
+                headers
+                    .into_iter()
+                    .enumerate()
+                    .filter_map(|(i, field)| if i == hash_index { None } else { Some(field) })
+                    .collect()
+            } else {
+                headers
+            };
+        }
+        let column_name = if let Some(new_column_name) = args.flag_new_column {
+            new_column_name
+        } else {
+            match enum_operation {
+                EnumOperation::Increment => "index".to_string(),
+                EnumOperation::Uuid4 => "uuid4".to_string(),
+                EnumOperation::Uuid7 => "uuid7".to_string(),
+                EnumOperation::Constant => "constant".to_string(),
+                EnumOperation::Copy => {
+                    let current_header = match simdutf8::compat::from_utf8(&headers[copy_index]) {
+                        Ok(s) => s,
+                        Err(e) => return fail_clierror!("Could not parse header as utf-8!: {e}"),
+                    };
+                    format!("{current_header}_copy")
+                },
+                EnumOperation::Hash => "hash".to_string(),
+            }
+        };
+        headers.push_field(column_name.as_bytes());
+        wtr.write_byte_record(&headers)?;
+    }
 
     // amortize allocations
     let mut record = csv::ByteRecord::new();

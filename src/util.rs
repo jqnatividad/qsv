@@ -46,6 +46,8 @@ macro_rules! regex_oncelock {
 // leave at least 20% of the available memory free
 const DEFAULT_FREEMEMORY_HEADROOM_PCT: u8 = 20;
 
+const DEFAULT_BATCH_SIZE: usize = 50_000;
+
 static ROW_COUNT: OnceLock<Option<u64>> = OnceLock::new();
 
 pub type ByteString = Vec<u8>;
@@ -1653,7 +1655,7 @@ pub fn process_input(
         if path == PathBuf::from("-") {
             if !stdin_file_created {
                 // if stdin was not copied to a file, copy stdin to a file named "stdin"
-                let tmp_filename = tmpdir.path().join("stdin");
+                let tmp_filename = tmpdir.path().join("stdin.csv");
                 let mut tmp_file = std::fs::File::create(&tmp_filename)?;
                 std::io::copy(&mut std::io::stdin(), &mut tmp_file)?;
                 tmp_file.flush()?;
@@ -2205,6 +2207,51 @@ pub fn csv_to_jsonl(
     }
 
     Ok(writer.flush()?)
+}
+
+/// get the optimal batch size
+/// if batch_size is 0, return the number of rows in the CSV, effectively disabling batching
+/// if batch_size is 1, force batch_size to be set to "optimal_size", even though
+/// its not recommended (number of rows is too small for parallel processing)
+/// if batch_size is equal to DEFAULT_BATCH_SIZE, return the optimal_size
+/// failing everything above, return the requested batch_size
+#[inline]
+pub fn optimal_batch_size(rconfig: &Config, batch_size: usize, num_jobs: usize) -> usize {
+    if batch_size < DEFAULT_BATCH_SIZE {
+        return DEFAULT_BATCH_SIZE;
+    }
+    // if ROW_COUNT is not known, even if the input is not indexed, we still determine
+    // optimal batch size if polars is enabled, as its fast even without an index.
+    // Otherwise, we return the default batch size, as the perf hit of counting rows is too high
+    // without an index with polars disabled
+    #[cfg(not(feature = "polars"))]
+    if ROW_COUNT.get().is_none() {
+        return DEFAULT_BATCH_SIZE;
+    }
+
+    let num_rows = if let Ok(rows) = count_rows(rconfig) {
+        rows as usize
+    } else {
+        return DEFAULT_BATCH_SIZE;
+    };
+    if batch_size == 0 {
+        // disable batching, handle all rows in one batch
+        num_rows
+    } else if (num_rows > DEFAULT_BATCH_SIZE && (batch_size == DEFAULT_BATCH_SIZE))
+        || batch_size == 1
+    {
+        // the optimal batch size is the number of rows divided by the number of jobs
+        if num_rows % num_jobs == 0 {
+            // there is no remainder as num_rows is divisible by num_jobs
+            num_rows / num_jobs
+        } else {
+            // there is a remainder, we add 1 to the batch size
+            // this is to ensure that all rows are processed
+            (num_rows / num_jobs) + 1
+        }
+    } else {
+        batch_size
+    }
 }
 
 // comment out for now as this is still WIP

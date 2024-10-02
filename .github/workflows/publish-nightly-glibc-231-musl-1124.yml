@@ -27,7 +27,7 @@ jobs:
     runs-on: ${{ matrix.job.os }}
     strategy:
       matrix:
-        rust: [nightly-2024-08-26]
+        rust: [nightly-2024-09-29]
         job:
           - os: ubuntu-20.04
             os-name: linux
@@ -43,7 +43,7 @@ jobs:
             target: x86_64-unknown-linux-musl
             architecture: x86_64
             musl-prep: true
-            addl-build-args: --features=apply,fetch,foreach,nightly,self_update,polars,lens,prompt
+            addl-build-args: --features=apply,fetch,foreach,nightly,self_update,polars,lens
             default-features:
             addl-qsvlite-features:
             addl-qsvdp-features:

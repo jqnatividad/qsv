@@ -30,10 +30,10 @@ qsv supports a custom format - `currency`. This format will only accept a valid 
       Negative amounts: ($100.00) or -$100.00
       Different styles: 1.000,00 (used in some countries for euros)
 
-qsv also supports a custom keyword - `dynenum`. It allows for dynamic validation against a CSV.
-This is useful for validating against a set of values that is not known at the time of schema creation
-or when the set of valid values is dynamic or too large to hardcode into the schema.
-`dynenum` can be used to validate against a CSV file on the local filesystem or on a URL (http/https).
+qsv also supports a custom keyword - `dynamicEnum`. It allows for dynamic validation against a CSV.
+This is useful for validating against a set of values unknown at the time of schema creation or
+when the set of valid values is dynamic or too large to hardcode into the schema.
+`dynamicEnum` can be used to validate against a CSV file on the local filesystem or on a URL (http/https).
 Only the first column of the CSV file is read and used for validation.
 
 You can create a JSON Schema file from a reference CSV file using the `qsv schema` command.
@@ -106,10 +106,13 @@ Validate options:
                                When not set, the number of jobs is set to the
                                number of CPUs detected.
     -b, --batch <size>         The number of rows per batch to load into memory,
-                               before running in parallel. Set to 0 to load all rows in one batch.
-                               [default: 50000]
+                               before running in parallel. Automatically determined
+                               for CSV files with more than 50000 rows.
+                               Set to 0 to load all rows in one batch.
+                               Set to 1 to force batch optimization even for files with
+                               less than 50000 rows. [default: 50000]
     --timeout <seconds>        Timeout for downloading json-schemas on URLs and for
-                               'dynenum' lookups on URLs. [default: 30]
+                               'dynamicEnum' lookups on URLs. [default: 30]
 
 Common options:
     -h, --help                 Display this message
@@ -241,7 +244,6 @@ fn currency_format_checker(s: &str) -> bool {
     })
 }
 
-#[derive(Debug)]
 struct DynEnumValidator {
     dynenum_set: HashSet<String>,
 }
@@ -254,6 +256,7 @@ impl DynEnumValidator {
 }
 
 impl Keyword for DynEnumValidator {
+    #[inline]
     fn validate<'instance>(
         &self,
         instance: &'instance Value,
@@ -272,6 +275,7 @@ impl Keyword for DynEnumValidator {
         }
     }
 
+    #[inline]
     fn is_valid(&self, instance: &Value) -> bool {
         if let Value::String(s) = instance {
             self.dynenum_set.contains(s)
@@ -304,7 +308,7 @@ fn dyn_enum_validator_factory<'a>(
                 None,
             );
             if let Err(e) = tokio::runtime::Runtime::new()?.block_on(future) {
-                return fail_validation_error!("Error downloading dynenum file - {e}");
+                return fail_validation_error!("Error downloading dynamicEnum file - {e}");
             }
 
             temp_download.path().to_str().unwrap().to_string()
@@ -313,7 +317,7 @@ fn dyn_enum_validator_factory<'a>(
             let uri_path = std::path::Path::new(uri);
             let uri_exists = uri_path.exists();
             if !uri_exists {
-                return fail_validation_error!("dynenum file not found - {uri}");
+                return fail_validation_error!("dynamicEnum file not found - {uri}");
             }
             uri_path.to_str().unwrap().to_string()
         };
@@ -329,7 +333,7 @@ fn dyn_enum_validator_factory<'a>(
                         enum_set.insert(value.to_owned());
                     }
                 },
-                Err(e) => return fail_validation_error!("Error reading dynenum file - {e}"),
+                Err(e) => return fail_validation_error!("Error reading dynamicEnum file - {e}"),
             };
         }
 
@@ -339,7 +343,7 @@ fn dyn_enum_validator_factory<'a>(
             JsonPointer::default(),
             jsonpointer,
             value,
-            "The 'dynenum' keyword must be set to to a CSV on the local filesystem or on a URL.",
+            "'dynamicEnum' must be set to a CSV file on the local filesystem or on a URL.",
         ))
     }
 }
@@ -597,15 +601,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // parse and compile supplied JSON Schema
     let (schema_json, schema_compiled): (Value, Validator) =
+        // safety: we know the schema is_some() because we checked above
         match load_json(&args.arg_json_schema.unwrap()) {
             Ok(s) => {
                 // parse JSON string
-                match serde_json::from_str(&s) {
+                let mut s_slice = s.as_bytes().to_vec();
+                match simd_json::serde::from_slice(&mut s_slice) {
                     Ok(json) => {
                         // compile JSON Schema
                         match Validator::options()
                             .with_format("currency", currency_format_checker)
-                            .with_keyword("dynenum", dyn_enum_validator_factory)
+                            .with_keyword("dynamicEnum", dyn_enum_validator_factory)
                             .should_validate_formats(true)
                             .build(&json)
                         {
@@ -643,42 +649,38 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut invalid_count: u64 = 0;
 
     // amortize memory allocation by reusing record
-    let mut record = csv::ByteRecord::new();
+    let mut record = csv::ByteRecord::with_capacity(500, header_len);
+
+    // set RAYON_NUM_THREADS
+    let num_jobs = util::njobs(args.flag_jobs);
+
     // reuse batch buffer
-    let batch_size = if args.flag_batch == 0 {
-        util::count_rows(&rconfig)? as usize
-    } else {
-        args.flag_batch
-    };
+    let batch_size = util::optimal_batch_size(&rconfig, args.flag_batch, num_jobs);
     let mut batch = Vec::with_capacity(batch_size);
     let mut validation_results = Vec::with_capacity(batch_size);
     let mut valid_flags: Vec<bool> = Vec::with_capacity(batch_size);
     let mut validation_error_messages: Vec<String> = Vec::with_capacity(50);
     let flag_trim = args.flag_trim;
 
-    // set RAYON_NUM_THREADS
-    util::njobs(args.flag_jobs);
+    // amortize buffer allocation
+    let mut buffer = itoa::Buffer::new();
 
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
     // loop exits when batch is empty.
     'batch_loop: loop {
-        let mut buffer = itoa::Buffer::new();
         for _ in 0..batch_size {
             match rdr.read_byte_record(&mut record) {
-                Ok(has_data) => {
-                    if has_data {
-                        row_number += 1;
-                        record.push_field(buffer.format(row_number).as_bytes());
-                        if flag_trim {
-                            record.trim();
-                        }
-                        batch.push(std::mem::take(&mut record));
-                    } else {
-                        // nothing else to add to batch
-                        break;
+                Ok(true) => {
+                    row_number += 1;
+                    record.push_field(buffer.format(row_number).as_bytes());
+                    if flag_trim {
+                        record.trim();
                     }
+                    // we use mem::take() to avoid cloning & clearing the record
+                    batch.push(std::mem::take(&mut record));
                 },
+                Ok(false) => break, // nothing else to add to batch
                 Err(e) => {
                     return fail_clierror!("Error reading row: {row_number}: {e}");
                 },
@@ -1195,6 +1197,57 @@ fn validate_json_instance(
     }
 }
 
+fn load_json(uri: &str) -> Result<String, String> {
+    let json_string = match uri {
+        url if url.to_lowercase().starts_with("http") => {
+            use reqwest::blocking::Client;
+
+            let client_timeout =
+                std::time::Duration::from_secs(TIMEOUT_SECS.load(Ordering::Relaxed) as u64);
+
+            let client = match Client::builder()
+                // safety: we're using a validated QSV_USER_AGENT or the default user agent
+                .user_agent(util::set_user_agent(None).unwrap())
+                .brotli(true)
+                .gzip(true)
+                .deflate(true)
+                .zstd(true)
+                .use_rustls_tls()
+                .http2_adaptive_window(true)
+                .connection_verbose(
+                    log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace),
+                )
+                .timeout(client_timeout)
+                .build()
+            {
+                Ok(c) => c,
+                Err(e) => {
+                    return fail_format!("Cannot build reqwest client: {e}.");
+                },
+            };
+
+            match client.get(url).send() {
+                Ok(response) => response.text().unwrap_or_default(),
+                Err(e) => return fail_format!("Cannot read JSON at url {url}: {e}."),
+            }
+        },
+        path => {
+            let mut buffer = String::new();
+            match File::open(path) {
+                Ok(p) => {
+                    BufReader::new(p)
+                        .read_to_string(&mut buffer)
+                        .unwrap_or_default();
+                },
+                Err(e) => return fail_format!("Cannot read JSON file {path}: {e}."),
+            }
+            buffer
+        },
+    };
+
+    Ok(json_string)
+}
+
 #[cfg(test)]
 mod tests_for_schema_validation {
     use super::*;
@@ -1321,7 +1374,7 @@ fn test_validate_currency_validator() {
 
     let compiled_schema = Validator::options()
         .with_format("currency", currency_format_checker)
-        .with_keyword("dynenum", dyn_enum_validator_factory)
+        .with_keyword("dynamicEnum", dyn_enum_validator_factory)
         .should_validate_formats(true)
         .build(&schema_currency_json())
         .expect("Invalid schema");
@@ -1355,7 +1408,7 @@ fn test_validate_currency_validator() {
 
     let compiled_schema = Validator::options()
         .with_format("currency", currency_format_checker)
-        .with_keyword("dynenum", dyn_enum_validator_factory)
+        .with_keyword("dynamicEnum", dyn_enum_validator_factory)
         .should_validate_formats(true)
         .build(&schema_currency_json())
         .expect("Invalid schema");
@@ -1364,57 +1417,6 @@ fn test_validate_currency_validator() {
 
     // no validation error for currency format
     assert_eq!(result, None);
-}
-
-fn load_json(uri: &str) -> Result<String, String> {
-    let json_string = match uri {
-        url if url.to_lowercase().starts_with("http") => {
-            use reqwest::blocking::Client;
-
-            let client_timeout =
-                std::time::Duration::from_secs(TIMEOUT_SECS.load(Ordering::Relaxed) as u64);
-
-            let client = match Client::builder()
-                // safety: we're using a validated QSV_USER_AGENT or if it's not set,
-                .user_agent(util::set_user_agent(None).unwrap())
-                .brotli(true)
-                .gzip(true)
-                .deflate(true)
-                .zstd(true)
-                .use_rustls_tls()
-                .http2_adaptive_window(true)
-                .connection_verbose(
-                    log_enabled!(log::Level::Debug) || log_enabled!(log::Level::Trace),
-                )
-                .timeout(client_timeout)
-                .build()
-            {
-                Ok(c) => c,
-                Err(e) => {
-                    return fail_format!("Cannot build reqwest client: {e}.");
-                },
-            };
-
-            match client.get(url).send() {
-                Ok(response) => response.text().unwrap_or_default(),
-                Err(e) => return fail_format!("Cannot read JSON at url {url}: {e}."),
-            }
-        },
-        path => {
-            let mut buffer = String::new();
-            match File::open(path) {
-                Ok(p) => {
-                    BufReader::new(p)
-                        .read_to_string(&mut buffer)
-                        .unwrap_or_default();
-                },
-                Err(e) => return fail_format!("Cannot read JSON file {path}: {e}."),
-            }
-            buffer
-        },
-    };
-
-    Ok(json_string)
 }
 
 #[test]
@@ -1429,9 +1431,9 @@ fn test_load_json_via_url() {
 
 #[test]
 fn test_dyn_enum_validator() {
-    let schema = json!({"dynenum": "https://raw.githubusercontent.com/jqnatividad/qsv/refs/heads/master/resources/test/fruits.csv", "type": "string"});
+    let schema = json!({"dynamicEnum": "https://raw.githubusercontent.com/jqnatividad/qsv/refs/heads/master/resources/test/fruits.csv", "type": "string"});
     let validator = jsonschema::options()
-        .with_keyword("dynenum", dyn_enum_validator_factory)
+        .with_keyword("dynamicEnum", dyn_enum_validator_factory)
         .build(&schema)
         .unwrap();
 

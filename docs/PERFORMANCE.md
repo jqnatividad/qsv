@@ -1,5 +1,32 @@
 # Performance Tuning
 
+## Index! Index! Index!
+
+Indexing your CSV files is key for performance. Here's why:
+
+1. **Faster Slicing**: `slice` uses the index to directly retrieve relevant rows.
+
+2. **Instant Row Counts**: `count` the total number of rows instantly.
+
+3. **Parallel Processing**: Indexing enables multithreading, dramatically speeding up supported commands like `stats`, `frequency`, `sample`, `split` and `tojsonl`.
+
+4. **Random Access**: The `luau` command gains random access capabilities.
+
+5. **Low Overhead**: Creating an index is fast and efficient, even for very large files.
+
+Even if you're only handling a CSV file once, and its not reference data, indexing still makes sense if you're `slicing`, `counting`, `sampling` or compiling summary statistics with the `stats` and `frequency` commands.
+
+The only time indexing is not useful is when the CSV file is too small to benefit from indexing or when the file is not seekable (e.g. stdin).
+
+To enable automatic indexing:
+- Set the `QSV_AUTOINDEX_SIZE` environment variable
+- Specify the minimum file size (in bytes) for auto-indexing
+
+```bash
+# automatically create an index for files larger than 10MB
+export QSV_AUTOINDEX_SIZE=10000000
+```
+
 ## CPU Optimization
 
 Modern CPUs have various features that the Rust compiler can take advantage

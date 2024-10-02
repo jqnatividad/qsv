@@ -195,14 +195,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
-/// Builds JSON MAP object that corresponds to the "properties" object of JSON Schema (Draft 7) by
-/// looking at CSV value stats Supported JSON Schema validation vocabularies:
+/// Builds JSON MAP object that corresponds to the "properties" object of JSON Schema (Draft 7
+/// 2020-12) by looking at CSV value stats Supported JSON Schema validation vocabularies:
 ///  * type
+///    - "null", "boolean", "number", "integer", or "string", with built-in support for date/datetime
+///      as "string" with "format" constraint (https://json-schema.org/draft/2020-12/json-schema-validation#section-7.3.1)
 ///  * enum
+///  * const
 ///  * minLength
 ///  * maxLength
-///  * min
-///  * max
+///  * minimum
+///  * maximum
 pub fn infer_schema_from_stats(
     args: &util::SchemaArgs,
     input_filename: &str,
@@ -213,11 +216,13 @@ pub fn infer_schema_from_stats(
     // amortize memory allocation
     let mut low_cardinality_column_indices: Vec<u64> =
         Vec::with_capacity(args.flag_enum_threshold as usize);
+    let mut const_column_indices: Vec<u64> = Vec::new();
 
     // build column selector arg to invoke cmd::frequency with
     let column_select_arg: String = build_low_cardinality_column_selector_arg(
         &mut low_cardinality_column_indices,
         args.flag_enum_threshold,
+        &mut const_column_indices,
         &csv_fields,
         &csv_stats,
     );
@@ -232,11 +237,13 @@ pub fn infer_schema_from_stats(
     let mut field_map: Map<String, Value> = Map::with_capacity(10);
     let mut type_list: Vec<Value> = Vec::with_capacity(4);
     let mut enum_list: Vec<Value> = Vec::with_capacity(args.flag_enum_threshold as usize);
+    let mut const_value: Value;
     let mut header_byte_slice;
     let mut header_string;
     let mut stats_record;
     let mut col_type;
     let mut col_null_count;
+    let empty_string = String::new();
 
     // generate definition for each CSV column/field and add to properties_map
     #[allow(clippy::needless_range_loop)]
@@ -268,6 +275,7 @@ pub fn infer_schema_from_stats(
         // use list to hold types, since optional fields get appended a "null" type
         type_list.clear();
         enum_list.clear();
+        const_value = Value::Null;
 
         match col_type.as_str() {
             "String" => {
@@ -289,8 +297,17 @@ pub fn infer_schema_from_stats(
                     );
                 }
 
-                // enum constraint
-                if let Some(values) = unique_values_map.get(&header_string) {
+                // const or enum constraint
+                if const_column_indices.contains(&((i + 1) as u64))
+                    && unique_values_map.contains_key(&header_string)
+                {
+                    const_value = Value::String(
+                        unique_values_map[&header_string]
+                            .first()
+                            .unwrap_or(&empty_string)
+                            .to_string(),
+                    );
+                } else if let Some(values) = unique_values_map.get(&header_string) {
                     for value in values {
                         enum_list.push(Value::String(value.to_string()));
                     }
@@ -360,8 +377,8 @@ pub fn infer_schema_from_stats(
                 }
             },
             _ => {
+                // we do not support other types like Array or Object, default to JSON String
                 wwarn!("Stats gave unexpected field type '{col_type}', default to JSON String.");
-                // defaults to JSON String
                 type_list.push(Value::String("string".to_string()));
             },
         }
@@ -382,7 +399,14 @@ pub fn infer_schema_from_stats(
             field_map.insert("type".to_string(), Value::Array(type_list.clone()));
         }
 
-        if !enum_list.is_empty() {
+        // add an enum or const constraint
+        // if enum list is empty, see if we have a const
+        if enum_list.is_empty() {
+            if const_value != Value::Null {
+                field_map.insert("const".to_string(), const_value.clone());
+                winfo!("Const generated for field '{header_string}': {const_value:?}");
+            }
+        } else {
             field_map.insert("enum".to_string(), Value::Array(enum_list.clone()));
             winfo!(
                 "Enum list generated for field '{header_string}' ({} value/s)",
@@ -401,6 +425,7 @@ pub fn infer_schema_from_stats(
 fn build_low_cardinality_column_selector_arg(
     low_cardinality_column_indices: &mut Vec<u64>,
     enum_cardinality_threshold: u64,
+    const_column_indices: &mut Vec<u64>,
     csv_fields: &ByteRecord,
     csv_stats: &[StatsData],
 ) -> String {
@@ -412,10 +437,12 @@ fn build_low_cardinality_column_selector_arg(
         // get Cardinality
         let col_cardinality = csv_stats[i].cardinality;
 
-        if col_cardinality > 0 && col_cardinality <= enum_cardinality_threshold {
+        if col_cardinality == 1 {
+            const_column_indices.push((i + 1) as u64);
+        } else if col_cardinality > 1 && col_cardinality <= enum_cardinality_threshold {
             // column selector uses 1-based index
             low_cardinality_column_indices.push((i + 1) as u64);
-        };
+        }
     }
 
     debug!("low cardinality columns: {low_cardinality_column_indices:?}");
