@@ -2229,19 +2229,25 @@ pub fn optimal_batch_size(rconfig: &Config, batch_size: usize, num_jobs: usize) 
         return DEFAULT_BATCH_SIZE;
     }
 
-    let num_rows = count_rows(rconfig).unwrap_or(DEFAULT_BATCH_SIZE as u64) as usize;
+    let num_rows = if let Ok(rows) = count_rows(rconfig) {
+        rows as usize
+    } else {
+        return DEFAULT_BATCH_SIZE;
+    };
     if batch_size == 0 {
+        // disable batching, handle all rows in one batch
         num_rows
     } else if (num_rows > DEFAULT_BATCH_SIZE && (batch_size == DEFAULT_BATCH_SIZE))
         || batch_size == 1
     {
         // the optimal batch size is the number of rows divided by the number of jobs
-        // if there is a remainder, we add 1 to the batch size
-        // this is to ensure that all rows are processed
-        if num_rows % num_jobs != 0 {
-            (num_rows / num_jobs) + 1
-        } else {
+        if num_rows % num_jobs == 0 {
+            // there is no remainder as num_rows is divisible by num_jobs
             num_rows / num_jobs
+        } else {
+            // there is a remainder, we add 1 to the batch size
+            // this is to ensure that all rows are processed
+            (num_rows / num_jobs) + 1
         }
     } else {
         batch_size
