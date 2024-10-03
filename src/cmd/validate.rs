@@ -1396,7 +1396,7 @@ fn test_validate_currency_email_validator() {
     );
 
     let csv = "title,name,fee,email
-    Professor,Xaviers,$100.00,thisisnotanemail";
+    Professor,Xaviers,Ð 100.00,thisisnotanemail";
 
     let mut rdr = csv::Reader::from_reader(csv.as_bytes());
     let headers = rdr.byte_headers().unwrap().clone();
@@ -1417,10 +1417,16 @@ fn test_validate_currency_email_validator() {
 
     assert_eq!(
         result,
-        Some(vec![(
-            "email".to_owned(),
-            "\"thisisnotanemail\" is not a \"email\"".to_owned()
-        )])
+        Some(vec![
+            (
+                "fee".to_owned(),
+                "\"Ð 100.00\" is not a \"currency\"".to_owned()
+            ),
+            (
+                "email".to_owned(),
+                "\"thisisnotanemail\" is not a \"email\"".to_owned()
+            )
+        ])
     );
 
     let csv = "title,name,fee,email
@@ -1429,7 +1435,7 @@ fn test_validate_currency_email_validator() {
     Mr,Deadpool,¥1,000,000.00,landfill@nomail.net
     Mrs,T,-€ 1.000.000,00,t+sheher@t.com
     Madam,X,(EUR 1.999.000,12),x123@aol.com
-    It,Vision,1.000.000,00,singularity+is@here.com";
+    SilicoGod,Vision,1.000.000,00,singularity+is@here.ai";
 
     let mut rdr = csv::Reader::from_reader(csv.as_bytes());
     let headers = rdr.byte_headers().unwrap().clone();
