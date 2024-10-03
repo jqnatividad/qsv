@@ -1415,7 +1415,6 @@ fn test_validate_currency_email_validator() {
 
     let result = validate_json_instance(&instance, &compiled_schema);
 
-    // Dogecoin is not an ISO currency
     assert_eq!(
         result,
         Some(vec![(
