@@ -1333,7 +1333,7 @@ mod tests_for_schema_validation {
 }
 
 #[test]
-fn test_validate_currency_validator() {
+fn test_validate_currency_email_validator() {
     fn schema_currency_json() -> Value {
         serde_json::json!({
             "$id": "https://example.com/person.schema.json",
@@ -1355,6 +1355,11 @@ fn test_validate_currency_validator() {
                     "description": "The required fee to see the person.",
                     "type": "string",
                     "format": "currency",
+                },
+                "email": {
+                    "description": "The person's email.",
+                    "type": "string",
+                    "format": "email",
                 }
             }
         })
@@ -1390,13 +1395,42 @@ fn test_validate_currency_validator() {
         )])
     );
 
-    let csv = "title,name,fee
-    Professor,Xaviers,USD60.02
-    He-man,Wolverine,$100.00
-    Mr,Deadpool,¥1,000,000.00
-    Mrs,T,-€ 1.000.000,00
-    Madam,X,(EUR 1.999.000,12)
-    It,Vision,1.000.000,00";
+    let csv = "title,name,fee,email
+    Professor,Xaviers,$100.00,thisisnotanemail";
+
+    let mut rdr = csv::Reader::from_reader(csv.as_bytes());
+    let headers = rdr.byte_headers().unwrap().clone();
+    let header_types = get_json_types(&headers, &schema_currency_json()).unwrap();
+
+    let record = &rdr.byte_records().next().unwrap().unwrap();
+
+    let instance = to_json_instance(&header_types, headers.len(), record).unwrap();
+
+    let compiled_schema = Validator::options()
+        .with_format("currency", currency_format_checker)
+        .with_keyword("dynamicEnum", dyn_enum_validator_factory)
+        .should_validate_formats(true)
+        .build(&schema_currency_json())
+        .expect("Invalid schema");
+
+    let result = validate_json_instance(&instance, &compiled_schema);
+
+    // Dogecoin is not an ISO currency
+    assert_eq!(
+        result,
+        Some(vec![(
+            "email".to_owned(),
+            "\"thisisnotanemail\" is not a \"email\"".to_owned()
+        )])
+    );
+
+    let csv = "title,name,fee,email
+    Professor,Xaviers,USD60.02,x@men.com
+    He-man,Wolverine,$100.00,claws@men.com
+    Mr,Deadpool,¥1,000,000.00,landfill@nomail.net
+    Mrs,T,-€ 1.000.000,00,t+sheher@t.com
+    Madam,X,(EUR 1.999.000,12),x123@aol.com
+    It,Vision,1.000.000,00,singularity+is@here.com";
 
     let mut rdr = csv::Reader::from_reader(csv.as_bytes());
     let headers = rdr.byte_headers().unwrap().clone();
