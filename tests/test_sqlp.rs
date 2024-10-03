@@ -2749,6 +2749,50 @@ IT	Rome,Milan,Turin,Naples,Venice
     assert_eq!(got, expected);
 }
 
+#[test]
+fn sqlp_dollar_quoting_string_literals() {
+    let wrk = Workdir::new("sqlp_dollar_quoting_string_literals");
+    wrk.create(
+        "cities_array.csv",
+        vec![
+            svec!["country_id", "description"],
+            svec!["DB", "Dubai"],
+            svec!["IN", "India"],
+            svec!["US", "United States"],
+            svec!["UK", "United Kingdom"],
+            svec!["CN", "China"],
+            svec!["RU", "Russia"],
+            svec!["NL", "Netherlands"],
+            svec!["IT", "Italy"],
+        ],
+    );
+
+    let output_file = wrk.path("output.tsv").to_string_lossy().to_string();
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("cities_array.csv")
+        .arg(
+            r#"SELECT country_id, $$This is a literal $,%,',"$$ AS complex_literal FROM cities_array"#,
+        )
+        .args(["--output", &output_file]);
+
+    wrk.assert_success(&mut cmd);
+
+    let got = wrk.read_to_string(&output_file);
+    let expected = r#"country_id	complex_literal
+DB	"This is a literal $,%,',"""
+IN	"This is a literal $,%,',"""
+US	"This is a literal $,%,',"""
+UK	"This is a literal $,%,',"""
+CN	"This is a literal $,%,',"""
+RU	"This is a literal $,%,',"""
+NL	"This is a literal $,%,',"""
+IT	"This is a literal $,%,',"""
+"#;
+
+    assert_eq!(got, expected);
+}
+
 // #[test]
 // fn sqlp_generate_graphviz_plan() {
 //     let wrk = Workdir::new("sqlp_generate_graphviz_plan");
