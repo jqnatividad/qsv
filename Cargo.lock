@@ -2144,6 +2144,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f4e5af126dafd0741c2ad62d47f68b28602550102e5f0dd45c8a97fc8b49c29"
 
 [[package]]
+name = "email_address"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e079f19b08ca6239f47f8ba8509c11cf3ea30095831f7fed61441475edd8c449"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "encode_unicode"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3192,15 +3201,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 
 [[package]]
-name = "iso8601"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "924e5d73ea28f59011fec52a0d12185d496a9b075d360657aed2a5707f701153"
-dependencies = [
- "nom",
-]
-
-[[package]]
 name = "iso_country"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3370,17 +3370,16 @@ dependencies = [
 [[package]]
 name = "jsonschema"
 version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "507489ad0bb386bda1ff52086877dc5847cc3730b9da5c5a4af75a9e4991eb30"
+source = "git+https://github.com/Stranger6667/jsonschema-rs?rev=d07e47f#d07e47f1926ba1766cefbfcc40b1156aa66ed97b"
 dependencies = [
  "ahash",
  "anyhow",
  "base64",
  "bytecount",
+ "email_address",
  "fancy-regex",
  "fraction",
  "getrandom",
- "iso8601",
  "itoa",
  "num-cmp",
  "once_cell",
@@ -3390,7 +3389,6 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "time",
  "url",
  "uuid-simd",
 ]
@@ -5824,8 +5822,7 @@ dependencies = [
 [[package]]
 name = "referencing"
 version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc5ad87f9bf7d32f48f98d606085fe5eae4404ad1cc1025c50111b80f53ea029"
+source = "git+https://github.com/Stranger6667/jsonschema-rs?rev=d07e47f#d07e47f1926ba1766cefbfcc40b1156aa66ed97b"
 dependencies = [
  "ahash",
  "fluent-uri",
