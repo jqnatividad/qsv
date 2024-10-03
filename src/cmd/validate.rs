@@ -130,6 +130,7 @@ Common options:
 "#;
 
 use std::{
+    borrow::Cow,
     env,
     fs::File,
     io::{BufReader, BufWriter, Read, Write},
@@ -921,9 +922,8 @@ fn to_json_instance(
     let mut json_object_map: Map<String, Value> = Map::with_capacity(header_len);
 
     let mut key_string: String;
-    let mut value_string: String;
-    for ((key_iter, json_type), value) in header_types.iter().zip(record.iter()) {
-        key_string = key_iter.to_owned();
+    for ((key, json_type), value) in header_types.iter().zip(record.iter()) {
+        key_string = key.to_owned();
 
         if value.is_empty() {
             json_object_map.insert(key_string, Value::Null);
@@ -931,17 +931,16 @@ fn to_json_instance(
         }
 
         let value_str = match simdutf8::basic::from_utf8(value) {
-            Ok(v) => v,
-            Err(e) => {
+            Ok(v) => Cow::Borrowed(v),
+            Err(_) => {
                 let s = String::from_utf8_lossy(value);
-                return fail_encoding_clierror!("CSV value \"{s}\" is not valid UTF-8: {e}");
+                return fail_encoding_clierror!("CSV value \"{s}\" is not valid UTF-8");
             },
         };
 
         match *json_type {
             JSONtypes::String => {
-                value_string = value_str.to_owned();
-                json_object_map.insert(key_string, Value::String(value_string));
+                json_object_map.insert(key_string, Value::String(value_str.into_owned()));
             },
             JSONtypes::Number => {
                 if let Ok(float) = value_str.parse::<f64>() {
@@ -972,6 +971,7 @@ fn to_json_instance(
                 }
             },
             JSONtypes::Unsupported => {
+                // unreachable because we assigned JSONtypes
                 unreachable!("we should never get an unsupported JSON type");
             },
         }
