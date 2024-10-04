@@ -182,9 +182,9 @@ To find out what features are enabled in a package/distro's qsv, run `qsv --vers
 
 In the true spirit of open source, these packages are maintained by volunteers who wanted to make qsv easier to install in various environments. They are much appreciated, and we loosely collaborate with the package maintainers through GitHub, but know that these packages are maintained by third-parties.
 
-datHere is currently working on a publishing workflow to create a Debian package on release. This package will target the latest Ubuntu LTS on x86_64 architecture.
+datHere also maintains a Debian package targetting the latest Ubuntu LTS on x86_64 architecture.
 
-To install qsv on Ubuntu/Debian, you can use the following commands:
+To install qsv on Ubuntu/Debian:
 
 ```bash
 wget -O - https://dathere.github.io/qsv-deb-releases/qsv-deb.gpg | sudo gpg --dearmor -o /usr/share/keyrings/qsv-deb.gpg
