@@ -269,7 +269,7 @@ impl Keyword for DynEnumValidator {
                 JsonPointer::default(),
                 instance_path.into(),
                 instance,
-                "Value must be a valid dynamic enum",
+                format!("{instance} is not a valid dynamicEnum value"),
             );
             Box::new(once(error))
         }
@@ -1330,7 +1330,7 @@ mod tests_for_schema_validation {
 }
 
 #[test]
-fn test_validate_currency_email_validator() {
+fn test_validate_currency_email_dynamicenum_validator() {
     fn schema_currency_json() -> Value {
         serde_json::json!({
             "$id": "https://example.com/person.schema.json",
@@ -1357,6 +1357,11 @@ fn test_validate_currency_email_validator() {
                     "description": "The person's email.",
                     "type": "string",
                     "format": "email",
+                },
+                "agency": {
+                    "description": "The person's agency.",
+                    "type": "string",
+                    "dynamicEnum": "https://raw.githubusercontent.com/jqnatividad/qsv/refs/heads/master/scripts/NYC_agencies.csv",
                 }
             }
         })
@@ -1426,16 +1431,16 @@ fn test_validate_currency_email_validator() {
         ])
     );
 
-    let csv = r#"title,name,fee,email
-    Professor,Xaviers,"USD60.02",x@men.com
-    He-man,Wolverine,"$100.00",claws@men.com
-    Mr,Deadpool,"¥1,000,000.00",landfill@nomail.net
-    Mrs,T,"-€ 1.000.000,00",t+sheher@t.com
-    Madam,X,"(EUR 1.999.000,12)",x123@aol.com
-    SilicoGod,Vision,"1.000.000,00",singularity+is@here.ai
-    Dr,Strange,"€ 1.000.000,00",stranger.danger@xmen.com
-    Dr,Octopus,"WAX 100.000,00",octopussy@bond.net
-    Mr,Robot,"B 1,000,000",71076.964-compuserve"#;
+    let csv = r#"title,name,fee,email,agency
+    Professor,Xaviers,"USD60.02",x@men.com,DOITT
+    He-man,Wolverine,"$100.00",claws@men.com,DPR
+    Mr,Deadpool,"¥1,000,000.00",landfill@nomail.net,DSNY
+    Mrs,T,"-€ 1.000.000,00",t+sheher@t.com,MODA
+    Madam,X,"(EUR 1.999.000,12)",x123@aol.com,DOB
+    SilicoGod,Vision,"1.000.000,00",singularity+is@here.ai,DOITT
+    Dr,Strange,"€ 1.000.000,00",stranger.danger@xmen.com,NYFD
+    Dr,Octopus,"WAX 100.000,00",octopussy@bond.net,DFTA
+    Mr,Robot,"B 1,000,000",71076.964-compuserve,ABCD"#;
 
     let mut rdr = csv::Reader::from_reader(csv.as_bytes());
     let headers = rdr.byte_headers().unwrap().clone();
@@ -1460,10 +1465,16 @@ fn test_validate_currency_email_validator() {
             2 => assert_eq!(result, None),
             3 => assert_eq!(
                 result,
-                Some(vec![(
-                    "name".to_owned(),
-                    "\"T\" is shorter than 2 characters".to_owned()
-                )])
+                Some(vec![
+                    (
+                        "name".to_owned(),
+                        "\"T\" is shorter than 2 characters".to_owned()
+                    ),
+                    (
+                        "agency".to_owned(),
+                        "\"MODA\" is not a valid dynamicEnum value".to_owned()
+                    )
+                ])
             ),
             4 => assert_eq!(
                 result,
@@ -1473,7 +1484,13 @@ fn test_validate_currency_email_validator() {
                 )])
             ),
             5 => assert_eq!(result, None),
-            6 => assert_eq!(result, None),
+            6 => assert_eq!(
+                result,
+                Some(vec![(
+                    "agency".to_owned(),
+                    "\"NYFD\" is not a valid dynamicEnum value".to_owned()
+                )])
+            ),
             7 => assert_eq!(
                 result,
                 Some(vec![(
@@ -1491,6 +1508,10 @@ fn test_validate_currency_email_validator() {
                     (
                         "email".to_owned(),
                         "\"71076.964-compuserve\" is not a \"email\"".to_owned()
+                    ),
+                    (
+                        "agency".to_owned(),
+                        "\"ABCD\" is not a valid dynamicEnum value".to_owned()
                     )
                 ])
             ),
@@ -1529,9 +1550,7 @@ fn test_dyn_enum_validator() {
         let err_info = e.into_iter().next().unwrap();
         assert_eq!(
             format!("{err_info:?}"),
-            "ValidationError { instance: String(\"lanzones\"), kind: Custom { message: \"Value \
-             must be a valid dynamic enum\" }, instance_path: JsonPointer([]), schema_path: \
-             JsonPointer([]) }"
+            r#"ValidationError { instance: String("lanzones"), kind: Custom { message: "\"lanzones\" is not a valid dynamicEnum value" }, instance_path: JsonPointer([]), schema_path: JsonPointer([]) }"#
         );
     } else {
         unreachable!("Expected an error, but validation succeeded.");
