@@ -180,7 +180,7 @@ To find out what features are enabled in a package/distro's qsv, run `qsv --vers
 
 In the true spirit of open source, these packages are maintained by volunteers who wanted to make qsv easier to install in various environments. They are much appreciated, and we loosely collaborate with the package maintainers through GitHub, but know that these packages are maintained by third-parties.
 
-datHere also maintains a Debian package targetting the latest Ubuntu LTS on x86_64 architecture.
+datHere also maintains a Debian package targeting the latest Ubuntu LTS on x86_64 architecture.
 
 To install qsv on Ubuntu/Debian:
 
