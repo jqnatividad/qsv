@@ -112,9 +112,46 @@
 ## Installation Options
 
 ### Option 0: TLDR Quick Install
-[qsv pro](https://qsvpro.dathere.com) is already available for download from its website, and is also planned for availability within the Microsoft Store and Apple App Store at later dates! In the meantime, you can quickly install qsv using these package manager one-liners[^2]:
+qsv's big brother - [qsv pro](https://qsvpro.dathere.com) is available for download from its website and on the [Microsoft App Store](https://apps.microsoft.com/detail/xpffdj3f1jsztf?hl=en-us&gl=US). Apart from a Graphical User Inteface, it's superpowered with additional features and capabilities - an API, [CKAN](https://ckan.org) integration, a Natural Language interface and more!
 
-[^2]: Option 0 is actually a quick-start version of Option 2. Of course, the package manager has to be installed first.  
+### Option 1: Download Prebuilt Binaries
+
+Full-featured prebuilt [binary variants](#variants) of the latest qsv version for Linux, macOS & Windows are available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
+
+These prebuilt binaries are also built with CPU optimizations enabled for x86_64 (e.g. [SSE4.2](https://en.wikipedia.org/wiki/SSE4#SSE4.2), [AVX2](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions#Advanced_Vector_Extensions_2), [AVX512](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions#Advanced_Vector_Extensions_512), etc. on Intel and AMD processors) and Apple Silicon processors ([ARM64 SIMD NEON](https://eclecticlight.co/2021/08/06/accelerating-the-m1-mac-an-introduction-to-simd/)) for even more performance gains.
+
+For Windows, an MSI Installer wrapping the x86_64-pc-windows-msvc build is also available for download.
+
+For macOS, ["ad-hoc" signatures](https://users.rust-lang.org/t/distributing-cli-apps-on-macos/70223) are used to sign our binaries, so you will need to [set appropriate Gatekeeper security settings](https://support.apple.com/en-us/HT202491) or run the following command to remove the quarantine attribute from qsv before you run it for the first time:
+
+```bash
+# replace qsv with qsvlite or qsvdp if you installed those binary variants
+xattr -d com.apple.quarantine qsv
+```
+
+An additional benefit of using the prebuilt binaries is that they have the `self_update` feature enabled, allowing you to quickly update qsv to the latest version with a simple `qsv --update`. For further security, the `self_update` feature only fetches [releases from this GitHub repo](https://github.com/jqnatividad/qsv/releases) and automatically verifies the signature of the downloaded zip archive before installing the update.
+
+> **_NOTE:_** The `luau` feature is not available in `musl` prebuilt binaries[^3].
+
+#### Manually verifying the Integrity of the Prebuilt Binaries Zip Archives
+All prebuilt binaries zip archives are signed with [zipsign](https://github.com/Kijewski/zipsign#zipsign) with the following public key [qsv-zipsign-public.key](https://github.com/jqnatividad/qsv/raw/master/src/qsv-zipsign-public.key). To verify the integrity of the downloaded zip archives:
+
+```bash
+# if you don't have zipsign installed yet
+cargo install zipsign
+
+# verify the integrity of the downloaded prebuilt binary zip archive
+# after downloading the zip archive and the qsv-zipsign-public.key file.
+# replace <PREBUILT-BINARY-ARCHIVE.zip> with the name of the downloaded zip archive
+# e.g. zipsign verify zip qsv-0.118.0-aarch64-apple-darwin.zip qsv-zipsign-public.key
+zipsign verify zip <PREBUILT-BINARY-ARCHIVE.zip> qsv-zipsign-public.key
+```
+
+### Option 2: Package Managers & Distributions
+
+qsv is also distributed by several package managers and distros.
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/qsv.svg)](https://repology.org/project/qsv/versions)
 
 ```bash
 # using Homebrew on macOS/Linux (https://formulae.brew.sh/formula/qsv#default)
@@ -137,45 +174,6 @@ yay -S qsv
 sudo xbps-install qsv
 ```
 
-### Option 1: Download Prebuilt Binaries (RECOMMENDED)
-
-Full-featured prebuilt [binary variants](#variants) of the latest qsv version for Linux, macOS & Windows are available [for download](https://github.com/jqnatividad/qsv/releases/latest), including binaries compiled with [Rust Nightly](https://stackoverflow.com/questions/70745970/rust-nightly-vs-beta-version) ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#nightly-release-builds)).
-
-These prebuilt binaries are also built with CPU optimizations enabled for x86_64 (e.g. [SSE4.2](https://en.wikipedia.org/wiki/SSE4#SSE4.2), [AVX2](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions#Advanced_Vector_Extensions_2), [AVX512](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions#Advanced_Vector_Extensions_512), etc. on Intel and AMD processors) and Apple Silicon processors ([ARM64 SIMD NEON](https://eclecticlight.co/2021/08/06/accelerating-the-m1-mac-an-introduction-to-simd/)) for even more performance gains.
-
-For Windows, an MSI Installer wrapping the x86_64-pc-windows-msvc build is also available for download.
-
-For macOS, ["ad-hoc" signatures](https://users.rust-lang.org/t/distributing-cli-apps-on-macos/70223) are used to sign our binaries, so you will need to [set appropriate Gatekeeper security settings](https://support.apple.com/en-us/HT202491) or run the following command to remove the quarantine attribute from qsv before you run it for the first time:
-
-```bash
-# replace qsv with qsvlite or qsvdp if you installed those binary variants
-xattr -d com.apple.quarantine qsv
-```
-
-An additional benefit of using the prebuilt binaries is that they have the `self_update` feature enabled, allowing you to quickly update qsv to the latest version with a simple `qsv --update`. For further security, the `self_update` feature only fetches [releases from this GitHub repo](https://github.com/jqnatividad/qsv/releases) and automatically verifies the signature of the downloaded zip archive before installing the update.
-
-> **_NOTE:_** The `luau` feature is not available in `musl` prebuilt binaries[^4].
-
-#### Manually verifying the Integrity of the Prebuilt Binaries Zip Archives
-All prebuilt binaries zip archives are signed with [zipsign](https://github.com/Kijewski/zipsign#zipsign) with the following public key [qsv-zipsign-public.key](https://github.com/jqnatividad/qsv/raw/master/src/qsv-zipsign-public.key). To verify the integrity of the downloaded zip archives:
-
-```bash
-# if you don't have zipsign installed yet
-cargo install zipsign
-
-# verify the integrity of the downloaded prebuilt binary zip archive
-# after downloading the zip archive and the qsv-zipsign-public.key file.
-# replace <PREBUILT-BINARY-ARCHIVE.zip> with the name of the downloaded zip archive
-# e.g. zipsign verify zip qsv-0.118.0-aarch64-apple-darwin.zip qsv-zipsign-public.key
-zipsign verify zip <PREBUILT-BINARY-ARCHIVE.zip> qsv-zipsign-public.key
-```
-
-### Option 2: Package Managers & Distributions
-
-qsv is also distributed by several package managers and distros[^2]. Check each package manager's/distro's documentation for installation instructions.
-
-[![Packaging status](https://repology.org/badge/vertical-allrepos/qsv.svg)](https://repology.org/project/qsv/versions)
-
 Note that qsv provided by these package managers/distros enable different features (Homebrew, for instance, only enables the `apply` and `luau` features. However, it does automatically install shell completion for `bash`, `fish` and `zsh` shells).
 
 To find out what features are enabled in a package/distro's qsv, run `qsv --version` ([more info](https://github.com/jqnatividad/qsv/blob/master/docs/PERFORMANCE.md#version-details)).
@@ -195,9 +193,9 @@ sudo apt install qsv
 
 ### Option 3: Install with Rust
 
-If you have [Rust installed](https://www.rust-lang.org/tools/install), you can also install from source using Rust's cargo command[^3]:
+If you have [Rust installed](https://www.rust-lang.org/tools/install), you can also install from source using Rust's cargo command[^2]:
 
-[^3]: Of course, you'll also need a linker & a C compiler. Linux users should generally install GCC or Clang, according to their distribution’s documentation.
+[^2]: Of course, you'll also need a linker & a C compiler. Linux users should generally install GCC or Clang, according to their distribution’s documentation.
 For example, if you use Ubuntu, you can install the `build-essential` package. On macOS, you can get a C compiler by running `$ xcode-select --install`.
 For Windows, this means installing [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/). When prompted for workloads, include "Desktop Development with C++",
 the Windows 10 or 11 SDK & the English language pack, along with any other language packs your require.
@@ -230,7 +228,7 @@ cargo install qsv --locked --bin qsvdp -F datapusher_plus,luau,polars
 
 ### Option 4: Compile from Source
 
-Compiling from source also works similarly[^3]:
+Compiling from source also works similarly[^2]:
 
 ```bash
 git clone https://github.com/jqnatividad/qsv.git
@@ -264,14 +262,14 @@ cargo build --release --locked --bin qsvdp -F datapusher_plus,luau,polars
 
 There are four binary variants of qsv:
 
-* `qsv` - [feature](#feature-flags)-capable(✨), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^4]
+* `qsv` - [feature](#feature-flags)-capable(✨), with the [prebuilt binaries](https://github.com/jqnatividad/qsv/releases/latest) enabling all applicable features except Python [^3]
 * `qsvpy` - same as `qsv` but with the Python feature enabled. Three subvariants are available - qsvpy310, qsvpy311 & qsvpy312 - which are compiled with the latest patch version of Python 3.10, 3.11 & 3.12 respectively.
 * `qsvlite` - all features disabled (~13% of the size of `qsv`)
 * `qsvdp` - optimized for use with [DataPusher+](https://github.com/dathere/datapusher-plus) with only DataPusher+ relevant commands; an embedded [`luau`](#luau_deeplink) interpreter; [`applydp`](#applydp_deeplink), a slimmed-down version of the `apply` feature; the `--progressbar` option disabled; and the self-update only checking for new releases, requiring an explicit `--update` (~12% of the the size of `qsv`).
 
 > **_NOTE:_** There are "portable" subvariants of qsv available with the "p" suffix - `qsvp`, `qsvplite` and `qsvpdp`. These subvariants are compiled without any CPU features enabled. Use these subvariants if you're getting "Illegal instruction" errors when running the regular qsv binaries.
 
-[^4]: The `luau`feature is NOT enabled by default on the prebuilt binaries for musl platforms. This is because we cross-compile using GitHub Action Runners using Ubuntu 20.04 LTS with the [musl libc](https://musl.libc.org/) toolchain. However, Ubuntu is a glibc-based, not a musl-based distro. We get around this by [cross-compiling](https://blog.logrocket.com/guide-cross-compilation-rust/).   
+[^3]: The `luau`feature is NOT enabled by default on the prebuilt binaries for musl platforms. This is because we cross-compile using GitHub Action Runners using Ubuntu 20.04 LTS with the [musl libc](https://musl.libc.org/) toolchain. However, Ubuntu is a glibc-based, not a musl-based distro. We get around this by [cross-compiling](https://blog.logrocket.com/guide-cross-compilation-rust/).   
 Unfortunately, this prevents us from cross-compiling binaries with the `luau` feature enabled as doing so requires statically linking the host OS libc library. If you need the `luau` feature on `musl`, you will need to compile from source on your own musl-based Linux Distro (e.g. Alpine, Void, [etc.](https://wiki.musl-libc.org/projects-using-musl)).  
 
 ### Shell Completion
@@ -281,9 +279,9 @@ To enable shell completion, see the [Shell Completion](contrib/completions/READM
 
 ## Regular Expression Syntax
 
-The `--select` option and several commands (`apply`, `applydp`, `datefmt`, `exclude`, `fetchpost`, `replace`, `schema`, `search`, `searchset`, `select`, `sqlp` & `stats`) allow the user to specify regular expressions. We use the [`regex`](https://docs.rs/regex) crate to parse, compile and execute these expressions. [^5]
+The `--select` option and several commands (`apply`, `applydp`, `datefmt`, `exclude`, `fetchpost`, `replace`, `schema`, `search`, `searchset`, `select`, `sqlp` & `stats`) allow the user to specify regular expressions. We use the [`regex`](https://docs.rs/regex) crate to parse, compile and execute these expressions. [^4]
 
-[^5]: This is the same regex engine used by [`ripgrep`](https://github.com/BurntSushi/ripgrep#ripgrep-rg) - the [blazingly fast grep replacement](https://blog.burntsushi.net/ripgrep/) that powers Visual Studio's [magical](https://lab.cccb.org/en/arthur-c-clarke-any-sufficiently-advanced-technology-is-indistinguishable-from-magic/) ["Find in Files"](https://github.com/microsoft/vscode-ripgrep) feature.
+[^4]: This is the same regex engine used by [`ripgrep`](https://github.com/BurntSushi/ripgrep#ripgrep-rg) - the [blazingly fast grep replacement](https://blog.burntsushi.net/ripgrep/) that powers Visual Studio's [magical](https://lab.cccb.org/en/arthur-c-clarke-any-sufficiently-advanced-technology-is-indistinguishable-from-magic/) ["Find in Files"](https://github.com/microsoft/vscode-ripgrep) feature.
 
 Its syntax can be found [here](https://docs.rs/regex/latest/regex/#syntax) and *"is similar to other regex engines, but it lacks several features that are not known how to implement efficiently. This includes, but is not limited to, look-around and backreferences. In exchange, all regex searches in this crate have worst case O(m * n) time complexity, where m is proportional to the size of the regex and n is proportional to the size of the string being searched."*
 
