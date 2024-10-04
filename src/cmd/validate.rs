@@ -147,7 +147,6 @@ use csv::ByteRecord;
 use indicatif::HumanCount;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use itertools::Itertools;
 use jsonschema::{
     output::BasicOutput,
     paths::{JsonPointer, JsonPointerNode, PathChunk},
@@ -900,15 +899,14 @@ fn do_json_validation(
     )
     .map(|validation_errors| {
         // squash multiple errors into one long String with linebreaks
-        let combined_errors: String = validation_errors
+        validation_errors
             .iter()
-            .map(|tuple| {
+            .map(|(field, error)| {
                 // validation error file format: row_number, field, error
-                format!("{row_number_string}\t{}\t{}", tuple.0, tuple.1)
+                format!("{row_number_string}\t{field}\t{error}")
             })
-            .join("\n");
-
-        combined_errors
+            .collect::<Vec<_>>()
+            .join("\n")
     })
 }
 
@@ -930,12 +928,11 @@ fn to_json_instance(
             continue;
         }
 
-        let value_str = match simdutf8::basic::from_utf8(value) {
-            Ok(v) => Cow::Borrowed(v),
-            Err(_) => {
-                let s = String::from_utf8_lossy(value);
-                return fail_encoding_clierror!("CSV value \"{s}\" is not valid UTF-8");
-            },
+        let value_str = if let Ok(v) = simdutf8::basic::from_utf8(value) {
+            Cow::Borrowed(v)
+        } else {
+            let s = String::from_utf8_lossy(value);
+            return fail_encoding_clierror!("CSV value \"{s}\" is not valid UTF-8");
         };
 
         match *json_type {
@@ -1429,21 +1426,20 @@ fn test_validate_currency_email_validator() {
         ])
     );
 
-    let csv = "title,name,fee,email
-    Professor,Xaviers,USD60.02,x@men.com
-    He-man,Wolverine,$100.00,claws@men.com
-    Mr,Deadpool,¥1,000,000.00,landfill@nomail.net
-    Mrs,T,-€ 1.000.000,00,t+sheher@t.com
-    Madam,X,(EUR 1.999.000,12),x123@aol.com
-    SilicoGod,Vision,1.000.000,00,singularity+is@here.ai";
+    let csv = r#"title,name,fee,email
+    Professor,Xaviers,"USD60.02",x@men.com
+    He-man,Wolverine,"$100.00",claws@men.com
+    Mr,Deadpool,"¥1,000,000.00",landfill@nomail.net
+    Mrs,T,"-€ 1.000.000,00",t+sheher@t.com
+    Madam,X,"(EUR 1.999.000,12)",x123@aol.com
+    SilicoGod,Vision,"1.000.000,00",singularity+is@here.ai
+    Dr,Strange,"€ 1.000.000,00",stranger.danger@xmen.com
+    Dr,Octopus,"WAX 100.000,00",octopussy@bond.net
+    Mr,Robot,"B 1,000,000",71076.964-compuserve"#;
 
     let mut rdr = csv::Reader::from_reader(csv.as_bytes());
     let headers = rdr.byte_headers().unwrap().clone();
     let header_types = get_json_types(&headers, &schema_currency_json()).unwrap();
-
-    let record = &rdr.byte_records().next().unwrap().unwrap();
-
-    let instance = to_json_instance(&header_types, headers.len(), record).unwrap();
 
     let compiled_schema = Validator::options()
         .with_format("currency", currency_format_checker)
@@ -1452,10 +1448,55 @@ fn test_validate_currency_email_validator() {
         .build(&schema_currency_json())
         .expect("Invalid schema");
 
-    let result = validate_json_instance(&instance, &compiled_schema);
+    for (i, record) in rdr.byte_records().enumerate() {
+        let record = record.unwrap();
+        let instance = to_json_instance(&header_types, headers.len(), &record).unwrap();
 
-    // no validation error for currency format
-    assert_eq!(result, None);
+        let result = validate_json_instance(&instance, &compiled_schema);
+
+        match i {
+            0 => assert_eq!(result, None),
+            1 => assert_eq!(result, None),
+            2 => assert_eq!(result, None),
+            3 => assert_eq!(
+                result,
+                Some(vec![(
+                    "name".to_owned(),
+                    "\"T\" is shorter than 2 characters".to_owned()
+                )])
+            ),
+            4 => assert_eq!(
+                result,
+                Some(vec![(
+                    "name".to_owned(),
+                    "\"X\" is shorter than 2 characters".to_owned()
+                )])
+            ),
+            5 => assert_eq!(result, None),
+            6 => assert_eq!(result, None),
+            7 => assert_eq!(
+                result,
+                Some(vec![(
+                    "fee".to_owned(),
+                    "\"WAX 100.000,00\" is not a \"currency\"".to_owned()
+                )])
+            ),
+            8 => assert_eq!(
+                result,
+                Some(vec![
+                    (
+                        "fee".to_owned(),
+                        "\"B 1,000,000\" is not a \"currency\"".to_owned()
+                    ),
+                    (
+                        "email".to_owned(),
+                        "\"71076.964-compuserve\" is not a \"email\"".to_owned()
+                    )
+                ])
+            ),
+            _ => unreachable!(),
+        }
+    }
 }
 
 #[test]
