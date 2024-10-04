@@ -1952,34 +1952,35 @@ impl TypedSum {
             return;
         }
         #[allow(clippy::cast_precision_loss)]
-        // safety: we know the sample is valid for their respective types, so we can use unwrap
         match typ {
             TFloat => {
                 self.stotlen = self.stotlen.saturating_add(sample.len() as u64);
-                let float: f64 = from_bytes::<f64>(sample).unwrap();
-                match self.float {
-                    None => {
-                        self.float = Some((self.integer as f64) + float);
-                    },
-                    Some(ref mut f) => {
-                        *f += float;
-                    },
+                if let Some(float_sample) = from_bytes::<f64>(sample) {
+                    if let Some(ref mut f) = self.float {
+                        *f += float_sample;
+                    } else {
+                        self.float = Some((self.integer as f64) + float_sample);
+                    }
                 }
             },
             TInteger => {
                 self.stotlen = self.stotlen.saturating_add(sample.len() as u64);
                 if let Some(ref mut float) = self.float {
+                    // safety: we know that the sample is a valid f64
                     *float += from_bytes::<f64>(sample).unwrap();
                 } else {
                     // so we don't panic on overflow/underflow, use saturating_add
                     self.integer = self
                         .integer
+                        // safety: we know that the sample is a valid i64
                         .saturating_add(atoi_simd::parse::<i64>(sample).unwrap());
                 }
             },
             TString => {
                 self.stotlen = self.stotlen.saturating_add(sample.len() as u64);
             },
+            // we don't need to do anything for TNull, TDate or TDateTime
+            // as they don't have a sum
             _ => {},
         }
     }
