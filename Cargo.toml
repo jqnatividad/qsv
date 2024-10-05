@@ -316,9 +316,9 @@ governor = { git = "https://github.com/jqnatividad/governor", branch = "deps-bum
 # BUILD NOTE: Be sure to set QSV_POLARS_REV below to the latest commit short hash or tag 
 # of polars/py-polars before building qsv. This allows us to show the polars rev/tag in --version.
 # if we are using a release version of Rust Polars, leave QSV_POLARS_REV empty
-# QSV_POLARS_REV=py-1.9.0
-polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.9.0" }
-# polars = { git = "https://github.com/pola-rs/polars", rev = "64ca265" }
+# QSV_POLARS_REV=f7de80c
+# polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.9.0" }
+polars = { git = "https://github.com/pola-rs/polars", rev = "f7de80c" }
 
 [features]
 default = ["mimalloc"]
