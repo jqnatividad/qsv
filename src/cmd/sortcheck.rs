@@ -93,7 +93,7 @@ struct SortCheckStruct {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
     let ignore_case = args.flag_ignore_case;
-    let rconfig = Config::new(&args.arg_input)
+    let rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .select(args.flag_select);

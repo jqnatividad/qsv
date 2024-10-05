@@ -65,10 +65,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_out_delimiter = Some(Delimiter(b'\t'));
     }
 
-    let rconfig = Config::new(&args.arg_input)
+    let rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(true);
-    let mut wconfig = Config::new(&args.flag_output)
+    let mut wconfig = Config::new(args.flag_output.as_ref())
         .delimiter(args.flag_out_delimiter)
         .crlf(args.flag_crlf);
 

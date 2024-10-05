@@ -101,11 +101,11 @@ impl Args {
     }
 
     fn wconfig(&self) -> Config {
-        Config::new(&self.flag_output)
+        Config::new(self.flag_output.as_ref())
     }
 
     fn rconfig(&self) -> Config {
-        Config::new(&self.arg_input)
+        Config::new(self.arg_input.as_ref())
             .delimiter(self.flag_delimiter)
             .no_headers(true)
     }

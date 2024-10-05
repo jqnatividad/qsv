@@ -106,13 +106,13 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    let rconfig = Config::new(&args.arg_input)
+    let rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .select(args.arg_column);
 
     let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&None).writer()?;
+    let mut wtr = Config::new(None).writer()?;
 
     #[allow(clippy::trivial_regex)]
     // template_pattern matches pairs of curly braces, e.g. "{}".

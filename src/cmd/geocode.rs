@@ -728,7 +728,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
         args.arg_input
     };
 
-    let rconfig = Config::new(&input)
+    let rconfig = Config::new(input.as_ref())
         .delimiter(args.flag_delimiter)
         .select(SelectColumns::parse(&args.arg_column)?);
 
@@ -932,7 +932,7 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     let engine = load_engine(geocode_index_file.clone().into(), &progress).await?;
 
     let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output)
+    let mut wtr = Config::new(args.flag_output.as_ref())
         .quote_style(
             // if we're doing a now subcommand with JSON output, we don't want the CSV writer
             // to close quote the output as it will produce invalid JSON

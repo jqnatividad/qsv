@@ -576,7 +576,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     );
 
     // we will write the stats to a temp file
-    let wconfig = Config::new(&Some(stats_csv_tempfile_fname.clone()))
+    let wconfig = Config::new(Some(stats_csv_tempfile_fname.clone()).as_ref())
         .delimiter(Some(Delimiter(output_delim)));
     let mut wtr = wconfig.writer()?;
     let mut rconfig = args.rconfig();
@@ -1032,7 +1032,7 @@ impl Args {
 
     #[inline]
     fn rconfig(&self) -> Config {
-        Config::new(&self.arg_input)
+        Config::new(self.arg_input.as_ref())
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
             .select(self.flag_select.clone())

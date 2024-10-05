@@ -57,7 +57,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Some(p) => PathBuf::from(&p),
     };
 
-    let rconfig = Config::new(&Some(args.arg_input));
+    let rconfig = Config::new(Some(args.arg_input).as_ref());
     let mut rdr = rconfig.reader_file()?;
     let mut wtr =
         io::BufWriter::with_capacity(DEFAULT_WTR_BUFFER_CAPACITY, fs::File::create(pidx)?);

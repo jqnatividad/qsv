@@ -116,13 +116,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         args.arg_replacement.as_bytes()
     };
-    let rconfig = Config::new(&args.arg_input)
+    let rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .select(args.flag_select);
 
     let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
 
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;

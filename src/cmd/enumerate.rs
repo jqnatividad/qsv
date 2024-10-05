@@ -131,12 +131,12 @@ enum EnumOperation {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let mut rconfig = Config::new(&args.arg_input)
+    let mut rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
 
     let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
 
     let mut headers = rdr.byte_headers()?.clone();
     let mut hash_index = None;

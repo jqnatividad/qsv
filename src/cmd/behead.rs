@@ -25,11 +25,13 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let conf = Config::new(&args.arg_input).no_headers(false);
+    let conf = Config::new(args.arg_input.as_ref()).no_headers(false);
 
     let mut rdr = conf.flexible(args.flag_flexible).reader()?;
     // write is always flexible for performance
-    let mut wtr = Config::new(&args.flag_output).flexible(true).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref())
+        .flexible(true)
+        .writer()?;
     let mut record = csv::ByteRecord::new();
 
     while rdr.read_byte_record(&mut record)? {

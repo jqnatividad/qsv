@@ -115,7 +115,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let reverse = args.flag_reverse;
     let random = args.flag_random;
     let faster = args.flag_faster;
-    let rconfig = Config::new(&args.arg_input)
+    let rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .select(args.flag_select);
@@ -258,7 +258,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }),
     }
 
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
     let mut prev: Option<csv::ByteRecord> = None;
     rconfig.write_headers(&mut rdr, &mut wtr)?;
     for r in all {

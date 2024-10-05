@@ -99,7 +99,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 impl Args {
     /// Configuration for our reader.
     fn rconfig(&self) -> Config {
-        Config::new(&self.arg_input)
+        Config::new(self.arg_input.as_ref())
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
             .select(self.arg_column.clone())

@@ -333,7 +333,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     let num_sheets = sheet_names.len();
 
-    let mut wtr = Config::new(&args.flag_output)
+    let mut wtr = Config::new(args.flag_output.as_ref())
         .flexible(args.flag_flexible)
         .delimiter(args.flag_delimiter)
         .writer()?;

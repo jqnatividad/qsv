@@ -74,7 +74,7 @@ impl From<Align> for Alignment {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let rconfig = Config::new(&args.arg_input)
+    let rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(true)
         .flexible(true);
@@ -84,7 +84,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::mem_file_check(&path, false, args.flag_memcheck)?;
     }
 
-    let wconfig = Config::new(&args.flag_output).delimiter(Some(Delimiter(b'\t')));
+    let wconfig = Config::new(args.flag_output.as_ref()).delimiter(Some(Delimiter(b'\t')));
 
     let tw = TabWriter::new(wconfig.io_writer()?)
         .minwidth(args.flag_width)

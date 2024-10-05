@@ -149,7 +149,7 @@ fn json_line_to_csv_record(value: &Value, headers: &[Vec<String>]) -> csv::Strin
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let mut wtr = Config::new(&args.flag_output)
+    let mut wtr = Config::new(args.flag_output.as_ref())
         .delimiter(args.flag_delimiter)
         .writer()?;
 

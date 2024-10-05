@@ -57,7 +57,7 @@ struct Args {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let mut config = Config::new(&args.arg_input)
+    let mut config = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .quote(args.flag_quote.as_byte())
         .no_headers(true)
@@ -96,7 +96,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let mut rdr = config.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
     let mut record = csv::ByteRecord::new();
     let mut record_work = csv::ByteRecord::new();
     #[allow(unused_assignments)]

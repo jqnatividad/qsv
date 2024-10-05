@@ -106,7 +106,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .into_os_string()
         .into_string()
         .unwrap();
-    let conf = Config::new(&Some(input_filename.clone())).delimiter(args.flag_delimiter);
+    let conf = Config::new(Some(&input_filename)).delimiter(args.flag_delimiter);
 
     // we're loading the entire file into memory, we need to check avail mem
     util::mem_file_check(
@@ -155,7 +155,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // TODO: instead of abusing csv writer to write jsonl file
     // just use a normal buffered writer
-    let mut wtr = Config::new(&args.flag_output)
+    let mut wtr = Config::new(args.flag_output.as_ref())
         .flexible(true)
         .no_headers(true)
         .quote_style(csv::QuoteStyle::Never)

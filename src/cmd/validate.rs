@@ -324,7 +324,7 @@ fn dyn_enum_validator_factory<'a>(
 
         // read the first column into a HashSet
         let mut enum_set = HashSet::with_capacity(50);
-        let rconfig = Config::new(&Some(dynenum_path));
+        let rconfig = Config::new(Some(dynenum_path).as_ref());
         let mut rdr = rconfig.flexible(true).reader()?;
         for result in rdr.records() {
             match result {
@@ -356,7 +356,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Ordering::Relaxed,
     );
 
-    let mut rconfig = Config::new(&args.arg_input).no_headers(args.flag_no_headers);
+    let mut rconfig = Config::new(args.arg_input.as_ref()).no_headers(args.flag_no_headers);
 
     if args.flag_delimiter.is_some() {
         rconfig = rconfig.delimiter(args.flag_delimiter);
@@ -746,7 +746,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 Some(valid_output)
             };
 
-            let mut valid_wtr = Config::new(&valid_path).writer()?;
+            let mut valid_wtr = Config::new(valid_path.as_ref()).writer()?;
             valid_wtr.write_byte_record(&headers)?;
 
             let mut rdr = rconfig.reader()?;
@@ -818,11 +818,12 @@ fn split_invalid_records(
     let mut split_row_num: usize = 0;
 
     // prepare output writers
-    let mut valid_wtr = Config::new(&Some(input_path.to_owned() + "." + valid_suffix)).writer()?;
+    let mut valid_wtr =
+        Config::new(Some(input_path.to_owned() + "." + valid_suffix).as_ref()).writer()?;
     valid_wtr.write_byte_record(headers)?;
 
     let mut invalid_wtr =
-        Config::new(&Some(input_path.to_owned() + "." + invalid_suffix)).writer()?;
+        Config::new(Some(input_path.to_owned() + "." + invalid_suffix).as_ref()).writer()?;
     invalid_wtr.write_byte_record(headers)?;
 
     let mut rdr = rconfig.reader()?;
