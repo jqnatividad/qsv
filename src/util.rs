@@ -1732,7 +1732,7 @@ pub fn format_systemtime(time: SystemTime, format_specifier: &str) -> String {
 }
 
 pub fn create_json_writer(
-    output: &Option<String>,
+    output: Option<&String>,
     buffer_capacity: usize,
 ) -> std::io::Result<Box<dyn Write + Send + 'static>> {
     // create a JSON writer
@@ -1762,7 +1762,7 @@ pub fn create_json_writer(
 
 /// iterate over the CSV ByteRecords and write them to the JSON file
 pub fn write_json(
-    output: &Option<String>,
+    output: Option<&String>,
     no_headers: bool,
     headers: &csv::ByteRecord,
     records: impl Iterator<Item = csv::ByteRecord>,

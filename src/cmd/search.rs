@@ -155,7 +155,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = Config::new(&args.flag_output).writer()?;
 
     let mut json_wtr = if flag_json {
-        util::create_json_writer(&args.flag_output, DEFAULT_WTR_BUFFER_CAPACITY * 4)?
+        util::create_json_writer(args.flag_output.as_ref(), DEFAULT_WTR_BUFFER_CAPACITY * 4)?
     } else {
         Box::new(std::io::sink())
     };
@@ -213,7 +213,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let mut stderr_wtr = csv::WriterBuilder::new().from_writer(std::io::stderr());
 
         let mut stderr_jsonwtr = if flag_json {
-            util::create_json_writer(&Some("stderr".to_string()), DEFAULT_WTR_BUFFER_CAPACITY * 4)?
+            util::create_json_writer(Some(&"stderr".to_string()), DEFAULT_WTR_BUFFER_CAPACITY * 4)?
         } else {
             Box::new(std::io::sink())
         };
