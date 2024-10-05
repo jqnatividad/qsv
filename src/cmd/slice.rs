@@ -116,7 +116,12 @@ impl Args {
                 .skip(start)
                 .take(end - start)
                 .map(|r| r.unwrap());
-            util::write_json(self.flag_output.as_ref(), self.flag_no_headers, &headers, records)
+            util::write_json(
+                self.flag_output.as_ref(),
+                self.flag_no_headers,
+                &headers,
+                records,
+            )
         } else {
             let mut wtr = self.wconfig().writer()?;
             self.rconfig().write_headers(&mut rdr, &mut wtr)?;
@@ -139,7 +144,12 @@ impl Args {
                 .byte_records()
                 .take(end - start)
                 .map(|r| r.unwrap());
-            util::write_json(self.flag_output.as_ref(), self.flag_no_headers, &headers, records)
+            util::write_json(
+                self.flag_output.as_ref(),
+                self.flag_no_headers,
+                &headers,
+                records,
+            )
         } else {
             let mut wtr = self.wconfig().writer()?;
             self.rconfig().write_headers(&mut *indexed_file, &mut wtr)?;
