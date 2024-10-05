@@ -515,7 +515,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             &args.arg_operations.split(',').collect(),
             &args.flag_comparand,
             &args.flag_replacement,
-            &args.flag_new_column,
+            args.flag_new_column.as_ref(),
             &args.flag_formatstr,
         ) {
             Ok(operations_vec) => ops_vec = operations_vec,
@@ -724,7 +724,7 @@ fn validate_operations(
     operations: &Vec<&str>,
     flag_comparand: &str,
     flag_replacement: &str,
-    flag_new_column: &Option<String>,
+    flag_new_column: Option<&String>,
     flag_formatstr: &str,
 ) -> Result<Vec<Operations>, CliError> {
     let mut censor_invokes = 0_u8;
