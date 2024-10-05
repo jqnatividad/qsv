@@ -942,7 +942,7 @@ fn random_access_mode(
 ) -> Result<(), CliError> {
     // users can create an index file by calling qsv_autoindex() in their BEGIN script
     if begin_script.contains("qsv_autoindex()") {
-        let result = create_index(&args.arg_input);
+        let result = create_index(args.arg_input.as_ref());
         if result.is_err() {
             return fail_clierror!("Unable to create/update index file");
         }
@@ -1407,7 +1407,7 @@ fn beginend_insertrecord(
     Ok(())
 }
 
-fn create_index(arg_input: &Option<String>) -> Result<bool, CliError> {
+fn create_index(arg_input: Option<&String>) -> Result<bool, CliError> {
     // this is a utility function that creates an index file for the current CSV.
     // it is called when "qsv_autoindex()" is called in the BEGIN script.
     let Some(input) = &arg_input else {
