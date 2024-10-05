@@ -1,0 +1,103 @@
+# This is a configuration file for the bacon tool
+#
+# Bacon repository: https://github.com/Canop/bacon
+# Complete help on configuration: https://dystroy.org/bacon/config/
+# You can also check bacon's own bacon.toml file
+#  as an example: https://github.com/Canop/bacon/blob/main/bacon.toml
+
+default_job = "check"
+
+[jobs.check]
+command = ["cargo", "check", "--color", "always", "-F", "feature_capable,apply,fetch,foreach,geocode,lens,luau,polars,prompt,python,to"]
+need_stdout = false
+
+[jobs.check-all]
+command = ["cargo", "check", "--all-targets", "--color", "always", "-F", "all_features"]
+need_stdout = false
+
+# Run clippy on the default target
+[jobs.clippy]
+command = [
+    "cargo", "clippy",
+    "--color", "always",
+    "-F", "all_features",
+]
+need_stdout = false
+
+# Run clippy on all targets
+# To disable some lints, you may change the job this way:
+#    [jobs.clippy-all]
+#    command = [
+#        "cargo", "clippy",
+#        "--all-targets",
+#        "--color", "always",
+#    	 "--",
+#    	 "-A", "clippy::bool_to_int_with_if",
+#    	 "-A", "clippy::collapsible_if",
+#    	 "-A", "clippy::derive_partial_eq_without_eq",
+#    ]
+# need_stdout = false
+[jobs.clippy-all]
+command = [
+    "cargo", "clippy",
+    "--all-targets",
+    "--color", "always",
+    "-F", "all_features",
+]
+need_stdout = false
+
+# This job lets you run
+# - all tests: bacon test
+# - a specific test: bacon test -- config::test_default_files
+# - the tests of a package: bacon test -- -- -p config
+[jobs.test]
+command = [
+    "cargo", "test", "--color", "always", "-F", "all_features",
+    "--", "--color", "always", # see https://github.com/Canop/bacon/issues/124
+]
+need_stdout = true
+
+[jobs.doc]
+command = ["cargo", "doc", "--color", "always", "--no-deps"]
+need_stdout = false
+
+# If the doc compiles, then it opens in your browser and bacon switches
+# to the previous job
+[jobs.doc-open]
+command = ["cargo", "doc", "--color", "always", "--no-deps", "--open"]
+need_stdout = false
+on_success = "back" # so that we don't open the browser at each change
+
+# You can run your application and have the result displayed in bacon,
+# *if* it makes sense for this crate.
+# Don't forget the `--color always` part or the errors won't be
+# properly parsed.
+# If your program never stops (eg a server), you may set `background`
+# to false to have the cargo run output immediately displayed instead
+# of waiting for program's end.
+[jobs.run]
+command = [
+    "cargo", "run",
+    "--color", "always",
+    # put launch parameters for your program behind a `--` separator
+]
+need_stdout = true
+allow_warnings = true
+background = true
+
+# This parameterized job runs the example of your choice, as soon
+# as the code compiles.
+# Call it as
+#    bacon ex -- my-example
+[jobs.ex]
+command = ["cargo", "run", "--color", "always", "--example"]
+need_stdout = true
+allow_warnings = true
+
+# You may define here keybindings that would be specific to
+# a project, for example a shortcut to launch a specific job.
+# Shortcuts to internal functions (scrolling, toggling, etc.)
+# should go in your personal global prefs.toml file instead.
+[keybindings]
+# alt-m = "job:my-job"
+c = "job:clippy-all" # comment this to have 'c' run clippy on only the default target
