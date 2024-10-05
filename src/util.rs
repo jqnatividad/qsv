@@ -1088,7 +1088,7 @@ pub fn safe_header_names(
     let mut buf_wrk = String::new();
 
     for header_name in headers {
-        let reserved_found = if let Some(reserved_names_vec) = reserved_names.clone() {
+        let reserved_found = if let Some(reserved_names_vec) = reserved_names {
             if keep_case {
                 header_name.clone_into(&mut buf_wrk);
             } else {
