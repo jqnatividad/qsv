@@ -128,7 +128,7 @@ use calamine::{open_workbook, Data, Error, Range, Reader, SheetType, Sheets};
 use file_format::FileFormat;
 use indicatif::HumanCount;
 use log::info;
-use rayon::prelude::{ParallelIterator, ParallelSlice};
+use rayon::prelude::{IndexedParallelIterator, ParallelIterator, ParallelSlice};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -727,12 +727,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let keep_zero_time = args.flag_keep_zero_time;
     let formula_get_value_error = "cannot get formula".to_string();
 
-    let processed_rows: Vec<Vec<csv::StringRecord>> = rows
-        .par_chunks(chunk_size)
+    let mut processed_rows: Vec<Vec<csv::StringRecord>> = Vec::with_capacity(row_count);
+
+    rows.par_chunks(chunk_size)
         .map(|chunk| {
             // amortize allocations
             let mut record = csv::StringRecord::with_capacity(500, col_count);
-            let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
+            let mut trimmed_record = if trim {
+                csv::StringRecord::with_capacity(500, col_count)
+            } else {
+                csv::StringRecord::new()
+            };
             let mut float_val;
             let mut work_date;
             let mut ryu_buffer = ryu::Buffer::new();
@@ -850,8 +855,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             trimmed_record.push_field(field);
                         }
                     });
-                    record.clone_from(&trimmed_record);
-                    trimmed_record.clear();
+                    record = std::mem::take(&mut trimmed_record);
                 }
 
                 // we use mem::take here to avoid a clone/allocation of the record
@@ -861,7 +865,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             processed_chunk
         })
-        .collect();
+        .collect_into_vec(&mut processed_rows);
 
     // rayon collect() guarantees original order,
     // so we can just write results for each chunk in order
