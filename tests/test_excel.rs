@@ -1381,7 +1381,7 @@ fn excel_empty_sheet2_message() {
     cmd.arg("--sheet").arg("Sheet1").arg(xls_file);
 
     let got = wrk.output_stderr(&mut cmd);
-    assert_eq!(got, "\"Sheet1\" sheet is empty.\n");
+    assert_eq!(got, "\"Sheet: Sheet1 \"is empty.\n");
     wrk.assert_err(&mut cmd);
 }
 

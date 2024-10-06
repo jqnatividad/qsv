@@ -91,6 +91,10 @@ Excel options:
                                
                                All other Excel options are ignored.
                                [default: none]
+    --table <table>            An Excel table to extract to a CSV. Only valid for XLSX files.
+                               The --sheet option is ignored as a table could be in any sheet.
+                               Overrides --range option.
+    --range <range>            An Excel format range, like C:T or C3:T25, to extract to the CSV.
     --error-format <format>    The format to use when formatting error cells.
                                There are 3 formats:
                                  - "code": return the error code.
@@ -110,7 +114,6 @@ Excel options:
                                return the date as if no date-format was specified.
      --keep-zero-time          Keep the time part of a date-time field if it is 00:00:00.
                                By default, qsv will remove the time part if it is 00:00:00.
-     --range <range>           An Excel format range, like C:T or C3:T25, to extract to the CSV.
      -j, --jobs <arg>          The number of jobs to run in parallel.
                                When not set, the number of jobs is set to the number of CPUs detected.
 
@@ -142,6 +145,8 @@ struct Args {
     flag_sheet:          String,
     flag_metadata:       String,
     flag_error_format:   String,
+    flag_table:          Option<String>,
+    flag_range:          Option<String>,
     flag_flexible:       bool,
     flag_trim:           bool,
     flag_output:         Option<String>,
@@ -149,7 +154,6 @@ struct Args {
     flag_quiet:          bool,
     flag_date_format:    Option<String>,
     flag_keep_zero_time: bool,
-    flag_range:          String,
     flag_jobs:           Option<usize>,
 }
 
@@ -168,6 +172,14 @@ enum ErrorFormat {
     Code,
     Formula,
     Both,
+}
+
+#[derive(PartialEq)]
+enum ExportMode {
+    Table,
+    Range,
+    Sheet,
+    NothingToExport,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -308,10 +320,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .unwrap_or_default()
         .to_ascii_lowercase();
 
-    let requested_range = args.flag_range.to_lowercase();
+    // let requested_range = args.flag_range.to_lowercase();
+    // let mut xlsxworkbook: Option<calamine::Xlsx<std::io::BufReader<std::fs::File>>> = None;
 
     let mut ods_flag = false;
-    let mut workbook = match (format).as_str() {
+    let mut sheets = match (format).as_str() {
         "xls" | "xla" => Sheets::Xls(open_workbook(path).map_err(Error::Xls)?),
         "xlsx" | "xlsm" => Sheets::Xlsx(open_workbook(path).map_err(Error::Xlsx)?),
         "xlsb" => Sheets::Xlsb(open_workbook(path).map_err(Error::Xlsb)?),
@@ -327,7 +340,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         },
     };
 
-    let sheet_names = workbook.sheet_names();
+    let sheet_names = sheets.sheet_names();
     if sheet_names.is_empty() {
         return fail!("No sheets found.");
     }
@@ -373,11 +386,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 || metadata_mode == MetadataMode::ShortJSON
             {
                 Range::empty()
-            } else if let Some(result) = workbook.worksheet_range_at(i) {
+            } else if let Some(result) = sheets.worksheet_range_at(i) {
                 match result {
                     Ok(result) => result,
                     Err(e) => {
-                        if workbook.sheets_metadata()[i].typ == SheetType::ChartSheet {
+                        if sheets.sheets_metadata()[i].typ == SheetType::ChartSheet {
                             // return an empty range for ChartSheet
                             Range::empty()
                         } else {
@@ -439,8 +452,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let sheetmetadata_struct = SheetMetadata {
                 index: i,
                 name: sheet_name.to_string(),
-                typ: format!("{:?}", workbook.sheets_metadata()[i].typ),
-                visible: format!("{:?}", workbook.sheets_metadata()[i].visible),
+                typ: format!("{:?}", sheets.sheets_metadata()[i].typ),
+                visible: format!("{:?}", sheets.sheets_metadata()[i].visible),
                 headers: header_vec,
                 num_columns,
                 num_rows,
@@ -560,11 +573,36 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // --------------------------------------------------------------------
     // we're not exporting metadata, we're exporting the spreadsheet to CSV
 
+    // check if a table is being requested
+    let table = if let Some(ref requested_table) = args.flag_table {
+        if format == "xlsx" {
+            let mut xlsx_workbook: calamine::Xlsx<_> = open_workbook(path).map_err(Error::Xlsx)?;
+            xlsx_workbook.load_tables().map_err(Error::Xlsx)?;
+            let table_names = xlsx_workbook.table_names();
+            if !table_names.contains(&&requested_table) {
+                return fail_clierror!(
+                    "{requested_table} table not found. Available tables are {table_names:?}"
+                );
+            };
+            Some(
+                xlsx_workbook
+                    .table_by_name(&requested_table)
+                    .map_err(Error::Xlsx)?,
+            )
+        } else {
+            return fail_incorrectusage_clierror!("--table is only valid for XLSX files");
+        }
+    } else {
+        None
+    };
+
     // convert sheet_names to lowercase so we can do a case-insensitive compare
     let lower_sheet_names: Vec<String> = sheet_names.iter().map(|s| s.to_lowercase()).collect();
 
     // if --sheet name was passed, see if its a valid sheet name.
-    let mut sheet = if lower_sheet_names.contains(&args.flag_sheet.to_lowercase()) {
+    let mut sheet = if table.is_some() {
+        String::new()
+    } else if lower_sheet_names.contains(&args.flag_sheet.to_lowercase()) {
         args.flag_sheet
     } else {
         // otherwise, if --sheet is a number, its a zero-based index, fetch it
@@ -604,45 +642,72 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     .to_lowercase();
 
-    let sheet_index = if let Some(idx) = lower_sheet_names.iter().position(|s| *s == sheet) {
+    let sheet_index = if table.is_some() {
+        0
+    } else if let Some(idx) = lower_sheet_names.iter().position(|s| *s == sheet) {
         // set to actual name of the sheet, not the one passed using the --sheet option,
         // as we process the option case insensitively
         // safety: it's safe to use index access here because lower_sheet_names is a lowercase copy
         // of sheet_names
         sheet.clone_from(&sheet_names[idx]);
+        let sheet_type = sheets.sheets_metadata()[idx].typ;
+        if sheet_type != SheetType::WorkSheet {
+            return fail_incorrectusage_clierror!(
+                "Can only export Worksheets. {sheet} is a {sheet_type:?}."
+            );
+        }
         idx
     } else {
         return fail_clierror!("Cannot get sheet index for {sheet}");
     };
 
-    let sheet_type = workbook.sheets_metadata()[sheet_index].typ;
-    if sheet_type != SheetType::WorkSheet {
-        return fail_incorrectusage_clierror!(
-            "Can only export Worksheets. {sheet} is a {sheet_type:?}."
-        );
-    }
-
-    let mut range = if let Some(result) = workbook.worksheet_range_at(sheet_index) {
-        result?
+    let export_mode: ExportMode;
+    let table_headers;
+    let range: Range<Data> = if let Some(table) = table {
+        export_mode = ExportMode::Table;
+        table_headers = table.columns().to_vec();
+        table.data().to_owned()
     } else {
-        Range::empty()
-    };
-
-    if !requested_range.is_empty() {
-        info!("using range: {requested_range}");
-        let parsed_range = RequestedRange::from_string(&requested_range, range.get_size())?;
-        info!(
-            "Range start: {} {}",
-            parsed_range.start.0, parsed_range.start.1
-        );
-        info!("Range end: {} {}", parsed_range.end.0, parsed_range.end.1);
-        if parsed_range.start < range.start().unwrap_or((0, 0))
-            || parsed_range.end > range.end().unwrap_or((0, 0))
-        {
-            return fail_clierror!("Cannot retrieve range {requested_range}: larger than sheet");
+        table_headers = vec![];
+        if let Some(ref requested_range) = args.flag_range {
+            export_mode = ExportMode::Range;
+            info!("using range: {requested_range}");
+            let sheet_range = if let Some(result) = sheets.worksheet_range_at(sheet_index) {
+                result?
+            } else {
+                Range::empty()
+            };
+            let parsed_range =
+                RequestedRange::from_string(&requested_range, sheet_range.get_size())?;
+            info!(
+                "Range start: {} {}",
+                parsed_range.start.0, parsed_range.start.1
+            );
+            info!("Range end: {} {}", parsed_range.end.0, parsed_range.end.1);
+            if parsed_range.start < sheet_range.start().unwrap_or((0, 0))
+                || parsed_range.end > sheet_range.end().unwrap_or((0, 0))
+            {
+                return fail_clierror!(
+                    "Cannot retrieve range {requested_range}: larger than sheet"
+                );
+            }
+            let range_result = sheet_range.range(parsed_range.start, parsed_range.end);
+            if range_result.is_empty() {
+                return fail_clierror!(
+                    "\"{requested_range}\" range in sheet \"{sheet}\" is empty."
+                );
+            }
+            range_result
+        } else {
+            if let Some(result) = sheets.worksheet_range_at(sheet_index) {
+                export_mode = ExportMode::Sheet;
+                result?
+            } else {
+                export_mode = ExportMode::NothingToExport;
+                Range::empty()
+            }
         }
-        range = range.range(parsed_range.start, parsed_range.end);
-    }
+    };
 
     let (row_count, col_count) = range.get_size();
 
@@ -653,10 +718,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     if row_count == 0 {
-        if !requested_range.is_empty() {
-            return fail_clierror!("\"{requested_range}\" range in sheet \"{sheet}\" is empty.");
-        }
-        return fail_clierror!("\"{sheet}\" sheet is empty.");
+        let msg = match export_mode {
+            ExportMode::Table => format!("Table: {:?} ", args.flag_table),
+            ExportMode::Sheet => format!("Sheet: {sheet} "),
+            ExportMode::Range => format!("Range: {:?} ", args.flag_range),
+            ExportMode::NothingToExport => String::new(),
+        };
+        return fail_clierror!("\"{msg}\"is empty.");
     }
     // there are rows to export
     let mut rows_iter = range.rows();
@@ -668,7 +736,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sheet_formulas = if error_format == ErrorFormat::Code {
         Range::empty()
     } else {
-        workbook.worksheet_formula(&sheet)?
+        sheets.worksheet_formula(&sheet)?
     };
 
     // amortize allocations
@@ -677,7 +745,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // get headers
     info!("exporting sheet ({sheet})... processing first row as header...");
-    let headers = range.headers().unwrap_or_default();
+    let headers = if export_mode != ExportMode::Table {
+        range.headers().unwrap_or_default()
+    } else {
+        table_headers
+    };
     for header in headers {
         record.push_field(&header);
     }
@@ -878,10 +950,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     wtr.flush()?;
 
     if !args.flag_quiet {
+        let msg = match export_mode {
+            ExportMode::Table => format!("Table: \"{}\"", args.flag_table.unwrap()),
+            ExportMode::Range => {
+                format!("Sheet: \"{sheet}\" Range:\"{}\"", args.flag_range.unwrap())
+            },
+            ExportMode::Sheet => format!("\"{sheet}\" sheet"),
+            ExportMode::NothingToExport => String::new(),
+        };
         winfo!(
             "{}",
             format!(
-                "{} {}-column rows exported from \"{sheet}\" sheet",
+                "{} {}-column rows exported from {msg}",
                 HumanCount(row_count.saturating_sub(1) as u64),
                 HumanCount(col_count as u64),
             )

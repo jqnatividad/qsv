@@ -293,7 +293,7 @@ dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_
 grex = { git = "https://github.com/pemistahl/grex", rev = "ff8533d" }
 
 # use calamine 0.25.0 with unreleased fixes and select clippy lints
-calamine = { git = "https://github.com/tafia/calamine", rev = "247c080" }
+calamine = { git = "https://github.com/tafia/calamine", rev = "06a1093" }
 
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
