@@ -1179,8 +1179,8 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         &args.flag_language,
                         min_score,
                         k_weight,
-                        &country_filter_list,
-                        &admin1_filter_list,
+                        country_filter_list.as_ref(),
+                        admin1_filter_list.as_ref(),
                         &column_values,
                         &mut record,
                     );
@@ -1212,8 +1212,8 @@ async fn geocode_main(args: Args) -> CliResult<()> {
                         &args.flag_language,
                         min_score,
                         k_weight,
-                        &country_filter_list,
-                        &admin1_filter_list,
+                        country_filter_list.as_ref(),
+                        admin1_filter_list.as_ref(),
                         &column_values,
                         &mut record,
                     );
@@ -1423,8 +1423,8 @@ fn search_index(
     lang_lookup: &str,
     min_score: Option<f32>,
     k: Option<f32>,
-    country_filter_list: &Option<Vec<String>>,
-    admin1_filter_list: &Option<Vec<Admin1Filter>>,
+    country_filter_list: Option<&Vec<String>>,
+    admin1_filter_list: Option<&Vec<Admin1Filter>>,
     column_values: &[&str], //&Vec<&str>,
     record: &mut csv::StringRecord,
 ) -> Option<String> {
@@ -1432,7 +1432,7 @@ fn search_index(
         let search_result: Vec<&CitiesRecord>;
         let cityrecord = if admin1_filter_list.is_none() {
             // no admin1 filter, run a search for 1 result (top match)
-            search_result = engine.suggest(cell, 1, min_score, country_filter_list.as_deref());
+            search_result = engine.suggest(cell, 1, min_score, country_filter_list.map(|v| &**v));
             let Some(cr) = search_result.into_iter().next() else {
                 // no results, so return early with None
                 return None;
@@ -1444,7 +1444,7 @@ fn search_index(
                 cell,
                 SUGGEST_ADMIN1_LIMIT,
                 min_score,
-                country_filter_list.as_deref(),
+                country_filter_list.map(|v| &**v),
             );
 
             // first, get the first result and store that in cityrecord
@@ -1559,7 +1559,8 @@ fn search_index(
         let lat = loccaps[1].to_string().parse::<f32>().unwrap_or_default();
         let long = loccaps[2].to_string().parse::<f32>().unwrap_or_default();
         if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&long) {
-            let search_result = engine.reverse((lat, long), 1, k, country_filter_list.as_deref());
+            let search_result =
+                engine.reverse((lat, long), 1, k, country_filter_list.map(|v| &**v));
             let cityrecord = (match search_result {
                 Some(search_result) => search_result.into_iter().next().map(|ri| ri.city),
                 None => return None,
