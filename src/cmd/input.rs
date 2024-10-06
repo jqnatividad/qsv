@@ -132,7 +132,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         args.flag_comment.map(|char| char as u8)
     };
 
-    let mut rconfig = Config::new(&args.arg_input)
+    let mut rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(true)
         .quote(args.flag_quote.as_byte())
@@ -141,7 +141,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_auto_skip {
         std::env::remove_var("QSV_SNIFF_PREAMBLE");
     }
-    let mut wconfig = Config::new(&args.flag_output);
+    let mut wconfig = Config::new(args.flag_output.as_ref());
 
     if let Some(escape) = args.flag_escape {
         rconfig = rconfig.escape(Some(escape.as_byte())).double_quote(false);

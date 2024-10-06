@@ -146,14 +146,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         None => None,
     };
 
-    let rconfig = Config::new(&args.arg_input)
+    let rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .flexible(true);
 
     let mut sample_size = args.arg_sample_size;
 
-    let mut wtr = Config::new(&args.flag_output)
+    let mut wtr = Config::new(args.flag_output.as_ref())
         .delimiter(args.flag_delimiter)
         .writer()?;
 

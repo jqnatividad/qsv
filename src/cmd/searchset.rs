@@ -184,14 +184,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .build()?;
     debug!("Successfully compiled regex set!");
 
-    let rconfig = Config::new(&args.arg_input)
+    let rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .select(args.flag_select);
 
     let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
-    let mut unmatched_wtr = Config::new(&args.flag_unmatched_output).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
+    let mut unmatched_wtr = Config::new(args.flag_unmatched_output.as_ref()).writer()?;
 
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;

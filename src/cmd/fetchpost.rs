@@ -402,7 +402,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     log::info!("Cache Type: {cache_type:?}");
 
-    let mut rconfig = Config::new(&args.arg_input)
+    let mut rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .trim(csv::Trim::All)
         .no_headers(args.flag_no_headers);
@@ -411,12 +411,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = if args.flag_new_column.is_some() {
         // when adding a new column for the response, the output
         // is a regular CSV file
-        Config::new(&args.flag_output).writer()?
+        Config::new(args.flag_output.as_ref()).writer()?
     } else {
         // otherwise, the output is a JSONL file. So we need to configure
         // the csv writer so it doesn't double double quote the JSON response
         // and its flexible (i.e. "column counts are different row to row")
-        Config::new(&args.flag_output)
+        Config::new(args.flag_output.as_ref())
             .quote_style(csv::QuoteStyle::Never)
             .flexible(true)
             .writer()?
@@ -439,7 +439,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // validate column-list is a list of valid column names
-    let cl_config = Config::new(&args.arg_input)
+    let cl_config = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .trim(csv::Trim::All)
         .no_headers(args.flag_no_headers)
@@ -598,7 +598,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let report_path;
     if report == ReportKind::None {
         // no report, point report_wtr to /dev/null (AKA sink)
-        report_wtr = Config::new(&Some("sink".to_string())).writer()?;
+        report_wtr = Config::new(Some("sink".to_string()).as_ref()).writer()?;
         report_path = String::new();
     } else {
         report_path = args
@@ -606,7 +606,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .clone()
             .unwrap_or_else(|| "stdin.csv".to_string());
 
-        report_wtr = Config::new(&Some(report_path.clone() + FETCHPOST_REPORT_SUFFIX)).writer()?;
+        report_wtr =
+            Config::new(Some(report_path.clone() + FETCHPOST_REPORT_SUFFIX).as_ref()).writer()?;
         let mut report_headers = if report == ReportKind::Detailed {
             headers.clone()
         } else {

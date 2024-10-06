@@ -110,7 +110,7 @@ struct WidthStats {
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let conf = Config::new(&args.arg_input)
+    let conf = Config::new(args.arg_input.as_ref())
         .no_headers(args.flag_no_headers)
         // we also want to count the quotes when computing width
         .quoting(!args.flag_width || !args.flag_width_no_delims)

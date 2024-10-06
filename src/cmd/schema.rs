@@ -561,7 +561,7 @@ fn generate_string_patterns(
     args: &util::SchemaArgs,
     properties_map: &Map<String, Value>,
 ) -> CliResult<AHashMap<String, String>> {
-    let rconfig = Config::new(&args.arg_input)
+    let rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .select(args.flag_pattern_columns.clone());

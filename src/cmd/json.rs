@@ -265,7 +265,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .flag_select
         .unwrap_or_else(|| SelectColumns::parse(&first_dict_headers.join(",")).unwrap());
 
-    let sel_rconfig = config::Config::new(&Some(intermediate_csv)).no_headers(false);
+    let sel_rconfig = config::Config::new(Some(intermediate_csv).as_ref()).no_headers(false);
     let mut intermediate_csv_rdr = sel_rconfig.reader()?;
     let byteheaders = intermediate_csv_rdr.byte_headers()?;
 
@@ -273,7 +273,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let sel = sel_rconfig.select(sel_cols).selection(byteheaders)?;
     let mut read_record = csv::ByteRecord::new();
     let mut write_record = csv::ByteRecord::new();
-    let mut final_csv_wtr = config::Config::new(&args.flag_output)
+    let mut final_csv_wtr = config::Config::new(args.flag_output.as_ref())
         .no_headers(false)
         .writer()?;
     final_csv_wtr.write_record(sel.iter().map(|&i| &byteheaders[i]))?;

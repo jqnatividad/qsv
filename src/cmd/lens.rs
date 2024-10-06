@@ -69,7 +69,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // we do config here to get the delimiter, just in case
     // QSV_SNIFF_DELIMITER or QSV_DELIMITER is set
-    let config: Config = Config::new(&Some(input));
+    let config: Config = Config::new(Some(input).as_ref());
 
     if let Some(delimiter) = &args.flag_delimiter {
         lens_args.extend_from_slice(&["--delimiter".to_string(), delimiter.to_string()]);

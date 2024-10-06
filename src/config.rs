@@ -101,12 +101,12 @@ pub trait SeekRead: io::Seek + io::Read {}
 impl<T: io::Seek + io::Read> SeekRead for T {}
 
 impl Config {
-    pub fn new(path: &Option<String>) -> Config {
+    pub fn new(path: Option<&String>) -> Config {
         let default_delim = match env::var("QSV_DEFAULT_DELIMITER") {
             Ok(delim) => Delimiter::decode_delimiter(&delim).unwrap().as_byte(),
             _ => b',',
         };
-        let (path, mut delim, snappy) = match *path {
+        let (path, mut delim, snappy) = match path {
             None => (None, default_delim, false),
             // WIP: support remote files; currently only http(s) is supported
             // Some(ref s) if s.starts_with("http") && Url::parse(s).is_ok() => {
@@ -124,7 +124,7 @@ impl Config {
             //     util::download_file()
             //     (Some(PathBuf::from(s)), delim, snappy)
             // },
-            Some(ref s) if &**s == "-" => (None, default_delim, false),
+            Some(s) if s == "-" => (None, default_delim, false),
             Some(ref s) => {
                 let path = PathBuf::from(s);
                 let (file_extension, delim, snappy) = get_delim_by_extension(&path, default_delim);

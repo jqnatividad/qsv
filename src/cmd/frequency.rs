@@ -175,7 +175,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         util::mem_file_check(&path, false, args.flag_memcheck)?;
     }
 
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
     let (headers, tables) = match args.rconfig().indexed()? {
         Some(ref mut idx) if util::njobs(args.flag_jobs) > 1 => args.parallel_ftables(idx),
         _ => args.sequential_ftables(),
@@ -273,7 +273,7 @@ type FTables = Vec<Frequencies<Vec<u8>>>;
 
 impl Args {
     pub fn rconfig(&self) -> Config {
-        Config::new(&self.arg_input)
+        Config::new(self.arg_input.as_ref())
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
             .select(self.flag_select.clone())

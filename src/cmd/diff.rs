@@ -134,11 +134,11 @@ struct Args {
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
 
-    let rconfig_left = Config::new(&args.arg_input_left)
+    let rconfig_left = Config::new(args.arg_input_left.as_ref())
         .delimiter(args.flag_delimiter_left)
         .no_headers(args.flag_no_headers_left);
 
-    let rconfig_right = Config::new(&args.arg_input_right)
+    let rconfig_right = Config::new(args.arg_input_right.as_ref())
         .delimiter(args.flag_delimiter_right)
         .no_headers(args.flag_no_headers_right);
 
@@ -244,7 +244,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         })
         .transpose()?;
 
-    let wtr = Config::new(&args.flag_output)
+    let wtr = Config::new(args.flag_output.as_ref())
         .delimiter(args.flag_delimiter_output)
         .writer()?;
 

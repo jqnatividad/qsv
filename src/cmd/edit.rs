@@ -63,9 +63,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let no_headers = args.flag_no_headers;
 
     // Build the CSV reader and iterate over each record.
-    let conf = Config::new(&input).no_headers(true);
+    let conf = Config::new(input.as_ref()).no_headers(true);
     let mut rdr = conf.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
 
     let headers = rdr.headers()?;
     let mut column_index: Option<usize> = None;

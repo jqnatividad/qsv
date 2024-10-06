@@ -336,7 +336,7 @@ impl Args {
         let dir = Path::new(&self.arg_outdir);
         let path = dir.join(self.flag_filename.filename(&format!("{start:0>width$}")));
         let spath = Some(path.display().to_string());
-        let mut wtr = Config::new(&spath).writer()?;
+        let mut wtr = Config::new(spath.as_ref()).writer()?;
         if !self.rconfig().no_headers {
             wtr.write_record(headers)?;
         }
@@ -344,7 +344,7 @@ impl Args {
     }
 
     fn rconfig(&self) -> Config {
-        Config::new(&self.arg_input)
+        Config::new(self.arg_input.as_ref())
             .delimiter(self.flag_delimiter)
             .no_headers(self.flag_no_headers)
     }

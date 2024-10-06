@@ -138,7 +138,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .dfa_size_limit(args.flag_dfa_size_limit * (1 << 20))
         .build()?;
 
-    let rconfig = Config::new(&args.arg_input)
+    let rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .select(args.flag_select);
@@ -152,7 +152,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let flag_not_one = args.flag_not_one;
 
     let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
 
     let mut json_wtr = if flag_json {
         util::create_json_writer(args.flag_output.as_ref(), DEFAULT_WTR_BUFFER_CAPACITY * 4)?

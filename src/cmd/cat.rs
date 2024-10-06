@@ -158,7 +158,7 @@ impl Args {
 
     fn cat_rows(&self) -> CliResult<()> {
         let mut row = csv::ByteRecord::new();
-        let mut wtr = Config::new(&self.flag_output)
+        let mut wtr = Config::new(self.flag_output.as_ref())
             .flexible(self.flag_flexible)
             .writer()?;
         let mut rdr;
@@ -254,7 +254,9 @@ impl Args {
         // set flexible to true for faster writes
         // as we know that all columns are already in columns_global and we don't need to
         // validate that the number of columns are the same every time we write a row
-        let mut wtr = Config::new(&self.flag_output).flexible(true).writer()?;
+        let mut wtr = Config::new(self.flag_output.as_ref())
+            .flexible(true)
+            .writer()?;
         let mut new_row = csv::ByteRecord::with_capacity(500, num_columns_global);
 
         // write the header
@@ -276,7 +278,7 @@ impl Args {
 
         for conf in self.configs()? {
             if conf.is_stdin() {
-                rdr = Config::new(&Some(stdin_tempfilename.to_string_lossy().to_string()))
+                rdr = Config::new(Some(stdin_tempfilename.to_string_lossy().to_string()).as_ref())
                     .reader()?;
                 conf_path = Some(stdin_tempfilename.clone());
             } else {
@@ -361,7 +363,7 @@ impl Args {
     }
 
     fn cat_columns(&self) -> CliResult<()> {
-        let mut wtr = Config::new(&self.flag_output).writer()?;
+        let mut wtr = Config::new(self.flag_output.as_ref()).writer()?;
         let mut rdrs = self
             .configs()?
             .into_iter()

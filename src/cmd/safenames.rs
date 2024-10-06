@@ -161,10 +161,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .map(str::to_lowercase)
         .collect();
 
-    let rconfig = Config::new(&args.arg_input).delimiter(args.flag_delimiter);
+    let rconfig = Config::new(args.arg_input.as_ref()).delimiter(args.flag_delimiter);
 
     let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
     let old_headers = rdr.byte_headers()?;
 
     let mut headers = csv::StringRecord::from_byte_record_lossy(old_headers.clone());

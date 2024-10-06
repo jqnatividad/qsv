@@ -339,7 +339,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Ordering::Relaxed,
     );
 
-    let rconfig = Config::new(&args.arg_input)
+    let rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers);
 
@@ -633,7 +633,7 @@ fn sequential_mode(
     globals.raw_set("cols", "{}")?;
 
     let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
     let mut headers = rdr.headers()?.clone();
     let mut remap_headers = csv::StringRecord::new();
     let mut new_column_count = 0_u8;
@@ -963,7 +963,7 @@ fn random_access_mode(
         row_count += 1;
     }
 
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
     let mut headers = idx_file.headers()?.clone();
     let mut remap_headers = csv::StringRecord::new();
     let mut new_column_count = 0_u8;
@@ -1423,7 +1423,7 @@ fn create_index(arg_input: Option<&String>) -> Result<bool, CliError> {
     let pidx = util::idx_path(Path::new(&input));
     debug!("Creating index file {pidx:?} for {input:?}.");
 
-    let rconfig = Config::new(&Some(input.to_string()));
+    let rconfig = Config::new(Some((*input).to_string()).as_ref());
     let mut rdr = rconfig.reader_file()?;
     let mut wtr =
         io::BufWriter::with_capacity(DEFAULT_WTR_BUFFER_CAPACITY, fs::File::create(pidx)?);
@@ -1715,7 +1715,7 @@ fn setup_helpers(
             #[allow(unused_assignments)]
             let mut record = csv::StringRecord::new();
 
-            let conf = Config::new(&Some(filepath.clone()))
+            let conf = Config::new(Some(filepath.clone()).as_ref())
                 .delimiter(delimiter)
                 .comment(Some(b'#'))
                 .no_headers(false);
@@ -2347,7 +2347,7 @@ fn setup_helpers(
         let lookup_table = luau.create_table()?;
         let mut record: csv::StringRecord;
 
-        let conf = Config::new(&Some(lookup_table_uri.clone()))
+        let conf = Config::new(Some(lookup_table_uri.clone()).as_ref())
             .delimiter(delimiter)
             .comment(Some(b'#'))
             .no_headers(false);

@@ -532,7 +532,7 @@ pub fn many_configs(
     let confs = inps
         .into_iter()
         .map(|p| {
-            Config::new(&Some(p))
+            Config::new(Some(p).as_ref())
                 .delimiter(delim)
                 .no_headers(no_headers)
                 .flexible(flexible)
@@ -776,7 +776,7 @@ impl FilenameTemplate {
             create_dir_all_threadsafe(parent)?;
         }
         let spath = Some(full_path.display().to_string());
-        Config::new(&spath).writer()
+        Config::new(spath.as_ref()).writer()
     }
 }
 

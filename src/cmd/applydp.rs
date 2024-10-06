@@ -260,13 +260,13 @@ const NULL_VALUE: &str = "<null>";
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
-    let rconfig = Config::new(&args.arg_input)
+    let rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
         .no_headers(args.flag_no_headers)
         .select(args.arg_column);
 
     let mut rdr = rconfig.reader()?;
-    let mut wtr = Config::new(&args.flag_output).writer()?;
+    let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
 
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
@@ -310,7 +310,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         dynfmt_fields.sort_unstable();
 
         // now, get the indices of the columns for the lookup vec
-        let (safe_headers, _) = util::safe_header_names(&headers, false, false, &None, "", true);
+        let (safe_headers, _) = util::safe_header_names(&headers, false, false, None, "", true);
         for (i, field) in safe_headers.iter().enumerate() {
             if dynfmt_fields.binary_search(&field.as_str()).is_ok() {
                 let field_with_curly = format!("{{{field}}}");
