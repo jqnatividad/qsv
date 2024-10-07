@@ -6,6 +6,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.136.0] - 2024-10-07
+
+## What's Changed
+* Upload artifact fix by @tino097 in https://github.com/jqnatividad/qsv/pull/2168
+* build(deps): bump flate2 from 1.0.33 to 1.0.34 by @dependabot in https://github.com/jqnatividad/qsv/pull/2171
+* 2172 enum new column by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2173
+* build(deps): bump tempfile from 3.12.0 to 3.13.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2175
+* build(deps): bump regex from 1.10.6 to 1.11.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2176
+* build(deps): bump jsonschema from 0.20.0 to 0.21.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2177
+* Automatically determine optimal batch size by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2178
+* `schema`: add `const` support; fix `enum` so it only adds a list when the number of unique values > `--enum-threshold` by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2180
+* Add signing step to qsv MSI installer GitHub Action by @rzmk in https://github.com/jqnatividad/qsv/pull/2182
+* build(deps): bump reqwest from 0.12.7 to 0.12.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/2183
+* build(deps): bump hashbrown from 0.14.5 to 0.15.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2186
+* Update deb readme by @tino097 in https://github.com/jqnatividad/qsv/pull/2187
+* build(deps): bump flexi_logger from 0.29.0 to 0.29.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2189
+* build(deps): bump simple-expand-tilde from 0.4.2 to 0.4.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2190
+* build(deps): bump jsonschema from 0.22.1 to 0.22.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2191
+* apply new `clippy::ref_option` lint to Config::new API by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2192
+* build(deps): bump sysinfo from 0.31.4 to 0.32.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2193
+* `excel`: new `--table` option for XLSX files by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2194
+* `excel`: expanded range and metadata options by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2195
+* build(deps): bump flexi_logger from 0.29.1 to 0.29.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2196
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.135.0...0.136.0
+
 ## [0.135.0] - 2024-09-24
 
 ### Highlights
