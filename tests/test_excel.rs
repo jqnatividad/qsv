@@ -878,11 +878,223 @@ fn excel_metadata_pretty_json() {
     }
   ],
   "names": [
-    "_xlfn._FV"
+    {
+      "name": "_xlfn._FV",
+      "formula": "Unsupported ptg: 1c"
+    }
   ],
   "names_count": 1,
   "tables": [],
   "tables_count": 0
+}"#;
+    assert!(got.ends_with(expected));
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_metadata_xlsx_ranges_tables_pretty_json() {
+    let wrk = Workdir::new("excel_metadata");
+
+    let xls_file = wrk.load_test_file("excel-xlsx.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--metadata").arg("J").arg(xls_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = r#"excel-xlsx.xlsx",
+  "format": "Excel: xlsx",
+  "num_sheets": 6,
+  "sheet": [
+    {
+      "index": 0,
+      "name": "Sheet1",
+      "typ": "WorkSheet",
+      "visible": "Visible",
+      "headers": [
+        "URL",
+        "City",
+        "number",
+        "date"
+      ],
+      "num_columns": 4,
+      "num_rows": 9,
+      "safe_headers": [
+        "URL",
+        "City",
+        "number",
+        "date"
+      ],
+      "safe_headers_count": 4,
+      "unsafe_headers": [],
+      "unsafe_headers_count": 0,
+      "duplicate_headers_count": 0
+    },
+    {
+      "index": 1,
+      "name": "safe_header_name_test",
+      "typ": "WorkSheet",
+      "visible": "Visible",
+      "headers": [
+        "col1",
+        "  col with leading and trailing spaces.  ",
+        "123_starts_with_123",
+        "With * / special ? ! Characters. ",
+        "col1",
+        "col1",
+        "The quick BROWN fox with a very long column name is now jumping over a lazy dog by the zigzag quarry site",
+        "!!!date???"
+      ],
+      "num_columns": 8,
+      "num_rows": 6,
+      "safe_headers": [
+        "col1"
+      ],
+      "safe_headers_count": 1,
+      "unsafe_headers": [
+        "  col with leading and trailing spaces.  ",
+        "123_starts_with_123",
+        "With * / special ? ! Characters. ",
+        "The quick BROWN fox with a very long column name is now jumping over a lazy dog by the zigzag quarry site",
+        "!!!date???"
+      ],
+      "unsafe_headers_count": 5,
+      "duplicate_headers_count": 2
+    },
+    {
+      "index": 2,
+      "name": "date_test",
+      "typ": "WorkSheet",
+      "visible": "Visible",
+      "headers": [
+        "date",
+        "plaincol"
+      ],
+      "num_columns": 2,
+      "num_rows": 6,
+      "safe_headers": [
+        "date",
+        "plaincol"
+      ],
+      "safe_headers_count": 2,
+      "unsafe_headers": [],
+      "unsafe_headers_count": 0,
+      "duplicate_headers_count": 0
+    },
+    {
+      "index": 3,
+      "name": "data types",
+      "typ": "WorkSheet",
+      "visible": "Visible",
+      "headers": [
+        "int",
+        "float",
+        "bool",
+        "date",
+        "duration",
+        "string",
+        "emojis",
+        "foreign"
+      ],
+      "num_columns": 8,
+      "num_rows": 6,
+      "safe_headers": [
+        "int",
+        "float",
+        "bool",
+        "date",
+        "duration",
+        "string",
+        "emojis",
+        "foreign"
+      ],
+      "safe_headers_count": 8,
+      "unsafe_headers": [],
+      "unsafe_headers_count": 0,
+      "duplicate_headers_count": 0
+    },
+    {
+      "index": 4,
+      "name": "cellerrors",
+      "typ": "WorkSheet",
+      "visible": "Visible",
+      "headers": [
+        "col1",
+        "col 2",
+        "column-3"
+      ],
+      "num_columns": 3,
+      "num_rows": 10,
+      "safe_headers": [
+        "col1",
+        "col 2",
+        "column-3"
+      ],
+      "safe_headers_count": 3,
+      "unsafe_headers": [],
+      "unsafe_headers_count": 0,
+      "duplicate_headers_count": 0
+    },
+    {
+      "index": 5,
+      "name": "Sheet2",
+      "typ": "WorkSheet",
+      "visible": "Visible",
+      "headers": [
+        "col1",
+        "col2",
+        "col3",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "num_columns": 9,
+      "num_rows": 24,
+      "safe_headers": [
+        "col1",
+        "col2",
+        "col3"
+      ],
+      "safe_headers_count": 3,
+      "unsafe_headers": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "unsafe_headers_count": 6,
+      "duplicate_headers_count": 5
+    }
+  ],
+  "names": [
+    {
+      "name": "testname",
+      "formula": "cellerrors!$C$6"
+    },
+    {
+      "name": "TestNamedRange",
+      "formula": "Sheet2!$C$20:$E$24"
+    }
+  ],
+  "names_count": 2,
+  "tables": [
+    {
+      "name": "Table1",
+      "sheet": "Sheet2",
+      "columns": [
+        "tabc1",
+        "tabc2",
+        "tabc3"
+      ],
+      "column_count": 3
+    }
+  ],
+  "tables_count": 1
 }"#;
     assert!(got.ends_with(expected));
     wrk.assert_success(&mut cmd);

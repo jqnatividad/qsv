@@ -87,10 +87,11 @@ Excel options:
                                safe_headers is a list of header with "safe"(database-ready) names.
                                unsafe_headers is a list of headers with "unsafe" names.
                                duplicate_headers_count is a count of duplicate header names.
-                               names is a list of defined names in the workbook.
+                               names is a list of defined names in the workbook, with the associated formula.
                                names_count is the number of defined names in the workbook.
-                               tables is a list of table names in the workbook (XLSX only).
-                               tables_count is the number of tables in the workbook (XLSX only).
+                               tables is a list of tables in the workbook, with sheet where the table
+                               is found, columns and the column_count.  (XLSX only)
+                               tables_count is the number of tables in the workbook.  (XLSX only)
 
                                In CSV(c) mode, the output is in CSV format.
                                In short(s) CSV mode, the output is in CSV format with only the
@@ -231,15 +232,30 @@ impl From<calamine::Error> for CliError {
 }
 
 #[derive(Serialize, Deserialize)]
+
+struct NamesMetadata {
+    name:    String,
+    formula: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct TableMetadata {
+    name:         String,
+    sheet:        String,
+    columns:      Vec<String>,
+    column_count: usize,
+}
+
+#[derive(Serialize, Deserialize)]
 struct MetadataStruct {
     filename:           String,
     canonical_filename: String,
     format:             String,
     num_sheets:         usize,
     sheet:              Vec<SheetMetadata>,
-    names:              Vec<String>,
+    names:              Vec<NamesMetadata>,
     names_count:        usize,
-    tables:             Vec<String>,
+    tables:             Vec<TableMetadata>,
     tables_count:       usize,
 }
 
@@ -393,19 +409,30 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // check if we're exporting workbook metadata only
     if metadata_mode != MetadataMode::None {
         let mut names_vec = vec![];
-        let mut tables_vec = vec![];
-        let mut names_count = 0;
-        let mut tables_count = 0;
+        let mut table_metadata_vec = vec![];
+
         sheets.defined_names().iter().for_each(|name| {
-            names_vec.push(name.0.clone());
-            names_count += 1;
+            names_vec.push(NamesMetadata {
+                name:    name.0.clone(),
+                formula: name.1.clone(),
+            });
         });
 
         if format == "xlsx" {
             let mut xlsx_wb: calamine::Xlsx<_> = open_workbook(path).map_err(Error::Xlsx)?;
             xlsx_wb.load_tables().map_err(Error::Xlsx)?;
-            tables_vec = xlsx_wb.table_names().into_iter().cloned().collect();
-            tables_count = tables_vec.len();
+            let mut columns;
+            let tables_vec: Vec<String> = xlsx_wb.table_names().into_iter().cloned().collect();
+            for table in &tables_vec {
+                let table_metadata = xlsx_wb.table_by_name(table).map_err(Error::Xlsx)?;
+                columns = table_metadata.columns().to_vec();
+                table_metadata_vec.push(TableMetadata {
+                    name: table_metadata.name().to_owned(),
+                    sheet: table_metadata.sheet_name().to_owned(),
+                    column_count: columns.len(),
+                    columns,
+                });
+            }
         }
 
         let mut excelmetadata_struct = MetadataStruct {
@@ -418,10 +445,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             },
             num_sheets,
             sheet: vec![],
+            names_count: names_vec.len(),
             names: names_vec,
-            names_count,
-            tables: tables_vec,
-            tables_count,
+            tables_count: table_metadata_vec.len(),
+            tables: table_metadata_vec,
         };
         let mut metadata_record;
         let sheet_vec = sheet_names;
