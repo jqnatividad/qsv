@@ -3514,8 +3514,7 @@ dependencies = [
 [[package]]
 name = "jsonschema"
 version = "0.22.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0762f81b67c46ac403497420b7f4ae457f6cdbef499d24f101bf4a63c35ddea1"
+source = "git+https://github.com/Stranger6667/jsonschema-rs?rev=cbc446b#cbc446b827e94748a347d5e3dde6ddc3d824e403"
 dependencies = [
  "ahash",
  "anyhow",
@@ -3524,7 +3523,6 @@ dependencies = [
  "email_address",
  "fancy-regex",
  "fraction",
- "getrandom",
  "idna 1.0.2",
  "itoa",
  "num-cmp",
@@ -5973,8 +5971,7 @@ dependencies = [
 [[package]]
 name = "referencing"
 version = "0.22.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43fda277062a68f002ee482f8319d2fcc84be5ff11669cacd74db7ca01f7f36a"
+source = "git+https://github.com/Stranger6667/jsonschema-rs?rev=cbc446b#cbc446b827e94748a347d5e3dde6ddc3d824e403"
 dependencies = [
  "ahash",
  "fluent-uri",
