@@ -303,7 +303,7 @@ jsonschema = { git = "https://github.com/Stranger6667/jsonschema-rs", rev = "cbc
 xlsxwriter = { git = "https://github.com/jqnatividad/xlsxwriter-rs", branch = "bump-bindgen-to-0.70.1" }
 
 # use serde_json with unreleased optimizations
-serde_json = { git = "https://github.com/serde-rs/json", rev = "1faf3a1" }
+serde_json = { git = "https://github.com/serde-rs/json", rev = "faab2e8" }
 
 # use our fork of governor with bumped dashmap dependency
 governor = { git = "https://github.com/jqnatividad/governor", branch = "deps-bump-dashmap" }

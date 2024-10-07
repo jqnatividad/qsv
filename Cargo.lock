@@ -6417,7 +6417,7 @@ dependencies = [
 [[package]]
 name = "serde_json"
 version = "1.0.128"
-source = "git+https://github.com/serde-rs/json?rev=1faf3a1#1faf3a1db661c7fb1f3a9a141efa30fb67e9ab3a"
+source = "git+https://github.com/serde-rs/json?rev=faab2e8#faab2e8d2fcf781a3f77f329df836ffb3aaacfba"
 dependencies = [
  "indexmap",
  "itoa",
