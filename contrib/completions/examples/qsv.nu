@@ -278,6 +278,7 @@ module completions {
     --trim
     --date-format
     --keep-zero-time
+    --table
     --range
     --jobs
     --output

@@ -360,6 +360,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --trim 'trim'
             cand --date-format 'date-format'
             cand --keep-zero-time 'keep-zero-time'
+            cand --table 'table'
             cand --range 'range'
             cand --jobs 'jobs'
             cand --output 'output'

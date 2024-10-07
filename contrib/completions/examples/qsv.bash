@@ -1138,7 +1138,7 @@ _qsv() {
             return 0
             ;;
         qsv__excel)
-            opts="-h --sheet --metadata --error-format --flexible --trim --date-format --keep-zero-time --range --jobs --output --delimiter --quiet --help"
+            opts="-h --sheet --metadata --error-format --flexible --trim --date-format --keep-zero-time --table --range --jobs --output --delimiter --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
