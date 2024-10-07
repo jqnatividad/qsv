@@ -275,10 +275,6 @@ csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-opt
 csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 
-# older lexical-core versions have soundness issues - https://rustsec.org/advisories/RUSTSEC-2023-0086
-# use arrow 53 upstream with unreleased lexical-core fix & other fixes; used by csvlens
-arrow = { git = "https://github.com/apache/arrow-rs", rev = "b809021" }
-
 # use our csvlens fork with latest dependencies, including arrow 53 upstream, with unreleased lexical-core fix
 csvlens = { git = "https://github.com/jqnatividad/csvlens", branch = "dependency-upgrades-lexical-core_fix" }
 
