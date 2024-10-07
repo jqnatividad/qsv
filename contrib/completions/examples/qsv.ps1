@@ -393,6 +393,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--trim', 'trim', [CompletionResultType]::ParameterName, 'trim')
             [CompletionResult]::new('--date-format', 'date-format', [CompletionResultType]::ParameterName, 'date-format')
             [CompletionResult]::new('--keep-zero-time', 'keep-zero-time', [CompletionResultType]::ParameterName, 'keep-zero-time')
+            [CompletionResult]::new('--table', 'table', [CompletionResultType]::ParameterName, 'table')
             [CompletionResult]::new('--range', 'range', [CompletionResultType]::ParameterName, 'range')
             [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
             [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')

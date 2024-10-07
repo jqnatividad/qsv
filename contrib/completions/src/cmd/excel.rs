@@ -9,6 +9,7 @@ pub fn excel_cmd() -> Command {
         arg!(--trim),
         arg!(--"date-format"),
         arg!(--"keep-zero-time"),
+        arg!(--table),
         arg!(--"range"),
         arg!(--jobs),
         arg!(--output),

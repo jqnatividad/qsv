@@ -690,6 +690,9 @@ const completion: Fig.Spec = {
           name: "--keep-zero-time",
         },
         {
+          name: "--table",
+        },
+        {
           name: "--range",
         },
         {

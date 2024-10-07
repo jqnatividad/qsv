@@ -287,6 +287,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand excel" -l flexible
 complete -c qsv -n "__fish_qsv_using_subcommand excel" -l trim
 complete -c qsv -n "__fish_qsv_using_subcommand excel" -l date-format
 complete -c qsv -n "__fish_qsv_using_subcommand excel" -l keep-zero-time
+complete -c qsv -n "__fish_qsv_using_subcommand excel" -l table
 complete -c qsv -n "__fish_qsv_using_subcommand excel" -l range
 complete -c qsv -n "__fish_qsv_using_subcommand excel" -l jobs
 complete -c qsv -n "__fish_qsv_using_subcommand excel" -l output

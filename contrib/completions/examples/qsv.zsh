@@ -392,6 +392,7 @@ _arguments "${_arguments_options[@]}" : \
 '--trim[]' \
 '--date-format[]' \
 '--keep-zero-time[]' \
+'--table[]' \
 '--range[]' \
 '--jobs[]' \
 '--output[]' \
