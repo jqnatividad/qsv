@@ -703,7 +703,9 @@ fn excel_metadata_pretty_json() {
     cmd.arg("--metadata").arg("J").arg(xls_file);
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected: &str = r#""format": "Excel: xls",
+
+    let expected = r#"excel-xls.xls",
+  "format": "Excel: xls",
   "num_sheets": 8,
   "sheet": [
     {
@@ -874,7 +876,13 @@ fn excel_metadata_pretty_json() {
       "unsafe_headers_count": 0,
       "duplicate_headers_count": 0
     }
-  ]
+  ],
+  "names": [
+    "_xlfn._FV"
+  ],
+  "names_count": 1,
+  "tables": [],
+  "tables_count": 0
 }"#;
     assert!(got.ends_with(expected));
     wrk.assert_success(&mut cmd);
@@ -954,7 +962,7 @@ fn ods_metadata_pretty_json() {
     cmd.arg("--metadata").arg("J").arg(xls_file);
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected: &str = r#"excel-ods.ods",
+    let expected = r#"excel-ods.ods",
   "format": "ODS",
   "num_sheets": 1,
   "sheet": [
@@ -978,9 +986,15 @@ fn ods_metadata_pretty_json() {
       "unsafe_headers_count": 0,
       "duplicate_headers_count": 0
     }
-  ]
+  ],
+  "names": [],
+  "names_count": 0,
+  "tables": [],
+  "tables_count": 0
 }"#;
+
     assert!(got.ends_with(expected));
+    // assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
 }
 
@@ -1609,5 +1623,90 @@ fn excel_formula_empty_string_value() {
     let mut cmd = wrk.command("excel");
     cmd.arg(xls_file);
 
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_table_range() {
+    let wrk = Workdir::new("excel_table_range");
+
+    let xlsx_file = wrk.load_test_file("excel-xlsx.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--table").arg("Table1").arg(xlsx_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["tabc1", "tabc2", "tabc3"],
+        svec!["a2", "false", "2.2"],
+        svec!["a3", "true", "3.3"],
+        svec!["a4", "true", "4.4"],
+        svec!["a5", "false", "5.56"],
+        svec!["a6", "true", "0.9999"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_named_range() {
+    let wrk = Workdir::new("excel_named_range");
+
+    let xlsx_file = wrk.load_test_file("excel-xlsx.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("TestNamedRange").arg(xlsx_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["alpha", "1", "5"],
+        svec!["beta", "2.2", "6"],
+        svec!["charlie", "3.3", "7"],
+        svec!["delta", "4.4", "8"],
+        svec!["echo", "5.5", "9"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_absolute_range() {
+    let wrk = Workdir::new("excel_absolute_range");
+
+    let xlsx_file = wrk.load_test_file("excel-xlsx.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("Sheet2!A1:C3").arg(xlsx_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["col1", "col2", "col3"],
+        svec!["1", "e", "1.1"],
+        svec!["2", "d", "2.2"],
+    ];
+
+    assert_eq!(got, expected);
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
+fn excel_absolute_range2() {
+    let wrk = Workdir::new("excel_absolute_range2");
+
+    let xlsx_file = wrk.load_test_file("excel-xlsx.xlsx");
+
+    let mut cmd = wrk.command("excel");
+    cmd.arg("--range").arg("Sheet2!$A$1:$C$3").arg(xlsx_file);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["col1", "col2", "col3"],
+        svec!["1", "e", "1.1"],
+        svec!["2", "d", "2.2"],
+    ];
+
+    assert_eq!(got, expected);
     wrk.assert_success(&mut cmd);
 }

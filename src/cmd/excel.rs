@@ -31,11 +31,23 @@ Export the last sheet (negative index)):
 Export the second to last sheet:
     qsv excel -s -2 input.xls
 
+Export a table in an XLSX file:
+    qsv excel --table "Table1" input.xlsx
+
 Export a range of cells in the first sheet:
     qsv excel --range C3:T25 input.xlsx
 
+Export a named range in the workbook:
+    qsv excel --range MyRange input.xlsx
+
 Export a range of cells in the second sheet:
     qsv excel --range C3:T25 -s 1 input.xlsx
+
+Export a range of cells in a sheet by name.
+Note the range name must be enclosed in single quotes in certain shells
+as it may contain special characters like ! and $:
+    qsv excel --range 'Sheet2!C3:T25' input.xlsx
+    qsv excel --range 'Sheet2!$C$3:$T$25' input.xlsx
 
 Export metadata for all sheets in CSV format:
     qsv excel --metadata c input.xlsx
@@ -67,7 +79,7 @@ Excel options:
     --metadata <c|s|j|J|S>     Outputs workbook metadata in CSV or JSON format:
                                  index, sheet_name, headers, type, visible, num_columns, num_rows,
                                  safe_headers, safe_headers_count, unsafe_headers, unsafe_headers_count
-                                 and duplicate_headers_count.
+                                 and duplicate_headers_count, names, names_count, tables, tables_count.
                                headers is a list of the first row which is presumed to be the header row.
                                type is the sheet type (WorkSheet, DialogSheet, MacroSheet, ChartSheet, Vba).
                                visible is the sheet visibility (Visible, Hidden, VeryHidden).
@@ -75,6 +87,10 @@ Excel options:
                                safe_headers is a list of header with "safe"(database-ready) names.
                                unsafe_headers is a list of headers with "unsafe" names.
                                duplicate_headers_count is a count of duplicate header names.
+                               names is a list of defined names in the workbook.
+                               names_count is the number of defined names in the workbook.
+                               tables is a list of table names in the workbook (XLSX only).
+                               tables_count is the number of tables in the workbook (XLSX only).
 
                                In CSV(c) mode, the output is in CSV format.
                                In short(s) CSV mode, the output is in CSV format with only the
@@ -91,10 +107,12 @@ Excel options:
                                
                                All other Excel options are ignored.
                                [default: none]
-    --table <table>            An Excel table to extract to a CSV. Only valid for XLSX files.
-                               The --sheet option is ignored as a table could be in any sheet.
-                               Overrides --range option.
-    --range <range>            An Excel format range, like C:T or C3:T25, to extract to the CSV.
+
+    --table <table>            An Excel table (case-insensitive) to extract to a CSV.
+                               Only valid for XLSX files. The --sheet option is ignored as a table could
+                               be in any sheet. Overrides --range option.
+    --range <range>            An Excel format range - like RangeName, C:T, C3:T25 or 'Sheet1!C3:T25' to
+                               extract to the CSV. If the range is not found, qsv will exit with an error.
     --error-format <format>    The format to use when formatting error cells.
                                There are 3 formats:
                                  - "code": return the error code.
@@ -127,7 +145,7 @@ Common options:
 
 use std::{cmp, fmt::Write, io::Read, path::PathBuf};
 
-use calamine::{open_workbook, Data, Error, Range, Reader, SheetType, Sheets};
+use calamine::{open_workbook, open_workbook_auto, Data, Error, Range, Reader, SheetType, Sheets};
 use file_format::FileFormat;
 use indicatif::HumanCount;
 use log::info;
@@ -219,6 +237,10 @@ struct MetadataStruct {
     format:             String,
     num_sheets:         usize,
     sheet:              Vec<SheetMetadata>,
+    names:              Vec<String>,
+    names_count:        usize,
+    tables:             Vec<String>,
+    tables_count:       usize,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -230,6 +252,7 @@ struct ShortMetadataStruct {
     sheet:              Vec<ShortSheetMetadata>,
 }
 
+#[derive(Debug)]
 struct RequestedRange {
     // matches args for https://docs.rs/calamine/latest/calamine/struct.Range.html#method.rows
     start: (u32, u32), // upper left, 0 based, row, column
@@ -238,9 +261,11 @@ struct RequestedRange {
 
 impl RequestedRange {
     fn parse_col(col: &str) -> Option<u32> {
-        // takes a string like C3 and returns a 0 indexed column number, 2
+        // takes a string like C3 or $C$3 and returns a 0 indexed column number, 2
         // returns 0 on missing.
 
+        let mut col: String = col.replace('$', "");
+        col.make_ascii_lowercase();
         col.chars()
             .filter(|c| !c.is_ascii_digit())
             .map(|i| u32::from(i) - (u32::from('a') - 1))
@@ -249,8 +274,11 @@ impl RequestedRange {
     }
 
     fn parse_row(row: &str) -> Option<u32> {
-        // takes a string like R32 and returns 0 indexed row number, 31.
+        // takes a string like R32 or $R$32 and returns 0 indexed row number, 31.
         // returns 0 on missing
+
+        let mut row = row.replace('$', "");
+        row.make_ascii_lowercase();
         row.chars()
             .filter(char::is_ascii_digit)
             .collect::<String>()
@@ -320,9 +348,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .unwrap_or_default()
         .to_ascii_lowercase();
 
-    // let requested_range = args.flag_range.to_lowercase();
-    // let mut xlsxworkbook: Option<calamine::Xlsx<std::io::BufReader<std::fs::File>>> = None;
-
     let mut ods_flag = false;
     let mut sheets = match (format).as_str() {
         "xls" | "xla" => Sheets::Xls(open_workbook(path).map_err(Error::Xls)?),
@@ -367,6 +392,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // check if we're exporting workbook metadata only
     if metadata_mode != MetadataMode::None {
+        let mut names_vec = vec![];
+        let mut tables_vec = vec![];
+        let mut names_count = 0;
+        let mut tables_count = 0;
+        sheets.defined_names().iter().for_each(|name| {
+            names_vec.push(name.0.clone());
+            names_count += 1;
+        });
+
+        if format == "xlsx" {
+            let mut xlsx_wb: calamine::Xlsx<_> = open_workbook(path).map_err(Error::Xlsx)?;
+            xlsx_wb.load_tables().map_err(Error::Xlsx)?;
+            tables_vec = xlsx_wb.table_names().into_iter().cloned().collect();
+            tables_count = tables_vec.len();
+        }
+
         let mut excelmetadata_struct = MetadataStruct {
             filename: filename.clone(),
             canonical_filename: canonical_filename.clone(),
@@ -377,6 +418,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             },
             num_sheets,
             sheet: vec![],
+            names: names_vec,
+            names_count,
+            tables: tables_vec,
+            tables_count,
         };
         let mut metadata_record;
         let sheet_vec = sheet_names;
@@ -576,19 +621,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // check if a table is being requested
     let table = if let Some(ref requested_table) = args.flag_table {
         if format == "xlsx" {
-            let mut xlsx_workbook: calamine::Xlsx<_> = open_workbook(path).map_err(Error::Xlsx)?;
-            xlsx_workbook.load_tables().map_err(Error::Xlsx)?;
-            let table_names = xlsx_workbook.table_names();
-            if !table_names.contains(&&requested_table) {
+            let mut xlsx_wb: calamine::Xlsx<_> = open_workbook(path).map_err(Error::Xlsx)?;
+            xlsx_wb.load_tables().map_err(Error::Xlsx)?;
+            let table_names = xlsx_wb.table_names();
+            let mut found_table = String::new();
+            for table_name in &table_names {
+                if table_name.to_lowercase() == requested_table.to_lowercase() {
+                    found_table = (*table_name).to_string();
+                    break;
+                }
+            }
+            if found_table.is_empty() {
                 return fail_clierror!(
-                    "{requested_table} table not found. Available tables are {table_names:?}"
+                    "\"{requested_table}\" table not found. Available tables are {table_names:?}"
                 );
             };
-            Some(
-                xlsx_workbook
-                    .table_by_name(&requested_table)
-                    .map_err(Error::Xlsx)?,
-            )
+            Some(xlsx_wb.table_by_name(&found_table).map_err(Error::Xlsx)?)
         } else {
             return fail_incorrectusage_clierror!("--table is only valid for XLSX files");
         }
@@ -653,7 +701,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         let sheet_type = sheets.sheets_metadata()[idx].typ;
         if sheet_type != SheetType::WorkSheet {
             return fail_incorrectusage_clierror!(
-                "Can only export Worksheets. {sheet} is a {sheet_type:?}."
+                "Can only export Worksheets. \"{sheet}\" is a {sheet_type:?}."
             );
         }
         idx
@@ -672,40 +720,77 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if let Some(ref requested_range) = args.flag_range {
             export_mode = ExportMode::Range;
             info!("using range: {requested_range}");
-            let sheet_range = if let Some(result) = sheets.worksheet_range_at(sheet_index) {
-                result?
+            let mut sheet_range = Range::empty();
+            let name_contains_exclamation: bool = requested_range.contains('!');
+            let parsed_range = if requested_range.contains(':') && !name_contains_exclamation {
+                // if there is a colon, we treat it as a range for the current sheet
+                sheet_range = if let Some(result) = sheets.worksheet_range_at(sheet_index) {
+                    result?
+                } else {
+                    Range::empty()
+                };
+                RequestedRange::from_string(requested_range, sheet_range.get_size())?
+            } else if name_contains_exclamation {
+                // if there is an exclamation mark, we treat it as a range in an explicitly named
+                // sheet parse the range string to get the sheet name and the range
+                // e.g. Sheet2!$C$20:$E$24
+                // is sheet name "Sheet2" and the range $C$20:$E$24
+                let range_str = get_requested_range(
+                    requested_range,
+                    &mut sheet,
+                    &sheet_names,
+                    &mut sheet_range,
+                    &mut sheets,
+                )?;
+                RequestedRange::from_string(&range_str, sheet_range.get_size())?
             } else {
-                Range::empty()
+                // if there is no colon, we treat it as a named range
+                let wb = open_workbook_auto(path)?;
+                let named_ranges = wb.defined_names();
+                let mut found_range = String::new();
+                for named_range in named_ranges {
+                    if named_range.0.to_lowercase() == requested_range.to_lowercase() {
+                        found_range = named_range.1.to_string();
+                        break;
+                    }
+                }
+                if found_range.is_empty() {
+                    return fail_clierror!(
+                        "\"{requested_range}\" named range not found. Available named ranges are \
+                         {named_ranges:?}"
+                    );
+                };
+                let range_str = get_requested_range(
+                    &found_range,
+                    &mut sheet,
+                    &sheet_names,
+                    &mut sheet_range,
+                    &mut sheets,
+                )?;
+                RequestedRange::from_string(&range_str, sheet_range.get_size())?
             };
-            let parsed_range =
-                RequestedRange::from_string(&requested_range, sheet_range.get_size())?;
-            info!(
-                "Range start: {} {}",
-                parsed_range.start.0, parsed_range.start.1
-            );
-            info!("Range end: {} {}", parsed_range.end.0, parsed_range.end.1);
-            if parsed_range.start < sheet_range.start().unwrap_or((0, 0))
+            info!("parsed_range: {parsed_range:?}");
+            let range_result = if parsed_range.start < sheet_range.start().unwrap_or((0, 0))
                 || parsed_range.end > sheet_range.end().unwrap_or((0, 0))
             {
                 return fail_clierror!(
-                    "Cannot retrieve range {requested_range}: larger than sheet"
+                    "Cannot retrieve range \"{requested_range}\": larger than sheet"
                 );
-            }
-            let range_result = sheet_range.range(parsed_range.start, parsed_range.end);
+            } else {
+                sheet_range.range(parsed_range.start, parsed_range.end)
+            };
             if range_result.is_empty() {
                 return fail_clierror!(
                     "\"{requested_range}\" range in sheet \"{sheet}\" is empty."
                 );
             }
             range_result
+        } else if let Some(result) = sheets.worksheet_range_at(sheet_index) {
+            export_mode = ExportMode::Sheet;
+            result?
         } else {
-            if let Some(result) = sheets.worksheet_range_at(sheet_index) {
-                export_mode = ExportMode::Sheet;
-                result?
-            } else {
-                export_mode = ExportMode::NothingToExport;
-                Range::empty()
-            }
+            export_mode = ExportMode::NothingToExport;
+            Range::empty()
         }
     };
 
@@ -745,10 +830,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // get headers
     info!("exporting sheet ({sheet})... processing first row as header...");
-    let headers = if export_mode != ExportMode::Table {
-        range.headers().unwrap_or_default()
-    } else {
+    let headers = if export_mode == ExportMode::Table {
         table_headers
+    } else {
+        range.headers().unwrap_or_default()
     };
     for header in headers {
         record.push_field(&header);
@@ -969,4 +1054,44 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     Ok(())
+}
+
+fn get_requested_range(
+    requested_range: &str,
+    sheet: &mut String,
+    sheet_names: &[String],
+    sheet_range: &mut Range<Data>,
+    sheets: &mut Sheets<std::io::BufReader<std::fs::File>>,
+) -> Result<String, CliError> {
+    let split_range: Vec<&str> = requested_range.split('!').collect();
+
+    // Ensure that both sheet name and range are provided
+    if split_range.len() != 2 {
+        return fail_clierror!("Invalid range format. Expected format: 'SheetName!Range'.");
+    }
+
+    let sheet_name = split_range[0].to_lowercase();
+    sheet.clone_from(&sheet_name);
+    let range_str = split_range[1].to_string();
+
+    // Find the sheet index
+    let sheet_index = sheet_names
+        .iter()
+        .position(|s| s.to_lowercase() == sheet_name)
+        .unwrap_or(usize::MAX);
+
+    if sheet_index == usize::MAX {
+        return fail_clierror!("Sheet \"{sheet}\" not found in available sheets: {sheet_names:?}.");
+    }
+
+    // Get the worksheet range
+    *sheet_range = if let Some(result) = sheets.worksheet_range_at(sheet_index) {
+        result?
+    } else {
+        return fail_clierror!(
+            "Cannot get sheet: \"{sheet}\". Available sheets are: {sheet_names:?}"
+        );
+    };
+
+    Ok(range_str)
 }
