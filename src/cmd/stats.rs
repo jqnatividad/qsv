@@ -1582,6 +1582,7 @@ impl Stats {
                     // so we can compute avg_length
                     let mut buffer = itoa::Buffer::new();
                     pieces.push(buffer.format(stotlen).to_owned());
+                    #[allow(clippy::cast_precision_loss)]
                     pieces.push(util::round_num(
                         stotlen as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64,
                         4,
