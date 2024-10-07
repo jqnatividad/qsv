@@ -543,8 +543,8 @@ fn excel_metadata() {
             "type",
             "visible",
             "headers",
-            "num_columns",
-            "num_rows",
+            "column_count",
+            "row_count",
             "safe_headers",
             "safe_headers_count",
             "unsafe_headers",
@@ -706,7 +706,7 @@ fn excel_metadata_pretty_json() {
 
     let expected = r#"excel-xls.xls",
   "format": "Excel: xls",
-  "num_sheets": 8,
+  "sheet_count": 8,
   "sheet": [
     {
       "index": 0,
@@ -717,8 +717,8 @@ fn excel_metadata_pretty_json() {
         "URL",
         "City"
       ],
-      "num_columns": 2,
-      "num_rows": 4,
+      "column_count": 2,
+      "row_count": 4,
       "safe_headers": [
         "URL",
         "City"
@@ -738,8 +738,8 @@ fn excel_metadata_pretty_json() {
         "City",
         ""
       ],
-      "num_columns": 3,
-      "num_rows": 6,
+      "column_count": 3,
+      "row_count": 6,
       "safe_headers": [
         "URL",
         "City"
@@ -760,8 +760,8 @@ fn excel_metadata_pretty_json() {
         "Middle sheet col1",
         "Middle-2"
       ],
-      "num_columns": 2,
-      "num_rows": 6,
+      "column_count": 2,
+      "row_count": 6,
       "safe_headers": [
         "Middle sheet col1",
         "Middle-2"
@@ -777,8 +777,8 @@ fn excel_metadata_pretty_json() {
       "typ": "WorkSheet",
       "visible": "Visible",
       "headers": [],
-      "num_columns": 0,
-      "num_rows": 0,
+      "column_count": 0,
+      "row_count": 0,
       "safe_headers": [],
       "safe_headers_count": 0,
       "unsafe_headers": [],
@@ -795,8 +795,8 @@ fn excel_metadata_pretty_json() {
         "   col2",
         "col3"
       ],
-      "num_columns": 3,
-      "num_rows": 6,
+      "column_count": 3,
+      "row_count": 6,
       "safe_headers": [
         "col1",
         "col3"
@@ -819,8 +819,8 @@ fn excel_metadata_pretty_json() {
         "col_Petsa",
         "just another col"
       ],
-      "num_columns": 4,
-      "num_rows": 6,
+      "column_count": 4,
+      "row_count": 6,
       "safe_headers": [
         "date_col",
         "num_col",
@@ -843,8 +843,8 @@ fn excel_metadata_pretty_json() {
         "col3",
         "col4"
       ],
-      "num_columns": 4,
-      "num_rows": 1,
+      "column_count": 4,
+      "row_count": 1,
       "safe_headers": [
         "col1",
         "col2",
@@ -865,8 +865,8 @@ fn excel_metadata_pretty_json() {
         "Last sheet col1",
         "Last-2"
       ],
-      "num_columns": 2,
-      "num_rows": 6,
+      "column_count": 2,
+      "row_count": 6,
       "safe_headers": [
         "Last sheet col1",
         "Last-2"
@@ -883,9 +883,9 @@ fn excel_metadata_pretty_json() {
       "formula": "Unsupported ptg: 1c"
     }
   ],
-  "names_count": 1,
+  "name_count": 1,
   "tables": [],
-  "tables_count": 0
+  "table_count": 0
 }"#;
     assert!(got.ends_with(expected));
     wrk.assert_success(&mut cmd);
@@ -904,7 +904,7 @@ fn excel_metadata_xlsx_ranges_tables_pretty_json() {
 
     let expected = r#"excel-xlsx.xlsx",
   "format": "Excel: xlsx",
-  "num_sheets": 6,
+  "sheet_count": 6,
   "sheet": [
     {
       "index": 0,
@@ -917,8 +917,8 @@ fn excel_metadata_xlsx_ranges_tables_pretty_json() {
         "number",
         "date"
       ],
-      "num_columns": 4,
-      "num_rows": 9,
+      "column_count": 4,
+      "row_count": 9,
       "safe_headers": [
         "URL",
         "City",
@@ -945,8 +945,8 @@ fn excel_metadata_xlsx_ranges_tables_pretty_json() {
         "The quick BROWN fox with a very long column name is now jumping over a lazy dog by the zigzag quarry site",
         "!!!date???"
       ],
-      "num_columns": 8,
-      "num_rows": 6,
+      "column_count": 8,
+      "row_count": 6,
       "safe_headers": [
         "col1"
       ],
@@ -970,8 +970,8 @@ fn excel_metadata_xlsx_ranges_tables_pretty_json() {
         "date",
         "plaincol"
       ],
-      "num_columns": 2,
-      "num_rows": 6,
+      "column_count": 2,
+      "row_count": 6,
       "safe_headers": [
         "date",
         "plaincol"
@@ -996,8 +996,8 @@ fn excel_metadata_xlsx_ranges_tables_pretty_json() {
         "emojis",
         "foreign"
       ],
-      "num_columns": 8,
-      "num_rows": 6,
+      "column_count": 8,
+      "row_count": 6,
       "safe_headers": [
         "int",
         "float",
@@ -1023,8 +1023,8 @@ fn excel_metadata_xlsx_ranges_tables_pretty_json() {
         "col 2",
         "column-3"
       ],
-      "num_columns": 3,
-      "num_rows": 10,
+      "column_count": 3,
+      "row_count": 10,
       "safe_headers": [
         "col1",
         "col 2",
@@ -1051,8 +1051,8 @@ fn excel_metadata_xlsx_ranges_tables_pretty_json() {
         "",
         ""
       ],
-      "num_columns": 9,
-      "num_rows": 24,
+      "column_count": 9,
+      "row_count": 24,
       "safe_headers": [
         "col1",
         "col2",
@@ -1081,7 +1081,7 @@ fn excel_metadata_xlsx_ranges_tables_pretty_json() {
       "formula": "Sheet2!$C$20:$E$24"
     }
   ],
-  "names_count": 2,
+  "name_count": 2,
   "tables": [
     {
       "name": "Table1",
@@ -1094,7 +1094,7 @@ fn excel_metadata_xlsx_ranges_tables_pretty_json() {
       "column_count": 3
     }
   ],
-  "tables_count": 1
+  "table_count": 1
 }"#;
     assert!(got.ends_with(expected));
     wrk.assert_success(&mut cmd);
@@ -1117,8 +1117,8 @@ fn ods_metadata() {
             "type",
             "visible",
             "headers",
-            "num_columns",
-            "num_rows",
+            "column_count",
+            "row_count",
             "safe_headers",
             "safe_headers_count",
             "unsafe_headers",
@@ -1176,7 +1176,7 @@ fn ods_metadata_pretty_json() {
     let got: String = wrk.stdout(&mut cmd);
     let expected = r#"excel-ods.ods",
   "format": "ODS",
-  "num_sheets": 1,
+  "sheet_count": 1,
   "sheet": [
     {
       "index": 0,
@@ -1187,8 +1187,8 @@ fn ods_metadata_pretty_json() {
         "URL",
         "City"
       ],
-      "num_columns": 2,
-      "num_rows": 4,
+      "column_count": 2,
+      "row_count": 4,
       "safe_headers": [
         "URL",
         "City"
@@ -1200,9 +1200,9 @@ fn ods_metadata_pretty_json() {
     }
   ],
   "names": [],
-  "names_count": 0,
+  "name_count": 0,
   "tables": [],
-  "tables_count": 0
+  "table_count": 0
 }"#;
 
     assert!(got.ends_with(expected));
@@ -1227,8 +1227,8 @@ fn excel_metadata_sheet_types() {
             "type",
             "visible",
             "headers",
-            "num_columns",
-            "num_rows",
+            "column_count",
+            "row_count",
             "safe_headers",
             "safe_headers_count",
             "unsafe_headers",
@@ -1313,8 +1313,8 @@ fn excel_metadata_sheet_types_xlsx() {
             "type",
             "visible",
             "headers",
-            "num_columns",
-            "num_rows",
+            "column_count",
+            "row_count",
             "safe_headers",
             "safe_headers_count",
             "unsafe_headers",
@@ -1393,7 +1393,7 @@ fn excel_metadata_sheet_types_xlsx_short_json() {
     cmd.arg("--metadata").arg("S").arg(xlsx_file);
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = r#"any_sheets.xlsx","format":"xlsx","num_sheets":4,"sheet":[{"index":0,"name":"Visible","typ":"WorkSheet","visible":"Visible"},{"index":1,"name":"Hidden","typ":"WorkSheet","visible":"Hidden"},{"index":2,"name":"VeryHidden","typ":"WorkSheet","visible":"VeryHidden"},{"index":3,"name":"Chart","typ":"ChartSheet","visible":"Visible"}]}"#;
+    let expected = r#"any_sheets.xlsx","format":"xlsx","sheet_count":4,"sheet":[{"index":0,"name":"Visible","typ":"WorkSheet","visible":"Visible"},{"index":1,"name":"Hidden","typ":"WorkSheet","visible":"Hidden"},{"index":2,"name":"VeryHidden","typ":"WorkSheet","visible":"VeryHidden"},{"index":3,"name":"Chart","typ":"ChartSheet","visible":"Visible"}]}"#;
     assert!(got.ends_with(expected));
     wrk.assert_success(&mut cmd);
 }
@@ -1415,8 +1415,8 @@ fn excel_metadata_sheet_types_xlsb() {
             "type",
             "visible",
             "headers",
-            "num_columns",
-            "num_rows",
+            "column_count",
+            "row_count",
             "safe_headers",
             "safe_headers_count",
             "unsafe_headers",
@@ -1502,8 +1502,8 @@ fn excel_metadata_sheet_types_ods() {
             "type",
             "visible",
             "headers",
-            "num_columns",
-            "num_rows",
+            "column_count",
+            "row_count",
             "safe_headers",
             "safe_headers_count",
             "unsafe_headers",

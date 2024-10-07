@@ -77,21 +77,21 @@ Excel options:
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
     --metadata <c|s|j|J|S>     Outputs workbook metadata in CSV or JSON format:
-                                 index, sheet_name, headers, type, visible, num_columns, num_rows,
+                                 index, sheet_name, headers, type, visible, column_count, row_count,
                                  safe_headers, safe_headers_count, unsafe_headers, unsafe_headers_count
-                                 and duplicate_headers_count, names, names_count, tables, tables_count.
+                                 and duplicate_headers_count, names, name_count, tables, table_count.
                                headers is a list of the first row which is presumed to be the header row.
                                type is the sheet type (WorkSheet, DialogSheet, MacroSheet, ChartSheet, Vba).
                                visible is the sheet visibility (Visible, Hidden, VeryHidden).
-                               num_rows includes all rows, including the first row.
+                               row_count includes all rows, including the first row.
                                safe_headers is a list of header with "safe"(database-ready) names.
                                unsafe_headers is a list of headers with "unsafe" names.
                                duplicate_headers_count is a count of duplicate header names.
                                names is a list of defined names in the workbook, with the associated formula.
-                               names_count is the number of defined names in the workbook.
+                               name_count is the number of defined names in the workbook.
                                tables is a list of tables in the workbook, with sheet where the table
                                is found, columns and the column_count.  (XLSX only)
-                               tables_count is the number of tables in the workbook.  (XLSX only)
+                               table_count is the number of tables in the workbook.  (XLSX only)
 
                                In CSV(c) mode, the output is in CSV format.
                                In short(s) CSV mode, the output is in CSV format with only the
@@ -208,8 +208,8 @@ struct SheetMetadata {
     typ:                     String,
     visible:                 String,
     headers:                 Vec<String>,
-    num_columns:             usize,
-    num_rows:                usize,
+    column_count:            usize,
+    row_count:               usize,
     safe_headers:            Vec<String>,
     safe_headers_count:      usize,
     unsafe_headers:          Vec<String>,
@@ -251,12 +251,12 @@ struct MetadataStruct {
     filename:           String,
     canonical_filename: String,
     format:             String,
-    num_sheets:         usize,
+    sheet_count:        usize,
     sheet:              Vec<SheetMetadata>,
     names:              Vec<NamesMetadata>,
-    names_count:        usize,
+    name_count:         usize,
     tables:             Vec<TableMetadata>,
-    tables_count:       usize,
+    table_count:        usize,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -264,7 +264,7 @@ struct ShortMetadataStruct {
     filename:           String,
     canonical_filename: String,
     format:             String,
-    num_sheets:         usize,
+    sheet_count:        usize,
     sheet:              Vec<ShortSheetMetadata>,
 }
 
@@ -385,7 +385,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if sheet_names.is_empty() {
         return fail!("No sheets found.");
     }
-    let num_sheets = sheet_names.len();
+    let sheet_count = sheet_names.len();
 
     let mut wtr = Config::new(args.flag_output.as_ref())
         .flexible(args.flag_flexible)
@@ -443,11 +443,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             } else {
                 format!("Excel: {format}")
             },
-            num_sheets,
+            sheet_count,
             sheet: vec![],
-            names_count: names_vec.len(),
+            name_count: names_vec.len(),
             names: names_vec,
-            tables_count: table_metadata_vec.len(),
+            table_count: table_metadata_vec.len(),
             tables: table_metadata_vec,
         };
         let mut metadata_record;
@@ -474,17 +474,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 Range::empty()
             };
 
-            let (header_vec, num_columns, num_rows, safenames_vec, unsafeheaders_vec, dupe_count) =
+            let (header_vec, column_count, row_count, safenames_vec, unsafeheaders_vec, dupe_count) =
                 if range.is_empty() {
                     (vec![], 0_usize, 0_usize, vec![], vec![], 0_usize)
                 } else {
-                    let (num_rows, num_columns) = range.get_size();
+                    let (row_count, column_count) = range.get_size();
                     let mut sheet_rows = range.rows();
-                    let mut checkednames_vec: Vec<String> = Vec::with_capacity(num_columns);
-                    let mut safenames_vec: Vec<String> = Vec::with_capacity(num_columns);
+                    let mut checkednames_vec: Vec<String> = Vec::with_capacity(column_count);
+                    let mut safenames_vec: Vec<String> = Vec::with_capacity(column_count);
                     let mut unsafenames_vec: Vec<String> = Vec::new();
                     let mut dupe_count = 0_usize;
-                    let mut header_vec: Vec<String> = Vec::with_capacity(num_columns);
+                    let mut header_vec: Vec<String> = Vec::with_capacity(column_count);
 
                     if let Some(first_row) = sheet_rows.next() {
                         header_vec = first_row
@@ -514,8 +514,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                     (
                         header_vec,
-                        num_columns,
-                        num_rows,
+                        column_count,
+                        row_count,
                         safenames_vec,
                         unsafenames_vec,
                         dupe_count,
@@ -527,8 +527,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 typ: format!("{:?}", sheets.sheets_metadata()[i].typ),
                 visible: format!("{:?}", sheets.sheets_metadata()[i].visible),
                 headers: header_vec,
-                num_columns,
-                num_rows,
+                column_count,
+                row_count,
                 safe_headers_count: safenames_vec.len(),
                 safe_headers: safenames_vec,
                 unsafe_headers_count: unsafeheaders_vec.len(),
@@ -547,8 +547,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     "type",
                     "visible",
                     "headers",
-                    "num_columns",
-                    "num_rows",
+                    "column_count",
+                    "row_count",
                     "safe_headers",
                     "safe_headers_count",
                     "unsafe_headers",
@@ -566,8 +566,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         format!("{:?}", sheetmetadata.headers),
                         sheetmetadata.typ,
                         sheetmetadata.visible,
-                        sheetmetadata.num_columns.to_string(),
-                        sheetmetadata.num_rows.to_string(),
+                        sheetmetadata.column_count.to_string(),
+                        sheetmetadata.row_count.to_string(),
                         format!("{:?}", sheetmetadata.safe_headers),
                         sheetmetadata.safe_headers_count.to_string(),
                         format!("{:?}", sheetmetadata.unsafe_headers),
@@ -617,7 +617,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     filename,
                     canonical_filename,
                     format,
-                    num_sheets,
+                    sheet_count,
                     sheet: vec![],
                 };
                 for sheetmetadata in excelmetadata_struct.sheet {
@@ -697,8 +697,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 sheet_names[cmp::max(
                     0,
                     cmp::min(
-                        num_sheets - 1,
-                        num_sheets.abs_diff(sheet_index.unsigned_abs() as usize),
+                        sheet_count - 1,
+                        sheet_count.abs_diff(sheet_index.unsigned_abs() as usize),
                     ),
                 )]
                 .to_string()
