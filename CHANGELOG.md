@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.136.0] - 2024-10-07
+## [0.136.0] - 2024-10-08
 
 ## What's Changed
 * Upload artifact fix by @tino097 in https://github.com/jqnatividad/qsv/pull/2168
@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `excel`: new `--table` option for XLSX files by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2194
 * `excel`: expanded range and metadata options by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2195
 * build(deps): bump flexi_logger from 0.29.1 to 0.29.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2196
+* `contrib(completions)`: add `--table` option to `qsv excel` by @rzmk in https://github.com/jqnatividad/qsv/pull/2197
 
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.135.0...0.136.0
