@@ -904,7 +904,7 @@ fn excel_metadata_xlsx_ranges_tables_pretty_json() {
 
     let expected = r#"excel-xlsx.xlsx",
   "format": "Excel: xlsx",
-  "sheet_count": 6,
+  "sheet_count": 7,
   "sheet": [
     {
       "index": 0,
@@ -1069,6 +1069,30 @@ fn excel_metadata_xlsx_ranges_tables_pretty_json() {
       ],
       "unsafe_headers_count": 6,
       "duplicate_headers_count": 5
+    },
+    {
+      "index": 6,
+      "name": "firstnonemptyrow",
+      "typ": "WorkSheet",
+      "visible": "Visible",
+      "headers": [
+        "col1",
+        "col2",
+        "col3",
+        "col4"
+      ],
+      "column_count": 4,
+      "row_count": 6,
+      "safe_headers": [
+        "col1",
+        "col2",
+        "col3",
+        "col4"
+      ],
+      "safe_headers_count": 4,
+      "unsafe_headers": [],
+      "unsafe_headers_count": 0,
+      "duplicate_headers_count": 0
     }
   ],
   "names": [

@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
 Exports a specified Excel/ODS sheet to a CSV file.
-The first row of a sheet is assumed to be the header row.
+The first non-empty row of a sheet is assumed to be the header row.
 
 Examples:
 
@@ -76,6 +76,7 @@ Excel options:
                                Negative indices start from the end (-1 = last sheet). 
                                If the sheet cannot be found, qsv will read the first sheet.
                                [default: 0]
+    --header-row <row>         The header row. Set if other than the first non-empty row of the sheet.
     --metadata <c|s|j|J|S>     Outputs workbook metadata in CSV or JSON format:
                                  index, sheet_name, headers, type, visible, column_count, row_count,
                                  safe_headers, safe_headers_count, unsafe_headers, unsafe_headers_count
@@ -146,7 +147,9 @@ Common options:
 
 use std::{cmp, fmt::Write, io::Read, path::PathBuf};
 
-use calamine::{open_workbook, open_workbook_auto, Data, Error, Range, Reader, SheetType, Sheets};
+use calamine::{
+    open_workbook, open_workbook_auto, Data, Error, HeaderRow, Range, Reader, SheetType, Sheets,
+};
 use file_format::FileFormat;
 use indicatif::HumanCount;
 use log::info;
@@ -162,6 +165,7 @@ use crate::{
 struct Args {
     arg_input:           String,
     flag_sheet:          String,
+    flag_header_row:     Option<u32>,
     flag_metadata:       String,
     flag_error_format:   String,
     flag_table:          Option<String>,
@@ -276,10 +280,9 @@ struct RequestedRange {
 }
 
 impl RequestedRange {
+    /// takes a string like C3 or $C$3 and returns a 0 indexed column number, 2
+    /// returns 0 on missing.
     fn parse_col(col: &str) -> Option<u32> {
-        // takes a string like C3 or $C$3 and returns a 0 indexed column number, 2
-        // returns 0 on missing.
-
         let mut col: String = col.replace('$', "");
         col.make_ascii_lowercase();
         col.chars()
@@ -289,10 +292,9 @@ impl RequestedRange {
             .map(|r| r - 1)
     }
 
+    /// takes a string like R32 or $R$32 and returns 0 indexed row number, 31.
+    /// returns 0 on missing
     fn parse_row(row: &str) -> Option<u32> {
-        // takes a string like R32 or $R$32 and returns 0 indexed row number, 31.
-        // returns 0 on missing
-
         let mut row = row.replace('$', "");
         row.make_ascii_lowercase();
         row.chars()
@@ -303,9 +305,8 @@ impl RequestedRange {
             .map(|r| r - 1)
     }
 
-    pub fn from_string(range: &str, worksheet_size: (usize, usize)) -> CliResult<RequestedRange> {
-        // worksheet_size is from range.getsize, height,width.  1 indexed.
-
+    /// worksheet_size is from range.getsize, height,width.  1 indexed.
+    fn from_string(range: &str, worksheet_size: (usize, usize)) -> CliResult<RequestedRange> {
         let Some((start, end)) = range.split_once(':') else {
             return fail_clierror!("Unable to parse range string");
         };
@@ -323,6 +324,68 @@ impl RequestedRange {
             ),
         })
     }
+}
+
+/// Parses and validates the requested range for a specific sheet in an Excel workbook.
+///
+/// # Arguments
+///
+/// * `requested_range` - A string in the format "SheetName!Range" (e.g., "Sheet1!A1:B10").
+/// * `sheet` - A mutable reference to a String that will be updated with the sheet name.
+/// * `sheet_names` - A slice of available sheet names in the workbook.
+/// * `sheet_range` - A mutable reference to a Range<Data> that will be updated with the worksheet
+///   range.
+/// * `sheets` - A mutable reference to the Sheets struct containing the workbook data.
+///
+/// # Returns
+///
+/// * `Ok(String)` - The range part of the requested_range if successful.
+/// * `Err(CliError)` - If there's an error in parsing or finding the requested sheet/range.
+///
+/// # Errors
+///
+/// This function will return an error if:
+/// * The requested_range format is invalid (doesn't contain a '!' separator).
+/// * The specified sheet name is not found in the workbook.
+/// * The worksheet range cannot be retrieved for the specified sheet.
+fn get_requested_range(
+    requested_range: &str,
+    sheet: &mut String,
+    sheet_names: &[String],
+    sheet_range: &mut Range<Data>,
+    sheets: &mut Sheets<std::io::BufReader<std::fs::File>>,
+) -> Result<String, CliError> {
+    let split_range: Vec<&str> = requested_range.split('!').collect();
+
+    // Ensure that both sheet name and range are provided
+    if split_range.len() != 2 {
+        return fail_clierror!("Invalid range format. Expected format: 'SheetName!Range'.");
+    }
+
+    let sheet_name = split_range[0].to_lowercase();
+    sheet.clone_from(&sheet_name);
+    let range_str = split_range[1].to_string();
+
+    // Find the sheet index
+    let sheet_index = sheet_names
+        .iter()
+        .position(|s| s.to_lowercase() == sheet_name)
+        .unwrap_or(usize::MAX);
+
+    if sheet_index == usize::MAX {
+        return fail_clierror!("Sheet \"{sheet}\" not found in available sheets: {sheet_names:?}.");
+    }
+
+    // Get the worksheet range
+    *sheet_range = if let Some(result) = sheets.worksheet_range_at(sheet_index) {
+        result?
+    } else {
+        return fail_clierror!(
+            "Cannot get sheet: \"{sheet}\". Available sheets are: {sheet_names:?}"
+        );
+    };
+
+    Ok(range_str)
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -736,6 +799,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail_clierror!("Cannot get sheet index for {sheet}");
     };
 
+    let header_row: HeaderRow = if let Some(hr) = args.flag_header_row {
+        HeaderRow::Row(hr)
+    } else {
+        HeaderRow::FirstNonEmptyRow
+    };
+    sheets.with_header_row(header_row);
+
     let export_mode: ExportMode;
     let table_headers;
     let range: Range<Data> = if let Some(table) = table {
@@ -856,7 +926,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
 
     // get headers
-    info!("exporting sheet ({sheet})... processing first row as header...");
+    info!("exporting sheet ({sheet})... processing first non-empty row as header...");
     let headers = if export_mode == ExportMode::Table {
         table_headers
     } else {
@@ -1081,44 +1151,4 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     Ok(())
-}
-
-fn get_requested_range(
-    requested_range: &str,
-    sheet: &mut String,
-    sheet_names: &[String],
-    sheet_range: &mut Range<Data>,
-    sheets: &mut Sheets<std::io::BufReader<std::fs::File>>,
-) -> Result<String, CliError> {
-    let split_range: Vec<&str> = requested_range.split('!').collect();
-
-    // Ensure that both sheet name and range are provided
-    if split_range.len() != 2 {
-        return fail_clierror!("Invalid range format. Expected format: 'SheetName!Range'.");
-    }
-
-    let sheet_name = split_range[0].to_lowercase();
-    sheet.clone_from(&sheet_name);
-    let range_str = split_range[1].to_string();
-
-    // Find the sheet index
-    let sheet_index = sheet_names
-        .iter()
-        .position(|s| s.to_lowercase() == sheet_name)
-        .unwrap_or(usize::MAX);
-
-    if sheet_index == usize::MAX {
-        return fail_clierror!("Sheet \"{sheet}\" not found in available sheets: {sheet_names:?}.");
-    }
-
-    // Get the worksheet range
-    *sheet_range = if let Some(result) = sheets.worksheet_range_at(sheet_index) {
-        result?
-    } else {
-        return fail_clierror!(
-            "Cannot get sheet: \"{sheet}\". Available sheets are: {sheet_names:?}"
-        );
-    };
-
-    Ok(range_str)
 }
