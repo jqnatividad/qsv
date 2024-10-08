@@ -672,6 +672,9 @@ const completion: Fig.Spec = {
           name: "--sheet",
         },
         {
+          name: "--header-row",
+        },
+        {
           name: "--metadata",
         },
         {

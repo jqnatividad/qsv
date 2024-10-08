@@ -386,6 +386,7 @@ _arguments "${_arguments_options[@]}" : \
 (excel)
 _arguments "${_arguments_options[@]}" : \
 '--sheet[]' \
+'--header-row[]' \
 '--metadata[]' \
 '--error-format[]' \
 '--flexible[]' \

@@ -387,6 +387,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         }
         'qsv;excel' {
             [CompletionResult]::new('--sheet', 'sheet', [CompletionResultType]::ParameterName, 'sheet')
+            [CompletionResult]::new('--header-row', 'header-row', [CompletionResultType]::ParameterName, 'header-row')
             [CompletionResult]::new('--metadata', 'metadata', [CompletionResultType]::ParameterName, 'metadata')
             [CompletionResult]::new('--error-format', 'error-format', [CompletionResultType]::ParameterName, 'error-format')
             [CompletionResult]::new('--flexible', 'flexible', [CompletionResultType]::ParameterName, 'flexible')

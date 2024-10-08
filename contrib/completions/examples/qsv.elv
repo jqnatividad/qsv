@@ -354,6 +354,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
         }
         &'qsv;excel'= {
             cand --sheet 'sheet'
+            cand --header-row 'header-row'
             cand --metadata 'metadata'
             cand --error-format 'error-format'
             cand --flexible 'flexible'

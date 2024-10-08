@@ -272,6 +272,7 @@ module completions {
 
   export extern "qsv excel" [
     --sheet
+    --header-row
     --metadata
     --error-format
     --flexible

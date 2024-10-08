@@ -3,6 +3,7 @@ use clap::{arg, Command};
 pub fn excel_cmd() -> Command {
     Command::new("excel").args([
         arg!(--sheet),
+        arg!(--"header-row"),
         arg!(--metadata),
         arg!(--"error-format"),
         arg!(--flexible),

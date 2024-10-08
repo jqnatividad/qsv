@@ -281,6 +281,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand enum" -l no-headers
 complete -c qsv -n "__fish_qsv_using_subcommand enum" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand enum" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand excel" -l sheet
+complete -c qsv -n "__fish_qsv_using_subcommand excel" -l header-row
 complete -c qsv -n "__fish_qsv_using_subcommand excel" -l metadata
 complete -c qsv -n "__fish_qsv_using_subcommand excel" -l error-format
 complete -c qsv -n "__fish_qsv_using_subcommand excel" -l flexible
