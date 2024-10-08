@@ -21,7 +21,7 @@ It's our attempt at democratizing data-wrangling at the desktop:
 
 Like qsv, we're iterating rapidly with qsv pro, so your feedback is essential. Give it a try!<br/>
 
-<div dir="rtl">Get it from the [qsv pro](https://qsvpro.dathere.com) website or<br/><a href="https://apps.microsoft.com/detail/xpffdj3f1jsztf?mode=full">
+<div dir="rtl">Get it from https://qsvpro.dathere.com or<br/><a href="https://apps.microsoft.com/detail/xpffdj3f1jsztf?mode=full">
 <img
 src="https://get.microsoft.com/images/en-us%20light.svg"
 width="200"  /></a></div>
