@@ -10,14 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Highlights
 
-# :tada: qsv pro is now available in the Microsoft Store! 
-It's our attempt at democratizing data-wrangling at the desktop:
+# :tada: qsv pro is now available in the Microsoft Store! :tada:
+It's ***Data Wrangling Democratized*** on the Desktop, featuring:
 
-  - __Familiar Spreadsheet Interface__<br/>tap the power of qsv to query, analyze, enrich, scrub and transform huge Excel files and multi-gigabyte CSV files in seconds, without having to deal with the command-line.
-  - __CKAN desktop client__<br/>designed to make data publishing easier for portal operators and data stewards using the CKAN platform.
-  - __Flow__<br/>allows you to build custom node-based flows and data pipelines using a visual interface.
-  - __Toolbox__<br/>features an ever-expanding library of reusable scripts for common data-wrangling use cases.
-  - __and more__<br/>a Natural Language Interface, POLARS SQL query support, an API, along with a retinue of other cloud-based services (e.g. customizable street-level geocoding, data feeds, reference data lookups, geo-ip lookups, cloud storage support, `.qsv` file creation, etc.) that will be unveiled in future versions.
+  - __:bar_chart: Familiar Spreadsheet Interface__<br/>tap the power of qsv to query, analyze, enrich, scrub and transform huge Excel files and multi-gigabyte CSV files in seconds, without having to deal with the command-line.
+  - __![CKAN](docs/images/ckan.png) CKAN desktop client__<br/>designed to make data publishing easier for portal operators and data stewards using the ![CKAN](docs/images/ckan.png) [CKAN](https://ckan.org) platform.
+  - __:inbox_tray: Flow__<br/>allows you to build custom node-based flows and data pipelines using a visual interface.
+  - __:hammer: Toolbox__<br/>features an ever-expanding library of reusable scripts for common data-wrangling use cases.
+  - __:star: and more!__<br/>a Natural Language Interface, POLARS SQL query support, an API, along with a retinue of other cloud-based services (e.g. customizable street-level geocoding, data feeds, reference data lookups, geo-ip lookups, cloud storage support, `.qsv` file creation, etc.) that will be unveiled in future versions.
 
 Like qsv, we're iterating rapidly with qsv pro, so your feedback is essential. Give it a try!<br/>
 
@@ -26,13 +26,14 @@ Like qsv, we're iterating rapidly with qsv pro, so your feedback is essential. G
 src="https://get.microsoft.com/images/en-us%20light.svg"
 width="200"  /></a></div>
 
-Other highlights:
-* `excel`: new `--table` option for XLSX files; new `--header-row` option;  expanded `--range` option, adding support for Named Ranges and absolute ranges (e.g. Sheet2!$A$1:$J$10); and expanded metadata export now including Named Ranges and Tables (for XLSX files)
+__Other highlights:__
+* `excel`: new `--table` option for XLSX files; new `--header-row` option;  expanded `--range` option, adding support for Named Ranges and absolute ranges (e.g. `Sheet2!$A$1:$J$10`); and expanded metadata export now including Named Ranges and Tables (for XLSX files)
 * Improved performance for several commands (`apply`, `datefmt`, `tojsonl` and `validate`) through automatic batch size optimization
-* `validate`: `dynamicEnum` custom JSON Schema keyword in validate command (renamed from `dynenum`); enhanced email validation; an even faster `jsonschema` engine
+* `validate`: `dynamicEnum` custom JSON Schema keyword in validate command (renamed from `dynenum`) and enhanced email validation
 * `schema`: automatic JSON Schema `const` inferencing for columns with just one value
-* Significant dependency updates, including latest upstream versions of Polars, jsonschema, and serde_json with unreleased performance upgrades, new features and fixes
+* Significant dependency updates, including latest upstream versions of Polars, calamine,jsonschema, and serde_json with unreleased performance upgrades, new features and fixes
 
+> __NOTE:__ You can also see __qsv__ & __qsv pro__ in action in our ["The Problem with Data Portals" webinar](https://us06web.zoom.us/webinar/register/5317284045017/WN_wTe4l6nlTWa6C0HDs8R2PA) Oct 23, 2024. 1-2pm EDT
 ---
 
 ### Added
@@ -54,8 +55,8 @@ Other highlights:
 * `validate`: optimizations for increased performance; replace serde_json with simd_json https://github.com/jqnatividad/qsv/compare/0.135.0...master#diff-9783631cdad9e1f47f60266303dc2d56a6e7a486784b61c40961601e8192f7cf
 * apply new `clippy::ref_option` lint to Config::new API https://github.com/jqnatividad/qsv/pull/2192
 * Update debian package readme by @tino097 in https://github.com/jqnatividad/qsv/pull/2187
-* `deps`: `jsonschema` use latest 0.22.3 upstream with unreleased features/fixes https://github.com/jqnatividad/qsv/blob/f44d4c95db034d0770a5ee7df42a472aba7f4dd5/Cargo.toml#L300
-* `deps`: `polars` use latest 0.43.1 upstream with unreleased features/fixes https://github.com/jqnatividad/qsv/blob/f44d4c95db034d0770a5ee7df42a472aba7f4dd5/Cargo.toml#L311-L322
+* `deps`: `jsonschema` use [latest 0.22.3 upstream with unreleased features/fixes](https://github.com/jqnatividad/qsv/blob/f44d4c95db034d0770a5ee7df42a472aba7f4dd5/Cargo.toml#L300)
+* `deps`: `polars` use [latest 0.43.1 upstream with unreleased features/fixes](https://github.com/jqnatividad/qsv/blob/f44d4c95db034d0770a5ee7df42a472aba7f4dd5/Cargo.toml#L311-L322)
 * `deps`: created our own fork of unmaintained vader_sentiment crate https://github.com/jqnatividad/qsv/commit/b4267610f39d13eb8939c86f3b5e70033aa95a0c
 * `deps`: use `serde_json` upstream with unreleased perf improvement/fixes https://github.com/jqnatividad/qsv/blob/f44d4c95db034d0770a5ee7df42a472aba7f4dd5/Cargo.toml#L221
 * build(deps): bump flate2 from 1.0.33 to 1.0.34 by @dependabot in https://github.com/jqnatividad/qsv/pull/2171
