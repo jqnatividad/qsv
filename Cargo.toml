@@ -81,7 +81,7 @@ cached = { version = "0.53", features = [
     "disk_store",
     "redis_ahash",
 ], optional = true }
-calamine = { version = "0.25", features = ["dates"] }
+calamine = { version = "0.26", features = ["dates"] }
 censor = { version = "0.3", optional = true }
 chrono = { version = "0.4", default-features = false }
 chrono-tz = "0.10"
@@ -289,9 +289,6 @@ dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_
 
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "ff8533d" }
-
-# use calamine 0.25.0 with unreleased features/fixes and select clippy lints
-calamine = { git = "https://github.com/tafia/calamine", rev = "8efe95d" }
 
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
