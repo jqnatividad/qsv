@@ -1148,7 +1148,6 @@ fn stats_path(stats_csv_path: &Path, stdin_flag: bool) -> io::Result<PathBuf> {
     Ok(parent.join(new_fname))
 }
 
-#[inline]
 fn init_date_inference(
     infer_dates: bool,
     headers: &csv::ByteRecord,
@@ -1167,9 +1166,8 @@ fn init_date_inference(
         vec![true; headers.len()]
     } else {
         let mut header_str = String::new();
-        let mut date_found = false;
         let whitelist_lower = flag_whitelist.to_lowercase();
-        log::info!("inferring dates with date-whitelist: {whitelist_lower}");
+        // log::info!("inferring dates with date-whitelist: {whitelist_lower}");
 
         let whitelist = whitelist_lower
             .split(',')
@@ -1180,13 +1178,9 @@ fn init_date_inference(
             .map(|header| {
                 // safety: we know the header is a valid String, so we can use unwrap
                 util::to_lowercase_into(&from_bytes::<String>(header).unwrap(), &mut header_str);
-                date_found = whitelist
+                whitelist
                     .iter()
-                    .any(|whitelist_item| header_str.contains(whitelist_item));
-                if date_found {
-                    log::info!("inferring dates for {header_str}");
-                }
-                date_found
+                    .any(|whitelist_item| header_str.contains(whitelist_item))
             })
             .collect()
     };
@@ -1309,8 +1303,7 @@ impl Stats {
         };
         if let Some(v) = self.minmax.as_mut() {
             if let Some(ts_val) = timestamp_val {
-                let mut buffer = itoa::Buffer::new();
-                v.add(t, buffer.format(ts_val).as_bytes());
+                v.add(t, itoa::Buffer::new().format(ts_val).as_bytes());
             } else {
                 v.add(t, sample);
             }
@@ -1322,13 +1315,6 @@ impl Stats {
             self.nullcount += 1;
         }
         match t {
-            TNull => {
-                if self.which.include_nulls {
-                    if let Some(v) = self.online.as_mut() {
-                        v.add_null();
-                    };
-                }
-            },
             TString => {
                 self.is_ascii &= sample.is_ascii();
             },
@@ -1368,6 +1354,13 @@ impl Stats {
                             }) as u16,
                         );
                     }
+                }
+            },
+            TNull => {
+                if self.which.include_nulls {
+                    if let Some(v) = self.online.as_mut() {
+                        v.add_null();
+                    };
                 }
             },
             TDateTime | TDate => {
@@ -1459,8 +1452,7 @@ impl Stats {
             Some(ref mut v) => {
                 if self.which.cardinality {
                     cardinality = v.cardinality(column_sorted, 1);
-                    let mut buffer = itoa::Buffer::new();
-                    mc_pieces.push(buffer.format(cardinality).to_owned());
+                    mc_pieces.push(itoa::Buffer::new().format(cardinality).to_owned());
                 }
                 if self.which.mode {
                     // mode/s
@@ -1580,8 +1572,7 @@ impl Stats {
             if stotlen > 0 {
                 if stotlen < u64::MAX {
                     // so we can compute avg_length
-                    let mut buffer = itoa::Buffer::new();
-                    pieces.push(buffer.format(stotlen).to_owned());
+                    pieces.push(itoa::Buffer::new().format(stotlen).to_owned());
                     #[allow(clippy::cast_precision_loss)]
                     pieces.push(util::round_num(
                         stotlen as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64,
@@ -1644,8 +1635,7 @@ impl Stats {
         }
 
         // nullcount
-        let mut buffer = itoa::Buffer::new();
-        pieces.push(buffer.format(self.nullcount).to_owned());
+        pieces.push(itoa::Buffer::new().format(self.nullcount).to_owned());
 
         // max precision
         if typ == TFloat {
@@ -1995,10 +1985,10 @@ impl TypedSum {
                     // we overflowed/underflowed
                     i64::MAX => Some((self.stotlen, OVERFLOW_STRING.to_string())),
                     i64::MIN => Some((self.stotlen, UNDERFLOW_STRING.to_string())),
-                    _ => {
-                        let mut buffer = itoa::Buffer::new();
-                        Some((self.stotlen, buffer.format(self.integer).to_owned()))
-                    },
+                    _ => Some((
+                        self.stotlen,
+                        itoa::Buffer::new().format(self.integer).to_owned(),
+                    )),
                 }
             },
             TFloat => {
@@ -2074,10 +2064,9 @@ impl TypedMinMax {
 
     fn len_range(&self) -> Option<(String, String)> {
         if let (Some(min), Some(max)) = (self.str_len.min(), self.str_len.max()) {
-            let mut buffer = itoa::Buffer::new();
             Some((
-                buffer.format(*min).to_owned(),
-                buffer.format(*max).to_owned(),
+                itoa::Buffer::new().format(*min).to_owned(),
+                itoa::Buffer::new().format(*max).to_owned(),
             ))
         } else {
             None
@@ -2108,11 +2097,10 @@ impl TypedMinMax {
                     self.integers.max(),
                     self.integers.sort_order(),
                 ) {
-                    let mut buffer = itoa::Buffer::new();
                     Some((
-                        buffer.format(*min).to_owned(),
-                        buffer.format(*max).to_owned(),
-                        buffer.format(*max - *min).to_owned(),
+                        itoa::Buffer::new().format(*min).to_owned(),
+                        itoa::Buffer::new().format(*max).to_owned(),
+                        itoa::Buffer::new().format(*max - *min).to_owned(),
                         sort_order.to_string(),
                     ))
                 } else {
@@ -2125,10 +2113,9 @@ impl TypedMinMax {
                     self.floats.max(),
                     self.floats.sort_order(),
                 ) {
-                    let mut buffer = ryu::Buffer::new();
                     Some((
-                        buffer.format(*min).to_owned(),
-                        buffer.format(*max).to_owned(),
+                        ryu::Buffer::new().format(*min).to_owned(),
+                        ryu::Buffer::new().format(*max).to_owned(),
                         util::round_num(*max - *min, round_places),
                         sort_order.to_string(),
                     ))
