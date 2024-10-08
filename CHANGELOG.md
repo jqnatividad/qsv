@@ -8,6 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.136.0] - 2024-10-08
 
+## Highlights
+
+# :tada: qsv pro is now available in the Microsoft Store! 
+It's our attempt at democratizing data-wrangling at the desktop:
+
+  - __Familiar Spreadsheet Interface__<br/>tap the power of qsv to query, analyze, enrich, scrub and transform huge Excel files and multi-gigabyte CSV files in seconds, without having to deal with the command-line.
+  - __CKAN desktop client__<br/>designed to make data publishing easier for portal operators and data stewards using the CKAN platform.
+  - __Flow__<br/>allows you to build custom node-based flows and data pipelines using a visual interface.
+  - __Toolbox__<br/>features an ever-expanding library of reusable scripts for common data-wrangling use cases.
+  - __and more__<br/>a Natural Language Interface, POLARS SQL query support, an API, along with a retinue of other cloud-based services (e.g. customizable street-level geocoding, data feeds, reference data lookups, geo-ip lookups, cloud storage support, `.qsv` file creation, etc.) that will be unveiled in future versions.
+
+Like qsv, we're iterating rapidly with qsv pro, so your feedback is essential. Give it a try!<br/>
+
+<div dir="rtl">Get it from the [qsv pro](https://qsvpro.dathere.com) website or<br/><a href="https://apps.microsoft.com/detail/xpffdj3f1jsztf?mode=full">
+<img
+src="https://get.microsoft.com/images/en-us%20light.svg"
+width="200"  /></a></div>
+
+Other highlights:
+* `excel`: new `--table` option for XLSX files; new `--header-row` option;  expanded `--range` option, adding support for Named Ranges and absolute ranges (e.g. Sheet2!$A$1:$J$10); and expanded metadata export now including Named Ranges and Tables (for XLSX files)
+* Improved performance for several commands (`apply`, `datefmt`, `tojsonl` and `validate`) through automatic batch size optimization
+* `validate`: `dynamicEnum` custom JSON Schema keyword in validate command (renamed from `dynenum`); enhanced email validation; an even faster `jsonschema` engine
+* `schema`: automatic JSON Schema `const` inferencing for columns with just one value
+* Significant dependency updates, including latest upstream versions of Polars, jsonschema, and serde_json with unreleased performance upgrades, new features and fixes
+
+---
+
 ### Added
 * :tada: [__qsv pro is now in the Microsoft Store!!!__](https://apps.microsoft.com/detail/xpffdj3f1jsztf?mode=full) :tada:
 * `apply`, `datefmt`, `tojsonl`, `validate`: added logic to automatically determine optimal batch size for better parallelization https://github.com/jqnatividad/qsv/pull/2178
@@ -15,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `excel`: new `--table` option for XLSX files https://github.com/jqnatividad/qsv/pull/2194
 * `excel`: new `--header-row` option https://github.com/jqnatividad/qsv/commit/458f79ad9f4da504c68d73b48e83ad53b9634027
 * `excel`: expanded range and metadata options https://github.com/jqnatividad/qsv/pull/2195
-* `schema`: added JSON Schema `const` support https://github.com/jqnatividad/qsv/pull/2180
+* `schema`: added JSON Schema automatic `const` inferencing https://github.com/jqnatividad/qsv/pull/2180
 * Add signing step to qsv MSI installer GitHub Action by @rzmk in https://github.com/jqnatividad/qsv/pull/2182
 * `contrib(completions)`: add `--table` option to `qsv excel` by @rzmk in https://github.com/jqnatividad/qsv/pull/2197
 * added new `apply operations sentiment` benchmark https://github.com/jqnatividad/qsv/commit/b745e6438b64686810e4d1df4fa2e6748ba93ff8
