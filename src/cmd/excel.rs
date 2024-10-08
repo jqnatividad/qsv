@@ -800,8 +800,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     let header_row: HeaderRow = if let Some(hr) = args.flag_header_row {
+        info!("processing row {hr} as header...");
         HeaderRow::Row(hr)
     } else {
+        info!("processing first non-empty row as header...");
         HeaderRow::FirstNonEmptyRow
     };
     sheets.with_header_row(header_row);
@@ -926,7 +928,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut trimmed_record = csv::StringRecord::with_capacity(500, col_count);
 
     // get headers
-    info!("exporting sheet ({sheet})... processing first non-empty row as header...");
+    info!("exporting sheet ({sheet})...");
     let headers = if export_mode == ExportMode::Table {
         table_headers
     } else {
