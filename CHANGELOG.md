@@ -16,11 +16,10 @@ It's ***Data Wrangling Democratized*** on the Desktop, featuring:
   - __:bar_chart: Familiar Spreadsheet Interface__<br/>tap the power of qsv to query, analyze, enrich, scrub and transform huge Excel files and multi-gigabyte CSV files in seconds, without having to deal with the command-line.
   - __![CKAN](docs/images/ckan.png) CKAN desktop client__<br/>designed to make data publishing easier for portal operators and data stewards using the ![CKAN](docs/images/ckan.png) [CKAN](https://ckan.org) platform.
   - __:inbox_tray: Flow__<br/>allows you to build custom node-based flows and data pipelines using a visual interface.
-  - __:hammer: Toolbox__<br/>features an ever-expanding library of reusable scripts for common data-wrangling use cases.
-  - __:star: and more!__<br/>a Natural Language Interface, POLARS SQL query support, an API, along with a retinue of other cloud-based services (e.g. customizable street-level geocoding, data feeds, reference data lookups, geo-ip lookups, cloud storage support, `.qsv` file creation, etc.) that will be unveiled in future versions.
+  - __:wrench: Toolbox__<br/>features an ever-expanding library of reusable scripts for common data-wrangling use cases.
+  - __:star: and more!__<br/>Natural Language Interface ([RAG](https://docs.google.com/presentation/d/10T_3MyIqS5UsKxJaOY7Ktrd-GfhJelQImlE_qYmtuis/edit#slide=id.g2e10e05624b_0_124)), [Polars](https://pola.rs) SQL query support, an API, Python/Luau support, automatic Data Dictionaries, [DCAT 3 metadata profile inferencing](https://github.com/jqnatividad/qsv/issues/1705), along with a retinue of other cloud-based services (e.g. customizable street-level geocoding, data feeds, reference data lookups, geo-ip lookups, cloud storage support, [`.qsv` file format](https://github.com/jqnatividad/qsv/issues/1982), etc.) that will be unveiled in future versions.
 
-Like qsv, we're iterating rapidly with qsv pro, so your feedback is essential. Give it a try!<br/>
-
+Like qsv, we're iterating rapidly with qsv pro, so your feedback is essential. Give it a try!
 <div dir="rtl">Get it from https://qsvpro.dathere.com or<br/><a href="https://apps.microsoft.com/detail/xpffdj3f1jsztf?mode=full">
 <img
 src="https://get.microsoft.com/images/en-us%20light.svg"
@@ -31,7 +30,7 @@ __Other highlights:__
 * Improved performance for several commands (`apply`, `datefmt`, `tojsonl` and `validate`) through automatic batch size optimization
 * `validate`: `dynamicEnum` custom JSON Schema keyword in validate command (renamed from `dynenum`) and enhanced email validation
 * `schema`: automatic JSON Schema `const` inferencing for columns with just one value
-* Significant dependency updates, including latest upstream versions of Polars, calamine,jsonschema, and serde_json with unreleased performance upgrades, new features and fixes
+* Significant dependency updates, including latest upstream versions of Polars, calamine, jsonschema, and serde_json with unreleased performance upgrades, new features and fixes
 
 > __NOTE:__ You can also see __qsv__ & __qsv pro__ in action in our ["The Problem with Data Portals" webinar](https://us06web.zoom.us/webinar/register/5317284045017/WN_wTe4l6nlTWa6C0HDs8R2PA) Oct 23, 2024. 1-2pm EDT
 ---
@@ -46,6 +45,7 @@ __Other highlights:__
 * `schema`: added JSON Schema automatic `const` inferencing https://github.com/jqnatividad/qsv/pull/2180
 * Add signing step to qsv MSI installer GitHub Action by @rzmk in https://github.com/jqnatividad/qsv/pull/2182
 * `contrib(completions)`: add `--table` option to `qsv excel` by @rzmk in https://github.com/jqnatividad/qsv/pull/2197
+* `completions`: add `--header-row` option to `qsv excel` https://github.com/jqnatividad/qsv/commit/e8794d569185245f857659cdc299ea86029dd841
 * added new `apply operations sentiment` benchmark https://github.com/jqnatividad/qsv/commit/b745e6438b64686810e4d1df4fa2e6748ba93ff8
 * `docs`: added indexing section to PERFORMANCE.md https://github.com/jqnatividad/qsv/commit/804145a5304091c36728a8cdde4d56f879f71c15
 
@@ -56,9 +56,9 @@ __Other highlights:__
 * apply new `clippy::ref_option` lint to Config::new API https://github.com/jqnatividad/qsv/pull/2192
 * Update debian package readme by @tino097 in https://github.com/jqnatividad/qsv/pull/2187
 * `deps`: `jsonschema` use [latest 0.22.3 upstream with unreleased features/fixes](https://github.com/jqnatividad/qsv/blob/f44d4c95db034d0770a5ee7df42a472aba7f4dd5/Cargo.toml#L300)
-* `deps`: `polars` use [latest 0.43.1 upstream with unreleased features/fixes](https://github.com/jqnatividad/qsv/blob/f44d4c95db034d0770a5ee7df42a472aba7f4dd5/Cargo.toml#L311-L322)
+* `deps`: `polars` use [latest 0.43.1 upstream with unreleased features/fixes](https://github.com/jqnatividad/qsv/blob/1c1174b3b8b65d9dfd9c841597366fb09d0a047c/Cargo.toml#L311-L322)
 * `deps`: created our own fork of unmaintained vader_sentiment crate https://github.com/jqnatividad/qsv/commit/b4267610f39d13eb8939c86f3b5e70033aa95a0c
-* `deps`: use `serde_json` upstream with unreleased perf improvement/fixes https://github.com/jqnatividad/qsv/blob/f44d4c95db034d0770a5ee7df42a472aba7f4dd5/Cargo.toml#L221
+* `deps`: use `serde_json` upstream with unreleased perf improvement/fixes https://github.com/jqnatividad/qsv/blob/1c1174b3b8b65d9dfd9c841597366fb09d0a047c/Cargo.toml#L221
 * build(deps): bump flate2 from 1.0.33 to 1.0.34 by @dependabot in https://github.com/jqnatividad/qsv/pull/2171
 * build(deps): bump flexi_logger from 0.29.0 to 0.29.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2189
 * build(deps): bump flexi_logger from 0.29.1 to 0.29.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2196
@@ -75,7 +75,7 @@ __Other highlights:__
 * aligned Rust nightly to Polars nightly - 2024-09-29 https://github.com/jqnatividad/qsv/commit/7cd2de1151b2299d9b75a9c8b1a3e21dc9c992e2
 
 ### Fixed
-* `schema`: fix `enum` so it only adds a list when the number of unique values > `--enum-threshold`  https://github.com/jqnatividad/qsv/pull/2180
+* `schema`: fix `enum` so it only adds a list when the number of unique values > `--enum-threshold` https://github.com/jqnatividad/qsv/pull/2180
 * Upload artifact fix for Debian package publishing by @tino097 in https://github.com/jqnatividad/qsv/pull/2168
 * fixed typos configuration https://github.com/jqnatividad/qsv/commit/627de891d8fd358aadf8c302552e8a99c54ed959
 * fixed various GitHub Actions publishing workflow issues
