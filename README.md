@@ -112,7 +112,12 @@
 ## Installation Options
 
 ### Option 0: TLDR Quick Install
-qsv's big brother - [qsv pro](https://qsvpro.dathere.com) is available for download from its website and on the [Microsoft App Store](https://apps.microsoft.com/detail/xpffdj3f1jsztf?hl=en-us&gl=US). Apart from a Graphical User Interface, it's superpowered with additional features and capabilities - an API, [CKAN](https://ckan.org) integration, a Natural Language interface and more!
+qsv's big brother - [qsv pro](https://qsvpro.dathere.com) is available for download from its website and on the [Microsoft Store](https://apps.microsoft.com/detail/xpffdj3f1jsztf?mode=full). Apart from a Graphical User Interface, it's superpowered with additional features and capabilities - an API, [CKAN](https://ckan.org) integration, a Natural Language interface, no false-positive Windows Defender warnings and more!
+
+<a href="https://apps.microsoft.com/detail/xpffdj3f1jsztf?mode=full">
+<img
+src="https://get.microsoft.com/images/en-us%20light.svg"
+width="200"  /></a>
 
 ### Option 1: Download Prebuilt Binaries
 

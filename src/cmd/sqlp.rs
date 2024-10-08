@@ -6,8 +6,8 @@ Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame exp
 (see https://docs.pola.rs/user-guide/sql/intro/).
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/py-1.9.0/crates/polars-sql/src/functions.rs and
-https://github.com/pola-rs/polars/blob/py-1.9.0/crates/polars-sql/src/keywords.rs.
+https://github.com/pola-rs/polars/blob/133bf47a6083dd72b991d0c72dacb30ebd3195f2/crates/polars-sql/src/functions.rs and
+https://github.com/pola-rs/polars/blob/133bf47a6083dd72b991d0c72dacb30ebd3195f2/crates/polars-sql/src/keywords.rs.
 https://docs.pola.rs/py-polars/html/reference/sql/index.html also provides a more readable
 version of the SQL functions and keywords, though be aware that it's for the Python version
 of Polars, so there will be some minor syntax differences.
