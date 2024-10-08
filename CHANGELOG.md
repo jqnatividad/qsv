@@ -8,29 +8,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.136.0] - 2024-10-08
 
-## What's Changed
-* Upload artifact fix by @tino097 in https://github.com/jqnatividad/qsv/pull/2168
-* build(deps): bump flate2 from 1.0.33 to 1.0.34 by @dependabot in https://github.com/jqnatividad/qsv/pull/2171
-* 2172 enum new column by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2173
-* build(deps): bump tempfile from 3.12.0 to 3.13.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2175
-* build(deps): bump regex from 1.10.6 to 1.11.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2176
-* build(deps): bump jsonschema from 0.20.0 to 0.21.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2177
-* Automatically determine optimal batch size by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2178
-* `schema`: add `const` support; fix `enum` so it only adds a list when the number of unique values > `--enum-threshold` by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2180
+### Added
+* :tada: [__qsv pro is now in the Microsoft Store!!!__](https://apps.microsoft.com/detail/xpffdj3f1jsztf?mode=full) :tada:
+* `apply`, `datefmt`, `tojsonl`, `validate`: added logic to automatically determine optimal batch size for better parallelization https://github.com/jqnatividad/qsv/pull/2178
+* `enum`: added `--new-column` support for all enum modes, not just `--increment` https://github.com/jqnatividad/qsv/pull/2173
+* `excel`: new `--table` option for XLSX files https://github.com/jqnatividad/qsv/pull/2194
+* `excel`: new `--header-row` option https://github.com/jqnatividad/qsv/commit/458f79ad9f4da504c68d73b48e83ad53b9634027
+* `excel`: expanded range and metadata options https://github.com/jqnatividad/qsv/pull/2195
+* `schema`: added JSON Schema `const` support https://github.com/jqnatividad/qsv/pull/2180
 * Add signing step to qsv MSI installer GitHub Action by @rzmk in https://github.com/jqnatividad/qsv/pull/2182
-* build(deps): bump reqwest from 0.12.7 to 0.12.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/2183
-* build(deps): bump hashbrown from 0.14.5 to 0.15.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2186
-* Update deb readme by @tino097 in https://github.com/jqnatividad/qsv/pull/2187
-* build(deps): bump flexi_logger from 0.29.0 to 0.29.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2189
-* build(deps): bump simple-expand-tilde from 0.4.2 to 0.4.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2190
-* build(deps): bump jsonschema from 0.22.1 to 0.22.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2191
-* apply new `clippy::ref_option` lint to Config::new API by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2192
-* build(deps): bump sysinfo from 0.31.4 to 0.32.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2193
-* `excel`: new `--table` option for XLSX files by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2194
-* `excel`: expanded range and metadata options by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2195
-* build(deps): bump flexi_logger from 0.29.1 to 0.29.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2196
 * `contrib(completions)`: add `--table` option to `qsv excel` by @rzmk in https://github.com/jqnatividad/qsv/pull/2197
+* added new `apply operations sentiment` benchmark https://github.com/jqnatividad/qsv/commit/b745e6438b64686810e4d1df4fa2e6748ba93ff8
+* `docs`: added indexing section to PERFORMANCE.md https://github.com/jqnatividad/qsv/commit/804145a5304091c36728a8cdde4d56f879f71c15
 
+### Changed
+* `stats`: various minor micro-optimizations https://github.com/jqnatividad/qsv/commit/62d95fc6db2c34916160db88e4235719749a5f23 https://github.com/jqnatividad/qsv/commit/2c2862a75d6c0b2651516da30a7e6207a0043670
+* `validate`: renamed custom keyword `dynenum` to `dynamicEnum` to be more consistent with JSON schema naming conventions https://github.com/jqnatividad/qsv/compare/0.135.0...master#diff-9783631cdad9e1f47f60266303dc2d56a6e7a486784b61c40961601e8192f7cf
+* `validate`: optimizations for increased performance; replace serde_json with simd_json https://github.com/jqnatividad/qsv/compare/0.135.0...master#diff-9783631cdad9e1f47f60266303dc2d56a6e7a486784b61c40961601e8192f7cf
+* apply new `clippy::ref_option` lint to Config::new API https://github.com/jqnatividad/qsv/pull/2192
+* Update debian package readme by @tino097 in https://github.com/jqnatividad/qsv/pull/2187
+* `deps`: `jsonschema` use latest 0.22.3 upstream with unreleased features/fixes https://github.com/jqnatividad/qsv/blob/f44d4c95db034d0770a5ee7df42a472aba7f4dd5/Cargo.toml#L300
+* `deps`: `polars` use latest 0.43.1 upstream with unreleased features/fixes https://github.com/jqnatividad/qsv/blob/f44d4c95db034d0770a5ee7df42a472aba7f4dd5/Cargo.toml#L311-L322
+* `deps`: created our own fork of unmaintained vader_sentiment crate https://github.com/jqnatividad/qsv/commit/b4267610f39d13eb8939c86f3b5e70033aa95a0c
+* `deps`: use `serde_json` upstream with unreleased perf improvement/fixes https://github.com/jqnatividad/qsv/blob/f44d4c95db034d0770a5ee7df42a472aba7f4dd5/Cargo.toml#L221
+* build(deps): bump flate2 from 1.0.33 to 1.0.34 by @dependabot in https://github.com/jqnatividad/qsv/pull/2171
+* build(deps): bump flexi_logger from 0.29.0 to 0.29.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2189
+* build(deps): bump flexi_logger from 0.29.1 to 0.29.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2196
+* build(deps): bump hashbrown from 0.14.5 to 0.15.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2186
+* build(deps): bump jsonschema from 0.20.0 to 0.21.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2177
+* build(deps): bump jsonschema from 0.22.1 to 0.22.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2191
+* build(deps): bump regex from 1.10.6 to 1.11.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2176
+* build(deps): bump reqwest from 0.12.7 to 0.12.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/2183
+* build(deps): bump simple-expand-tilde from 0.4.2 to 0.4.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2190
+* build(deps): bump sysinfo from 0.31.4 to 0.32.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2193
+* build(deps): bump tempfile from 3.12.0 to 3.13.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2175
+* apply select clippy lints
+* bumped indirect dependencies
+* aligned Rust nightly to Polars nightly - 2024-09-29 https://github.com/jqnatividad/qsv/commit/7cd2de1151b2299d9b75a9c8b1a3e21dc9c992e2
+
+### Fixed
+* `schema`: fix `enum` so it only adds a list when the number of unique values > `--enum-threshold`  https://github.com/jqnatividad/qsv/pull/2180
+* Upload artifact fix for Debian package publishing by @tino097 in https://github.com/jqnatividad/qsv/pull/2168
+* fixed typos configuration https://github.com/jqnatividad/qsv/commit/627de891d8fd358aadf8c302552e8a99c54ed959
+* fixed various GitHub Actions publishing workflow issues
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.135.0...0.136.0
 
