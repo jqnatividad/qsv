@@ -30,7 +30,7 @@ __Other highlights:__
 * Improved performance for several commands (`apply`, `datefmt`, `tojsonl` and `validate`) through automatic batch size optimization
 * `validate`: `dynamicEnum` custom JSON Schema keyword in validate command (renamed from `dynenum`) and enhanced email validation
 * `schema`: automatic JSON Schema `const` inferencing for columns with just one value
-* Significant dependency updates, including latest upstream versions of Polars, calamine, jsonschema, and serde_json with unreleased performance upgrades, new features and fixes
+* Significant dependency updates, including latest upstream versions of Polars, jsonschema, and serde_json with unreleased performance upgrades, new features and fixes
 
 > __NOTE:__ You can also see __qsv__ & __qsv pro__ in action in our ["The Problem with Data Portals" webinar](https://us06web.zoom.us/webinar/register/5317284045017/WN_wTe4l6nlTWa6C0HDs8R2PA) Oct 23, 2024. 1-2pm EDT
 ---
@@ -55,6 +55,7 @@ __Other highlights:__
 * `validate`: optimizations for increased performance; replace serde_json with simd_json https://github.com/jqnatividad/qsv/compare/0.135.0...master#diff-9783631cdad9e1f47f60266303dc2d56a6e7a486784b61c40961601e8192f7cf
 * apply new `clippy::ref_option` lint to Config::new API https://github.com/jqnatividad/qsv/pull/2192
 * Update debian package readme by @tino097 in https://github.com/jqnatividad/qsv/pull/2187
+* `deps`: bump `calamine` from 0.25 to 0.26 https://github.com/jqnatividad/qsv/commit/b42279a66144264bde9333068c47c530e3945f8c
 * `deps`: `jsonschema` use [latest 0.22.3 upstream with unreleased features/fixes](https://github.com/jqnatividad/qsv/blob/f44d4c95db034d0770a5ee7df42a472aba7f4dd5/Cargo.toml#L300)
 * `deps`: `polars` use [latest 0.43.1 upstream with unreleased features/fixes](https://github.com/jqnatividad/qsv/blob/1c1174b3b8b65d9dfd9c841597366fb09d0a047c/Cargo.toml#L311-L322)
 * `deps`: created our own fork of unmaintained vader_sentiment crate https://github.com/jqnatividad/qsv/commit/b4267610f39d13eb8939c86f3b5e70033aa95a0c
@@ -67,6 +68,7 @@ __Other highlights:__
 * build(deps): bump jsonschema from 0.22.1 to 0.22.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2191
 * build(deps): bump regex from 1.10.6 to 1.11.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2176
 * build(deps): bump reqwest from 0.12.7 to 0.12.8 by @dependabot in https://github.com/jqnatividad/qsv/pull/2183
+* build(deps): bump simd-json from 0.14.0 to 0.14.1 https://github.com/jqnatividad/qsv/pull/2199
 * build(deps): bump simple-expand-tilde from 0.4.2 to 0.4.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2190
 * build(deps): bump sysinfo from 0.31.4 to 0.32.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2193
 * build(deps): bump tempfile from 3.12.0 to 3.13.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2175
