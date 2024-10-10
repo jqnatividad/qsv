@@ -24,7 +24,7 @@ qsv supports a custom format - `currency`. This format will only accept a valid 
 
  1. ISO Currency Symbol (optional): This is the ISO 4217 three-character code or currency symbol
     (e.g. USD, EUR, JPY, $, €, ¥, etc.)
- 2. Amount: This is the numerical value of the currency.More than 2 decimal places are allowed.
+ 2. Amount: This is the numerical value of the currency. More than 2 decimal places are allowed.
  3. Formats: Valid currency formats include:
       Standard: $1,000.00 or USD1000.00  
       Negative amounts: ($100.00) or -$100.00
