@@ -1624,8 +1624,7 @@ checksum = "19d374276b40fb8bbdee95aef7c7fa6b5316ec764510eb64b8dd0e2ed0d7e7f5"
 [[package]]
 name = "crc32fast"
 version = "1.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a97769d94ddab943e4510d138150169a2758b5ef3eb191a9ee688de3e23ef7b3"
+source = "git+https://github.com/jqnatividad/rust-crc32fast?branch=modernize#895e18662e8416f154b87870f533fe3586f3391b"
 dependencies = [
  "cfg-if",
 ]

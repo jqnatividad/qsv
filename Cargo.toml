@@ -280,6 +280,9 @@ csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-opt
 # use our csvlens fork with latest dependencies, including arrow 53 upstream, with unreleased lexical-core fix
 csvlens = { git = "https://github.com/jqnatividad/csvlens", branch = "dependency-upgrades-lexical-core_fix" }
 
+# modernized fork of crc32fast, 2021 edition, MSRV 1.81, select clippy lint suggestions applied
+crc32fast = { git = "https://github.com/jqnatividad/rust-crc32fast", branch = "modernize" }
+
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
