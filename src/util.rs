@@ -2210,6 +2210,7 @@ pub fn csv_to_jsonl(
 }
 
 /// get the optimal batch size
+/// if CSV is not indexed and ROW_COUNT is not set, return DEFAULT_BATCH_SIZE
 /// if batch_size is 0, return the number of rows in the CSV, effectively disabling batching
 /// if batch_size is 1, force batch_size to be set to "optimal_size", even though
 /// its not recommended (number of rows is too small for parallel processing)
@@ -2217,23 +2218,21 @@ pub fn csv_to_jsonl(
 /// failing everything above, return the requested batch_size
 #[inline]
 pub fn optimal_batch_size(rconfig: &Config, batch_size: usize, num_jobs: usize) -> usize {
-    if batch_size < DEFAULT_BATCH_SIZE {
-        return DEFAULT_BATCH_SIZE;
-    }
-    // if ROW_COUNT is not known, even if the input is not indexed, we still determine
-    // optimal batch size if polars is enabled, as its fast even without an index.
-    // Otherwise, we return the default batch size, as the perf hit of counting rows is too high
-    // without an index with polars disabled
-    #[cfg(not(feature = "polars"))]
-    if ROW_COUNT.get().is_none() {
+    if batch_size > 1 && batch_size < DEFAULT_BATCH_SIZE {
         return DEFAULT_BATCH_SIZE;
     }
 
-    let num_rows = if let Ok(rows) = count_rows(rconfig) {
-        rows as usize
-    } else {
-        return DEFAULT_BATCH_SIZE;
+    let num_rows = match ROW_COUNT.get() {
+        Some(count) => count.unwrap() as usize,
+        None => {
+            if let Ok(Some(idx)) = rconfig.indexed() {
+                idx.count() as usize
+            } else {
+                return DEFAULT_BATCH_SIZE;
+            }
+        },
     };
+
     if batch_size == 0 {
         // disable batching, handle all rows in one batch
         num_rows
