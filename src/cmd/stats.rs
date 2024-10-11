@@ -246,6 +246,7 @@ use std::{
     sync::OnceLock,
 };
 
+use crossbeam_channel;
 use itertools::Itertools;
 use qsv_dateparser::parse_with_preference;
 use serde::{Deserialize, Serialize};
@@ -933,7 +934,7 @@ impl Args {
         let nchunks = util::num_of_chunks(idx_count as usize, chunk_size);
 
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
-        let (send, recv) = channel::bounded(0);
+        let (send, recv) = crossbeam_channel::bounded(0);
         for i in 0..nchunks {
             let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
             pool.execute(move || {
@@ -961,7 +962,7 @@ impl Args {
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         let mut results = Vec::with_capacity(stats.len());
         for mut stat in stats {
-            let (send, recv) = channel::bounded(0);
+            let (send, recv) = crossbeam_channel::bounded(0);
             results.push(recv);
             pool.execute(move || {
                 // safety: this will only return an Error if the channel has been disconnected
