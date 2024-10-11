@@ -281,7 +281,7 @@ csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-opt
 csvlens = { git = "https://github.com/jqnatividad/csvlens", branch = "dependency-upgrades-lexical-core_fix" }
 
 # modernized fork of crc32fast, 2021 edition, MSRV 1.81, select clippy lint suggestions applied
-crc32fast = { git = "https://github.com/jqnatividad/rust-crc32fast", branch = "modernize" }
+# crc32fast = { git = "https://github.com/jqnatividad/rust-crc32fast", branch = "modernize" }
 
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
