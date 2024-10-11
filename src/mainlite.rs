@@ -1,4 +1,3 @@
-extern crate crossbeam_channel as channel;
 use std::{env, io, time::Instant};
 
 extern crate qsv_docopt as docopt;
@@ -6,7 +5,10 @@ use docopt::Docopt;
 use rand::Rng;
 use serde::Deserialize;
 
-use crate::clitypes::{CliError, CliResult, QsvExitCode, CURRENT_COMMAND};
+use crate::{
+    clitypes::{CliError, CliResult, QsvExitCode, CURRENT_COMMAND},
+    config::SPONSOR_MESSAGE,
+};
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
@@ -16,9 +18,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 #[global_allocator]
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
-macro_rules! command_list {
-    () => {
-        "
+static COMMAND_LIST: &str = r#"
     behead      Drop header from CSV file
     cat         Concatenate by row or column
     clipboard   Provide input from clipboard or output to clipboard
@@ -68,12 +68,8 @@ macro_rules! command_list {
     table       Align CSV data into columns
     tojsonl     Convert CSV to newline-delimited JSON
     transpose   Transpose rows/columns of CSV data
-    validate    Validate CSV data for RFC4180-compliance or with JSON Schema
+    validate    Validate CSV data for RFC4180-compliance or with JSON Schema"#;
 
-sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
-"
-    };
-}
 mod clitypes;
 mod cmd;
 mod config;
@@ -96,8 +92,6 @@ Options:
     <command> -h         Display the command help message
     -v, --version        Print version info, mem allocator, features installed, 
                          max_jobs, num_cpus, build info then exit
-
-sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
 "#;
 
 #[derive(Deserialize)]
@@ -119,7 +113,7 @@ fn main() -> QsvExitCode {
         },
     };
 
-    let args: Args = Docopt::new(USAGE)
+    let args: Args = Docopt::new(format!("{USAGE}\n\n{SPONSOR_MESSAGE}"))
         .and_then(|d| {
             d.options_first(true)
                 .version(Some(util::version()))
@@ -132,7 +126,7 @@ fn main() -> QsvExitCode {
     }
 
     if args.flag_list {
-        wout!(concat!("Installed commands:", command_list!()));
+        wout!("Installed commands:{}\n\n{}", COMMAND_LIST, SPONSOR_MESSAGE);
         util::log_end(qsv_args, now);
         return QsvExitCode::Good;
     } else if args.flag_envlist {
@@ -150,12 +144,10 @@ fn main() -> QsvExitCode {
     }
     match args.arg_command {
         None => {
-            werr!(concat!(
-                "qsvlite is a suite of CSV command line utilities.
-
-Please choose one of the following commands:",
-                command_list!()
-            ));
+            werr!(
+                "qsvlite is a suite of CSV command line utilities.\n\nPlease choose one of the \
+                 following commands:\n{COMMAND_LIST}\n\n{SPONSOR_MESSAGE}",
+            );
 
             // if no command is specified, auto-check for updates 10% of the time
             let mut rng = rand::thread_rng(); //DevSkim: ignore DS148264
@@ -320,7 +312,7 @@ impl Command {
             Command::Frequency => cmd::frequency::run(argv),
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
-                wout!("{USAGE}");
+                wout!("{USAGE}\n\n{SPONSOR_MESSAGE}");
                 util::qsv_check_for_update(true, false)?;
                 Ok(())
             },

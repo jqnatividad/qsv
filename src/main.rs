@@ -33,7 +33,6 @@
     )
 )]
 
-extern crate crossbeam_channel as channel;
 use std::{env, io, time::Instant};
 
 extern crate qsv_docopt as docopt;
@@ -41,7 +40,10 @@ use docopt::Docopt;
 use rand::Rng;
 use serde::Deserialize;
 
-use crate::clitypes::{CliError, CliResult, QsvExitCode, CURRENT_COMMAND};
+use crate::{
+    clitypes::{CliError, CliResult, QsvExitCode, CURRENT_COMMAND},
+    config::SPONSOR_MESSAGE,
+};
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
@@ -72,10 +74,7 @@ Options:
     -h, --help           Display this message
     <command> -h         Display the command help message
     -v, --version        Print version info, mem allocator, features installed, 
-                         max_jobs, num_cpus, build info then exit
-
-sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
-"#;
+                         max_jobs, num_cpus, build info then exit"#;
 
 #[derive(Deserialize)]
 struct Args {
@@ -214,7 +213,7 @@ fn main() -> QsvExitCode {
         },
     };
 
-    let args: Args = Docopt::new(USAGE)
+    let args: Args = Docopt::new(format!("{USAGE}\n\n{SPONSOR_MESSAGE}"))
         .and_then(|d| {
             d.options_first(true)
                 .version(Some(util::version()))
@@ -227,13 +226,7 @@ fn main() -> QsvExitCode {
     }
 
     if args.flag_list {
-        wout!("Installed commands ({num_commands}):");
-        wout!(
-            r#"{enabled_commands}
-
-sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
-"#
-        );
+        wout!("Installed commands ({num_commands}):\n{enabled_commands}\n\n{SPONSOR_MESSAGE}");
         util::log_end(qsv_args, now);
         return QsvExitCode::Good;
     } else if args.flag_envlist {
@@ -252,13 +245,8 @@ sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
     match args.arg_command {
         None => {
             werr!(
-                r#"qsv is a suite of CSV command line utilities.
-
-Please choose one of the following {num_commands} commands:
-{enabled_commands}
-
-sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
-"#
+                "qsv is a suite of CSV command line utilities.\n\nPlease choose one of the \
+                 following {num_commands} commands:\n{enabled_commands}\n\n{SPONSOR_MESSAGE}"
             );
 
             // if no command is specified, auto-check for updates 10% of the time
@@ -459,7 +447,7 @@ impl Command {
             Command::Geocode => cmd::geocode::run(argv),
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
-                wout!("{USAGE}");
+                wout!("{USAGE}\n\n{SPONSOR_MESSAGE}");
                 util::qsv_check_for_update(true, false)?;
                 Ok(())
             },
