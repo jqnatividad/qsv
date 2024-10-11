@@ -2675,7 +2675,13 @@ fn apply_crc32() {
     let wrk = Workdir::new("apply_crc32");
     wrk.create(
         "data.csv",
-        vec![svec!["name"], svec!["John"], svec!["Sue"], svec!["Hopkins"]],
+        vec![
+            svec!["name"],
+            svec!["John"],
+            svec!["Sue"],
+            svec!["Hopkins"],
+            svec!["TheQuickBrownFoxJumpedOverTheLazyDogByTheZigzagQuarrySite 1234567890 &^#@09"],
+        ],
     );
     let mut cmd = wrk.command("apply");
     cmd.arg("operations")
@@ -2691,6 +2697,10 @@ fn apply_crc32() {
         svec!["John", "2437433000"],
         svec!["Sue", "4264251807"],
         svec!["Hopkins", "1940610850"],
+        svec![
+            "TheQuickBrownFoxJumpedOverTheLazyDogByTheZigzagQuarrySite 1234567890 &^#@09",
+            "4056627688"
+        ],
     ];
 
     assert_eq!(got, expected);
