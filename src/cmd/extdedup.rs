@@ -167,7 +167,7 @@ fn dedup_csv(args: Args, mem_limited_buffer: u64) -> Result<u64, crate::clitypes
             dupes_count += 1;
             if dupes_output {
                 dupe_row.clear();
-                dupe_row.push_field((row_idx + 1).to_string().as_bytes());
+                dupe_row.push_field(itoa::Buffer::new().format(row_idx + 1).as_bytes());
                 dupe_row.extend(curr_row.iter());
                 dupewtr.write_byte_record(&dupe_row)?;
             }
