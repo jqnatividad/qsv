@@ -903,7 +903,10 @@ fn do_json_validation(
             .iter()
             .map(|(field, error)| {
                 // validation error file format: row_number, field, error
-                format!("{row_number_string}\t{field}\t{error}")
+                format!(
+                    "{row_number_string}\t{field}\t{error}",
+                    field = field.trim_start_matches('/')
+                )
             })
             .collect::<Vec<_>>()
             .join("\n")
@@ -1164,10 +1167,7 @@ fn validate_json_instance(
                 .iter()
                 .map(|e| {
                     (
-                        e.instance_location()
-                            .to_string()
-                            .trim_start_matches('/')
-                            .to_owned(),
+                        e.instance_location().to_string(),
                         e.error_description().to_string(),
                     )
                 })
@@ -1303,7 +1303,7 @@ mod tests_for_schema_validation {
 
         assert_eq!(
             vec![(
-                "name".to_string(),
+                "/name".to_string(),
                 "\"X\" is shorter than 2 characters".to_string()
             )],
             result.unwrap()
@@ -1374,7 +1374,7 @@ fn test_validate_currency_email_dynamicenum_validator() {
     assert_eq!(
         result,
         Some(vec![(
-            "fee".to_owned(),
+            "/fee".to_owned(),
             "\"Ð 100.00\" is not a \"currency\"".to_owned()
         )])
     );
@@ -1403,11 +1403,11 @@ fn test_validate_currency_email_dynamicenum_validator() {
         result,
         Some(vec![
             (
-                "fee".to_owned(),
+                "/fee".to_owned(),
                 "\"Ð 100.00\" is not a \"currency\"".to_owned()
             ),
             (
-                "email".to_owned(),
+                "/email".to_owned(),
                 "\"thisisnotanemail\" is not a \"email\"".to_owned()
             )
         ])
@@ -1449,11 +1449,11 @@ fn test_validate_currency_email_dynamicenum_validator() {
                 result,
                 Some(vec![
                     (
-                        "name".to_owned(),
+                        "/name".to_owned(),
                         "\"T\" is shorter than 2 characters".to_owned()
                     ),
                     (
-                        "agency".to_owned(),
+                        "/agency".to_owned(),
                         "\"MODA\" is not a valid dynamicEnum value".to_owned()
                     )
                 ])
@@ -1461,7 +1461,7 @@ fn test_validate_currency_email_dynamicenum_validator() {
             4 => assert_eq!(
                 result,
                 Some(vec![(
-                    "name".to_owned(),
+                    "/name".to_owned(),
                     "\"X\" is shorter than 2 characters".to_owned()
                 )])
             ),
@@ -1469,14 +1469,14 @@ fn test_validate_currency_email_dynamicenum_validator() {
             6 => assert_eq!(
                 result,
                 Some(vec![(
-                    "agency".to_owned(),
+                    "/agency".to_owned(),
                     "\"NYFD\" is not a valid dynamicEnum value".to_owned()
                 )])
             ),
             7 => assert_eq!(
                 result,
                 Some(vec![(
-                    "fee".to_owned(),
+                    "/fee".to_owned(),
                     "\"WAX 100.000,00\" is not a \"currency\"".to_owned()
                 )])
             ),
@@ -1484,15 +1484,15 @@ fn test_validate_currency_email_dynamicenum_validator() {
                 result,
                 Some(vec![
                     (
-                        "fee".to_owned(),
+                        "/fee".to_owned(),
                         "\"B 1,000,000\" is not a \"currency\"".to_owned()
                     ),
                     (
-                        "email".to_owned(),
+                        "/email".to_owned(),
                         "\"71076.964-compuserve\" is not a \"email\"".to_owned()
                     ),
                     (
-                        "agency".to_owned(),
+                        "/agency".to_owned(),
                         "\"ABCD\" is not a valid dynamicEnum value".to_owned()
                     )
                 ])
