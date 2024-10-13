@@ -149,7 +149,7 @@ use indicatif::HumanCount;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use jsonschema::{
     output::BasicOutput,
-    paths::{JsonPointer, JsonPointerNode, PathChunk},
+    paths::{LazyLocation, Location},
     ErrorIterator, Keyword, ValidationError, Validator,
 };
 use log::{debug, info, log_enabled};
@@ -179,8 +179,8 @@ macro_rules! fail_validation_error {
         let err = format!($($t)*);
         error!("{err}");
         Err(ValidationError::custom(
-            JsonPointer::default(),
-            JsonPointer::default(),
+            Location::default(),
+            Location::default(),
             &Value::Null,
             err,
         ))
@@ -260,13 +260,13 @@ impl Keyword for DynEnumValidator {
     fn validate<'instance>(
         &self,
         instance: &'instance Value,
-        instance_path: &JsonPointerNode,
+        instance_path: &LazyLocation,
     ) -> ErrorIterator<'instance> {
         if self.dynenum_set.contains(instance.as_str().unwrap()) {
             Box::new(std::iter::empty())
         } else {
             let error = ValidationError::custom(
-                JsonPointer::default(),
+                Location::default(),
                 instance_path.into(),
                 instance,
                 format!("{instance} is not a valid dynamicEnum value"),
@@ -289,7 +289,7 @@ impl Keyword for DynEnumValidator {
 fn dyn_enum_validator_factory<'a>(
     _parent: &'a Map<String, Value>,
     value: &'a Value,
-    jsonpointer: JsonPointer,
+    location: Location,
 ) -> Result<Box<dyn Keyword>, ValidationError<'a>> {
     if let Value::String(uri) = value {
         let temp_download = NamedTempFile::new()?;
@@ -340,8 +340,8 @@ fn dyn_enum_validator_factory<'a>(
         Ok(Box::new(DynEnumValidator::new(enum_set)))
     } else {
         Err(ValidationError::custom(
-            JsonPointer::default(),
-            jsonpointer,
+            Location::default(),
+            location,
             value,
             "'dynamicEnum' must be set to a CSV file on the local filesystem or on a URL.",
         ))
@@ -1164,34 +1164,22 @@ fn validate_json_instance(
     instance: &Value,
     schema_compiled: &Validator,
 ) -> Option<Vec<(String, String)>> {
-    let validation_output = schema_compiled.apply(instance);
-
-    // If validation output is Invalid, then grab field names and errors
-    if validation_output.flag() {
-        None
-    } else {
-        // get validation errors as String
-        let validation_errors: Vec<(String, String)> = match validation_output.basic() {
-            BasicOutput::Invalid(errors) => errors
+    match schema_compiled.apply(instance).basic() {
+        BasicOutput::Valid(_) => None,
+        BasicOutput::Invalid(errors) => Some(
+            errors
                 .iter()
                 .map(|e| {
-                    if let Some(PathChunk::Property(box_str)) = e.instance_location().last() {
-                        (box_str.to_string(), e.error_description().to_string())
-                    } else {
-                        (
-                            e.instance_location().to_string(),
-                            e.error_description().to_string(),
-                        )
-                    }
+                    (
+                        e.instance_location()
+                            .to_string()
+                            .trim_start_matches('/')
+                            .to_owned(),
+                        e.error_description().to_string(),
+                    )
                 })
                 .collect(),
-            BasicOutput::Valid(_annotations) => {
-                // shouldn't happen
-                unreachable!("Unexpected error.");
-            },
-        };
-
-        Some(validation_errors)
+        ),
     }
 }
 
@@ -1551,7 +1539,7 @@ fn test_dyn_enum_validator() {
         let err_info = e.into_iter().next().unwrap();
         assert_eq!(
             format!("{err_info:?}"),
-            r#"ValidationError { instance: String("lanzones"), kind: Custom { message: "\"lanzones\" is not a valid dynamicEnum value" }, instance_path: JsonPointer([]), schema_path: JsonPointer([]) }"#
+            r#"ValidationError { instance: String("lanzones"), kind: Custom { message: "\"lanzones\" is not a valid dynamicEnum value" }, instance_path: Location(""), schema_path: Location("") }"#
         );
     } else {
         unreachable!("Expected an error, but validation succeeded.");
