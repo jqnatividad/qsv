@@ -2424,15 +2424,14 @@ dependencies = [
 
 [[package]]
 name = "flexi_logger"
-version = "0.29.2"
+version = "0.29.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c6e500462d7c5ee8b974423b55bd47f3e09c8306050e5bbeaccaf2b17992f70"
+checksum = "719236bdbcf6033a3395165f797076b31056018e6723ccff616eb25fc9c99de1"
 dependencies = [
  "chrono",
  "crossbeam-channel",
  "crossbeam-queue",
  "flate2",
- "glob",
  "log",
  "thiserror",
 ]
