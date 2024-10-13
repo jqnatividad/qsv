@@ -278,7 +278,7 @@ fn dedup_lines(args: Args, mem_limited_buffer: u64) -> Result<u64, crate::clityp
 /// - If `flag_memory_limit` is Some(limit):
 ///   - For limit <= 50, it's treated as a percentage of total system memory.
 ///   - For limit > 50, it's treated as megabytes, but capped at 90% of total system memory.
-fn calculate_memory_limit(flag_memory_limit: Option<u64>) -> u64 {
+pub fn calculate_memory_limit(flag_memory_limit: Option<u64>) -> u64 {
     if !sysinfo::IS_SUPPORTED_SYSTEM {
         return MEMORY_LIMITED_BUFFER;
     }
