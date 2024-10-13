@@ -1,5 +1,6 @@
-use crate::workdir::Workdir;
 use arboard::Clipboard;
+
+use crate::workdir::Workdir;
 
 #[test]
 // #[ignore = "Requires clipboard to test."]
