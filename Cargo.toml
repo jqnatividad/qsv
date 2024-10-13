@@ -69,7 +69,7 @@ panic    = "abort"
 
 [dependencies]
 ahash = "0.8"
-arboard = "3.4.1"
+arboard = { version = "3.4.1", default-features = false }
 arrow = { version = "53", default-features = false, features = [
     "csv",
 ], optional = true }
