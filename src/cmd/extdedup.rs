@@ -25,7 +25,7 @@ Usage:
 extdedup options:
     -s, --select <arg>         Select a subset of columns to dedup.
                                Note that the outputs will remain at the full width of the CSV.
-                               If --select is NOT set, extdedup will work in LINE MODE, sorting
+                               If --select is NOT set, extdedup will work in LINE MODE, deduping
                                the input as a text file on a line-by-line basis.
     --no-output                Do not write deduplicated output to <output>.
                                Use this if you only want to know the duplicate count.
@@ -43,7 +43,7 @@ extdedup options:
 Common options:
                                CSV MODE ONLY:
     -n, --no-headers           When set, the first row will not be interpreted
-                               as headers. That is, it will be sorted with the rest
+                               as headers. That is, it will be deduped with the rest
                                of the rows. Otherwise, the first row will always
                                appear as the header row in the output.
     -d, --delimiter <arg>      The field delimiter for reading CSV data.
