@@ -230,7 +230,7 @@ fn sort_csv(
 
     for l in sorted_line_rdr.lines() {
         line.clone_from(&l?);
-        let Ok(position) = atoi_simd::parse::<u64>((&line[line.len() - width..]).as_bytes()) else {
+        let Ok(position) = atoi_simd::parse::<u64>(line[line.len() - width..].as_bytes()) else {
             return fail!("Failed to retrieve position: invalid integer");
         };
 

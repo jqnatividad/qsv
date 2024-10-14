@@ -6717,9 +6717,9 @@ dependencies = [
 
 [[package]]
 name = "sorted-vec"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6734caf0b6f51addd5eeacca12fb39b2c6c14e8d4f3ac42f3a78955c0467458"
+checksum = "2432f7c120a790d329ee1c54c9c09495b163a72eb338b0682742e2c173b15107"
 
 [[package]]
 name = "spin"
