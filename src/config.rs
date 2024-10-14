@@ -30,7 +30,7 @@ const NO_INDEX_WARNING_FILESIZE: u64 = 100_000_000; // 100MB
 static AUTO_INDEXED: AtomicBool = AtomicBool::new(false);
 
 pub static SPONSOR_MESSAGE: &str = r#"sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
-Need a UI & more advanced data-wrangling? Upgrade to qsv pro (https://qsvpro.dathere.com)
+Need a UI & more advanced data-wrangling? Upgrade to qsv pro (https://qsvpro.datHere.com)
 "#;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
