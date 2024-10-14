@@ -152,7 +152,7 @@ fn sort_csv(
 
     // first pass. get the selected columns, and the record position
     // then write them to a temp text file with the selected columns and the position
-    // separated by "<!>". Pad the position with leading zeroes, so it will always be the same width
+    // separated by "|". Pad the position with leading zeroes, so it will always be the same width
     for row in input_rdr.byte_records() {
         curr_row.clone_from(&row?);
         sort_key.clear();
@@ -167,7 +167,7 @@ fn sort_csv(
         }
         let idx_position = curr_row.position().unwrap();
 
-        sort_key.push_str(&format!("<!>{:01$}", idx_position.line(), width));
+        sort_key.push_str(&format!("|{:01$}", idx_position.line(), width));
 
         writeln!(line_wtr, "{sort_key}")?;
     }
@@ -227,18 +227,12 @@ fn sort_csv(
     // amortize allocations
     let mut record_wrk = csv::ByteRecord::new();
     let mut line = String::new();
-    #[allow(unused_assignments)]
-    let mut line_parts: Vec<&str> = Vec::with_capacity(2);
 
     for l in sorted_line_rdr.lines() {
         line.clone_from(&l?);
-        line_parts = line.rsplitn(2, "<!>").collect();
-        if line_parts.len() != 2 {
-            return fail_clierror!("Invalid sorted line format");
-        }
-        let position: u64 = line_parts[0]
-            .parse()
-            .map_err(|e| format!("Failed to retrieve position: {e}"))?;
+        let Ok(position) = atoi_simd::parse::<u64>((&line[line.len() - width..]).as_bytes()) else {
+            return fail!("Failed to retrieve position: invalid integer");
+        };
 
         idxfile.seek(position - position_delta)?;
         idxfile.read_byte_record(&mut record_wrk)?;
