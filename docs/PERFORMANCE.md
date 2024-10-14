@@ -10,9 +10,9 @@ Indexing your CSV files is key for performance. Here's why:
 
 3. **Parallel Processing**: Indexing enables multithreading, dramatically speeding up supported commands like `stats`, `frequency`, `sample`, `split` and `tojsonl`.
 
-4. **Random Access**: The `luau` command gains random access capabilities.
+4. **Random Access**: The `luau` command gains random access capabilities. `extsort` CSV mode requires an index.
 
-5. **Low Overhead**: Creating an index is fast and efficient, even for very large files.
+5. **Low Overhead**: Creating an index is fast and efficient, even for very large files. The million row, 41-column, 520mb NYC 311 benchmark file for instance, takes all of 466 ms to index.
 
 Even if you're only handling a CSV file once, and its not reference data, indexing still makes sense if you're `slicing`, `counting`, `sampling` or compiling summary statistics with the `stats` and `frequency` commands.
 
