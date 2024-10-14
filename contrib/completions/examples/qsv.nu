@@ -298,18 +298,24 @@ module completions {
   ]
 
   export extern "qsv extdedup" [
+    --select
     --no-output
     --dupes-output
     --human-readable
     --memory-limit
+    --no-headers
+    --delimiter
     --quiet
     --help(-h)                # Print help
   ]
 
   export extern "qsv extsort" [
+    --select
+    --reverse
     --memory-limit
     --tmp-dir
     --jobs
+    --delimiter
     --no-headers
     --help(-h)                # Print help
   ]

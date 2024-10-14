@@ -744,6 +744,9 @@ const completion: Fig.Spec = {
       name: "extdedup",
       options: [
         {
+          name: "--select",
+        },
+        {
           name: "--no-output",
         },
         {
@@ -754,6 +757,12 @@ const completion: Fig.Spec = {
         },
         {
           name: "--memory-limit",
+        },
+        {
+          name: "--no-headers",
+        },
+        {
+          name: "--delimiter",
         },
         {
           name: "--quiet",
@@ -768,6 +777,12 @@ const completion: Fig.Spec = {
       name: "extsort",
       options: [
         {
+          name: "--select",
+        },
+        {
+          name: "--reverse",
+        },
+        {
           name: "--memory-limit",
         },
         {
@@ -775,6 +790,9 @@ const completion: Fig.Spec = {
         },
         {
           name: "--jobs",
+        },
+        {
+          name: "--delimiter",
         },
         {
           name: "--no-headers",

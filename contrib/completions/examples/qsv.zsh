@@ -416,10 +416,13 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (extdedup)
 _arguments "${_arguments_options[@]}" : \
+'--select[]' \
 '--no-output[]' \
 '--dupes-output[]' \
 '--human-readable[]' \
 '--memory-limit[]' \
+'--no-headers[]' \
+'--no-delimiter[]' \
 '--quiet[]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -427,9 +430,12 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (extsort)
 _arguments "${_arguments_options[@]}" : \
+'--select[]' \
+'--reverse[]' \
 '--memory-limit[]' \
 '--tmp-dir[]' \
 '--jobs[]' \
+'--delimiter[]' \
 '--no-headers[]' \
 '-h[Print help]' \
 '--help[Print help]' \

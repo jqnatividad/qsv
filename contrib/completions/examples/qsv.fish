@@ -301,15 +301,21 @@ complete -c qsv -n "__fish_qsv_using_subcommand exclude" -l output
 complete -c qsv -n "__fish_qsv_using_subcommand exclude" -l no-headers
 complete -c qsv -n "__fish_qsv_using_subcommand exclude" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand exclude" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l select
 complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l no-output
 complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l dupes-output
 complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l human-readable
 complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l memory-limit
+complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l quiet
 complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l select
+complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l reverse
 complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l memory-limit
 complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l tmp-dir
 complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l no-headers
 complete -c qsv -n "__fish_qsv_using_subcommand extsort" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand explode" -l rename

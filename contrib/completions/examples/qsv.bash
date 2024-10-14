@@ -1180,7 +1180,7 @@ _qsv() {
             return 0
             ;;
         qsv__extdedup)
-            opts="-h --no-output --dupes-output --human-readable --memory-limit --quiet --help"
+            opts="-h --select --no-output --dupes-output --human-readable --memory-limit --no-headers --delimiter --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1194,7 +1194,7 @@ _qsv() {
             return 0
             ;;
         qsv__extsort)
-            opts="-h --memory-limit --tmp-dir --jobs --no-headers --help"
+            opts="-h --select --reverse --memory-limit --tmp-dir --jobs --delimiter --no-headers --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

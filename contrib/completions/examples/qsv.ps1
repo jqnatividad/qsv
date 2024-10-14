@@ -415,19 +415,25 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             break
         }
         'qsv;extdedup' {
+            [CompletionResult]::new('--select', 'select', [CompletionResultType]::ParameterName, 'select')
             [CompletionResult]::new('--no-output', 'no-output', [CompletionResultType]::ParameterName, 'no-output')
             [CompletionResult]::new('--dupes-output', 'dupes-output', [CompletionResultType]::ParameterName, 'dupes-output')
             [CompletionResult]::new('--human-readable', 'human-readable', [CompletionResultType]::ParameterName, 'human-readable')
             [CompletionResult]::new('--memory-limit', 'memory-limit', [CompletionResultType]::ParameterName, 'memory-limit')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
             [CompletionResult]::new('--quiet', 'quiet', [CompletionResultType]::ParameterName, 'quiet')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'qsv;extsort' {
+            [CompletionResult]::new('--select', 'select', [CompletionResultType]::ParameterName, 'select')
+            [CompletionResult]::new('--reverse', 'reverse', [CompletionResultType]::ParameterName, 'reverse')
             [CompletionResult]::new('--memory-limit', 'memory-limit', [CompletionResultType]::ParameterName, 'memory-limit')
             [CompletionResult]::new('--tmp-dir', 'tmp-dir', [CompletionResultType]::ParameterName, 'tmp-dir')
             [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
             [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')

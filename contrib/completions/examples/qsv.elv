@@ -380,18 +380,24 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --help 'Print help'
         }
         &'qsv;extdedup'= {
+            cand --select 'select'
             cand --no-output 'no-output'
             cand --dupes-output 'dupes-output'
             cand --human-readable 'human-readable'
             cand --memory-limit 'memory-limit'
+            cand --no-headers 'no-headers'
+            cand --delimiter 'delimiter'
             cand --quiet 'quiet'
             cand -h 'Print help'
             cand --help 'Print help'
         }
         &'qsv;extsort'= {
+            cand --select 'select'
+            cand --reverse 'reverse'
             cand --memory-limit 'memory-limit'
             cand --tmp-dir 'tmp-dir'
             cand --jobs 'jobs'
+            cand --delimiter 'delimiter'
             cand --no-headers 'no-headers'
             cand -h 'Print help'
             cand --help 'Print help'
