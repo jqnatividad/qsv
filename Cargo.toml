@@ -70,9 +70,6 @@ panic    = "abort"
 [dependencies]
 ahash = "0.8"
 arboard = { version = "3.4.1", default-features = false }
-arrow = { version = "53", default-features = false, features = [
-    "csv",
-], optional = true }
 atoi_simd = "0.16"
 base62 = { version = "2.0", optional = true }
 bytemuck = { version = "1.19", features = [
@@ -281,7 +278,7 @@ csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-opt
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 
 # use our csvlens fork with latest dependencies, including arrow 53 upstream, with unreleased lexical-core fix
-csvlens = { git = "https://github.com/jqnatividad/csvlens", branch = "dependency-upgrades-lexical-core_fix" }
+csvlens = { git = "https://github.com/jqnatividad/csvlens", branch = "bump-dependencies-especially-arrow" }
 
 # modernized fork of crc32fast, 2021 edition, MSRV 1.81, select clippy lint suggestions applied
 # crc32fast = { git = "https://github.com/jqnatividad/rust-crc32fast", branch = "modernize" }
@@ -375,7 +372,7 @@ polars = ["dep:polars", "bytemuck"]
 prompt = ["rfd"]
 python = ["pyo3"]
 to = ["csvs_convert", "xlsxwriter"]
-lens = ["arrow", "csvlens"]
+lens = ["csvlens"]
 lite = []
 datapusher_plus = ["self_update"]
 feature_capable = []

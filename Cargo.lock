@@ -1791,7 +1791,7 @@ dependencies = [
 [[package]]
 name = "csvlens"
 version = "0.10.1"
-source = "git+https://github.com/jqnatividad/csvlens?branch=dependency-upgrades-lexical-core_fix#89e8bbf397017ce067bcb552f66658e3db4d939b"
+source = "git+https://github.com/jqnatividad/csvlens?branch=bump-dependencies-especially-arrow#3fcedb92c3d800f0ecfc2427bbe8eee3ce33fcdd"
 dependencies = [
  "anyhow",
  "arboard",
@@ -5441,7 +5441,6 @@ dependencies = [
  "actix-web",
  "ahash",
  "arboard",
- "arrow",
  "assert-json-diff",
  "atoi_simd 0.16.0",
  "base62",
@@ -6251,9 +6250,9 @@ dependencies = [
 
 [[package]]
 name = "rustversion"
-version = "1.0.17"
+version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "955d28af4278de8121b7ebeb796b6a45735dc01436d898801014aced2773a3d6"
+checksum = "0e819f2bc632f285be6d7cd36e25940d45b2391dd6d9b939e79de557f7014248"
 
 [[package]]
 name = "ryu"
