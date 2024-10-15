@@ -303,6 +303,11 @@ publicsuffix = { git = "https://github.com/rushmorem/publicsuffix", rev = "b3003
 # use serde_json with unreleased optimizations
 serde_json = { git = "https://github.com/serde-rs/json", rev = "faab2e8" }
 
+# use our fork of strum with bumped phf dependency. They're holding back as they have a conservative
+# MSRV policy, while qsv has an aggressive MSRV policy to always require Rust stable
+strum        = { git = "https://github.com/jqnatividad/strum", branch = "bump-phf-to-0.11" }
+strum_macros = { git = "https://github.com/jqnatividad/strum", branch = "bump-phf-to-0.11" }
+
 # use of fork of xlsxwriter with bumped bindgen dependency
 xlsxwriter = { git = "https://github.com/jqnatividad/xlsxwriter-rs", branch = "bump-bindgen-to-0.70.1" }
 
