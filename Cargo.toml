@@ -278,8 +278,8 @@ csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-opt
 csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 
-# use our csvlens fork with latest dependencies, including arrow 53 upstream, with unreleased lexical-core fix
-csvlens = { git = "https://github.com/jqnatividad/csvlens", branch = "bump-dependencies-especially-arrow" }
+# use latest csvlens upstream with latest dependencies, including arrow 53, with lexical-core fix
+csvlens = { git = "https://github.com/YS-L/csvlens", rev = "002edeb" }
 
 # modernized fork of crc32fast, 2021 edition, MSRV 1.81, select clippy lint suggestions applied
 # crc32fast = { git = "https://github.com/jqnatividad/rust-crc32fast", branch = "modernize" }
