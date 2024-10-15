@@ -3218,16 +3218,6 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "idna"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e14ddfc70884202db2244c223200c204c2bda1bc6e0998d11b5e024d657209e6"
-dependencies = [
- "unicode-bidi",
- "unicode-normalization",
-]
-
-[[package]]
-name = "idna"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "634d9b1461af396cad843f47fdba5597a4f9e6ddd4bfb6ff5d85028c25cb12f6"
@@ -5363,10 +5353,9 @@ dependencies = [
 [[package]]
 name = "publicsuffix"
 version = "2.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96a8c1bda5ae1af7f99a2962e49df150414a43d62404644d98dd5c3a93d07457"
+source = "git+https://github.com/rushmorem/publicsuffix?rev=b300356#b30035623f75d8122c222058eff48835078276f4"
 dependencies = [
- "idna 0.3.0",
+ "idna 0.5.0",
  "psl-types",
 ]
 
@@ -5501,6 +5490,7 @@ dependencies = [
  "parking_lot 0.12.3",
  "phf 0.11.2",
  "polars",
+ "publicsuffix",
  "pyo3",
  "qsv-dateparser",
  "qsv-sniffer",
