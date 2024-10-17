@@ -2772,12 +2772,13 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 [[package]]
 name = "governor"
 version = "0.6.3"
-source = "git+https://github.com/jqnatividad/governor?branch=deps-bump-dashmap#d84d2c6b8be907535f45d3212c835dd2923ee650"
+source = "git+https://github.com/jqnatividad/governor?branch=deps-bump-dashmap#f93388e4e2109b529d78b42cc66fe12c5d787e8f"
 dependencies = [
  "cfg-if",
  "dashmap",
- "futures",
+ "futures-sink",
  "futures-timer",
+ "futures-util",
  "no-std-compat",
  "nonzero_ext",
  "parking_lot 0.12.3",
@@ -3629,9 +3630,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.159"
+version = "0.2.160"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "561d97a539a36e26a9a5fad1ea11a3039a67714694aaa379433e580854bc3dc5"
+checksum = "f0b21006cd1874ae9e650973c565615676dc4a274c965bb0a73796dac838ce4f"
 
 [[package]]
 name = "libflate"
