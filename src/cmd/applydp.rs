@@ -417,6 +417,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // do actual applydp command via Rayon parallel iterator
         batch
             .par_iter()
+            .with_min_len(1024)
             .map(|record_item| {
                 let mut record = record_item.clone();
                 match applydp_cmd {
