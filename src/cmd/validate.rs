@@ -695,6 +695,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // validation_results vector should have same row count and in same order as input CSV
         batch
             .par_iter()
+            .with_min_len(1024)
             .map(|record| do_json_validation(&header_types, header_len, record, &schema_compiled))
             .collect_into_vec(&mut validation_results);
 
