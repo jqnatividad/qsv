@@ -12,7 +12,7 @@ categories = ["command-line-utilities", "parser-implementations"]
 license = "MIT OR Unlicense"
 autotests = false
 edition = "2021"
-rust-version = "1.81"
+rust-version = "1.82"
 autobins = false
 include = [
     "src/**/*",
@@ -167,6 +167,7 @@ polars = { version = "0.43", features = [
     "performant",
     "pivot",
     "semi_anti_join",
+    "serde",
     "serde-lazy",
     "sql",
     "streaming",
