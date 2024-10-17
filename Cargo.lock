@@ -612,9 +612,9 @@ dependencies = [
 
 [[package]]
 name = "async-compression"
-version = "0.4.15"
+version = "0.4.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e26a9844c659a2a293d239c7910b752f8487fe122c6c8bd1659bf85a6507c302"
+checksum = "103db485efc3e41214fe4fda9f3dbeae2eb9082f48fd236e6095627a9422066e"
 dependencies = [
  "brotli 7.0.0",
  "flate2",
@@ -3240,9 +3240,9 @@ dependencies = [
 
 [[package]]
 name = "image"
-version = "0.25.2"
+version = "0.25.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99314c8a2152b8ddb211f924cdae532d8c5e4c8bb54728e12fff1b0cd5963a10"
+checksum = "d97eb9a8e0cd5b76afea91d7eecd5cf8338cd44ced04256cf1f800474b227c52"
 dependencies = [
  "bytemuck",
  "byteorder-lite",
@@ -3253,9 +3253,9 @@ dependencies = [
 
 [[package]]
 name = "impl-more"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e658178c10c747241199382079c0f195ce229866fbf4aa0d46fa6107fe33d2ec"
+checksum = "aae21c3177a27788957044151cc2800043d127acaa460a47ebb9b84dfa2c6aa0"
 
 [[package]]
 name = "indexmap"
@@ -3544,7 +3544,7 @@ dependencies = [
  "itertools",
  "log",
  "num-traits",
- "ordered-float 4.3.0",
+ "ordered-float 4.4.0",
  "sorted-vec",
  "tracing",
  "tracing-subscriber",
@@ -4398,9 +4398,9 @@ dependencies = [
 
 [[package]]
 name = "ordered-float"
-version = "4.3.0"
+version = "4.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44d501f1a72f71d3c063a6bbc8f7271fa73aa09fe5d6283b6571e2ed176a2537"
+checksum = "83e7ccb95e240b7c9506a3d544f10d935e142cc90b0a1d56954fb44d89ad6b97"
 dependencies = [
  "num-traits",
 ]
@@ -5278,9 +5278,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.87"
+version = "1.0.88"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3e4daa0dcf6feba26f985457cdf104d4b4256fc5a09547140f3631bb076b19a"
+checksum = "7c3a7fc5db1e57d5a779a352c8cdb57b29aa4c40cc69c3a68a7fedc815fbf2f9"
 dependencies = [
  "unicode-ident",
 ]
@@ -6137,9 +6137,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.23.14"
+version = "0.23.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "415d9944693cb90382053259f89fbb077ea730ad7273047ec63b19bc9b160ba8"
+checksum = "5fbb44d7acc4e873d613422379f69f237a1b141928c02f6bc6ccfddddc2d7993"
 dependencies = [
  "once_cell",
  "ring",
@@ -6770,8 +6770,8 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "strum"
-version = "0.26.2"
-source = "git+https://github.com/jqnatividad/strum?branch=bump-phf-to-0.11#d60ce1afe338f4456a5c49ef7e51ee083330babe"
+version = "0.26.3"
+source = "git+https://github.com/jqnatividad/strum?branch=bump-phf-to-0.11#33c1b0848634ea8e85daed31c19dac0c162f25bd"
 dependencies = [
  "phf",
  "strum_macros",
@@ -6780,7 +6780,7 @@ dependencies = [
 [[package]]
 name = "strum_macros"
 version = "0.26.4"
-source = "git+https://github.com/jqnatividad/strum?branch=bump-phf-to-0.11#d60ce1afe338f4456a5c49ef7e51ee083330babe"
+source = "git+https://github.com/jqnatividad/strum?branch=bump-phf-to-0.11#33c1b0848634ea8e85daed31c19dac0c162f25bd"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
