@@ -94,7 +94,7 @@ csv-core = "0.1"
 csv-diff = "0.1.0"
 csv-index = "0.1"
 csvlens = { version = "0.10", optional = true }
-csvs_convert = { version = "0.8.14", default-features = false, features = [
+csvs_convert = { version = "0.9.0", default-features = false, features = [
     "converters",
 ], optional = true }
 data-encoding = { version = "2.6", optional = true }
