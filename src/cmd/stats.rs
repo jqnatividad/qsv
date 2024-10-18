@@ -1,5 +1,9 @@
 static USAGE: &str = r#"
-Compute summary statistics & infers data types for each column in a CSV. 
+Compute summary statistics & infers data types for each column in a CSV.
+
+> NOTE: `stats` is heavily optimized for speed. It assumes the CSV is well-formed and
+UTF-8 encoded. If you encounter problems generating stats, use `qsv validate` to confirm the
+input CSV is valid.
 
 Summary statistics includes sum, min/max/range, sort order, min/max/sum/avg length, mean,
 standard error of the mean (SEM), stddev, variance, coefficient of variation (CV), nullcount,
