@@ -6,11 +6,8 @@ Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame exp
 (see https://docs.pola.rs/user-guide/sql/intro/).
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/ee9bafbdef7d62baa06d469f42e6cec0755eb544/crates/polars-sql/src/functions.rs#L32 and
-https://github.com/pola-rs/polars/blob/ee9bafbdef7d62baa06d469f42e6cec0755eb544/crates/polars-sql/src/keywords.rs.
-https://docs.pola.rs/py-polars/html/reference/sql/index.html also provides a more readable
-version of the SQL functions and keywords, though be aware that it's for the Python version
-of Polars, so there will be some minor syntax differences.
+https://docs.pola.rs/py-polars/html/reference/sql/index.html though be aware that it's for
+the Python version of Polars, so there will be some minor syntax differences.
 
 Returns the shape of the query result (number of rows, number of columns) to stderr.
 
@@ -679,12 +676,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         && delim == b','
         && !args.flag_no_optimizations
         && !args.flag_try_parsedates
-        && args.flag_infer_len != 10_000
+        && args.flag_infer_len == 10_000 // make sure this matches the usage text default
         && !args.flag_streaming
         && !args.flag_low_memory
         && !args.flag_truncate_ragged_lines
         && !args.flag_ignore_errors
-        && args.flag_rnull_values.is_empty()
+        && rnull_values == vec![PlSmallStr::EMPTY]
         && !args.flag_decimal_comma
         && comment_char.is_none()
         && std::path::Path::new(&args.arg_input[0])
