@@ -301,9 +301,6 @@ local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", br
 # use upstream publicsuffix with unreleased dependency bumps
 publicsuffix = { git = "https://github.com/rushmorem/publicsuffix", rev = "b300356" }
 
-# use serde_json with unreleased optimizations
-serde_json = { git = "https://github.com/serde-rs/json", rev = "faab2e8" }
-
 # use our fork of strum with bumped phf dependency. They're holding back as they have a conservative
 # MSRV policy, while qsv has an aggressive MSRV policy to always require Rust stable
 strum        = { git = "https://github.com/jqnatividad/strum", branch = "bump-phf-to-0.11" }
