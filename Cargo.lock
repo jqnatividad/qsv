@@ -1692,7 +1692,7 @@ dependencies = [
 [[package]]
 name = "csv"
 version = "1.3.0"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#8cf30edc2ec3eb701cf708504a6ff54bd217afea"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#f2c22500da5b0faf0b3a734876b47031b0f80b57"
 dependencies = [
  "csv-core",
  "itoa",
@@ -1704,7 +1704,7 @@ dependencies = [
 [[package]]
 name = "csv-core"
 version = "0.1.11"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#8cf30edc2ec3eb701cf708504a6ff54bd217afea"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#f2c22500da5b0faf0b3a734876b47031b0f80b57"
 dependencies = [
  "memchr",
 ]
@@ -1727,7 +1727,7 @@ dependencies = [
 [[package]]
 name = "csv-index"
 version = "0.1.6"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#8cf30edc2ec3eb701cf708504a6ff54bd217afea"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#f2c22500da5b0faf0b3a734876b47031b0f80b57"
 dependencies = [
  "byteorder",
  "csv",
