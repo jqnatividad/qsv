@@ -2730,7 +2730,7 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 [[package]]
 name = "governor"
 version = "0.6.4"
-source = "git+https://github.com/jqnatividad/governor?branch=bump-dashmap-to-6.1.0#7668120b6f45211fcda3e2d4cc61c3f1d673a440"
+source = "git+https://github.com/boinkor-net/governor?rev=ae92838#ae9283804efda307729ae85e829d3638d8f99b2d"
 dependencies = [
  "cfg-if",
  "dashmap",
