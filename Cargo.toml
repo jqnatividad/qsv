@@ -2,7 +2,7 @@
 name = "qsv"
 version = "0.136.0" #:version
 authors = ["Joel Natividad <joel@datHere.com>"]
-description = "A high performance CSV data-wrangling toolkit."
+description = "A Blazing-Fast Data-wrangling toolkit."
 documentation = "https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
 homepage = "https://qsv.dathere.com"
 repository = "https://github.com/jqnatividad/qsv"
