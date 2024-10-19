@@ -434,7 +434,7 @@ pub enum JsonTypes {
 
 // we use this to serialize the StatsData data structure
 // to a JSONL file using serde_json
-pub static STATSDATA_TYPES_ARRAY: [JsonTypes; MAX_STAT_COLUMNS] = [
+const STATSDATA_TYPES_ARRAY: [JsonTypes; MAX_STAT_COLUMNS] = [
     JsonTypes::String, //field
     JsonTypes::String, //type
     JsonTypes::Bool,   //is_ascii
@@ -496,6 +496,10 @@ const MAX_STAT_COLUMNS: usize = 37;
 const MAX_ANTIMODES: usize = 10;
 // maximum length of antimode string before truncating and appending "..."
 const MAX_ANTIMODE_LEN: usize = 100;
+
+pub const fn get_stats_data_types() -> [JsonTypes; MAX_STAT_COLUMNS] {
+    STATSDATA_TYPES_ARRAY
+}
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
@@ -887,7 +891,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // save the stats data to "<FILESTEM>.stats.csv.data.jsonl"
             if write_stats_jsonl {
                 stats_pathbuf.set_extension("data.jsonl");
-                util::csv_to_jsonl(&currstats_filename, &STATSDATA_TYPES_ARRAY, stats_pathbuf)?;
+                util::csv_to_jsonl(&currstats_filename, &get_stats_data_types(), stats_pathbuf)?;
             }
         }
     }

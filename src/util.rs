@@ -28,7 +28,7 @@ use sysinfo::System;
 #[cfg(feature = "polars")]
 use crate::cmd::count::polars_count_input;
 use crate::{
-    cmd::stats::{JsonTypes, StatsData, STATSDATA_TYPES_ARRAY},
+    cmd::stats::{get_stats_data_types, JsonTypes, StatsData},
     config,
     config::{Config, Delimiter, DEFAULT_RDR_BUFFER_CAPACITY, DEFAULT_WTR_BUFFER_CAPACITY},
     select::SelectColumns,
@@ -2116,7 +2116,7 @@ pub fn get_stats_records(
         // create a statsdatajon from the output of the stats command
         csv_to_jsonl(
             &tempfile_path,
-            &STATSDATA_TYPES_ARRAY,
+            &get_stats_data_types(),
             statsdatajson_path.clone(),
         )?;
 
