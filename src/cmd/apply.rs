@@ -832,13 +832,12 @@ fn validate_operations(
                         "--new_column (-c) is required for sentiment operation."
                     );
                 }
-                if sentiment_invokes == 0 {
-                    if SENTIMENT_ANALYZER
+                if sentiment_invokes == 0
+                    && SENTIMENT_ANALYZER
                         .set(SentimentIntensityAnalyzer::new())
                         .is_err()
-                    {
-                        return fail!("Cannot initialize Sentiment Analyzer.");
-                    }
+                {
+                    return fail!("Cannot initialize Sentiment Analyzer.");
                 }
 
                 sentiment_invokes = sentiment_invokes.saturating_add(1);
