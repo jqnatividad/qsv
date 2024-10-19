@@ -321,6 +321,7 @@ use rayon::{
 };
 use regex::Regex;
 use serde::Deserialize;
+use smallvec::SmallVec;
 use strsim::{
     damerau_levenshtein, hamming, jaro_winkler, normalized_damerau_levenshtein, osa_distance,
     sorensen_dice,
@@ -508,7 +509,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         String::new()
     };
 
-    let mut ops_vec: Vec<Operations> = Vec::new();
+    let mut ops_vec = SmallVec::<[Operations; 4]>::new();
 
     let apply_cmd = if args.cmd_operations {
         match validate_operations(
@@ -727,7 +728,7 @@ fn validate_operations(
     flag_replacement: &str,
     flag_new_column: Option<&String>,
     flag_formatstr: &str,
-) -> Result<Vec<Operations>, CliError> {
+) -> Result<SmallVec<[Operations; 4]>, CliError> {
     let mut censor_invokes = 0_u8;
     let mut copy_invokes = 0_u8;
     let mut eudex_invokes = 0_u8;
@@ -738,7 +739,7 @@ fn validate_operations(
     let mut strip_invokes = 0_u8;
     let mut whatlang_invokes = 0_u8;
 
-    let mut ops_vec: Vec<Operations> = Vec::with_capacity(operations.len());
+    let mut ops_vec = SmallVec::with_capacity(operations.len());
 
     for op in operations {
         let Ok(operation) = Operations::from_str(op) else {
@@ -960,7 +961,7 @@ fn validate_operations(
 
 #[inline]
 fn apply_operations(
-    ops_vec: &Vec<Operations>,
+    ops_vec: &SmallVec<[Operations; 4]>,
     cell: &mut String,
     comparand: &str,
     replacement: &str,
