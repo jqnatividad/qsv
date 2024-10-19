@@ -1043,9 +1043,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                         if write!(formatted_date, "{}", dt.format(&date_format))
                                             .is_ok()
                                         {
-                                            // the format string was ok, so use to_owned()
+                                            // the format string was ok, so use to_string()
                                             // to actually apply the DelayedFormat
-                                            work_date = formatted_date.to_owned();
+                                            work_date = formatted_date.to_string();
                                         } else {
                                             // if there was a format error, revert to the
                                             // default format
