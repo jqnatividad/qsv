@@ -256,6 +256,7 @@ use qsv_dateparser::parse_with_preference;
 use serde::{Deserialize, Serialize};
 use simd_json::{prelude::ValueAsScalar, OwnedValue};
 use simdutf8::basic::from_utf8;
+use smallvec::{smallvec, SmallVec};
 use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
 use tempfile::NamedTempFile;
 use threadpool::ThreadPool;
@@ -473,7 +474,7 @@ pub static STATSDATA_TYPES_ARRAY: [JsonTypes; MAX_STAT_COLUMNS] = [
     JsonTypes::Int,    //antimode_occurrences
 ];
 
-static INFER_DATE_FLAGS: OnceLock<Vec<bool>> = OnceLock::new();
+static INFER_DATE_FLAGS: OnceLock<SmallVec<[bool; 8]>> = OnceLock::new();
 static RECORD_COUNT: OnceLock<u64> = OnceLock::new();
 
 // standard overflow and underflow strings
@@ -1161,14 +1162,14 @@ fn init_date_inference(
     if !infer_dates {
         // we're not inferring dates, set INFER_DATE_FLAGS to all false
         INFER_DATE_FLAGS
-            .set(vec![false; headers.len()])
+            .set(smallvec![false; headers.len()])
             .map_err(|e| format!("Cannot init empty date inference flags: {e:?}"))?;
         return Ok(());
     }
 
     let infer_date_flags = if flag_whitelist.eq_ignore_ascii_case("all") {
         log::info!("inferring dates for ALL fields");
-        vec![true; headers.len()]
+        smallvec![true; headers.len()]
     } else {
         let mut header_str = String::new();
         let whitelist_lower = flag_whitelist.to_lowercase();
