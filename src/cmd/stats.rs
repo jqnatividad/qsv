@@ -951,12 +951,19 @@ impl Args {
                 // if it does return an Err, you have a bigger problem as the index file was
                 // modified WHILE stats is running and you NEED to abort if that
                 // happens, however unlikely
-                let mut idx = args.rconfig().indexed().unwrap().unwrap();
+                let mut idx = unsafe {
+                    args.rconfig()
+                        .indexed()
+                        .unwrap_unchecked()
+                        .unwrap_unchecked()
+                };
                 idx.seek((i * chunk_size) as u64)
                     .expect("File seek failed.");
                 let it = idx.byte_records().take(chunk_size);
                 // safety: this will only return an Error if the channel has been disconnected
-                send.send(args.compute(&sel, it)).unwrap();
+                unsafe {
+                    send.send(args.compute(&sel, it)).unwrap_unchecked();
+                }
             });
         }
         drop(send);
