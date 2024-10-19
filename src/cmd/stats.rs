@@ -497,6 +497,7 @@ const MAX_ANTIMODES: usize = 10;
 // maximum length of antimode string before truncating and appending "..."
 const MAX_ANTIMODE_LEN: usize = 100;
 
+// we do this so this is evaluated at compile-time
 pub const fn get_stats_data_types() -> [JsonTypes; MAX_STAT_COLUMNS] {
     STATSDATA_TYPES_ARRAY
 }
@@ -939,10 +940,11 @@ impl Args {
 
         init_date_inference(self.flag_infer_dates, &headers, whitelist)?;
 
-        let chunk_size = util::chunk_size(idx_count as usize, util::njobs(self.flag_jobs));
+        let njobs = util::njobs(self.flag_jobs);
+        let chunk_size = util::chunk_size(idx_count as usize, njobs);
         let nchunks = util::num_of_chunks(idx_count as usize, chunk_size);
 
-        let pool = ThreadPool::new(util::njobs(self.flag_jobs));
+        let pool = ThreadPool::new(njobs);
         let (send, recv) = crossbeam_channel::bounded(0);
         for i in 0..nchunks {
             let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
