@@ -135,8 +135,8 @@ pub fn njobs(flag_jobs: Option<usize>) -> usize {
             jobs
         }
     });
-    env::set_var("RAYON_NUM_THREADS", jobs_to_use.to_string());
-    log::info!("Using {jobs_to_use} jobs...");
+    env::set_var("RAYON_NUM_THREADS", itoa::Buffer::new().format(jobs_to_use));
+    // log::info!("Using {jobs_to_use} jobs...");
     jobs_to_use
 }
 
