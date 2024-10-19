@@ -596,7 +596,7 @@ fn applydp_operations(
     for op in ops_vec {
         match op {
             Operations::Len => {
-                *cell = cell.len().to_string();
+                *cell = itoa::Buffer::new().format(cell.len()).to_owned();
             },
             Operations::Lower => {
                 *cell = cell.to_lowercase();
@@ -606,11 +606,11 @@ fn applydp_operations(
             },
             Operations::Squeeze => {
                 let squeezer: &'static Regex = regex_oncelock!(r"\s+");
-                *cell = squeezer.replace_all(cell, " ").to_string();
+                *cell = squeezer.replace_all(cell, " ").into_owned();
             },
             Operations::Squeeze0 => {
                 let squeezer: &'static Regex = regex_oncelock!(r"\s+");
-                *cell = squeezer.replace_all(cell, "").to_string();
+                *cell = squeezer.replace_all(cell, "").into_owned();
             },
             Operations::Trim => {
                 *cell = String::from(cell.trim());
@@ -650,7 +650,7 @@ fn applydp_operations(
             Operations::Regex_Replace => {
                 // safety: we set REGEX_REPLACE in validate_operations()
                 let regexreplace = REGEX_REPLACE.get().unwrap();
-                *cell = regexreplace.replace_all(cell, replacement).to_string();
+                *cell = regexreplace.replace_all(cell, replacement).into_owned();
             },
             Operations::Round => {
                 if let Ok(num) = cell.parse::<f64>() {
