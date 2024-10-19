@@ -290,7 +290,7 @@ csvlens = { git = "https://github.com/YS-L/csvlens", rev = "b3fab72" }
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 
 # use our fork of governor with bumped dashmap dependency
-governor = { git = "https://github.com/jqnatividad/governor", branch = "deps-bump-dashmap" }
+governor = { git = "https://github.com/jqnatividad/governor", branch = "bump-dashmap-to-6.1.0" }
 
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "ff8533d" }
