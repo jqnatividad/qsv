@@ -2188,8 +2188,8 @@ fn apply_ops_similarity() {
         svec!["name", "name_sim_score"],
         svec!["John", "0.5"],
         svec!["Jonathan", "0.25"],
-        svec!["Edna", "0"],
-        svec!["Larry", "0"],
+        svec!["Edna", "0.0"],
+        svec!["Larry", "0.0"],
     ];
     assert_eq!(got, expected);
 }
