@@ -39,6 +39,7 @@ use crate::{
 macro_rules! regex_oncelock {
     ($re:literal $(,)?) => {{
         static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+        #[allow(clippy::regex_creation_in_loops)] // false positive as we use oncelock
         RE.get_or_init(|| regex::Regex::new($re).expect("Invalid regex"))
     }};
 }
