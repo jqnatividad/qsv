@@ -135,7 +135,6 @@ jsonschema = { version = "0.23", features = [
     "resolve-file",
     "resolve-http",
 ], default-features = false }
-jql-runner = { version = "7.2", default-features = false, optional = true }
 local-encoding = { version = "0.2", optional = true }
 localzone = { version = "0.3", features = ["auto_validation"] }
 log = "0.4"
@@ -356,7 +355,6 @@ fetch = [
     "flate2",
     "governor",
     "hashbrown",
-    "jql-runner",
     "publicsuffix",
     "redis",
     "serde_stacker",
