@@ -135,7 +135,6 @@ jsonschema = { version = "0.23", features = [
     "resolve-file",
     "resolve-http",
 ], default-features = false }
-jql-runner = { version = "7.2", default-features = false, optional = true }
 local-encoding = { version = "0.2", optional = true }
 localzone = { version = "0.3", features = ["auto_validation"] }
 log = "0.4"
@@ -221,7 +220,6 @@ self_update = { version = "0.41", features = [
 semver = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
-serde_stacker = { version = "0.1", optional = true }
 serde_urlencoded = { version = "0.7", optional = true }
 simple-expand-tilde = { version = "0.4.3", optional = true }
 smallvec = "1"
@@ -356,10 +354,8 @@ fetch = [
     "flate2",
     "governor",
     "hashbrown",
-    "jql-runner",
     "publicsuffix",
     "redis",
-    "serde_stacker",
     "serde_urlencoded",
     "simple-expand-tilde",
 ]

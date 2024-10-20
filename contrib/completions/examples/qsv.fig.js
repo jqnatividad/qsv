@@ -834,10 +834,10 @@ const completion: Fig.Spec = {
           name: "--new-column",
         },
         {
-          name: "--jql",
+          name: "--jaq",
         },
         {
-          name: "--jqlfile",
+          name: "--jaqfile",
         },
         {
           name: "--pretty",
@@ -915,10 +915,10 @@ const completion: Fig.Spec = {
           name: "--new-column",
         },
         {
-          name: "--jql",
+          name: "--jaq",
         },
         {
-          name: "--jqlfile",
+          name: "--jaqfile",
         },
         {
           name: "--pretty",
