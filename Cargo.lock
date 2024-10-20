@@ -5379,7 +5379,6 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "serde_stacker",
  "serde_urlencoded",
  "serial_test",
  "simd-json",
@@ -6296,16 +6295,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.81",
-]
-
-[[package]]
-name = "serde_stacker"
-version = "0.1.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "babfccff5773ff80657f0ecf553c7c516bdc2eb16389c0918b36b73e7015276e"
-dependencies = [
- "serde",
- "stacker",
 ]
 
 [[package]]

@@ -220,7 +220,6 @@ self_update = { version = "0.41", features = [
 semver = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
-serde_stacker = { version = "0.1", optional = true }
 serde_urlencoded = { version = "0.7", optional = true }
 simple-expand-tilde = { version = "0.4.3", optional = true }
 smallvec = "1"
@@ -357,7 +356,6 @@ fetch = [
     "hashbrown",
     "publicsuffix",
     "redis",
-    "serde_stacker",
     "serde_urlencoded",
     "simple-expand-tilde",
 ]
