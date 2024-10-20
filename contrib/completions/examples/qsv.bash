@@ -1208,7 +1208,7 @@ _qsv() {
             return 0
             ;;
         qsv__fetch)
-            opts="-h --url-template --new-column --jql --jqlfile --pretty --rate-limit --timeout --http-header --max-retries --max-errors --store-error --cookies --user-agent --report --no-cache --mem-cache-size --disk-cache --disk-cache-dir --redis-cache --cache-error --flush-cache --output --no-headers --delimiter --progressbar --help"
+            opts="-h --url-template --new-column --jaq --jaqfile --pretty --rate-limit --timeout --http-header --max-retries --max-errors --store-error --cookies --user-agent --report --no-cache --mem-cache-size --disk-cache --disk-cache-dir --redis-cache --cache-error --flush-cache --output --no-headers --delimiter --progressbar --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1222,7 +1222,7 @@ _qsv() {
             return 0
             ;;
         qsv__fetchpost)
-            opts="-h --new-column --jql --jqlfile --pretty --rate-limit --timeout --http-header --compress --max-retries --max-errors --store-error --cookies --user-agent --report --no-cache --mem-cache-size --disk-cache --disk-cache-dir --redis-cache --cache-error --flush-cache --output --no-headers --delimiter --progressbar --help"
+            opts="-h --new-column --jaq --jaqfile --pretty --rate-limit --timeout --http-header --compress --max-retries --max-errors --store-error --cookies --user-agent --report --no-cache --mem-cache-size --disk-cache --disk-cache-dir --redis-cache --cache-error --flush-cache --output --no-headers --delimiter --progressbar --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

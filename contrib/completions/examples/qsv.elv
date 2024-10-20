@@ -413,8 +413,8 @@ set edit:completion:arg-completer[qsv] = {|@words|
         &'qsv;fetch'= {
             cand --url-template 'url-template'
             cand --new-column 'new-column'
-            cand --jql 'jql'
-            cand --jqlfile 'jqlfile'
+            cand --jaq 'jaq'
+            cand --jaqfile 'jaqfile'
             cand --pretty 'pretty'
             cand --rate-limit 'rate-limit'
             cand --timeout 'timeout'
@@ -441,8 +441,8 @@ set edit:completion:arg-completer[qsv] = {|@words|
         }
         &'qsv;fetchpost'= {
             cand --new-column 'new-column'
-            cand --jql 'jql'
-            cand --jqlfile 'jqlfile'
+            cand --jaq 'jaq'
+            cand --jaqfile 'jaqfile'
             cand --pretty 'pretty'
             cand --rate-limit 'rate-limit'
             cand --timeout 'timeout'

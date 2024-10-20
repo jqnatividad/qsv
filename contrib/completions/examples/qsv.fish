@@ -325,8 +325,8 @@ complete -c qsv -n "__fish_qsv_using_subcommand explode" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand explode" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l url-template
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l new-column
-complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l jql
-complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l jqlfile
+complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l jaq
+complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l jaqfile
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l pretty
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l rate-limit
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l timeout
@@ -350,8 +350,8 @@ complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l new-column
-complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l jql
-complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l jqlfile
+complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l jaq
+complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l jaqfile
 complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l pretty
 complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l rate-limit
 complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l timeout
