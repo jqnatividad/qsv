@@ -3,7 +3,7 @@ static USAGE: &str = r#"
 Fetchpost fetches data from web services for every row using HTTP Post.
 As opposed to fetch, which uses HTTP Get.
 
-Fetchpost is integrated with `jql` to directly parse out values from an API JSON response.
+Fetchpost is integrated with `jaq` (a jq clone) to directly parse out values from an API JSON response.
 
 CACHE OPTIONS:
 Fetchpost caches responses to minimize traffic and maximize performance. It has four
@@ -84,10 +84,10 @@ Given the data.csv above, fetch the JSON response.
 Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
 Now, if we want to generate a CSV file with a parsed response - getting only the "form" property,
-we use the new-column and jql options. (See https://github.com/yamafaktory/jql#%EF%B8%8F-usage 
-for more info on how to use the jql JSON Query Language)
+we use the new-column and jaq options. (See https://github.com/01mf02/jaq?tab=readme-ov-file#examples 
+for more info on how to use the jaq JSON Query Language)
 
-$ qsv fetchpost URL zipcode,country --new-column form --jql '"form"' data.csv > data_with_response.csv
+$ qsv fetchpost URL zipcode,country --new-column form --jaq '."form"' data.csv > data_with_response.csv
 
 data_with_response.csv
   URL,zipcode,country,form
@@ -97,15 +97,15 @@ data_with_response.csv
 
 Alternatively, since we're using the same URL for all the rows, we can just pass the url directly on the command-line.
 
-  $ qsv fetchpost https://httpbin.org/post 2,3 --new-column form --jqlfile form.jql data.csv > data_with_formdata.csv
+  $ qsv fetchpost https://httpbin.org/post 2,3 --new-column form --jaqfile form.jaq data.csv > data_with_formdata.csv
 
 Also note that for the column-list argument, we used the column index (2,3 for second & third column)
-instead of using the column names, and we loaded the jql selector from the form.jql file.
+instead of using the column names, and we loaded the jaq selector from the form.jaq file.
 
-The form.jql file simply contains the string literal "form", including the enclosing double quotes:
+The form.jaq file simply contains the string literal ".form", including the enclosing double quotes:
 
-form.jql
-  "form"
+form.jaq
+  ".form"
 
 USING THE HTTP-HEADER OPTION:
 
@@ -118,7 +118,7 @@ $ qsv fetchpost https://httpbin.org/post col1-col3 data.csv -H "X-Api-Key:TEST_K
 For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_fetch.rs.
 
 Usage:
-    qsv fetchpost (<url-column> <column-list>) [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
+    qsv fetchpost (<url-column> <column-list>) [--jaq <selector> | --jaqfile <file>] [--http-header <k:v>...] [options] [<input>]
     qsv fetchpost --help
 
 Fetchpost options:
@@ -132,10 +132,10 @@ Fetchpost options:
                                See 'qsv select --help' for examples.
     -c, --new-column <name>    Put the fetched values in a new column. Specifying this option
                                results in a CSV. Otherwise, the output is in JSONL format.
-    --jql <selector>           Apply jql selector to API returned JSON response.
-                               Mutually exclusive with --jqlfile.
-    --jqlfile <file>           Load jql selector from file instead.
-                               Mutually exclusive with --jql.
+    --jaq <selector>           Apply jaq selector to API returned JSON response.
+                               Mutually exclusive with --jaqfile.
+    --jaqfile <file>           Load jaq selector from file instead.
+                               Mutually exclusive with --jaq.
     --pretty                   Prettify JSON responses. Otherwise, they're minified.
                                If the response is not in JSON format, it's passed through unchanged.
                                Note that --pretty requires the --new-column option.
@@ -255,7 +255,7 @@ use url::Url;
 
 use crate::{
     cmd::fetch::{
-        get_ratelimit_header_value, parse_ratelimit_header_value, process_jql, CacheType,
+        get_ratelimit_header_value, parse_ratelimit_header_value, process_jaq, CacheType,
         DiskCacheConfig, FetchResponse, RedisConfig, ReportKind, DEFAULT_ACCEPT_ENCODING,
     },
     config::{Config, Delimiter},
@@ -266,8 +266,8 @@ use crate::{
 #[derive(Deserialize)]
 struct Args {
     flag_new_column:     Option<String>,
-    flag_jql:            Option<String>,
-    flag_jqlfile:        Option<String>,
+    flag_jaq:            Option<String>,
+    flag_jaqfile:        Option<String>,
     flag_pretty:         bool,
     flag_rate_limit:     u32,
     flag_timeout:        u16,
@@ -578,9 +578,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         multi_progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    let jql_selector: Option<String> = match args.flag_jqlfile {
-        Some(ref jql_file) => Some(fs::read_to_string(jql_file)?),
-        None => args.flag_jql.as_ref().map(std::string::ToString::to_string),
+    let jaq_selector: Option<String> = match args.flag_jaqfile {
+        Some(ref jaq_file) => Some(fs::read_to_string(jaq_file)?),
+        None => args.flag_jaq.as_ref().map(std::string::ToString::to_string),
     };
 
     // prepare report
@@ -725,7 +725,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         &form_body_jsonmap,
                         &client,
                         &limiter,
-                        jql_selector.as_ref(),
+                        jaq_selector.as_ref(),
                         args.flag_store_error,
                         args.flag_pretty,
                         args.flag_compress,
@@ -745,7 +745,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         &form_body_jsonmap,
                         &client,
                         &limiter,
-                        jql_selector.as_ref(),
+                        jaq_selector.as_ref(),
                         args.flag_store_error,
                         args.flag_pretty,
                         args.flag_compress,
@@ -769,7 +769,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         &form_body_jsonmap,
                         &client,
                         &limiter,
-                        jql_selector.as_ref(),
+                        jaq_selector.as_ref(),
                         args.flag_store_error,
                         args.flag_pretty,
                         args.flag_compress,
@@ -793,7 +793,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         let key = format!(
                             "{}{:?}{}{}{}",
                             url,
-                            jql_selector,
+                            jaq_selector,
                             args.flag_store_error,
                             args.flag_pretty,
                             include_existing_columns
@@ -811,7 +811,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         &form_body_jsonmap,
                         &client,
                         &limiter,
-                        jql_selector.as_ref(),
+                        jaq_selector.as_ref(),
                         args.flag_store_error,
                         args.flag_pretty,
                         args.flag_compress,
@@ -961,7 +961,7 @@ fn get_cached_response(
     form_body_jsonmap: &serde_json::Map<String, Value>,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
-    flag_jql: Option<&String>,
+    flag_jaq: Option<&String>,
     flag_store_error: bool,
     flag_pretty: bool,
     flag_compress: bool,
@@ -973,7 +973,7 @@ fn get_cached_response(
         form_body_jsonmap,
         client,
         limiter,
-        flag_jql,
+        flag_jaq,
         flag_store_error,
         flag_pretty,
         flag_compress,
@@ -983,14 +983,14 @@ fn get_cached_response(
 }
 
 // this is a disk cache that can be used across qsv sessions
-// so we need to include the values of flag_jql, flag_store_error, flag_pretty and
+// so we need to include the values of flag_jaq, flag_store_error, flag_pretty and
 // include_existing_columns in the cache key
 #[io_cached(
     disk = true,
     ty = "cached::DiskCache<String, FetchResponse>",
     cache_prefix_block = r##"{ "dc_" }"##,
     key = "String",
-    convert = r#"{ format!("{}{:?}{:?}{}{}{}{}", url, form_body_jsonmap, flag_jql, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
+    convert = r#"{ format!("{}{:?}{:?}{}{}{}{}", url, form_body_jsonmap, flag_jaq, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
     create = r##"{
         let cache_dir = DISKCACHE_DIR.get().unwrap();
         let diskcache_config = DISKCACHECONFIG.get().unwrap();
@@ -1013,7 +1013,7 @@ fn get_diskcache_response(
     form_body_jsonmap: &serde_json::Map<String, Value>,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
-    flag_jql: Option<&String>,
+    flag_jaq: Option<&String>,
     flag_store_error: bool,
     flag_pretty: bool,
     flag_compress: bool,
@@ -1026,7 +1026,7 @@ fn get_diskcache_response(
             form_body_jsonmap,
             client,
             limiter,
-            flag_jql,
+            flag_jaq,
             flag_store_error,
             flag_pretty,
             flag_compress,
@@ -1037,12 +1037,12 @@ fn get_diskcache_response(
 }
 
 // get_redis_response needs a longer key as its a persistent cache and the
-// values of flag_jql, flag_store_error, flag_pretty and include_existing_columns
+// values of flag_jaq, flag_store_error, flag_pretty and include_existing_columns
 // may change between sessions
 #[io_cached(
     ty = "cached::RedisCache<String, String>",
     key = "String",
-    convert = r#"{ format!("{}{:?}{:?}{}{}{}{}", url, form_body_jsonmap, flag_jql, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
+    convert = r#"{ format!("{}{:?}{:?}{}{}{}{}", url, form_body_jsonmap, flag_jaq, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
     create = r##" {
         let redis_config = REDISCONFIG.get().unwrap();
         let rediscache = RedisCache::new("fp", redis_config.ttl_secs)
@@ -1067,7 +1067,7 @@ fn get_redis_response(
     form_body_jsonmap: &serde_json::Map<String, Value>,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
-    flag_jql: Option<&String>,
+    flag_jaq: Option<&String>,
     flag_store_error: bool,
     flag_pretty: bool,
     flag_compress: bool,
@@ -1080,7 +1080,7 @@ fn get_redis_response(
             form_body_jsonmap,
             client,
             limiter,
-            flag_jql,
+            flag_jaq,
             flag_store_error,
             flag_pretty,
             flag_compress,
@@ -1098,7 +1098,7 @@ fn get_response(
     form_body_jsonmap: &serde_json::Map<String, Value>,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
-    flag_jql: Option<&String>,
+    flag_jaq: Option<&String>,
     flag_store_error: bool,
     flag_pretty: bool,
     flag_compress: bool,
@@ -1209,15 +1209,15 @@ fn get_response(
                 }
             } else {
                 error_flag = false;
-                // apply JQL selector if provided
-                if let Some(selectors) = flag_jql {
-                    match process_jql(&api_value, selectors) {
+                // apply jaq selector if provided
+                if let Some(selectors) = flag_jaq {
+                    match process_jaq(&api_value, selectors) {
                         Ok(s) => {
                             final_value = s;
                         },
                         Err(e) => {
                             error!(
-                                "jql error. json: {api_value:?}, selectors: {selectors:?}, error: \
+                                "jaq error. json: {api_value:?}, selectors: {selectors:?}, error: \
                                  {e:?}"
                             );
 
