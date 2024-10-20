@@ -1749,7 +1749,7 @@ dependencies = [
 [[package]]
 name = "csvlens"
 version = "0.10.1"
-source = "git+https://github.com/YS-L/csvlens?rev=b3fab72#b3fab72c4fae6b03072cc0e27d6ff60c322b2011"
+source = "git+https://github.com/YS-L/csvlens?rev=29e46af#29e46af3921867097ed09d746dd80d57676b9aad"
 dependencies = [
  "anyhow",
  "arboard",
@@ -2750,7 +2750,7 @@ dependencies = [
 [[package]]
 name = "grex"
 version = "1.4.5"
-source = "git+https://github.com/pemistahl/grex?rev=ff8533d#ff8533dd65d7b454909436fc6360a8cc7ca7d7e3"
+source = "git+https://github.com/pemistahl/grex?rev=bbf3064#bbf306493033072e14027c9f4c0f3c70f8452e32"
 dependencies = [
  "itertools",
  "lazy_static",

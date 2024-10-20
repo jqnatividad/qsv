@@ -278,7 +278,7 @@ csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-opt
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 
 # use latest csvlens upstream with latest dependencies and fixes
-csvlens = { git = "https://github.com/YS-L/csvlens", rev = "b3fab72" }
+csvlens = { git = "https://github.com/YS-L/csvlens", rev = "29e46af" }
 
 # modernized fork of crc32fast, 2021 edition, MSRV 1.81, select clippy lint suggestions applied
 # crc32fast = { git = "https://github.com/jqnatividad/rust-crc32fast", branch = "modernize" }
@@ -291,7 +291,7 @@ dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_
 governor = { git = "https://github.com/boinkor-net/governor", rev = "ae92838" }
 
 # needed to get latest dependencies and unreleased fixes
-grex = { git = "https://github.com/pemistahl/grex", rev = "ff8533d" }
+grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
 
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
