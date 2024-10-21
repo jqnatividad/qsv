@@ -6,6 +6,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.137.0] - 2024-10-21
+## What's Changed
+* build(deps): bump redis from 0.27.3 to 0.27.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/2202
+* build(deps): bump calamine from 0.26.0 to 0.26.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2204
+* refactor `optimal_batch_size` to require indexed CSV files by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2206
+* build(deps): bump pyo3 from 0.22.3 to 0.22.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/2207
+* `extdedup`: now supports two modes - LINE mode and CSV mode by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2208
+* build(deps): bump flexi_logger from 0.29.2 to 0.29.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2209
+* `extsort`: now also has two modes - CSV mode and LINE mode by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2210
+* build(deps): bump pyo3 from 0.22.4 to 0.22.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/2212
+* build(deps): bump uuid from 1.10.0 to 1.11.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2213
+* build(deps): bump csvs_convert from 0.8.14 to 0.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2215
+* build(deps): bump redis from 0.27.4 to 0.27.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/2217
+* build(deps): bump serde_json from 1.0.129 to 1.0.130 by @dependabot in https://github.com/jqnatividad/qsv/pull/2218
+* `apply` & `applydp`: use smallvec for operations vector by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2219
+* build(deps): bump serde_json from 1.0.131 to 1.0.132 by @dependabot in https://github.com/jqnatividad/qsv/pull/2220
+* `fetch` & `fetchpost`: replace jql with jaq by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2222
+* build(deps): bump jsonschema from 0.23.0 to 0.24.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2223
+* `sqlp`: add `--cache-schema` option by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2224
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.136.0...0.137.0
+
 ## [0.136.0] - 2024-10-08
 
 ## Highlights
