@@ -17,6 +17,8 @@ And since both commands use the disk and are streaming, they can handle files of
 * `stats` is a tad faster as we keep squeezing more performance from this central command.
 * `validate` is now faster and more memory efficient due to optimizations in the `jsonschema` crate and minor performance improvements in the `validate` command itself.
 
+---
+
 ### Added
 * `extdedup`: now supports two modes - LINE mode and CSV mode https://github.com/jqnatividad/qsv/pull/2208
 * `extsort`: now also has two modes - CSV mode and LINE mode https://github.com/jqnatividad/qsv/pull/2210
