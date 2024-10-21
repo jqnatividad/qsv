@@ -3756,7 +3756,7 @@ _qsv() {
             return 0
             ;;
         qsv__sqlp)
-            opts="-h --format --try-parsedates --infer-len --streaming --low-memory --no-optimizations --truncate-ragged-lines --ignore-errors --rnull-values --decimal-comma --datetime-format --date-format --time-format --float-precision --wnull-value --compression --compress-level --statistics --output --delimiter --quiet --help"
+            opts="-h --format --try-parsedates --infer-len --cache-schema --streaming --low-memory --no-optimizations --truncate-ragged-lines --ignore-errors --rnull-values --decimal-comma --datetime-format --date-format --time-format --float-precision --wnull-value --compression --compress-level --statistics --output --delimiter --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
