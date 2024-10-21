@@ -166,7 +166,6 @@ polars = { version = "0.43", features = [
     "performant",
     "pivot",
     "semi_anti_join",
-    "serde",
     "serde-lazy",
     "sql",
     "streaming",
