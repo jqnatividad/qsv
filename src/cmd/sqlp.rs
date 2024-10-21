@@ -795,7 +795,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
                 work_lf.finish()?
             } else {
-                // --cache-schema is not enabled, we alway --infer-len schema
+                // --cache-schema is not enabled, we always --infer-len schema
                 LazyCsvReader::new(table)
                     .with_has_header(true)
                     .with_missing_is_null(true)
