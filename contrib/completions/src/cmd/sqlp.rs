@@ -5,6 +5,7 @@ pub fn sqlp_cmd() -> Command {
         arg!(--format),
         arg!(--"try-parsedates"),
         arg!(--"infer-len"),
+        arg!(--"cache-schema"),
         arg!(--streaming),
         arg!(--"low-memory"),
         arg!(--"no-optimizations"),

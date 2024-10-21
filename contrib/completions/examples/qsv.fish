@@ -1076,6 +1076,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand split" -s h -l help -d 'Print he
 complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l format
 complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l try-parsedates
 complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l infer-len
+complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l cache-schema
 complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l streaming
 complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l low-memory
 complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l no-optimizations

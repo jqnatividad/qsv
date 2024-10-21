@@ -1524,6 +1524,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--format', 'format', [CompletionResultType]::ParameterName, 'format')
             [CompletionResult]::new('--try-parsedates', 'try-parsedates', [CompletionResultType]::ParameterName, 'try-parsedates')
             [CompletionResult]::new('--infer-len', 'infer-len', [CompletionResultType]::ParameterName, 'infer-len')
+            [CompletionResult]::new('--cache-schema', 'cache-schema', [CompletionResultType]::ParameterName, 'cache-schema')
             [CompletionResult]::new('--streaming', 'streaming', [CompletionResultType]::ParameterName, 'streaming')
             [CompletionResult]::new('--low-memory', 'low-memory', [CompletionResultType]::ParameterName, 'low-memory')
             [CompletionResult]::new('--no-optimizations', 'no-optimizations', [CompletionResultType]::ParameterName, 'no-optimizations')

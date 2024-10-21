@@ -3405,6 +3405,9 @@ const completion: Fig.Spec = {
           name: "--infer-len",
         },
         {
+          name: "--cache-schema",
+        },
+        {
           name: "--streaming",
         },
         {

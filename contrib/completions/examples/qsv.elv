@@ -1398,6 +1398,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --format 'format'
             cand --try-parsedates 'try-parsedates'
             cand --infer-len 'infer-len'
+            cand --cache-schema 'cache-schema'
             cand --streaming 'streaming'
             cand --low-memory 'low-memory'
             cand --no-optimizations 'no-optimizations'

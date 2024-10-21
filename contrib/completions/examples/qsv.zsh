@@ -1686,6 +1686,7 @@ _arguments "${_arguments_options[@]}" : \
 '--format[]' \
 '--try-parsedates[]' \
 '--infer-len[]' \
+'--cache-schema[]' \
 '--streaming[]' \
 '--low-memory[]' \
 '--no-optimizations[]' \
