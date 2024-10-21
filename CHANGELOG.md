@@ -6,7 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.137.0] - 2024-10-21
+## [0.137.0] - 2024-10-20
+
+### Highlights:
+* `extdedup` and `extsort` now support two modes - LINE mode and CSV mode. Previously, both commands only sorted on a line-by-line basis (now called LINE MODE).<br/>
+With the addition of CSV MODE, you can now deduplicate or sort CSV files on a column-by-column basis, with the powerful `--select` option to specify which columns to deduplicate or sort on. This is especially useful for large CSV files with many columns, where you only want to deduplicate or sort on a subset of columns.
+And since both commands use the disk and are streaming, they can handle files of any size.
+* `sqlp` now has a `--cache-schema` option that caches the schema of the input CSV file, which can significantly speed up subsequent queries on the same file.
+* `fetch` and `fetchpost` have been updated to use the [`jaq`](https://github.com/01mf02/jaq?tab=readme-ov-file#jaq) (a [jq](https://jqlang.github.io/jq/)-like tool for parsing JSON) crate instead of the `jql` crate. This change was made to improve performance and to make the commands more consistent with the `json` command which also uses `jaq`. Furthermore, `jaq` is a clone of `jq` - which is widely used and has a large community, so it should be more familiar to users.
+* `stats` is a tad faster as we keep squeezing more performance from this central command.
+* `validate` is now faster and more memory efficient due to optimizations in the `jsonschema` crate and minor performance improvements in the `validate` command itself.
 
 ### Added
 * `extdedup`: now supports two modes - LINE mode and CSV mode https://github.com/jqnatividad/qsv/pull/2208
