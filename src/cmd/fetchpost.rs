@@ -4,6 +4,7 @@ Fetchpost fetches data from web services for every row using HTTP Post.
 As opposed to fetch, which uses HTTP Get.
 
 Fetchpost is integrated with `jaq` (a jq clone) to directly parse out values from an API JSON response.
+(See https://github.com/01mf02/jaq for more info on how to use the jaq JSON Query Language)
 
 CACHE OPTIONS:
 Fetchpost caches responses to minimize traffic and maximize performance. It has four
@@ -84,8 +85,7 @@ Given the data.csv above, fetch the JSON response.
 Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
 Now, if we want to generate a CSV file with a parsed response - getting only the "form" property,
-we use the new-column and jaq options. (See https://github.com/01mf02/jaq?tab=readme-ov-file#examples 
-for more info on how to use the jaq JSON Query Language)
+we use the new-column and jaq options.
 
 $ qsv fetchpost URL zipcode,country --new-column form --jaq '."form"' data.csv > data_with_response.csv
 

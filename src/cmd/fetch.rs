@@ -3,6 +3,7 @@ static USAGE: &str = r#"
 Fetches data from web services for every row using HTTP Get.
 
 Fetch is integrated with `jaq` (a jq clone) to directly parse out values from an API JSON response.
+(See https://github.com/01mf02/jaq for more info on how to use the jaq JSON Query Language)
 
 CACHE OPTIONS:
 Fetch caches responses to minimize traffic and maximize performance. It has four
@@ -75,8 +76,7 @@ Given the data.csv above, fetch the JSON response.
 Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
 Now, if we want to generate a CSV file with the parsed City and State, we use the 
-new-column and jaq options. (See https://github.com/01mf02/jaq?tab=readme-ov-file#examples 
-for more info on how to use the jaq JSON Query Language)
+new-column and jaq options.
 
 $ qsv fetch URL --new-column CityState --jaq '[ ."places"[0]."place name",."places"[0]."state abbreviation" ]' 
   data.csv > data_with_CityState.csv
