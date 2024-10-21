@@ -31,11 +31,43 @@ jobs:
       - name: Build all Debian packages
         id: build
         run: |
-          chmod +x .scripts/build_all_debs.sh
-          echo "DEB_PATHS=$(.scripts/build_all_debs.sh)" >> $GITHUB_OUTPUT
+          chmod +x scripts/build-deb.sh
+          echo "Running build-deb.sh..."
+          build_output=$(./scripts/build-deb.sh)
+          echo "Build script output:"
+          echo "$build_output"
+          
+          # Extract paths from the output
+          deb_paths=$(echo "$build_output" | grep -oP '/[^ ]*\.deb' | tr '\n' ' ')
+          
+          echo "Extracted .deb paths:"
+          echo "$deb_paths"
+          
+          echo "DEB_PATHS=$deb_paths" >> $GITHUB_OUTPUT
+
+      - name: List built packages
+        run: |
+          echo "Built packages:"
+          ls -l ${{ steps.build.outputs.DEB_PATHS }}
+
+      - name: Rename and move Debian packages
+        run: |
+          mkdir -p renamed_debs
+          mv $(echo "${{ steps.build.outputs.DEB_PATHS }}" | awk '{print $1}') renamed_debs/qsv.deb
+          mv $(echo "${{ steps.build.outputs.DEB_PATHS }}" | awk '{print $2}') renamed_debs/qsvlite.deb
+          mv $(echo "${{ steps.build.outputs.DEB_PATHS }}" | awk '{print $3}') renamed_debs/qsvdp.deb
+          echo "Renamed packages:"
+          ls -l renamed_debs
 
       - name: Upload Debian Packages as Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: debian-packages
-          path: ${{ steps.build.outputs.DEB_PATHS }}
+          path: renamed_debs/*.deb
+
+      - name: Upload Debian Packages as Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: debian-packages
+          path: |
+            /home/runner/work/qsv/qsv/target/debian/*.deb
