@@ -143,7 +143,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .set_directory(args.flag_workdir.clone())
             .set_title(title.clone());
 
-        if args.flag_filters.to_ascii_lowercase() != "none" {
+        if !args.flag_filters.eq_ignore_ascii_case("none") {
             let ext_comma_delimited: Vec<&str> = args.flag_filters.split(',').collect();
             let ext_slice: &[&str] = &ext_comma_delimited;
             if !ext_slice.is_empty() {

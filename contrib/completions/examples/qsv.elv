@@ -380,18 +380,24 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --help 'Print help'
         }
         &'qsv;extdedup'= {
+            cand --select 'select'
             cand --no-output 'no-output'
             cand --dupes-output 'dupes-output'
             cand --human-readable 'human-readable'
             cand --memory-limit 'memory-limit'
+            cand --no-headers 'no-headers'
+            cand --delimiter 'delimiter'
             cand --quiet 'quiet'
             cand -h 'Print help'
             cand --help 'Print help'
         }
         &'qsv;extsort'= {
+            cand --select 'select'
+            cand --reverse 'reverse'
             cand --memory-limit 'memory-limit'
             cand --tmp-dir 'tmp-dir'
             cand --jobs 'jobs'
+            cand --delimiter 'delimiter'
             cand --no-headers 'no-headers'
             cand -h 'Print help'
             cand --help 'Print help'
@@ -407,8 +413,8 @@ set edit:completion:arg-completer[qsv] = {|@words|
         &'qsv;fetch'= {
             cand --url-template 'url-template'
             cand --new-column 'new-column'
-            cand --jql 'jql'
-            cand --jqlfile 'jqlfile'
+            cand --jaq 'jaq'
+            cand --jaqfile 'jaqfile'
             cand --pretty 'pretty'
             cand --rate-limit 'rate-limit'
             cand --timeout 'timeout'
@@ -435,8 +441,8 @@ set edit:completion:arg-completer[qsv] = {|@words|
         }
         &'qsv;fetchpost'= {
             cand --new-column 'new-column'
-            cand --jql 'jql'
-            cand --jqlfile 'jqlfile'
+            cand --jaq 'jaq'
+            cand --jaqfile 'jaqfile'
             cand --pretty 'pretty'
             cand --rate-limit 'rate-limit'
             cand --timeout 'timeout'
@@ -1392,6 +1398,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --format 'format'
             cand --try-parsedates 'try-parsedates'
             cand --infer-len 'infer-len'
+            cand --cache-schema 'cache-schema'
             cand --streaming 'streaming'
             cand --low-memory 'low-memory'
             cand --no-optimizations 'no-optimizations'

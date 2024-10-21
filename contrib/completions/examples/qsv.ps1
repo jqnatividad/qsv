@@ -415,19 +415,25 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             break
         }
         'qsv;extdedup' {
+            [CompletionResult]::new('--select', 'select', [CompletionResultType]::ParameterName, 'select')
             [CompletionResult]::new('--no-output', 'no-output', [CompletionResultType]::ParameterName, 'no-output')
             [CompletionResult]::new('--dupes-output', 'dupes-output', [CompletionResultType]::ParameterName, 'dupes-output')
             [CompletionResult]::new('--human-readable', 'human-readable', [CompletionResultType]::ParameterName, 'human-readable')
             [CompletionResult]::new('--memory-limit', 'memory-limit', [CompletionResultType]::ParameterName, 'memory-limit')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
             [CompletionResult]::new('--quiet', 'quiet', [CompletionResultType]::ParameterName, 'quiet')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'qsv;extsort' {
+            [CompletionResult]::new('--select', 'select', [CompletionResultType]::ParameterName, 'select')
+            [CompletionResult]::new('--reverse', 'reverse', [CompletionResultType]::ParameterName, 'reverse')
             [CompletionResult]::new('--memory-limit', 'memory-limit', [CompletionResultType]::ParameterName, 'memory-limit')
             [CompletionResult]::new('--tmp-dir', 'tmp-dir', [CompletionResultType]::ParameterName, 'tmp-dir')
             [CompletionResult]::new('--jobs', 'jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
             [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
@@ -445,8 +451,8 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         'qsv;fetch' {
             [CompletionResult]::new('--url-template', 'url-template', [CompletionResultType]::ParameterName, 'url-template')
             [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
-            [CompletionResult]::new('--jql', 'jql', [CompletionResultType]::ParameterName, 'jql')
-            [CompletionResult]::new('--jqlfile', 'jqlfile', [CompletionResultType]::ParameterName, 'jqlfile')
+            [CompletionResult]::new('--jaq', 'jaq', [CompletionResultType]::ParameterName, 'jaq')
+            [CompletionResult]::new('--jaqfile', 'jaqfile', [CompletionResultType]::ParameterName, 'jaqfile')
             [CompletionResult]::new('--pretty', 'pretty', [CompletionResultType]::ParameterName, 'pretty')
             [CompletionResult]::new('--rate-limit', 'rate-limit', [CompletionResultType]::ParameterName, 'rate-limit')
             [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
@@ -474,8 +480,8 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         }
         'qsv;fetchpost' {
             [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
-            [CompletionResult]::new('--jql', 'jql', [CompletionResultType]::ParameterName, 'jql')
-            [CompletionResult]::new('--jqlfile', 'jqlfile', [CompletionResultType]::ParameterName, 'jqlfile')
+            [CompletionResult]::new('--jaq', 'jaq', [CompletionResultType]::ParameterName, 'jaq')
+            [CompletionResult]::new('--jaqfile', 'jaqfile', [CompletionResultType]::ParameterName, 'jaqfile')
             [CompletionResult]::new('--pretty', 'pretty', [CompletionResultType]::ParameterName, 'pretty')
             [CompletionResult]::new('--rate-limit', 'rate-limit', [CompletionResultType]::ParameterName, 'rate-limit')
             [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
@@ -1518,6 +1524,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--format', 'format', [CompletionResultType]::ParameterName, 'format')
             [CompletionResult]::new('--try-parsedates', 'try-parsedates', [CompletionResultType]::ParameterName, 'try-parsedates')
             [CompletionResult]::new('--infer-len', 'infer-len', [CompletionResultType]::ParameterName, 'infer-len')
+            [CompletionResult]::new('--cache-schema', 'cache-schema', [CompletionResultType]::ParameterName, 'cache-schema')
             [CompletionResult]::new('--streaming', 'streaming', [CompletionResultType]::ParameterName, 'streaming')
             [CompletionResult]::new('--low-memory', 'low-memory', [CompletionResultType]::ParameterName, 'low-memory')
             [CompletionResult]::new('--no-optimizations', 'no-optimizations', [CompletionResultType]::ParameterName, 'no-optimizations')

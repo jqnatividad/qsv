@@ -321,6 +321,7 @@ use rayon::{
 };
 use regex::Regex;
 use serde::Deserialize;
+use smallvec::SmallVec;
 use strsim::{
     damerau_levenshtein, hamming, jaro_winkler, normalized_damerau_levenshtein, osa_distance,
     sorensen_dice,
@@ -417,6 +418,7 @@ static SENTIMENT_ANALYZER: OnceLock<SentimentIntensityAnalyzer> = OnceLock::new(
 static THOUSANDS_POLICY: OnceLock<SeparatorPolicy> = OnceLock::new();
 static ROUND_PLACES: OnceLock<u32> = OnceLock::new();
 static WHATLANG_CONFIDENCE_THRESHOLD: OnceLock<f64> = OnceLock::new();
+static GENDER_GUESSER: OnceLock<gender_guesser::Detector> = OnceLock::new();
 
 // default confidence threshold for whatlang language detection - 90% confidence
 const DEFAULT_THRESHOLD: f64 = 0.9;
@@ -508,7 +510,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         String::new()
     };
 
-    let mut ops_vec: Vec<Operations> = Vec::new();
+    let mut ops_vec = SmallVec::<[Operations; 4]>::new();
 
     let apply_cmd = if args.cmd_operations {
         match validate_operations(
@@ -598,6 +600,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // do actual apply command via Rayon parallel iterator
         batch
             .par_iter()
+            .with_min_len(1024)
             .map(|record_item| {
                 let mut record = record_item.clone();
                 match apply_cmd {
@@ -726,7 +729,7 @@ fn validate_operations(
     flag_replacement: &str,
     flag_new_column: Option<&String>,
     flag_formatstr: &str,
-) -> Result<Vec<Operations>, CliError> {
+) -> Result<SmallVec<[Operations; 4]>, CliError> {
     let mut censor_invokes = 0_u8;
     let mut copy_invokes = 0_u8;
     let mut eudex_invokes = 0_u8;
@@ -737,7 +740,7 @@ fn validate_operations(
     let mut strip_invokes = 0_u8;
     let mut whatlang_invokes = 0_u8;
 
-    let mut ops_vec: Vec<Operations> = Vec::with_capacity(operations.len());
+    let mut ops_vec = SmallVec::with_capacity(operations.len());
 
     for op in operations {
         let Ok(operation) = Operations::from_str(op) else {
@@ -829,6 +832,14 @@ fn validate_operations(
                         "--new_column (-c) is required for sentiment operation."
                     );
                 }
+                if sentiment_invokes == 0
+                    && SENTIMENT_ANALYZER
+                        .set(SentimentIntensityAnalyzer::new())
+                        .is_err()
+                {
+                    return fail!("Cannot initialize Sentiment Analyzer.");
+                }
+
                 sentiment_invokes = sentiment_invokes.saturating_add(1);
             },
             Operations::Simdl
@@ -930,6 +941,9 @@ fn validate_operations(
                         "--new_column (-c) is required for Gender_Guess"
                     );
                 }
+                if GENDER_GUESSER.set(gender_guesser::Detector::new()).is_err() {
+                    return fail!("Cannot initialize Gender Detector.");
+                }
             },
             _ => {},
         }
@@ -959,7 +973,7 @@ fn validate_operations(
 
 #[inline]
 fn apply_operations(
-    ops_vec: &Vec<Operations>,
+    ops_vec: &SmallVec<[Operations; 4]>,
     cell: &mut String,
     comparand: &str,
     replacement: &str,
@@ -968,7 +982,7 @@ fn apply_operations(
     for op in ops_vec {
         match op {
             Operations::Len => {
-                *cell = cell.len().to_string();
+                itoa::Buffer::new().format(cell.len()).clone_into(cell);
             },
             Operations::Lower => {
                 *cell = cell.to_lowercase();
@@ -978,11 +992,11 @@ fn apply_operations(
             },
             Operations::Squeeze => {
                 let squeezer: &'static Regex = regex_oncelock!(r"\s+");
-                *cell = squeezer.replace_all(cell, " ").to_string();
+                *cell = squeezer.replace_all(cell, " ").into_owned();
             },
             Operations::Squeeze0 => {
                 let squeezer: &'static Regex = regex_oncelock!(r"\s+");
-                *cell = squeezer.replace_all(cell, "").to_string();
+                *cell = squeezer.replace_all(cell, "").into_owned();
             },
             Operations::Trim => {
                 *cell = String::from(cell.trim());
@@ -1036,18 +1050,21 @@ fn apply_operations(
                 // including selection of the best algorithm repeatedly at runtime
                 let mut crc32_hasher = CRC32.get().unwrap().clone();
                 crc32_hasher.update(cell.as_bytes());
-                *cell = crc32_hasher.finalize().to_string();
+                itoa::Buffer::new()
+                    .format(crc32_hasher.finalize())
+                    .clone_into(cell);
             },
             Operations::Gender_Guess => {
-                let gender_detector = gender_guesser::Detector::new();
+                // safety: we set GENDER_GUESSER in validate_operations()
+                let gender_detector = GENDER_GUESSER.get().unwrap();
                 *cell = match gender_detector.get_gender(cell) {
-                    Gender::Male => "Male".to_string(),
-                    Gender::Female => "Female".to_string(),
-                    Gender::MayBeMale => "MayBeMale".to_string(),
-                    Gender::MayBeFemale => "MayBeFemale".to_string(),
-                    Gender::BothMaleFemale => "BothMaleFemale".to_string(),
-                    Gender::NotSure => "NotSure".to_string(),
-                    Gender::NotFound => "NotFound".to_string(),
+                    Gender::Male => "Male".to_owned(),
+                    Gender::Female => "Female".to_owned(),
+                    Gender::MayBeMale => "MayBeMale".to_owned(),
+                    Gender::MayBeFemale => "MayBeFemale".to_owned(),
+                    Gender::BothMaleFemale => "BothMaleFemale".to_owned(),
+                    Gender::NotSure => "NotSure".to_owned(),
+                    Gender::NotFound => "NotFound".to_owned(),
                 };
             },
             Operations::Escape => {
@@ -1072,7 +1089,7 @@ fn apply_operations(
             Operations::Regex_Replace => {
                 // safety: we set REGEX_REPLACE in validate_operations()
                 let regexreplace = REGEX_REPLACE.get().unwrap();
-                *cell = regexreplace.replace_all(cell, replacement).to_string();
+                *cell = regexreplace.replace_all(cell, replacement).into_owned();
             },
             Operations::Censor => {
                 // safety: we set CENSOR in validate_operations()
@@ -1082,12 +1099,14 @@ fn apply_operations(
             Operations::Censor_Check => {
                 // safety: we set CENSOR in validate_operations()
                 let censor = CENSOR.get().unwrap();
-                *cell = censor.check(cell).to_string();
+                if censor.check(cell) { "true" } else { "false" }.clone_into(cell);
             },
             Operations::Censor_Count => {
                 // safety: we set CENSOR in validate_operations()
                 let censor = CENSOR.get().unwrap();
-                *cell = censor.count(cell).to_string();
+                itoa::Buffer::new()
+                    .format(censor.count(cell))
+                    .clone_into(cell);
             },
             Operations::Thousands => {
                 if let Ok(num) = cell.parse::<f64>() {
@@ -1168,25 +1187,37 @@ fn apply_operations(
                 }
             },
             Operations::Simdl => {
-                *cell = damerau_levenshtein(cell, comparand).to_string();
+                itoa::Buffer::new()
+                    .format(damerau_levenshtein(cell, comparand))
+                    .clone_into(cell);
             },
             Operations::Simdln => {
-                *cell = normalized_damerau_levenshtein(cell, comparand).to_string();
+                ryu::Buffer::new()
+                    .format_finite(normalized_damerau_levenshtein(cell, comparand))
+                    .clone_into(cell);
             },
             Operations::Simjw => {
-                *cell = jaro_winkler(cell, comparand).to_string();
+                ryu::Buffer::new()
+                    .format_finite(jaro_winkler(cell, comparand))
+                    .clone_into(cell);
             },
             Operations::Simsd => {
-                *cell = sorensen_dice(cell, comparand).to_string();
+                ryu::Buffer::new()
+                    .format_finite(sorensen_dice(cell, comparand))
+                    .clone_into(cell);
             },
             Operations::Simhm => {
                 let ham_val = hamming(cell, comparand);
                 match ham_val {
-                    Ok(val) => *cell = val.to_string(),
+                    Ok(val) => itoa::Buffer::new().format(val).clone_into(cell),
                     Err(_) => *cell = String::from("ERROR: Different lengths"),
                 }
             },
-            Operations::Simod => *cell = osa_distance(cell, comparand).to_string(),
+            Operations::Simod => {
+                itoa::Buffer::new()
+                    .format(osa_distance(cell, comparand))
+                    .clone_into(cell);
+            },
             Operations::Eudex => {
                 // safety: we set EUDEX_COMPARAND_HASH in validate_operations()
                 let eudex_comparand_hash = EUDEX_COMPARAND_HASH.get().unwrap();
@@ -1195,10 +1226,11 @@ fn apply_operations(
             },
             Operations::Sentiment => {
                 // safety: we set SENTIMENT_ANALYZER in validate_operations()
-                let sentiment_analyzer =
-                    SENTIMENT_ANALYZER.get_or_init(SentimentIntensityAnalyzer::new);
+                let sentiment_analyzer = SENTIMENT_ANALYZER.get().unwrap();
                 let sentiment_scores = sentiment_analyzer.polarity_scores(cell);
-                *cell = sentiment_scores.get("compound").unwrap_or(&0.0).to_string();
+                ryu::Buffer::new()
+                    .format_finite(*sentiment_scores.get("compound").unwrap_or(&0.0))
+                    .clone_into(cell);
             },
             Operations::Whatlang => {
                 let lang_info = detect(cell);

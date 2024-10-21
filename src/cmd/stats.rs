@@ -1,5 +1,9 @@
 static USAGE: &str = r#"
-Compute summary statistics & infers data types for each column in a CSV. 
+Compute summary statistics & infers data types for each column in a CSV.
+
+> NOTE: `stats` is heavily optimized for speed. It assumes the CSV is well-formed and
+UTF-8 encoded. If you encounter problems generating stats, use `qsv validate` to confirm the
+input CSV is valid.
 
 Summary statistics includes sum, min/max/range, sort order, min/max/sum/avg length, mean,
 standard error of the mean (SEM), stddev, variance, coefficient of variation (CV), nullcount,
@@ -246,11 +250,13 @@ use std::{
     sync::OnceLock,
 };
 
+use crossbeam_channel;
 use itertools::Itertools;
 use qsv_dateparser::parse_with_preference;
 use serde::{Deserialize, Serialize};
 use simd_json::{prelude::ValueAsScalar, OwnedValue};
 use simdutf8::basic::from_utf8;
+use smallvec::{smallvec, SmallVec};
 use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
 use tempfile::NamedTempFile;
 use threadpool::ThreadPool;
@@ -428,7 +434,7 @@ pub enum JsonTypes {
 
 // we use this to serialize the StatsData data structure
 // to a JSONL file using serde_json
-pub static STATSDATA_TYPES_ARRAY: [JsonTypes; MAX_STAT_COLUMNS] = [
+const STATSDATA_TYPES_ARRAY: [JsonTypes; MAX_STAT_COLUMNS] = [
     JsonTypes::String, //field
     JsonTypes::String, //type
     JsonTypes::Bool,   //is_ascii
@@ -468,7 +474,7 @@ pub static STATSDATA_TYPES_ARRAY: [JsonTypes; MAX_STAT_COLUMNS] = [
     JsonTypes::Int,    //antimode_occurrences
 ];
 
-static INFER_DATE_FLAGS: OnceLock<Vec<bool>> = OnceLock::new();
+static INFER_DATE_FLAGS: OnceLock<SmallVec<[bool; 8]>> = OnceLock::new();
 static RECORD_COUNT: OnceLock<u64> = OnceLock::new();
 
 // standard overflow and underflow strings
@@ -490,6 +496,11 @@ const MAX_STAT_COLUMNS: usize = 37;
 const MAX_ANTIMODES: usize = 10;
 // maximum length of antimode string before truncating and appending "..."
 const MAX_ANTIMODE_LEN: usize = 100;
+
+// we do this so this is evaluated at compile-time
+pub const fn get_stats_data_types() -> [JsonTypes; MAX_STAT_COLUMNS] {
+    STATSDATA_TYPES_ARRAY
+}
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut args: Args = util::get_args(USAGE, argv)?;
@@ -881,7 +892,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // save the stats data to "<FILESTEM>.stats.csv.data.jsonl"
             if write_stats_jsonl {
                 stats_pathbuf.set_extension("data.jsonl");
-                util::csv_to_jsonl(&currstats_filename, &STATSDATA_TYPES_ARRAY, stats_pathbuf)?;
+                util::csv_to_jsonl(&currstats_filename, &get_stats_data_types(), stats_pathbuf)?;
             }
         }
     }
@@ -929,11 +940,12 @@ impl Args {
 
         init_date_inference(self.flag_infer_dates, &headers, whitelist)?;
 
-        let chunk_size = util::chunk_size(idx_count as usize, util::njobs(self.flag_jobs));
+        let njobs = util::njobs(self.flag_jobs);
+        let chunk_size = util::chunk_size(idx_count as usize, njobs);
         let nchunks = util::num_of_chunks(idx_count as usize, chunk_size);
 
-        let pool = ThreadPool::new(util::njobs(self.flag_jobs));
-        let (send, recv) = channel::bounded(0);
+        let pool = ThreadPool::new(njobs);
+        let (send, recv) = crossbeam_channel::bounded(0);
         for i in 0..nchunks {
             let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
             pool.execute(move || {
@@ -941,12 +953,19 @@ impl Args {
                 // if it does return an Err, you have a bigger problem as the index file was
                 // modified WHILE stats is running and you NEED to abort if that
                 // happens, however unlikely
-                let mut idx = args.rconfig().indexed().unwrap().unwrap();
+                let mut idx = unsafe {
+                    args.rconfig()
+                        .indexed()
+                        .unwrap_unchecked()
+                        .unwrap_unchecked()
+                };
                 idx.seek((i * chunk_size) as u64)
                     .expect("File seek failed.");
                 let it = idx.byte_records().take(chunk_size);
                 // safety: this will only return an Error if the channel has been disconnected
-                send.send(args.compute(&sel, it)).unwrap();
+                unsafe {
+                    send.send(args.compute(&sel, it)).unwrap_unchecked();
+                }
             });
         }
         drop(send);
@@ -961,7 +980,7 @@ impl Args {
         let pool = ThreadPool::new(util::njobs(self.flag_jobs));
         let mut results = Vec::with_capacity(stats.len());
         for mut stat in stats {
-            let (send, recv) = channel::bounded(0);
+            let (send, recv) = crossbeam_channel::bounded(0);
             results.push(recv);
             pool.execute(move || {
                 // safety: this will only return an Error if the channel has been disconnected
@@ -1156,14 +1175,14 @@ fn init_date_inference(
     if !infer_dates {
         // we're not inferring dates, set INFER_DATE_FLAGS to all false
         INFER_DATE_FLAGS
-            .set(vec![false; headers.len()])
+            .set(smallvec![false; headers.len()])
             .map_err(|e| format!("Cannot init empty date inference flags: {e:?}"))?;
         return Ok(());
     }
 
     let infer_date_flags = if flag_whitelist.eq_ignore_ascii_case("all") {
         log::info!("inferring dates for ALL fields");
-        vec![true; headers.len()]
+        smallvec![true; headers.len()]
     } else {
         let mut header_str = String::new();
         let whitelist_lower = flag_whitelist.to_lowercase();

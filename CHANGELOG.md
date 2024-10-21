@@ -6,6 +6,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.137.0] - 2024-10-20
+
+### Highlights:
+* `extdedup` and `extsort` now support two modes - LINE mode and CSV mode. Previously, both commands only sorted on a line-by-line basis (now called LINE MODE).<br/>
+With the addition of CSV MODE, you can now deduplicate or sort CSV files on a column-by-column basis, with the powerful `--select` option to specify which columns to deduplicate or sort on. This is especially useful for large CSV files with many columns, where you only want to deduplicate or sort on a subset of columns.
+And since both commands use the disk and are streaming, they can handle files of any size.
+* `sqlp` now has a `--cache-schema` option that caches the schema of the input CSV file, which can significantly speed up subsequent queries on the same file.
+* `fetch` and `fetchpost` have been updated to use the [`jaq`](https://github.com/01mf02/jaq?tab=readme-ov-file#jaq) (a [jq](https://jqlang.github.io/jq/)-like tool for parsing JSON) crate instead of the `jql` crate. This change was made to improve performance and to make the commands more consistent with the `json` command which also uses `jaq`. Furthermore, `jaq` is a clone of `jq` - which is widely used and has a large community, so it should be more familiar to users.
+* `stats` is a tad faster as we keep squeezing more performance from this central command.
+* `validate` is now faster and more memory efficient due to optimizations in the `jsonschema` crate and minor performance improvements in the `validate` command itself.
+
+---
+
+### Added
+* `extdedup`: now supports two modes - LINE mode and CSV mode https://github.com/jqnatividad/qsv/pull/2208
+* `extsort`: now also has two modes - CSV mode and LINE mode https://github.com/jqnatividad/qsv/pull/2210
+* `sqlp`: add `--cache-schema` option https://github.com/jqnatividad/qsv/pull/2224
+* added `sqlp --cache-schema` benchmarks
+
+### Changed
+* `apply` & `applydp`: use smallvec for operations vector & other minor performance optimizations https://github.com/jqnatividad/qsv/pull/2219 & https://github.com/jqnatividad/qsv/commit/bc837ae698f3aee06ea9b846b98ea0c75820a22d
+* `apply` & `applydp`: specify min_length for parallel iterators https://github.com/jqnatividad/qsv/commit/7d6ce5ec9675755abd5942a5e9e731592961700d
+* `fetch` & `fetchpost`: replace jql with jaq https://github.com/jqnatividad/qsv/pull/2222
+* `stats`: performance optimizations https://github.com/jqnatividad/qsv/commit/f205809549ac275078a95bc2821a583611955ad0 https://github.com/jqnatividad/qsv/commit/e26c27f58df688d7bfb2185ad54d4fe010b1fccf https://github.com/jqnatividad/qsv/commit/4579c1bfba4eca21d7480694780e39f6966a88a0
+* `validate`: specify min_length for parallel iterators https://github.com/jqnatividad/qsv/commit/a5b818562d5db7d65f00e5acd2c8bf7d44bd869a
+* build(deps): bump calamine from 0.26.0 to 0.26.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2204
+* build(deps): bump csvs_convert from 0.8.14 to 0.9.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2215
+* build(deps): bump flexi_logger from 0.29.2 to 0.29.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2209
+* build(deps): bump jsonschema from 0.23.0 to 0.24.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2223
+* build(deps): bump pyo3 from 0.22.3 to 0.22.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/2207
+* build(deps): bump pyo3 from 0.22.4 to 0.22.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/2212
+* build(deps): bump redis from 0.27.3 to 0.27.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/2202
+* build(deps): bump redis from 0.27.4 to 0.27.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/2217
+* build(deps): bump serde_json from 1.0.129 to 1.0.130 by @dependabot in https://github.com/jqnatividad/qsv/pull/2218
+* build(deps): bump serde_json from 1.0.131 to 1.0.132 by @dependabot in https://github.com/jqnatividad/qsv/pull/2220
+* build(deps): bump uuid from 1.10.0 to 1.11.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2213
+* apply select clippy lints
+* bumped indirect dependencies
+* bumped MSRV to 1.82
+
+### Fixed:
+* fix performance regression in batched commands by refactoring `optimal_batch_size` to require indexed CSV files https://github.com/jqnatividad/qsv/pull/2206
+
+### Removed:
+* `fetch` & `fetchpost`: removed jql options; replaced with jaq https://github.com/jqnatividad/qsv/pull/2222
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.136.0...0.137.0
+
 ## [0.136.0] - 2024-10-08
 
 ## Highlights

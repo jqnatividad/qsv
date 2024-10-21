@@ -301,15 +301,21 @@ complete -c qsv -n "__fish_qsv_using_subcommand exclude" -l output
 complete -c qsv -n "__fish_qsv_using_subcommand exclude" -l no-headers
 complete -c qsv -n "__fish_qsv_using_subcommand exclude" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand exclude" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l select
 complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l no-output
 complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l dupes-output
 complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l human-readable
 complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l memory-limit
+complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l no-headers
+complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -l quiet
 complete -c qsv -n "__fish_qsv_using_subcommand extdedup" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l select
+complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l reverse
 complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l memory-limit
 complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l tmp-dir
 complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l jobs
+complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand extsort" -l no-headers
 complete -c qsv -n "__fish_qsv_using_subcommand extsort" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand explode" -l rename
@@ -319,8 +325,8 @@ complete -c qsv -n "__fish_qsv_using_subcommand explode" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand explode" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l url-template
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l new-column
-complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l jql
-complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l jqlfile
+complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l jaq
+complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l jaqfile
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l pretty
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l rate-limit
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l timeout
@@ -344,8 +350,8 @@ complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l new-column
-complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l jql
-complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l jqlfile
+complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l jaq
+complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l jaqfile
 complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l pretty
 complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l rate-limit
 complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l timeout
@@ -1070,6 +1076,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand split" -s h -l help -d 'Print he
 complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l format
 complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l try-parsedates
 complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l infer-len
+complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l cache-schema
 complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l streaming
 complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l low-memory
 complete -c qsv -n "__fish_qsv_using_subcommand sqlp" -l no-optimizations

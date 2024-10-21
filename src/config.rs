@@ -29,6 +29,10 @@ const NO_INDEX_WARNING_FILESIZE: u64 = 100_000_000; // 100MB
 // so we don't have to keep checking if the index has been created
 static AUTO_INDEXED: AtomicBool = AtomicBool::new(false);
 
+pub static SPONSOR_MESSAGE: &str = r#"sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
+Need a UI & more advanced data-wrangling? Upgrade to qsv pro (https://qsvpro.datHere.com)
+"#;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Delimiter(pub u8);
 
@@ -101,6 +105,38 @@ pub trait SeekRead: io::Seek + io::Read {}
 impl<T: io::Seek + io::Read> SeekRead for T {}
 
 impl Config {
+    /// Creates a new `Config` instance with default settings and optional file path.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - An optional reference to a `String` representing the file path.
+    ///
+    /// # Returns
+    ///
+    /// A new `Config` instance.
+    ///
+    /// # Details
+    ///
+    /// This function initializes a `Config` with the following behavior:
+    /// - Uses env var `QSV_DEFAULT_DELIMITER` for default delimiter, or ',' if not set
+    /// - Determines delimiter and Snappy compression based on file extension.
+    /// - Supports sniffing delimiter and preamble rows if `QSV_SNIFF_DELIMITER` or
+    ///   `QSV_SNIFF_PREAMBLE` is set.
+    /// - Sets comment character from `QSV_COMMENT_CHAR` environment variable.
+    /// - Sets headers behavior based on `QSV_NO_HEADERS` environment variable.
+    /// - Configures various other settings from environment variables.
+    ///
+    /// # Environment Variables
+    ///
+    /// - `QSV_DEFAULT_DELIMITER`: Sets the default delimiter.
+    /// - `QSV_SNIFF_DELIMITER` or `QSV_SNIFF_PREAMBLE`: Enables sniffing of delimiter and preamble
+    ///   rows.
+    /// - `QSV_COMMENT_CHAR`: Sets the comment character.
+    /// - `QSV_NO_HEADERS`: Determines if the file has headers.
+    /// - `QSV_AUTOINDEX_SIZE`: Sets the auto-index size.
+    /// - `QSV_PREFER_DMY`: Sets date format preference.
+    /// - `QSV_RDR_BUFFER_CAPACITY`: Sets read buffer capacity.
+    /// - `QSV_WTR_BUFFER_CAPACITY`: Sets write buffer capacity.
     pub fn new(path: Option<&String>) -> Config {
         let default_delim = match env::var("QSV_DEFAULT_DELIMITER") {
             Ok(delim) => Delimiter::decode_delimiter(&delim).unwrap().as_byte(),
@@ -301,6 +337,20 @@ impl Config {
     }
 
     #[inline]
+    /// Returns a `Selection` based on the config's `select_columns` & the first record of the CSV.
+    ///
+    /// # Arguments
+    ///
+    /// * `first_record` - A reference to the first `ByteRecord` of the CSV.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Selection, String>` - A `Selection` if successful, otherwise, an error msg
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// * The `Config` has no `SelectColumns` (i.e., `Config::select` was not called).
     pub fn selection(&self, first_record: &csv::ByteRecord) -> Result<Selection, String> {
         match self.select_columns {
             None => fail!("Config has no 'SelectColumns'. Did you call Config::select?"),
@@ -308,6 +358,20 @@ impl Config {
         }
     }
 
+    /// Writes the headers from a CSV reader to a CSV writer.
+    ///
+    /// This function reads the headers from the given CSV reader and writes them to the CSV writer,
+    /// but only if the `no_headers` flag is not set. If the headers are empty, nothing is written.
+    ///
+    /// # Arguments
+    ///
+    /// * `r` - A mutable reference to a CSV reader.
+    /// * `w` - A mutable reference to a CSV writer.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `csv::Result<()>` which is `Ok(())` if the operation was successful,
+    /// or an error if there was a problem reading or writing.
     pub fn write_headers<R: io::Read, W: io::Write>(
         &self,
         r: &mut csv::Reader<R>,
@@ -354,11 +418,26 @@ impl Config {
         })
     }
 
+    /// Automatically creates an index file for the CSV file.
+    ///
+    /// This function attempts to create an index file for the CSV file specified in `self.path`.
+    /// It's designed to fail silently if any step of the process encounters an error, as it's
+    /// intended to be a convenience function.
+    ///
+    /// # Behavior
+    ///
+    /// - If the file is Snappy-compressed, the function returns immediately w/o creating an index.
+    /// - If `self.path` is `None`, the function returns without action.
+    /// - The function creates an index file using `util::idx_path()` to determine index file path.
+    /// - It uses `csv_index::RandomAccessSimple::create()` to generate the index.
+    /// - If index creation is successful, it sets the `AUTO_INDEXED` atomic flag to `true`.
+    ///
+    /// # Errors
+    ///
+    /// While this function doesn't return any errors, it logs debug messages for both successful
+    /// and failed index creation attempts.
     fn autoindex_file(&self) {
-        // autoindex_file should never panic. It should silently fail as its a "convenience fn"
-        // that's why we have a lot of let-else returns, in lieu of unwraps
         if self.snappy {
-            // cannot index snappy compressed files
             return;
         }
 
@@ -553,6 +632,28 @@ impl Config {
     }
 }
 
+/// Determines the delimiter and compression status based on the file extension.
+///
+/// # Arguments
+///
+/// * `path` - A reference to the `Path` of the file.
+/// * `default_delim` - The default delimiter to use if not determined by extension.
+///
+/// # Returns
+///
+/// A tuple containing:
+/// * `String` - The lowercase file extension.
+/// * `u8` - The determined delimiter.
+/// * `bool` - Whether the file is Snappy-compressed.
+///
+/// # Details
+///
+/// This function examines the file extension to determine:
+/// 1. The appropriate delimiter (tab for .tsv/.tab, semicolon for .ssv, comma for .csv).
+/// 2. Whether the file is Snappy-compressed (indicated by a .sz extension).
+/// 3. For Snappy-compressed files, it checks the extension before .sz to determine the delimiter.
+///
+/// If the file extension doesn't match known types, it returns the default delimiter.
 pub fn get_delim_by_extension(path: &Path, default_delim: u8) -> (String, u8, bool) {
     let mut snappy = false;
     let file_extension = path

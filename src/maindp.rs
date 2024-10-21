@@ -32,14 +32,16 @@
         clippy::option_if_let_else,
     )
 )]
-extern crate crossbeam_channel as channel;
 use std::{env, io, time::Instant};
 
 extern crate qsv_docopt as docopt;
 use docopt::Docopt;
 use serde::Deserialize;
 
-use crate::clitypes::{CliError, CliResult, QsvExitCode, CURRENT_COMMAND};
+use crate::{
+    clitypes::{CliError, CliResult, QsvExitCode, CURRENT_COMMAND},
+    config::SPONSOR_MESSAGE,
+};
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
@@ -49,9 +51,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 #[global_allocator]
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
-macro_rules! command_list {
-    () => {
-        "
+static COMMAND_LIST: &str = r#"
     applydp     Apply series of transformations to a column
     count       Count records
     datefmt     Format date/datetime strings
@@ -86,12 +86,8 @@ macro_rules! command_list {
     stats       Infer data types and compute summary statistics
     validate    Validate CSV data for RFC4180-compliance or with JSON Schema
 
-    NOTE: qsvdp ignores the --progressbar option for all commands.
+    NOTE: qsvdp ignores the --progressbar option for all commands."#;
 
-sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
-"
-    };
-}
 mod clitypes;
 mod cmd;
 mod config;
@@ -113,10 +109,7 @@ Options:
     -h, --help           Display this message
     <command> -h         Display the command help message
     -v, --version        Print version info, mem allocator, features installed, 
-                         max_jobs, num_cpus, build info then exit
-
-sponsored by datHere - Data Infrastructure Engineering (https://qsv.datHere.com)
-"#;
+                         max_jobs, num_cpus, build info then exit"#;
 #[derive(Deserialize)]
 struct Args {
     arg_command:    Option<Command>,
@@ -136,7 +129,7 @@ fn main() -> QsvExitCode {
         },
     };
 
-    let args: Args = Docopt::new(USAGE)
+    let args: Args = Docopt::new(format!("{USAGE}\n\n{SPONSOR_MESSAGE}"))
         .and_then(|d| {
             d.options_first(true)
                 .version(Some(util::version()))
@@ -149,7 +142,7 @@ fn main() -> QsvExitCode {
     }
 
     if args.flag_list {
-        wout!(concat!("Installed commands:", command_list!()));
+        wout!("Installed commands:{}\n\n{}", COMMAND_LIST, SPONSOR_MESSAGE);
         util::log_end(qsv_args, now);
         return QsvExitCode::Good;
     } else if args.flag_envlist {
@@ -167,12 +160,11 @@ fn main() -> QsvExitCode {
     }
     match args.arg_command {
         None => {
-            werr!(concat!(
-                "qsvdp is a suite of CSV command line utilities optimized for Datapusher+.
-
-Please choose one of the following commands:",
-                command_list!()
-            ));
+            werr!(
+                "qsvdp is a suite of CSV command line utilities optimized for \
+                 Datapusher+.\n\nPlease choose one of the following \
+                 commands:\n{COMMAND_LIST}\n\n{SPONSOR_MESSAGE}",
+            );
 
             util::log_end(qsv_args, now);
             QsvExitCode::Good
@@ -308,7 +300,7 @@ impl Command {
             Command::Frequency => cmd::frequency::run(argv),
             Command::Headers => cmd::headers::run(argv),
             Command::Help => {
-                wout!("{USAGE}");
+                wout!("{USAGE}\n\n{SPONSOR_MESSAGE}");
                 util::qsv_check_for_update(true, false)?;
                 Ok(())
             },

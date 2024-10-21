@@ -28,7 +28,7 @@ use sysinfo::System;
 #[cfg(feature = "polars")]
 use crate::cmd::count::polars_count_input;
 use crate::{
-    cmd::stats::{JsonTypes, StatsData, STATSDATA_TYPES_ARRAY},
+    cmd::stats::{get_stats_data_types, JsonTypes, StatsData},
     config,
     config::{Config, Delimiter, DEFAULT_RDR_BUFFER_CAPACITY, DEFAULT_WTR_BUFFER_CAPACITY},
     select::SelectColumns,
@@ -39,6 +39,7 @@ use crate::{
 macro_rules! regex_oncelock {
     ($re:literal $(,)?) => {{
         static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+        #[allow(clippy::regex_creation_in_loops)] // false positive as we use oncelock
         RE.get_or_init(|| regex::Regex::new($re).expect("Invalid regex"))
     }};
 }
@@ -135,8 +136,8 @@ pub fn njobs(flag_jobs: Option<usize>) -> usize {
             jobs
         }
     });
-    env::set_var("RAYON_NUM_THREADS", jobs_to_use.to_string());
-    log::info!("Using {jobs_to_use} jobs...");
+    env::set_var("RAYON_NUM_THREADS", itoa::Buffer::new().format(jobs_to_use));
+    // log::info!("Using {jobs_to_use} jobs...");
     jobs_to_use
 }
 
@@ -2116,7 +2117,7 @@ pub fn get_stats_records(
         // create a statsdatajon from the output of the stats command
         csv_to_jsonl(
             &tempfile_path,
-            &STATSDATA_TYPES_ARRAY,
+            &get_stats_data_types(),
             statsdatajson_path.clone(),
         )?;
 
@@ -2210,6 +2211,7 @@ pub fn csv_to_jsonl(
 }
 
 /// get the optimal batch size
+/// if CSV is not indexed and ROW_COUNT is not set, return DEFAULT_BATCH_SIZE
 /// if batch_size is 0, return the number of rows in the CSV, effectively disabling batching
 /// if batch_size is 1, force batch_size to be set to "optimal_size", even though
 /// its not recommended (number of rows is too small for parallel processing)
@@ -2217,23 +2219,21 @@ pub fn csv_to_jsonl(
 /// failing everything above, return the requested batch_size
 #[inline]
 pub fn optimal_batch_size(rconfig: &Config, batch_size: usize, num_jobs: usize) -> usize {
-    if batch_size < DEFAULT_BATCH_SIZE {
-        return DEFAULT_BATCH_SIZE;
-    }
-    // if ROW_COUNT is not known, even if the input is not indexed, we still determine
-    // optimal batch size if polars is enabled, as its fast even without an index.
-    // Otherwise, we return the default batch size, as the perf hit of counting rows is too high
-    // without an index with polars disabled
-    #[cfg(not(feature = "polars"))]
-    if ROW_COUNT.get().is_none() {
+    if batch_size > 1 && batch_size < DEFAULT_BATCH_SIZE {
         return DEFAULT_BATCH_SIZE;
     }
 
-    let num_rows = if let Ok(rows) = count_rows(rconfig) {
-        rows as usize
-    } else {
-        return DEFAULT_BATCH_SIZE;
+    let num_rows = match ROW_COUNT.get() {
+        Some(count) => count.unwrap() as usize,
+        None => {
+            if let Ok(Some(idx)) = rconfig.indexed() {
+                idx.count() as usize
+            } else {
+                return DEFAULT_BATCH_SIZE;
+            }
+        },
     };
+
     if batch_size == 0 {
         // disable batching, handle all rows in one batch
         num_rows

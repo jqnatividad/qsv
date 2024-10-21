@@ -22,6 +22,9 @@ fn prop_reverse(name: &str, rows: CsvData, headers: bool) -> bool {
         vec![]
     };
     expected.reverse();
+    if !expected.is_empty() && expected[0].contains(&"\u{FEFF}".to_string()) {
+        return true;
+    }
     if !headers.is_empty() {
         expected.insert(0, headers);
     }

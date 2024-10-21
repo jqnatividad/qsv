@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=5.1.0
+bm_version=5.3.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -496,7 +496,9 @@ run exclude_multi_casei "$qsv_bin" exclude --ignore-case \'Incident Zip,Communit
 run --index exclude_multi_casei_index "$qsv_bin" exclude --ignore-case \'Incident Zip,Community Board,Agency\' "$data" \'Incident Zip,Community Board,Agency\' data_to_exclude.csv
 run explode "$qsv_bin" explode City "-" "$data"
 run extdedup "$qsv_bin" extdedup "$data"
+run extdedup_csv "$qsv_bin" extdedup "$data" --select 1-5
 run extsort "$qsv_bin" extsort data_unsorted.csv extsort_sorted.csv
+run --index extsort_csv "$qsv_bin" extsort data_unsorted.csv --select 1-5 extsort_sorted.csv
 run fill "$qsv_bin" fill -v Unspecified \'Address Type\' "$data"
 run fixlengths "$qsv_bin" fixlengths "$data"
 run flatten "$qsv_bin" flatten "$data"
@@ -617,6 +619,8 @@ run --index split_chunks_index "$qsv_bin" split --chunks 20 split_tempdir_chunks
 run --index split_chunks_index_j1 "$qsv_bin" split --chunks 20 -j 1 split_tempdir_chunks_idx_j1
 run sqlp "$qsv_bin" sqlp "$data" -Q --infer-len 100000 '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_aggregations "$qsv_bin" sqlp "$data" -Q --infer-len 100000 '"select Borough, count(*) from _t_1 where \"Complaint Type\"='\''Noise'\'' group by Borough"'
+run sqlp_aggregations_seed_schema_cache "$qsv_bin" sqlp "$data" -Q --infer-len 100000 --cache-schema '"select Borough, count(*) from _t_1 where \"Complaint Type\"='\''Noise'\'' group by Borough"'
+run sqlp_aggregations_use_schema_cache "$qsv_bin" sqlp "$data" -Q --infer-len 100000 --cache-schema '"select Borough, count(*) from _t_1 where \"Complaint Type\"='\''Noise'\'' group by Borough"'
 run sqlp_aggregations_vs_duckdb duckdb :memory: '"select Borough, count(*) from read_csv_auto('\'''$data''\'') where \"Complaint Type\"='\''Noise'\'' group by Borough"'
 run sqlp_aggregations_expensive "$qsv_bin" sqlp SKIP_INPUT -Q --infer-len 100000 expensive.sql
 run sqlp_aggregations_expensive_streaming "$qsv_bin" sqlp SKIP_INPUT -Q --infer-len 100000 --streaming expensive.sql

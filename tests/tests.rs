@@ -39,7 +39,10 @@ mod test_applydp;
 mod test_behead;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_cat;
-#[cfg(any(feature = "feature_capable", feature = "lite"))]
+#[cfg(all(
+    any(feature = "feature_capable", feature = "lite"),
+    any(target_os = "windows", target_os = "macos")
+))]
 mod test_clipboard;
 mod test_combos;
 mod test_comments;

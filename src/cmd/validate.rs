@@ -24,7 +24,7 @@ qsv supports a custom format - `currency`. This format will only accept a valid 
 
  1. ISO Currency Symbol (optional): This is the ISO 4217 three-character code or currency symbol
     (e.g. USD, EUR, JPY, $, €, ¥, etc.)
- 2. Amount: This is the numerical value of the currency.More than 2 decimal places are allowed.
+ 2. Amount: This is the numerical value of the currency. More than 2 decimal places are allowed.
  3. Formats: Valid currency formats include:
       Standard: $1,000.00 or USD1000.00  
       Negative amounts: ($100.00) or -$100.00
@@ -130,7 +130,6 @@ Common options:
 "#;
 
 use std::{
-    borrow::Cow,
     env,
     fs::File,
     io::{BufReader, BufWriter, Read, Write},
@@ -149,7 +148,7 @@ use indicatif::HumanCount;
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use jsonschema::{
     output::BasicOutput,
-    paths::{JsonPointer, JsonPointerNode, PathChunk},
+    paths::{LazyLocation, Location},
     ErrorIterator, Keyword, ValidationError, Validator,
 };
 use log::{debug, info, log_enabled};
@@ -179,8 +178,8 @@ macro_rules! fail_validation_error {
         let err = format!($($t)*);
         error!("{err}");
         Err(ValidationError::custom(
-            JsonPointer::default(),
-            JsonPointer::default(),
+            Location::default(),
+            Location::default(),
             &Value::Null,
             err,
         ))
@@ -260,13 +259,13 @@ impl Keyword for DynEnumValidator {
     fn validate<'instance>(
         &self,
         instance: &'instance Value,
-        instance_path: &JsonPointerNode,
+        instance_path: &LazyLocation,
     ) -> ErrorIterator<'instance> {
         if self.dynenum_set.contains(instance.as_str().unwrap()) {
             Box::new(std::iter::empty())
         } else {
             let error = ValidationError::custom(
-                JsonPointer::default(),
+                Location::default(),
                 instance_path.into(),
                 instance,
                 format!("{instance} is not a valid dynamicEnum value"),
@@ -289,7 +288,7 @@ impl Keyword for DynEnumValidator {
 fn dyn_enum_validator_factory<'a>(
     _parent: &'a Map<String, Value>,
     value: &'a Value,
-    jsonpointer: JsonPointer,
+    location: Location,
 ) -> Result<Box<dyn Keyword>, ValidationError<'a>> {
     if let Value::String(uri) = value {
         let temp_download = NamedTempFile::new()?;
@@ -340,8 +339,8 @@ fn dyn_enum_validator_factory<'a>(
         Ok(Box::new(DynEnumValidator::new(enum_set)))
     } else {
         Err(ValidationError::custom(
-            JsonPointer::default(),
-            jsonpointer,
+            Location::default(),
+            location,
             value,
             "'dynamicEnum' must be set to a CSV file on the local filesystem or on a URL.",
         ))
@@ -696,6 +695,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // validation_results vector should have same row count and in same order as input CSV
         batch
             .par_iter()
+            .with_min_len(1024)
             .map(|record| do_json_validation(&header_types, header_len, record, &schema_compiled))
             .collect_into_vec(&mut validation_results);
 
@@ -904,7 +904,10 @@ fn do_json_validation(
             .iter()
             .map(|(field, error)| {
                 // validation error file format: row_number, field, error
-                format!("{row_number_string}\t{field}\t{error}")
+                format!(
+                    "{row_number_string}\t{field}\t{error}",
+                    field = field.trim_start_matches('/')
+                )
             })
             .collect::<Vec<_>>()
             .join("\n")
@@ -920,59 +923,53 @@ fn to_json_instance(
 ) -> CliResult<Value> {
     let mut json_object_map: Map<String, Value> = Map::with_capacity(header_len);
 
-    let mut key_string: String;
+    let mut lossy_string;
     for ((key, json_type), value) in header_types.iter().zip(record.iter()) {
-        key_string = key.to_owned();
-
         if value.is_empty() {
-            json_object_map.insert(key_string, Value::Null);
+            json_object_map.insert(key.clone(), Value::Null);
             continue;
         }
 
         let value_str = if let Ok(v) = simdutf8::basic::from_utf8(value) {
-            Cow::Borrowed(v)
+            v
         } else {
-            let s = String::from_utf8_lossy(value);
-            return fail_encoding_clierror!("CSV value \"{s}\" is not valid UTF-8");
+            lossy_string = String::from_utf8_lossy(value).to_string();
+            &lossy_string
         };
 
-        match *json_type {
-            JSONtypes::String => {
-                json_object_map.insert(key_string, Value::String(value_str.into_owned()));
-            },
+        let json_value = match json_type {
+            JSONtypes::String => Value::String(value_str.to_owned()),
             JSONtypes::Number => {
                 if let Ok(float) = value_str.parse::<f64>() {
-                    json_object_map
-                        .insert(key_string, Value::Number(Number::from_f64(float).unwrap()));
+                    Value::Number(Number::from_f64(float).unwrap())
                 } else {
                     return fail_clierror!(
-                        "Can't cast into Number. key: {key_string}, value: {value_str}"
+                        "Can't cast into Number. key: {key}, value: {value_str}"
                     );
                 }
             },
             JSONtypes::Integer => {
                 if let Ok(int) = atoi_simd::parse::<i64>(value_str.as_bytes()) {
-                    json_object_map.insert(key_string, Value::Number(Number::from(int)));
+                    Value::Number(Number::from(int))
                 } else {
                     return fail_clierror!(
-                        "Can't cast into Integer. key: {key_string}, value: {value_str}"
+                        "Can't cast into Integer. key: {key}, value: {value_str}"
                     );
                 }
             },
             JSONtypes::Boolean => {
                 if let Ok(boolean) = value_str.parse::<bool>() {
-                    json_object_map.insert(key_string, Value::Bool(boolean));
+                    Value::Bool(boolean)
                 } else {
                     return fail_clierror!(
-                        "Can't cast into Boolean. key: {key_string}, value: {value_str}"
+                        "Can't cast into Boolean. key: {key}, value: {value_str}"
                     );
                 }
             },
-            JSONtypes::Unsupported => {
-                // unreachable because we assigned JSONtypes
-                unreachable!("we should never get an unsupported JSON type");
-            },
-        }
+            JSONtypes::Unsupported => unreachable!("we should never get an unsupported JSON type"),
+        };
+
+        json_object_map.insert(key.clone(), json_value);
     }
 
     Ok(Value::Object(json_object_map))
@@ -1164,34 +1161,19 @@ fn validate_json_instance(
     instance: &Value,
     schema_compiled: &Validator,
 ) -> Option<Vec<(String, String)>> {
-    let validation_output = schema_compiled.apply(instance);
-
-    // If validation output is Invalid, then grab field names and errors
-    if validation_output.flag() {
-        None
-    } else {
-        // get validation errors as String
-        let validation_errors: Vec<(String, String)> = match validation_output.basic() {
-            BasicOutput::Invalid(errors) => errors
+    match schema_compiled.apply(instance).basic() {
+        BasicOutput::Valid(_) => None,
+        BasicOutput::Invalid(errors) => Some(
+            errors
                 .iter()
                 .map(|e| {
-                    if let Some(PathChunk::Property(box_str)) = e.instance_location().last() {
-                        (box_str.to_string(), e.error_description().to_string())
-                    } else {
-                        (
-                            e.instance_location().to_string(),
-                            e.error_description().to_string(),
-                        )
-                    }
+                    (
+                        e.instance_location().to_string(),
+                        e.error_description().to_string(),
+                    )
                 })
                 .collect(),
-            BasicOutput::Valid(_annotations) => {
-                // shouldn't happen
-                unreachable!("Unexpected error.");
-            },
-        };
-
-        Some(validation_errors)
+        ),
     }
 }
 
@@ -1322,7 +1304,7 @@ mod tests_for_schema_validation {
 
         assert_eq!(
             vec![(
-                "name".to_string(),
+                "/name".to_string(),
                 "\"X\" is shorter than 2 characters".to_string()
             )],
             result.unwrap()
@@ -1393,7 +1375,7 @@ fn test_validate_currency_email_dynamicenum_validator() {
     assert_eq!(
         result,
         Some(vec![(
-            "fee".to_owned(),
+            "/fee".to_owned(),
             "\"Ð 100.00\" is not a \"currency\"".to_owned()
         )])
     );
@@ -1422,11 +1404,11 @@ fn test_validate_currency_email_dynamicenum_validator() {
         result,
         Some(vec![
             (
-                "fee".to_owned(),
+                "/fee".to_owned(),
                 "\"Ð 100.00\" is not a \"currency\"".to_owned()
             ),
             (
-                "email".to_owned(),
+                "/email".to_owned(),
                 "\"thisisnotanemail\" is not a \"email\"".to_owned()
             )
         ])
@@ -1468,11 +1450,11 @@ fn test_validate_currency_email_dynamicenum_validator() {
                 result,
                 Some(vec![
                     (
-                        "name".to_owned(),
+                        "/name".to_owned(),
                         "\"T\" is shorter than 2 characters".to_owned()
                     ),
                     (
-                        "agency".to_owned(),
+                        "/agency".to_owned(),
                         "\"MODA\" is not a valid dynamicEnum value".to_owned()
                     )
                 ])
@@ -1480,7 +1462,7 @@ fn test_validate_currency_email_dynamicenum_validator() {
             4 => assert_eq!(
                 result,
                 Some(vec![(
-                    "name".to_owned(),
+                    "/name".to_owned(),
                     "\"X\" is shorter than 2 characters".to_owned()
                 )])
             ),
@@ -1488,14 +1470,14 @@ fn test_validate_currency_email_dynamicenum_validator() {
             6 => assert_eq!(
                 result,
                 Some(vec![(
-                    "agency".to_owned(),
+                    "/agency".to_owned(),
                     "\"NYFD\" is not a valid dynamicEnum value".to_owned()
                 )])
             ),
             7 => assert_eq!(
                 result,
                 Some(vec![(
-                    "fee".to_owned(),
+                    "/fee".to_owned(),
                     "\"WAX 100.000,00\" is not a \"currency\"".to_owned()
                 )])
             ),
@@ -1503,15 +1485,15 @@ fn test_validate_currency_email_dynamicenum_validator() {
                 result,
                 Some(vec![
                     (
-                        "fee".to_owned(),
+                        "/fee".to_owned(),
                         "\"B 1,000,000\" is not a \"currency\"".to_owned()
                     ),
                     (
-                        "email".to_owned(),
+                        "/email".to_owned(),
                         "\"71076.964-compuserve\" is not a \"email\"".to_owned()
                     ),
                     (
-                        "agency".to_owned(),
+                        "/agency".to_owned(),
                         "\"ABCD\" is not a valid dynamicEnum value".to_owned()
                     )
                 ])
@@ -1551,7 +1533,7 @@ fn test_dyn_enum_validator() {
         let err_info = e.into_iter().next().unwrap();
         assert_eq!(
             format!("{err_info:?}"),
-            r#"ValidationError { instance: String("lanzones"), kind: Custom { message: "\"lanzones\" is not a valid dynamicEnum value" }, instance_path: JsonPointer([]), schema_path: JsonPointer([]) }"#
+            r#"ValidationError { instance: String("lanzones"), kind: Custom { message: "\"lanzones\" is not a valid dynamicEnum value" }, instance_path: Location(""), schema_path: Location("") }"#
         );
     } else {
         unreachable!("Expected an error, but validation succeeded.");

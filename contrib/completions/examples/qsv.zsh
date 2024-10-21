@@ -416,10 +416,13 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (extdedup)
 _arguments "${_arguments_options[@]}" : \
+'--select[]' \
 '--no-output[]' \
 '--dupes-output[]' \
 '--human-readable[]' \
 '--memory-limit[]' \
+'--no-headers[]' \
+'--no-delimiter[]' \
 '--quiet[]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -427,9 +430,12 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (extsort)
 _arguments "${_arguments_options[@]}" : \
+'--select[]' \
+'--reverse[]' \
 '--memory-limit[]' \
 '--tmp-dir[]' \
 '--jobs[]' \
+'--delimiter[]' \
 '--no-headers[]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -449,8 +455,8 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 '--url-template[]' \
 '--new-column[]' \
-'--jql[]' \
-'--jqlfile[]' \
+'--jaq[]' \
+'--jaqfile[]' \
 '--pretty[]' \
 '--rate-limit[]' \
 '--timeout[]' \
@@ -479,8 +485,8 @@ _arguments "${_arguments_options[@]}" : \
 (fetchpost)
 _arguments "${_arguments_options[@]}" : \
 '--new-column[]' \
-'--jql[]' \
-'--jqlfile[]' \
+'--jaq[]' \
+'--jaqfile[]' \
 '--pretty[]' \
 '--rate-limit[]' \
 '--timeout[]' \
@@ -1680,6 +1686,7 @@ _arguments "${_arguments_options[@]}" : \
 '--format[]' \
 '--try-parsedates[]' \
 '--infer-len[]' \
+'--cache-schema[]' \
 '--streaming[]' \
 '--low-memory[]' \
 '--no-optimizations[]' \

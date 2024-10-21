@@ -2,7 +2,7 @@
 static USAGE: &str = r#"
 Fetches data from web services for every row using HTTP Get.
 
-Fetch is integrated with `jql` to directly parse out values from an API JSON response.
+Fetch is integrated with `jaq` (a jq clone) to directly parse out values from an API JSON response.
 
 CACHE OPTIONS:
 Fetch caches responses to minimize traffic and maximize performance. It has four
@@ -75,10 +75,10 @@ Given the data.csv above, fetch the JSON response.
 Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
 Now, if we want to generate a CSV file with the parsed City and State, we use the 
-new-column and jql options. (See https://github.com/yamafaktory/jql#%EF%B8%8F-usage 
-for more info on how to use the jql JSON Query Language)
+new-column and jaq options. (See https://github.com/01mf02/jaq?tab=readme-ov-file#examples 
+for more info on how to use the jaq JSON Query Language)
 
-$ qsv fetch URL --new-column CityState --jql '"places"[0]"place name","places"[0]"state abbreviation"' 
+$ qsv fetch URL --new-column CityState --jaq '[ ."places"[0]."place name",."places"[0]."state abbreviation" ]' 
   data.csv > data_with_CityState.csv
 
 data_with_CityState.csv
@@ -87,10 +87,10 @@ data_with_CityState.csv
   https://api.zippopotam.us/us/94105, "[\"San Francisco\",\"CA\"]"
   https://api.zippopotam.us/us/92802, "[\"Anaheim\",\"CA\"]"
 
-As you can see, entering jql selectors on the command line is error prone and can quickly become cumbersome.
-Alternatively, the jql selector can be saved and loaded from a file using the --jqlfile option.
+As you can see, entering jaq selectors on the command line is error prone and can quickly become cumbersome.
+Alternatively, the jaq selector can be saved and loaded from a file using the --jaqfile option.
 
-  $ qsv fetch URL --new-column CityState --jqlfile places.jql data.csv > datatest.csv
+  $ qsv fetch URL --new-column CityState --jaqfile places.jaq data.csv > datatest.csv
 
 EXAMPLES USING THE --URL-TEMPLATE OPTION:
 
@@ -117,10 +117,10 @@ $ qsv fetch --url-template "https://api.geocode.earth/v1/reverse?point.lat={lati
 
 Example 2:
 Geocode addresses in addresses.csv, pass the "street address" and "zip-code" fields
-and use jql to parse placename from the JSON response into a new column in addresses_with_placename.csv.
+and use jaq to parse placename from the JSON response into a new column in addresses_with_placename.csv.
 Note how field name non-alphanumeric characters (space and hyphen) in the url-template were replaced with _.
 
-$ qsv fetch --jql '"features"[0]"properties","name"' addresses.csv -c placename --url-template 
+$ qsv fetch --jaq '."features"[0]."properties", ."name"' addresses.csv -c placename --url-template 
   "https://api.geocode.earth/v1/search/structured?address={street_address}&postalcode={zip_code}"
   > addresses_with_placename.csv
 
@@ -135,7 +135,7 @@ $ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" -H "X-Api-Secret:ABC
 For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_fetch.rs.
 
 Usage:
-    qsv fetch [<url-column> | --url-template <template>] [--jql <selector> | --jqlfile <file>] [--http-header <k:v>...] [options] [<input>]
+    qsv fetch [<url-column> | --url-template <template>] [--jaq <selector> | --jaqfile <file>] [--http-header <k:v>...] [options] [<input>]
     qsv fetch --help
 
 Fetch options:
@@ -146,10 +146,10 @@ Fetch options:
                                Mutually exclusive with url-column.
     -c, --new-column <name>    Put the fetched values in a new column. Specifying this option
                                results in a CSV. Otherwise, the output is in JSONL format.
-    --jql <selector>           Apply jql selector to API returned JSON value.
-                               Mutually exclusive with --jqlfile,
-    --jqlfile <file>           Load jql selector from file instead.
-                               Mutually exclusive with --jql.
+    --jaq <selector>           Apply jaq selector to API returned JSON value.
+                               Mutually exclusive with --jaqfile,
+    --jaqfile <file>           Load jaq selector from file instead.
+                               Mutually exclusive with --jaq.
     --pretty                   Prettify JSON responses. Otherwise, they're minified.
                                If the response is not in JSON format, it's passed through.
                                Note that --pretty requires the --new-column option.
@@ -247,6 +247,7 @@ use governor::{
     Quota, RateLimiter,
 };
 use indicatif::{HumanCount, MultiProgress, ProgressBar, ProgressDrawTarget};
+use jaq_interpret::{Ctx, FilterT, ParseCtx, RcIter, Val};
 use log::{
     debug, error, info, log_enabled, warn,
     Level::{Debug, Trace, Warn},
@@ -276,8 +277,8 @@ struct Args {
     arg_input:           Option<String>,
     flag_url_template:   Option<String>,
     flag_new_column:     Option<String>,
-    flag_jql:            Option<String>,
-    flag_jqlfile:        Option<String>,
+    flag_jaq:            Option<String>,
+    flag_jaqfile:        Option<String>,
     flag_pretty:         bool,
     flag_rate_limit:     u32,
     flag_timeout:        u16,
@@ -662,9 +663,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         multi_progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    let jql_selector: Option<String> = match args.flag_jqlfile {
-        Some(ref jql_file) => Some(fs::read_to_string(jql_file)?),
-        None => args.flag_jql.as_ref().map(std::string::ToString::to_string),
+    let jaq_selector: Option<String> = match args.flag_jaqfile {
+        Some(ref jaq_file) => Some(fs::read_to_string(jaq_file)?),
+        None => args.flag_jaq.as_ref().map(std::string::ToString::to_string),
     };
 
     // prepare report
@@ -798,7 +799,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         &url,
                         &client,
                         &limiter,
-                        jql_selector.as_ref(),
+                        jaq_selector.as_ref(),
                         args.flag_store_error,
                         args.flag_pretty,
                         include_existing_columns,
@@ -816,7 +817,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         &url,
                         &client,
                         &limiter,
-                        jql_selector.as_ref(),
+                        jaq_selector.as_ref(),
                         args.flag_store_error,
                         args.flag_pretty,
                         include_existing_columns,
@@ -838,7 +839,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         &url,
                         &client,
                         &limiter,
-                        jql_selector.as_ref(),
+                        jaq_selector.as_ref(),
                         args.flag_store_error,
                         args.flag_pretty,
                         include_existing_columns,
@@ -861,7 +862,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         let key = format!(
                             "{}{:?}{}{}{}",
                             url,
-                            jql_selector,
+                            jaq_selector,
                             args.flag_store_error,
                             args.flag_pretty,
                             include_existing_columns
@@ -878,7 +879,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         &url,
                         &client,
                         &limiter,
-                        jql_selector.as_ref(),
+                        jaq_selector.as_ref(),
                         args.flag_store_error,
                         args.flag_pretty,
                         include_existing_columns,
@@ -1025,7 +1026,7 @@ fn get_cached_response(
     url: &str,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
-    flag_jql: Option<&String>,
+    flag_jaq: Option<&String>,
     flag_store_error: bool,
     flag_pretty: bool,
     include_existing_columns: bool,
@@ -1035,7 +1036,7 @@ fn get_cached_response(
         url,
         client,
         limiter,
-        flag_jql,
+        flag_jaq,
         flag_store_error,
         flag_pretty,
         include_existing_columns,
@@ -1044,14 +1045,14 @@ fn get_cached_response(
 }
 
 // this is a disk cache that can be used across qsv sessions
-// so we need to include the values of flag_jql, flag_store_error, flag_pretty and
+// so we need to include the values of flag_jaq, flag_store_error, flag_pretty and
 // include_existing_columns in the cache key
 #[io_cached(
     disk = true,
     ty = "cached::DiskCache<String, FetchResponse>",
     cache_prefix_block = r##"{ "dc_" }"##,
     key = "String",
-    convert = r##"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"##,
+    convert = r##"{ format!("{}{:?}{}{}{}", url, flag_jaq, flag_store_error, flag_pretty, include_existing_columns) }"##,
     create = r##"{
         let cache_dir = DISKCACHE_DIR.get().unwrap();
         let diskcache_config = DISKCACHECONFIG.get().unwrap();
@@ -1073,7 +1074,7 @@ fn get_diskcache_response(
     url: &str,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
-    flag_jql: Option<&String>,
+    flag_jaq: Option<&String>,
     flag_store_error: bool,
     flag_pretty: bool,
     include_existing_columns: bool,
@@ -1084,7 +1085,7 @@ fn get_diskcache_response(
             url,
             client,
             limiter,
-            flag_jql,
+            flag_jaq,
             flag_store_error,
             flag_pretty,
             include_existing_columns,
@@ -1094,12 +1095,12 @@ fn get_diskcache_response(
 }
 
 // get_redis_response needs a longer key as its a persistent cache and the
-// values of flag_jql, flag_store_error, flag_pretty and include_existing_columns
+// values of flag_jaq, flag_store_error, flag_pretty and include_existing_columns
 // may change between sessions
 #[io_cached(
     ty = "cached::RedisCache<String, String>",
     key = "String",
-    convert = r##"{ format!("{}{:?}{}{}{}", url, flag_jql, flag_store_error, flag_pretty, include_existing_columns) }"##,
+    convert = r##"{ format!("{}{:?}{}{}{}", url, flag_jaq, flag_store_error, flag_pretty, include_existing_columns) }"##,
     create = r##" {
         let redis_config = REDISCONFIG.get().unwrap();
         let rediscache = RedisCache::new("f", redis_config.ttl_secs)
@@ -1123,7 +1124,7 @@ fn get_redis_response(
     url: &str,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
-    flag_jql: Option<&String>,
+    flag_jaq: Option<&String>,
     flag_store_error: bool,
     flag_pretty: bool,
     include_existing_columns: bool,
@@ -1134,7 +1135,7 @@ fn get_redis_response(
             url,
             client,
             limiter,
-            flag_jql,
+            flag_jaq,
             flag_store_error,
             flag_pretty,
             include_existing_columns,
@@ -1170,7 +1171,7 @@ fn get_response(
     url: &str,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
-    flag_jql: Option<&String>,
+    flag_jaq: Option<&String>,
     flag_store_error: bool,
     flag_pretty: bool,
     include_existing_columns: bool,
@@ -1266,15 +1267,15 @@ fn get_response(
                 }
             } else {
                 error_flag = false;
-                // apply JQL selector if provided
-                if let Some(selectors) = flag_jql {
-                    match process_jql(&api_value, selectors) {
+                // apply jaq selector if provided
+                if let Some(selectors) = flag_jaq {
+                    match process_jaq(&api_value, selectors) {
                         Ok(s) => {
                             final_value = s;
                         },
                         Err(e) => {
                             error!(
-                                "jql error. json: {api_value:?}, selectors: {selectors:?}, error: \
+                                "jaq error. json: {api_value:?}, selectors: {selectors:?}, error: \
                                  {e:?}"
                             );
 
@@ -1450,63 +1451,91 @@ fn get_response(
     }
 }
 
-impl From<jql_runner::errors::JqlRunnerError> for CliError {
-    fn from(err: jql_runner::errors::JqlRunnerError) -> CliError {
-        CliError::Other(format!("jql runner error: {err:?}"))
-    }
-}
-
 #[cached(
     size = 2_000_000,
     key = "String",
     convert = r#"{ format!("{}-{}", json, query) }"#,
     result = true
 )]
-pub fn process_jql(json: &str, query: &str) -> CliResult<String> {
+pub fn process_jaq(json: &str, query: &str) -> CliResult<String> {
     let mut deserializer = serde_json::Deserializer::from_str(json);
 
-    deserializer.disable_recursion_limit();
-
-    let deserializer = serde_stacker::Deserializer::new(&mut deserializer);
-
-    let value = match serde_json::Value::deserialize(deserializer) {
+    let value = match serde_json::Value::deserialize(&mut deserializer) {
         Ok(valid_value) => valid_value,
         Err(e) => return fail_clierror!("Failed to deserialize the JSON data: {e:?}"),
     };
-    let result: Value = jql_runner::runner::raw(query, &value)?;
 
-    Ok(serde_json::to_string(&result)?)
+    // Parse jaq filter based on JSON input
+    let mut defs = ParseCtx::new(Vec::new());
+    let (f, errs) = jaq_parse::parse(query, jaq_parse::main());
+
+    // Check for parsing errors
+    if !errs.is_empty() {
+        return fail_clierror!("Invalid jaq query: {errs:?}");
+    }
+
+    let f = match f {
+        Some(filter) => defs.compile(filter),
+        None => return fail_clierror!("Failed to compile jaq query"),
+    };
+
+    let inputs = RcIter::new(core::iter::empty());
+    let out = f
+        .run((Ctx::new([], &inputs), Val::from(value)))
+        .filter_map(std::result::Result::ok);
+
+    #[allow(clippy::from_iter_instead_of_collect)]
+    let jaq_value = serde_json::Value::from_iter(out);
+
+    let final_val = match jaq_value {
+        Value::Array(arr) => {
+            if arr.is_empty() {
+                return fail_clierror!("Jaq query returned an empty result");
+            }
+            arr.into_iter()
+                .map(format_value)
+                .collect::<Vec<String>>()
+                .join(", ")
+        },
+        value => format_value(value),
+    };
+
+    Ok(final_val)
 }
 
-// TODO: use this in the future to process JQL with pre-parsed tokens
-// pub fn process_json_with_tokens(
-//     json: &str,
-//     tokens_vec: &Vec<jql_parser::tokens::Token>,
-// ) -> CliResult<String> { if let Err(error) = serde_json::from_str::<Value>(json) { return
-//   fail_clierror!("Invalid json: {error:?}"); }
-
-//     let mut deserializer = serde_json::Deserializer::from_str(json);
-
-//     deserializer.disable_recursion_limit();
-
-//     let deserializer = serde_stacker::Deserializer::new(&mut deserializer);
-
-//     let value = match serde_json::Value::deserialize(deserializer) {
-//         Ok(valid_value) => valid_value,
-//         Err(e) => return fail_clierror!("Failed to deserialize the JSON data: {e:?}"),
-//     };
-//     let result: Value = jql_runner::runner::token(tokens_vec, &value)?;
-
-//     Ok(serde_json::to_string(&result)?)
-// }
+#[inline]
+fn format_value(value: Value) -> String {
+    match value {
+        Value::Number(num) => {
+            if num.is_f64() {
+                ryu::Buffer::new()
+                    .format_finite(num.as_f64().unwrap())
+                    .to_string()
+            } else if num.is_i64() {
+                itoa::Buffer::new()
+                    .format(num.as_i64().unwrap())
+                    .to_string()
+            } else {
+                itoa::Buffer::new()
+                    .format(num.as_u64().unwrap())
+                    .to_string()
+            }
+        },
+        Value::Bool(b) => b.to_string(),
+        Value::String(s) => format!("\"{s}\""),
+        Value::Null => "null".to_string(),
+        Value::Array(arr) => serde_json::to_string(&arr).unwrap_or_else(|_| "[]".to_string()),
+        Value::Object(obj) => serde_json::to_string(&obj).unwrap_or_else(|_| "{}".to_string()),
+    }
+}
 
 #[test]
-fn test_apply_jql_invalid_json() {
+fn test_apply_jaq_invalid_json() {
     let json =
         r#"<!doctype html><html lang="en"><meta charset=utf-8><title>shortest html5</title>"#;
     let selectors = r#"."places"[0]."place name""#;
 
-    let value = process_jql(json, selectors).unwrap_err().to_string();
+    let value = process_jaq(json, selectors).unwrap_err().to_string();
 
     assert_eq!(
         "Failed to deserialize the JSON data: Error(\"expected value\", line: 1, column: 1)",
@@ -1515,90 +1544,168 @@ fn test_apply_jql_invalid_json() {
 }
 
 #[test]
-fn test_apply_jql_invalid_selector() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
+fn test_apply_jaq_invalid_selector() {
+    let json_data = serde_json::json!(
+        {
+            "post code": "90210",
+            "country": "United States",
+            "country abbreviation": "US",
+            "places": [
+                {
+                    "place name": "Beverly Hills",
+                    "longitude": -118.4065,
+                    "state": "California",
+                    "state abbreviation": "CA",
+                    "latitude": 34.0901
+                }
+            ]
+        }
+    );
+    let json_string = serde_json::to_string(&json_data).unwrap();
     let selectors = r#"."place"[0]."place name""#;
 
-    let value = process_jql(json, selectors).unwrap_err().to_string();
+    let value = process_jaq(&json_string, selectors)
+        .unwrap_err()
+        .to_string();
+
+    assert_eq!("Jaq query returned an empty result", value);
+}
+
+#[test]
+fn test_apply_jaq_string() {
+    let json_data = serde_json::json!(
+        {
+            "post code": "90210",
+            "country": "United States",
+            "country abbreviation": "US",
+            "places": [
+                {
+                    "place name": "Beverly Hills",
+                    "longitude": "-118.4065",
+                    "state": "California",
+                    "state abbreviation": "CA",
+                    "latitude": "34.0901"
+                }
+            ]
+        }
+    );
+    let json_string = serde_json::to_string(&json_data).unwrap();
+    let selectors = r#"."places"[0]."place name""#;
+
+    let value = process_jaq(&json_string, selectors).unwrap();
+
+    assert_eq!(r#""Beverly Hills""#, value);
+}
+
+#[test]
+fn test_apply_jaq() {
+    let json_data = serde_json::json!({
+        "data": [
+            {
+                "fruit": "apple",
+                "price": 0.50
+            },
+            {
+                "fruit": "banana",
+                "price": 1.00
+            }
+        ]
+    });
+
+    let json_string = serde_json::to_string(&json_data).unwrap();
+    let value = process_jaq(&json_string, ".data[]").unwrap();
 
     assert_eq!(
-        r#"jql runner error: ParsingError(ParsingError { tokens: "", unparsed: ".\"place\"[0].\"place name\"" })"#,
+        "{\"fruit\":\"apple\",\"price\":0.5}, {\"fruit\":\"banana\",\"price\":1.0}",
         value
     );
 }
 
 #[test]
-fn test_apply_jql_string() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California", "state abbreviation": "CA", "latitude": "34.0901"}]}"#;
-    let selectors = r#""places"[0]"place name""#;
+fn test_apply_jaq_number() {
+    let json_data = serde_json::json!(
+        {
+            "post code": "90210",
+            "country": "United States",
+            "country abbreviation": "US",
+            "places": [
+                {
+                    "place name": "Beverly Hills",
+                    "longitude": -118.4065,
+                    "state": "California",
+                    "state abbreviation": "CA",
+                    "latitude": 34.0901
+                }
+            ]
+        }
+    );
+    let json_string = serde_json::to_string(&json_data).unwrap();
+    let selectors = r#"."places"[0]."longitude""#;
 
-    let value = process_jql(json, selectors).unwrap();
-
-    assert_eq!(r#""Beverly Hills""#, value);
-}
-
-// #[test]
-// fn test_apply_jql_string_with_tokens_vec() {
-//     let json = r#"{"post code": "90210", "country": "United States", "country abbreviation":
-// "US", "places": [{"place name": "Beverly Hills", "longitude": "-118.4065", "state": "California",
-// "state abbreviation": "CA", "latitude": "34.0901"}]}"#;     let selectors = r#""places"[0]"place
-// name""#;
-//     let token_vec = jql_parser::parser::parse(&selectors).unwrap();
-//     let value = process_json_with_token(json, &token_vec).unwrap();
-//     assert_eq!(r#""Beverly Hills""#, value);
-// }
-
-#[test]
-fn test_apply_jql_number() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901}]}"#;
-    let selectors = r#""places"[0]"longitude""#;
-
-    let value = process_jql(json, selectors).unwrap();
+    let value = process_jaq(&json_string, selectors).unwrap();
 
     assert_eq!("-118.4065", value);
 }
 
 #[test]
-fn test_apply_jql_bool() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901, "expensive": true}]}"#;
-    let selectors = r#""places"[0]"expensive""#;
+fn test_apply_jaq_bool() {
+    let json_data = serde_json::json!(
+        {
+            "post code": "90210",
+            "country": "United States",
+            "country abbreviation": "US",
+            "places": [
+                {
+                    "place name": "Beverly Hills",
+                    "longitude": -118.4065,
+                    "state": "California",
+                    "state abbreviation": "CA",
+                    "latitude": 34.0901,
+                    "expensive": true,
+                }
+            ]
+        }
+    );
+    let json_string = serde_json::to_string(&json_data).unwrap();
+    let selectors = r#"."places"[0]."expensive""#;
 
-    let value = process_jql(json, selectors).unwrap();
+    let value = process_jaq(&json_string, selectors).unwrap();
 
     assert_eq!("true", value);
 }
 
 #[test]
-fn test_apply_jql_null() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901, "university":null}]}"#;
-    let selectors = r#""places"[0]"university""#;
+fn test_apply_jaq_array() {
+    let json_data = serde_json::json!(
+        {
+            "post code": "90210",
+            "country": "United States",
+            "country abbreviation": "US",
+            "places": [
+                {
+                    "place name": "Beverly Hills",
+                    "longitude": -118.4065,
+                    "state": "California",
+                    "state abbreviation": "CA",
+                    "latitude": 34.0901
+                }
+            ]
+        }
+    );
+    let json_string = serde_json::to_string(&json_data).unwrap();
+    let selectors = r#"[ ."places"[0]."longitude", ."places"[0]."latitude" ] "#;
 
-    let value = process_jql(json, selectors).unwrap();
-
-    assert_eq!("null", value);
-}
-
-#[test]
-fn test_apply_jql_array() {
-    let json = r#"{"post code": "90210", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Beverly Hills", "longitude": -118.4065, "state": "California", "state abbreviation": "CA", "latitude": 34.0901}]}"#;
-    let selectors = r#""places"[0]"longitude","places"[0]"latitude""#;
-
-    let value = process_jql(json, selectors).unwrap();
+    let value = process_jaq(&json_string, selectors).unwrap();
 
     assert_eq!("[-118.4065,34.0901]", value);
 }
 
 #[test]
-fn test_root_out_of_bounds() {
-    // test for out_of_bounds root element handling
-    // see https://github.com/yamafaktory/jql/issues/129
+fn test_root_out_of_bounds_jaq() {
     let json = r#"[{"page":1,"pages":1,"per_page":"50","total":1},[{"id":"BRA","iso2Code":"BR","name":"Brazil","region":{"id":"LCN","iso2code":"ZJ","value":"Latin America & Caribbean (all income levels)"},"adminregion":{"id":"LAC","iso2code":"XJ","value":"Latin America & Caribbean (developing only)"},"incomeLevel":{"id":"UMC","iso2code":"XT","value":"Upper middle income"},"lendingType":{"id":"IBD","iso2code":"XF","value":"IBRD"},"capitalCity":"Brasilia","longitude":"-47.9292","latitude":"-15.7801"}]]"#;
-    let selectors = r#"[2][0]"incomeLevel""value"'"#;
+    let selectors = r#".[2][0].incomeLevel.value"#;
 
-    let value = process_jql(json, selectors).unwrap_err().to_string();
+    let value = process_jaq(json, selectors).unwrap_err().to_string();
 
-    assert_eq!(
-        r#"jql runner error: ParsingError(ParsingError { tokens: "Array Index Selector [Index (2)], Array Index Selector [Index (0)], Key Selector \"incomeLevel\", Key Selector \"value\"", unparsed: "'" })"#,
-        value
-    );
+    assert_eq!("Jaq query returned an empty result", value);
 }

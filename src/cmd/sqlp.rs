@@ -6,11 +6,8 @@ Polars SQL is a SQL dialect, converting SQL queries to fast Polars LazyFrame exp
 (see https://docs.pola.rs/user-guide/sql/intro/).
 
 For a list of SQL functions and keywords supported by Polars SQL, see
-https://github.com/pola-rs/polars/blob/ee9bafbdef7d62baa06d469f42e6cec0755eb544/crates/polars-sql/src/functions.rs#L32 and
-https://github.com/pola-rs/polars/blob/ee9bafbdef7d62baa06d469f42e6cec0755eb544/crates/polars-sql/src/keywords.rs.
-https://docs.pola.rs/py-polars/html/reference/sql/index.html also provides a more readable
-version of the SQL functions and keywords, though be aware that it's for the Python version
-of Polars, so there will be some minor syntax differences.
+https://docs.pola.rs/py-polars/html/reference/sql/index.html though be aware that it's for
+the Python version of Polars, so there will be some minor syntax differences.
 
 Returns the shape of the query result (number of rows, number of columns) to stderr.
 
@@ -190,6 +187,14 @@ sqlp options:
     --infer-len <arg>         The number of rows to scan when inferring the schema of the CSV.
                               Set to 0 to do a full table scan (warning: can be slow).
                               [default: 10000]
+    --cache-schema            Create and cache Polars schema JSON files.
+                              If specified and the schema file/s do not exist, it will save the
+                              inferred schemas in JSON format. Each schema file will have the same
+                              file stem as the corresponding input file, with the extension ".pschema.json"
+                              (data.csv's Polars schema file will be data.pschema.json)
+                              If the file/s exists, it will load the schema instead of inferring it
+                              (ignoring --infer-len) and attempt to use it for each corresponding
+                              Polars "table" with the same file stem.
     --streaming               Use streaming mode when parsing CSVs. This will use less memory
                               but will be slower. Only use this when you get out of memory errors.
     --low-memory              Use low memory mode when parsing CSVs. This will use less memory
@@ -260,7 +265,7 @@ use std::{
     env,
     fs::File,
     io,
-    io::{Read, Write},
+    io::{BufReader, BufWriter, Read, Write},
     path::{Path, PathBuf},
     str::FromStr,
     time::Instant,
@@ -270,9 +275,9 @@ use polars::{
     datatypes::PlSmallStr,
     io::avro::{AvroWriter, Compression as AvroCompression},
     prelude::{
-        CsvWriter, DataFrame, GzipLevel, IpcCompression, IpcWriter, JsonFormat, JsonWriter,
+        Arc, CsvWriter, DataFrame, GzipLevel, IpcCompression, IpcWriter, JsonFormat, JsonWriter,
         LazyCsvReader, LazyFileListReader, NullValues, OptFlags, ParquetCompression, ParquetWriter,
-        SerWriter, StatisticsOptions, ZstdLevel,
+        Schema, SerWriter, StatisticsOptions, ZstdLevel,
     },
     sql::SQLContext,
 };
@@ -297,6 +302,7 @@ struct Args {
     flag_format:                String,
     flag_try_parsedates:        bool,
     flag_infer_len:             usize,
+    flag_cache_schema:          bool,
     flag_streaming:             bool,
     flag_low_memory:            bool,
     flag_no_optimizations:      bool,
@@ -679,12 +685,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         && delim == b','
         && !args.flag_no_optimizations
         && !args.flag_try_parsedates
-        && args.flag_infer_len != 10_000
+        && args.flag_infer_len == 10_000 // make sure this matches the usage text default
+        && !args.flag_cache_schema
         && !args.flag_streaming
         && !args.flag_low_memory
         && !args.flag_truncate_ragged_lines
         && !args.flag_ignore_errors
-        && args.flag_rnull_values.is_empty()
+        && rnull_values == vec![PlSmallStr::EMPTY]
         && !args.flag_decimal_comma
         && comment_char.is_none()
         && std::path::Path::new(&args.arg_input[0])
@@ -716,12 +723,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             log::debug!("Using fast path - Modified Query: {modified_query}");
         }
     } else {
-        if debuglog_flag {
-            // Using the slow path to read and parse the CSV/s into tables in the SQL context.
-            log::debug!("Using the slow path...");
-        }
+        // --------------------------------------------
         // we have more than one input and/or we are using CSV parsing options, so we need to
         // parse the CSV first, and register the input files as tables in the SQL context
+        // AKA the "slow path"
+        // --------------------------------------------
+
+        if debuglog_flag {
+            log::debug!("Using the slow path...");
+        }
+
+        let cache_schemas = args.flag_cache_schema;
+
         for (idx, table) in args.arg_input.iter().enumerate() {
             // as we are using the table name as alias, we need to make sure that the table name is
             // a valid identifier. if its not utf8, we use the lossy version
@@ -741,20 +754,77 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     alias = table_aliases.get(table_name).unwrap(),
                 );
             }
-            let lf = LazyCsvReader::new(table)
-                .with_has_header(true)
-                .with_missing_is_null(true)
-                .with_comment_prefix(comment_char.clone())
-                .with_null_values(Some(NullValues::AllColumns(rnull_values.clone())))
-                .with_separator(tsvssv_delim(table, delim))
-                .with_infer_schema_length(Some(args.flag_infer_len))
-                .with_try_parse_dates(args.flag_try_parsedates)
-                .with_ignore_errors(args.flag_ignore_errors)
-                .with_truncate_ragged_lines(args.flag_truncate_ragged_lines)
-                .with_decimal_comma(args.flag_decimal_comma)
-                .with_low_memory(args.flag_low_memory)
-                .finish()?;
-            ctx.register(table_name, lf.with_optimizations(optflags));
+
+            // we build the lazyframe, accounting for the --cache-schema flag
+            let mut create_schema = cache_schemas;
+            let mut lf = if cache_schemas {
+                let mut work_lf = LazyCsvReader::new(table)
+                    .with_has_header(true)
+                    .with_missing_is_null(true)
+                    .with_comment_prefix(comment_char.clone())
+                    .with_null_values(Some(NullValues::AllColumns(rnull_values.clone())))
+                    .with_separator(tsvssv_delim(table, delim))
+                    .with_try_parse_dates(args.flag_try_parsedates)
+                    .with_ignore_errors(args.flag_ignore_errors)
+                    .with_truncate_ragged_lines(args.flag_truncate_ragged_lines)
+                    .with_decimal_comma(args.flag_decimal_comma)
+                    .with_low_memory(args.flag_low_memory);
+
+                // --cache-schema is enabled, check if a valid pschema.json file exists for this
+                // table
+                let schema_file = table.canonicalize()?.with_extension("pschema.json");
+                if schema_file.exists()
+                    && schema_file.metadata()?.modified()? > table.metadata()?.modified()?
+                {
+                    // We have a valid pschema.json file - it exists and is newer than the table
+                    // load the schema and deserialize it and use it with the lazy frame
+                    let file = File::open(&schema_file)?;
+                    let mut buf_reader = BufReader::new(file);
+                    let mut schema_json = String::with_capacity(100);
+                    buf_reader.read_to_string(&mut schema_json)?;
+                    let schema: Schema = serde_json::from_str(&schema_json)?;
+                    if debuglog_flag {
+                        log::debug!("Loaded schema from file: {}", schema_file.display());
+                    }
+                    work_lf = work_lf.with_schema(Some(Arc::new(schema)));
+                    create_schema = false;
+                } else {
+                    // there is no valid pschema.json file, infer the schema using --infer-len
+                    work_lf = work_lf.with_infer_schema_length(Some(args.flag_infer_len));
+                    create_schema = true;
+                }
+                work_lf.finish()?
+            } else {
+                // --cache-schema is not enabled, we always --infer-len schema
+                LazyCsvReader::new(table)
+                    .with_has_header(true)
+                    .with_missing_is_null(true)
+                    .with_comment_prefix(comment_char.clone())
+                    .with_null_values(Some(NullValues::AllColumns(rnull_values.clone())))
+                    .with_separator(tsvssv_delim(table, delim))
+                    .with_infer_schema_length(Some(args.flag_infer_len))
+                    .with_try_parse_dates(args.flag_try_parsedates)
+                    .with_ignore_errors(args.flag_ignore_errors)
+                    .with_truncate_ragged_lines(args.flag_truncate_ragged_lines)
+                    .with_decimal_comma(args.flag_decimal_comma)
+                    .with_low_memory(args.flag_low_memory)
+                    .finish()?
+            };
+            ctx.register(table_name, lf.clone().with_optimizations(optflags));
+
+            // the lazy frame's schema has been updated and --cache-schema is enabled
+            // update the pschema.json file
+            if create_schema {
+                let schema = lf.collect_schema()?;
+                let schema_json = serde_json::to_string_pretty(&schema)?;
+                let schema_file = table.canonicalize()?.with_extension("pschema.json");
+                let mut file = BufWriter::new(File::create(&schema_file)?);
+                file.write_all(schema_json.as_bytes())?;
+                file.flush()?;
+                if debuglog_flag {
+                    log::debug!("Saved schema to file: {}", schema_file.display());
+                }
+            }
         }
     }
 

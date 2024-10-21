@@ -121,6 +121,7 @@ Common options:
 
 use std::{fs, io, sync::OnceLock};
 
+use crossbeam_channel;
 use indicatif::HumanCount;
 use rust_decimal::prelude::*;
 use serde::Deserialize;
@@ -391,7 +392,7 @@ impl Args {
         let nchunks = util::num_of_chunks(idx_count, chunk_size);
 
         let pool = ThreadPool::new(njobs);
-        let (send, recv) = channel::bounded(0);
+        let (send, recv) = crossbeam_channel::bounded(0);
         for i in 0..nchunks {
             let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
             pool.execute(move || {
