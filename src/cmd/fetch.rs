@@ -1507,21 +1507,23 @@ pub fn process_jaq(json: &str, query: &str) -> CliResult<String> {
 fn format_value(value: Value) -> String {
     match value {
         Value::Number(num) => {
-            if num.is_f64() {
-                ryu::Buffer::new()
-                    .format_finite(num.as_f64().unwrap())
-                    .to_string()
-            } else if num.is_i64() {
-                itoa::Buffer::new()
-                    .format(num.as_i64().unwrap())
-                    .to_string()
+            if let Some(f) = num.as_f64() {
+                ryu::Buffer::new().format_finite(f).to_string()
+            } else if let Some(i) = num.as_i64() {
+                itoa::Buffer::new().format(i).to_string()
             } else {
                 itoa::Buffer::new()
                     .format(num.as_u64().unwrap())
                     .to_string()
             }
         },
-        Value::Bool(b) => b.to_string(),
+        Value::Bool(b) => {
+            if b {
+                "true".to_string()
+            } else {
+                "false".to_string()
+            }
+        },
         Value::String(s) => format!("\"{s}\""),
         Value::Null => "null".to_string(),
         Value::Array(arr) => serde_json::to_string(&arr).unwrap_or_else(|_| "[]".to_string()),
