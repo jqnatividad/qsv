@@ -117,7 +117,7 @@ futures-util = "0.3"
 gender_guesser = { version = "0.2", optional = true }
 geosuggest-core = { version = "0.6", optional = true }
 geosuggest-utils = { version = "0.6", optional = true }
-governor = { version = "0.6", optional = true }
+governor = { version = "0.7", optional = true }
 grex = { version = "1.4", default-features = false }
 gzp = { version = "0.11", default-features = false, features = [
     "snappy_default",
@@ -285,9 +285,6 @@ csvlens = { git = "https://github.com/YS-L/csvlens", rev = "29e46af" }
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
-
-# use latest upstream of governor with bumped dashmap dependency
-governor = { git = "https://github.com/boinkor-net/governor", rev = "ae92838" }
 
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
