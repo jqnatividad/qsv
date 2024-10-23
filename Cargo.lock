@@ -22,13 +22,12 @@ dependencies = [
 [[package]]
 name = "actix-governor"
 version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0954b0f27aabd8f56bb03f2a77b412ddf3f8c034a3c27b2086c1fc75415760df"
+source = "git+https://github.com/jqnatividad/actix-governor?branch=bump-governor-0.6.0-to-0.7.0#519c4a56edf84b0503a88c478c7c4f24a45b01b9"
 dependencies = [
  "actix-http",
  "actix-web",
  "futures",
- "governor 0.6.3",
+ "governor",
 ]
 
 [[package]]
@@ -1863,19 +1862,6 @@ dependencies = [
 
 [[package]]
 name = "dashmap"
-version = "5.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "978747c1d849a7d2ee5e8adc0159961c48fb7e5db2f06af6723b80123bb53856"
-dependencies = [
- "cfg-if",
- "hashbrown 0.14.5",
- "lock_api",
- "once_cell",
- "parking_lot_core 0.9.10",
-]
-
-[[package]]
-name = "dashmap"
 version = "6.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5041cc499144891f3790297212f32a74fb938e5136a14943f338ef9e0ae276cf"
@@ -2742,32 +2728,12 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "governor"
-version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68a7f542ee6b35af73b06abc0dad1c1bae89964e4e253bc4b587b91c9637867b"
-dependencies = [
- "cfg-if",
- "dashmap 5.5.3",
- "futures",
- "futures-timer",
- "no-std-compat",
- "nonzero_ext",
- "parking_lot 0.12.3",
- "portable-atomic",
- "quanta",
- "rand",
- "smallvec",
- "spinning_top",
-]
-
-[[package]]
-name = "governor"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0746aa765db78b521451ef74221663b57ba595bf83f75d0ce23cc09447c8139f"
 dependencies = [
  "cfg-if",
- "dashmap 6.1.0",
+ "dashmap",
  "futures-sink",
  "futures-timer",
  "futures-util",
@@ -5365,7 +5331,7 @@ dependencies = [
  "gender_guesser",
  "geosuggest-core",
  "geosuggest-utils",
- "governor 0.7.0",
+ "governor",
  "grex",
  "gzp",
  "hashbrown 0.15.0",
