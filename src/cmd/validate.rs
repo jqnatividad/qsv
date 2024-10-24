@@ -294,7 +294,14 @@ fn dyn_enum_validator_factory<'a>(
         let temp_download = NamedTempFile::new()?;
 
         let dynenum_path = if uri.starts_with("http") {
-            let valid_url = reqwest::Url::parse(uri)?;
+            let valid_url = reqwest::Url::parse(uri).map_err(|e| {
+                ValidationError::custom(
+                    Location::default(),
+                    location,
+                    value,
+                    format!("Error parsing dynamicEnum URL: {e}"),
+                )
+            })?;
 
             // download the CSV file from the URL
             let download_timeout = TIMEOUT_SECS.load(Ordering::Relaxed);
