@@ -22,7 +22,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5.2.0
+    - uses: actions/setup-python@v5.3.0
       with:
         python-version: '3.12'
     - name: Installing Rust toolchain
