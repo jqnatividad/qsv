@@ -252,7 +252,7 @@ simdutf8 = "0.1"
 simdutf8 = { version = "0.1", features = ["aarch64_neon"] }
 
 [dev-dependencies]
-actix-governor = "0.6"
+actix-governor = "0.7"
 actix-web = { version = "4.9", default-features = false, features = [
     "compress-brotli",
     "compress-gzip",
@@ -275,9 +275,6 @@ serial_test = { version = "3.1", features = ["file_locks"] }
 csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
-
-# use our fork of actix-governor until our PR is merged
-actix-governor = { git = "https://github.com/jqnatividad/actix-governor", branch = "bump-governor-0.6.0-to-0.7.0" }
 
 # use latest csvlens upstream with latest dependencies and fixes
 csvlens = { git = "https://github.com/YS-L/csvlens", rev = "29e46af" }
