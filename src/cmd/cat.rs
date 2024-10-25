@@ -382,7 +382,8 @@ impl Args {
             .map(csv::Reader::byte_records)
             .collect::<Vec<_>>();
 
-        let mut record = csv::ByteRecord::with_capacity(1024, *lengths.get(0).unwrap());
+        // safety: there's always a first element
+        let mut record = csv::ByteRecord::with_capacity(1024, *lengths.first().unwrap());
 
         'OUTER: loop {
             record.clear();
