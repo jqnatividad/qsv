@@ -381,8 +381,11 @@ impl Args {
             .iter_mut()
             .map(csv::Reader::byte_records)
             .collect::<Vec<_>>();
+
+        let mut record = csv::ByteRecord::with_capacity(1024, *lengths.get(0).unwrap());
+
         'OUTER: loop {
-            let mut record = csv::ByteRecord::new();
+            record.clear();
             let mut num_done = 0;
             for (iter, &len) in iters.iter_mut().zip(lengths.iter()) {
                 match iter.next() {
@@ -396,8 +399,8 @@ impl Args {
                             break 'OUTER;
                         }
                     },
-                    Some(Err(err)) => return fail!(err),
                     Some(Ok(next)) => record.extend(&next),
+                    Some(Err(err)) => return fail!(err),
                 }
             }
             // Only needed when `--pad` is set.
