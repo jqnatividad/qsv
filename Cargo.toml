@@ -276,6 +276,9 @@ csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-opt
 csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
 
+# use calamine with updated quick-xml dependency
+calamine = { git = "https://github.com/PrettyWood/calamine", branch = "bump-quick-xml" }
+
 # use latest csvlens upstream with latest dependencies and fixes
 csvlens = { git = "https://github.com/YS-L/csvlens", rev = "29e46af" }
 
