@@ -206,7 +206,7 @@ pub fn version() -> String {
         match luau.load("return _VERSION").eval() {
             Ok(version_info) => {
                 if let mlua::Value::String(luaustring_val) = version_info {
-                    let string_val = luaustring_val.to_str().unwrap_or("Luau - invalid version");
+                    let string_val = luaustring_val.to_string_lossy();
                     if string_val == "Luau" {
                         enabled_features.push_str("Luau - version not specified;");
                     } else {

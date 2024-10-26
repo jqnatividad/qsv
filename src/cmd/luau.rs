@@ -714,7 +714,7 @@ fn sequential_mode(
     let main_bytecode = if debug_enabled {
         Vec::new()
     } else {
-        luau_compiler.compile(main_script)
+        luau_compiler.compile(main_script)?
     };
 
     let mut record = csv::StringRecord::new();
@@ -803,12 +803,7 @@ fn sequential_mode(
         }
 
         if cmd_map {
-            map_computedvalue(
-                computed_value.as_ref(),
-                &mut record,
-                flag_remap,
-                new_column_count,
-            )?;
+            map_computedvalue(&computed_value, &mut record, flag_remap, new_column_count)?;
 
             // check if the script is trying to insert a record with
             // qsv_insertrecord(). We do this by checking if the global
@@ -895,7 +890,7 @@ fn sequential_mode(
         beginend_insertrecord(luau, &mut insertrecord, headers_count, &mut wtr)?;
 
         let end_string = match end_value {
-            Value::String(string) => string.to_string_lossy().to_string(),
+            Value::String(string) => string.to_string_lossy(),
             Value::Number(number) => number.to_string(),
             Value::Integer(number) => number.to_string(),
             Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_string(),
@@ -1029,7 +1024,7 @@ fn random_access_mode(
 
     // in random access mode, setting "_INDEX" allows us to change the current record
     // for the NEXT read
-    let mut pos = globals.get::<_, isize>(QSV_V_INDEX).unwrap_or_default();
+    let mut pos = globals.get::<isize>(QSV_V_INDEX).unwrap_or_default();
     let mut curr_record = if pos > 0 && pos <= row_count as isize {
         pos as u64
     } else {
@@ -1041,7 +1036,7 @@ fn random_access_mode(
     let main_bytecode = if debug_enabled {
         Vec::new()
     } else {
-        luau_compiler.compile(main_script)
+        luau_compiler.compile(main_script)?
     };
     let mut record = csv::StringRecord::new();
     let mut error_count = 0_usize;
@@ -1153,12 +1148,7 @@ fn random_access_mode(
         }
 
         if cmd_map {
-            map_computedvalue(
-                computed_value.as_ref(),
-                &mut record,
-                flag_remap,
-                new_column_count,
-            )?;
+            map_computedvalue(&computed_value, &mut record, flag_remap, new_column_count)?;
 
             // check if the MAIN script is trying to insert a record
             match luau.globals().raw_get(QSV_INSERTRECORD_TBL) {
@@ -1209,7 +1199,7 @@ fn random_access_mode(
             }
         }
 
-        pos = globals.get::<_, isize>(QSV_V_INDEX).unwrap_or_default();
+        pos = globals.get::<isize>(QSV_V_INDEX).unwrap_or_default();
         if pos < 0 || pos as u64 > row_count {
             break 'main;
         }
@@ -1244,7 +1234,7 @@ fn random_access_mode(
         beginend_insertrecord(luau, &mut insertrecord, headers_count, &mut wtr)?;
 
         let end_string = match end_value {
-            Value::String(string) => string.to_string_lossy().to_string(),
+            Value::String(string) => string.to_string_lossy(),
             Value::Number(number) => number.to_string(),
             Value::Integer(number) => number.to_string(),
             Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_string(),
@@ -1287,7 +1277,7 @@ fn map_computedvalue(
 ) -> Result<(), CliError> {
     match computed_value {
         Value::String(string) => {
-            if let Ok(utf8) = simdutf8::basic::from_utf8(string.as_bytes()) {
+            if let Ok(utf8) = simdutf8::basic::from_utf8(&string.as_bytes()) {
                 record.push_field(utf8);
             } else {
                 record.push_field(&string.to_string_lossy());
@@ -1897,7 +1887,7 @@ fn setup_helpers(
         let qsv_binary = env::current_exe().unwrap();
 
         let mut cmd = std::process::Command::new(qsv_binary);
-        let qsv_args = args.to_str().unwrap_or_default().to_string();
+        let qsv_args = args.to_string_lossy();
         let args_vec: Vec<&str> = qsv_args.split_whitespace().collect();
         log::info!("Invoking qsv_cmd: {qsv_args}");
         let result = cmd.args(args_vec).output();
