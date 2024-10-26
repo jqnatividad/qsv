@@ -364,7 +364,7 @@ fn get_requested_range(
 
     let sheet_name = split_range[0].to_lowercase();
     sheet.clone_from(&sheet_name);
-    let range_str = split_range[1].to_string();
+    let range_string = split_range[1].to_string();
 
     // Find the sheet index
     let sheet_index = sheet_names
@@ -385,7 +385,7 @@ fn get_requested_range(
         );
     };
 
-    Ok(range_str)
+    Ok(range_string)
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -996,8 +996,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
             let mut float_val;
             let mut work_date;
-            let mut ryu_buffer = ryu::Buffer::new();
-            let mut itoa_buffer = itoa::Buffer::new();
             let mut format_buffer = String::new();
             let mut formatted_date = String::new();
 
@@ -1011,7 +1009,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     match *cell {
                         Data::Empty => record.push_field(""),
                         Data::String(ref s) => record.push_field(s),
-                        Data::Int(ref i) => record.push_field(itoa_buffer.format(*i)),
+                        Data::Int(ref i) => record.push_field(itoa::Buffer::new().format(*i)),
                         Data::Float(ref f) => {
                             float_val = *f;
                             // push the ryu-formatted float value if its
@@ -1022,12 +1020,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 || float_val > i64::MAX as f64
                                 || float_val < i64::MIN as f64
                             {
-                                record.push_field(ryu_buffer.format_finite(float_val));
+                                record.push_field(ryu::Buffer::new().format_finite(float_val));
                             } else {
                                 // its an i64 integer. We can't use ryu to format it, because it
                                 // will be formatted as a
                                 // float (have a ".0"). So we use itoa.
-                                record.push_field(itoa_buffer.format(float_val as i64));
+                                record.push_field(itoa::Buffer::new().format(float_val as i64));
                             }
                         },
                         Data::DateTime(ref edt) => {
