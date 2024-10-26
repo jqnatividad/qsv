@@ -891,9 +891,9 @@ fn sequential_mode(
 
         let end_string = match end_value {
             Value::String(string) => string.to_string_lossy(),
-            Value::Number(number) => number.to_string(),
-            Value::Integer(number) => number.to_string(),
-            Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_string(),
+            Value::Number(number) => ryu::Buffer::new().format_finite(number).to_owned(),
+            Value::Integer(number) => itoa::Buffer::new().format(number).to_owned(),
+            Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_owned(),
             Value::Nil => String::new(),
             _ => {
                 return fail_clierror!(
@@ -1235,9 +1235,9 @@ fn random_access_mode(
 
         let end_string = match end_value {
             Value::String(string) => string.to_string_lossy(),
-            Value::Number(number) => number.to_string(),
-            Value::Integer(number) => number.to_string(),
-            Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_string(),
+            Value::Number(number) => ryu::Buffer::new().format_finite(number).to_owned(),
+            Value::Integer(number) => itoa::Buffer::new().format(number).to_owned(),
+            Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_owned(),
             Value::Nil => String::new(),
             _ => {
                 return fail_clierror!(
@@ -1284,12 +1284,10 @@ fn map_computedvalue(
             }
         },
         Value::Number(number) => {
-            let mut buffer = ryu::Buffer::new();
-            record.push_field(buffer.format(*number));
+            record.push_field(ryu::Buffer::new().format_finite(*number));
         },
         Value::Integer(number) => {
-            let mut buffer = itoa::Buffer::new();
-            record.push_field(buffer.format(*number));
+            record.push_field(itoa::Buffer::new().format(*number));
         },
         Value::Boolean(boolean) => {
             record.push_field(if *boolean { "true" } else { "false" });
@@ -1315,7 +1313,7 @@ fn map_computedvalue(
                 match v {
                     Value::Integer(intval) => record.push_field(ibuffer.format(intval)),
                     Value::String(strval) => record.push_field(&strval.to_string_lossy()),
-                    Value::Number(number) => record.push_field(nbuffer.format(number)),
+                    Value::Number(number) => record.push_field(nbuffer.format_finite(number)),
                     Value::Boolean(boolean) => {
                         record.push_field(if boolean { "true" } else { "false" });
                     },
