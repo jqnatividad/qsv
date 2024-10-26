@@ -133,7 +133,6 @@ use std::{
     env,
     fs::File,
     io::{BufReader, BufWriter, Read, Write},
-    iter::once,
     str,
     sync::{
         atomic::{AtomicU16, Ordering},
@@ -149,7 +148,7 @@ use indicatif::{ProgressBar, ProgressDrawTarget};
 use jsonschema::{
     output::BasicOutput,
     paths::{LazyLocation, Location},
-    ErrorIterator, Keyword, ValidationError, Validator,
+    Keyword, ValidationError, Validator,
 };
 use log::{debug, info, log_enabled};
 use qsv_currency::Currency;
@@ -260,9 +259,9 @@ impl Keyword for DynEnumValidator {
         &self,
         instance: &'instance Value,
         instance_path: &LazyLocation,
-    ) -> ErrorIterator<'instance> {
+    ) -> Result<(), ValidationError<'instance>> {
         if self.dynenum_set.contains(instance.as_str().unwrap()) {
-            Box::new(std::iter::empty())
+            Ok(())
         } else {
             let error = ValidationError::custom(
                 Location::default(),
@@ -270,7 +269,7 @@ impl Keyword for DynEnumValidator {
                 instance,
                 format!("{instance} is not a valid dynamicEnum value"),
             );
-            Box::new(once(error))
+            Err(error)
         }
     }
 
@@ -291,7 +290,10 @@ fn dyn_enum_validator_factory<'a>(
     location: Location,
 ) -> Result<Box<dyn Keyword>, ValidationError<'a>> {
     if let Value::String(uri) = value {
-        let temp_download = NamedTempFile::new()?;
+        let temp_download = match NamedTempFile::new() {
+            Ok(file) => file,
+            Err(e) => return fail_validation_error!("Failed to create temporary file: {}", e),
+        };
 
         let dynenum_path = if uri.starts_with("http") {
             let valid_url = reqwest::Url::parse(uri).map_err(|e| {
@@ -313,8 +315,15 @@ fn dyn_enum_validator_factory<'a>(
                 Some(download_timeout),
                 None,
             );
-            if let Err(e) = tokio::runtime::Runtime::new()?.block_on(future) {
-                return fail_validation_error!("Error downloading dynamicEnum file - {e}");
+            match tokio::runtime::Runtime::new() {
+                Ok(runtime) => {
+                    if let Err(e) = runtime.block_on(future) {
+                        return fail_validation_error!("Error downloading dynamicEnum file - {e}");
+                    }
+                },
+                Err(e) => {
+                    return fail_validation_error!("Error creating Tokio runtime - {e}");
+                },
             }
 
             temp_download.path().to_str().unwrap().to_string()
@@ -331,7 +340,10 @@ fn dyn_enum_validator_factory<'a>(
         // read the first column into a HashSet
         let mut enum_set = HashSet::with_capacity(50);
         let rconfig = Config::new(Some(dynenum_path).as_ref());
-        let mut rdr = rconfig.flexible(true).reader()?;
+        let mut rdr = match rconfig.flexible(true).reader() {
+            Ok(reader) => reader,
+            Err(e) => return fail_validation_error!("Error opening dynamicEnum file: {e}"),
+        };
         for result in rdr.records() {
             match result {
                 Ok(record) => {
@@ -1537,9 +1549,8 @@ fn test_dyn_enum_validator() {
     assert!(!validator.is_valid(&json!("")));
     assert!(!validator.is_valid(&json!(5)));
     if let Err(e) = validator.validate(&json!("lanzones")) {
-        let err_info = e.into_iter().next().unwrap();
         assert_eq!(
-            format!("{err_info:?}"),
+            format!("{e:?}"),
             r#"ValidationError { instance: String("lanzones"), kind: Custom { message: "\"lanzones\" is not a valid dynamicEnum value" }, instance_path: Location(""), schema_path: Location("") }"#
         );
     } else {
