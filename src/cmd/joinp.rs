@@ -529,6 +529,7 @@ impl JoinStruct {
 }
 
 impl Args {
+    #[allow(clippy::fn_params_excessive_bools)]
     fn new_join(
         &mut self,
         try_parsedates: bool,
