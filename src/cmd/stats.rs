@@ -255,8 +255,7 @@ use itertools::Itertools;
 use qsv_dateparser::parse_with_preference;
 use serde::{Deserialize, Serialize};
 use simd_json::{prelude::ValueAsScalar, OwnedValue};
-use simdutf8::basic::from_utf8;
-use smallvec::{smallvec, SmallVec};
+use smallvec::SmallVec;
 use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
 use tempfile::NamedTempFile;
 use threadpool::ThreadPool;
@@ -1175,28 +1174,27 @@ fn init_date_inference(
     if !infer_dates {
         // we're not inferring dates, set INFER_DATE_FLAGS to all false
         INFER_DATE_FLAGS
-            .set(smallvec![false; headers.len()])
-            .map_err(|e| format!("Cannot init empty date inference flags: {e:?}"))?;
+            .set(SmallVec::from_elem(false, headers.len()))
+            .map_err(|_| "Cannot init empty date inference flags".to_string())?;
         return Ok(());
     }
 
     let infer_date_flags = if flag_whitelist.eq_ignore_ascii_case("all") {
         log::info!("inferring dates for ALL fields");
-        smallvec![true; headers.len()]
+        SmallVec::from_elem(true, headers.len())
     } else {
         let mut header_str = String::new();
         let whitelist_lower = flag_whitelist.to_lowercase();
-        // log::info!("inferring dates with date-whitelist: {whitelist_lower}");
+        log::info!("inferring dates with date-whitelist: {whitelist_lower}");
 
-        let whitelist = whitelist_lower
-            .split(',')
-            .map(str::trim)
-            .collect::<Vec<_>>();
+        let whitelist: SmallVec<[&str; 8]> = whitelist_lower.split(',').map(str::trim).collect();
         headers
             .iter()
             .map(|header| {
-                // safety: we know the header is a valid String, so we can use unwrap
-                util::to_lowercase_into(&from_bytes::<String>(header).unwrap(), &mut header_str);
+                util::to_lowercase_into(
+                    simdutf8::basic::from_utf8(header).unwrap_or_default(),
+                    &mut header_str,
+                );
                 whitelist
                     .iter()
                     .any(|whitelist_item| header_str.contains(whitelist_item))
@@ -1346,7 +1344,7 @@ impl Stats {
                     }
                 } else {
                     // safety: we know the sample is a valid f64, so we can use unwrap
-                    let n = from_bytes::<f64>(sample).unwrap();
+                    let n = fast_float::parse(sample).unwrap();
                     if let Some(v) = self.median.as_mut() {
                         v.add(n);
                     }
@@ -1562,7 +1560,7 @@ impl Stats {
         let stotlen =
             if let Some((stotlen_work, sum)) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
                 if typ == FieldType::TFloat {
-                    if let Ok(f64_val) = sum.parse::<f64>() {
+                    if let Ok(f64_val) = fast_float::parse::<f64, &[u8]>(sum.as_bytes()) {
                         pieces.push(util::round_num(f64_val, round_places));
                     } else {
                         pieces.push(format!("ERROR: Cannot convert {sum} to a float."));
@@ -1865,7 +1863,7 @@ impl FieldType {
             }
 
             // Check for float
-            if s.parse::<f64>().is_ok() {
+            if fast_float::parse::<f64, &[u8]>(s.as_bytes()).is_ok() {
                 return (FieldType::TFloat, None);
             }
 
@@ -1965,7 +1963,7 @@ impl TypedSum {
         match typ {
             TFloat => {
                 self.stotlen = self.stotlen.saturating_add(sample.len() as u64);
-                if let Some(float_sample) = from_bytes::<f64>(sample) {
+                if let Ok(float_sample) = fast_float::parse::<f64, &[u8]>(sample) {
                     if let Some(ref mut f) = self.float {
                         *f += float_sample;
                     } else {
@@ -1977,7 +1975,7 @@ impl TypedSum {
                 self.stotlen = self.stotlen.saturating_add(sample.len() as u64);
                 if let Some(ref mut float) = self.float {
                     // safety: we know that the sample is a valid f64
-                    *float += from_bytes::<f64>(sample).unwrap();
+                    *float += fast_float::parse::<f64, &[u8]>(sample).unwrap();
                 } else {
                     // so we don't panic on overflow/underflow, use saturating_add
                     self.integer = self
@@ -2060,7 +2058,7 @@ impl TypedMinMax {
         match typ {
             TString | TNull => {},
             TFloat => {
-                let n = from_utf8(sample).unwrap().parse::<f64>().unwrap();
+                let n = fast_float::parse::<f64, &[u8]>(sample).unwrap();
 
                 self.floats.add(n);
                 self.integers.add(n as i64);
@@ -2173,15 +2171,5 @@ impl Commute for TypedMinMax {
         self.integers.merge(other.integers);
         self.floats.merge(other.floats);
         self.dates.merge(other.dates);
-    }
-}
-
-#[allow(clippy::inline_always)]
-#[inline(always)]
-fn from_bytes<T: std::str::FromStr>(bytes: &[u8]) -> Option<T> {
-    if let Ok(x) = simdutf8::basic::from_utf8(bytes) {
-        x.parse().ok()
-    } else {
-        None
     }
 }
