@@ -1009,9 +1009,7 @@ fn get_json_types(headers: &ByteRecord, schema: &Value) -> CliResult<Vec<(String
 
     // iterate over each CSV field and convert to JSON type
     for header in headers {
-        let key = if let Ok(s) = simdutf8::basic::from_utf8(header) {
-            s
-        } else {
+        let Ok(key) = simdutf8::basic::from_utf8(header) else {
             let s = String::from_utf8_lossy(header);
             return fail_encoding_clierror!("CSV header is not valid UTF-8: {s}");
         };
