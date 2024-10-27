@@ -2032,6 +2032,11 @@ pub fn get_stats_records(
 
         let statsdatajson_path = canonical_input_path.with_extension("stats.csv.data.jsonl");
 
+        let input = if let Some(arg_input) = stats_args.arg_input {
+            arg_input
+        } else {
+            "-".to_string()
+        };
         let mut stats_args_str = match mode {
             StatsMode::Schema => {
                 // mode is StatsMode::Schema
@@ -2039,13 +2044,6 @@ pub fn get_stats_records(
                 format!(
                     "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
                      --cardinality --stats-jsonl --force --output {output}",
-                    input = {
-                        if let Some(arg_input) = stats_args.arg_input.clone() {
-                            arg_input
-                        } else {
-                            "-".to_string()
-                        }
-                    },
                     dates_whitelist = stats_args.flag_dates_whitelist,
                     output = tempfile_path,
                 )
@@ -2055,13 +2053,6 @@ pub fn get_stats_records(
                 // we're doing frequency, so we just need cardinality
                 format!(
                     "stats {input} --cardinality --stats-jsonl --output {output}",
-                    input = {
-                        if let Some(arg_input) = stats_args.arg_input.clone() {
-                            arg_input
-                        } else {
-                            "-".to_string()
-                        }
-                    },
                     output = tempfile_path,
                 )
             },
@@ -2070,13 +2061,6 @@ pub fn get_stats_records(
                 // we need data types and ranges
                 format!(
                     "stats {input} --infer-boolean --stats-jsonl --output {output}",
-                    input = {
-                        if let Some(arg_input) = stats_args.arg_input.clone() {
-                            arg_input
-                        } else {
-                            "-".to_string()
-                        }
-                    },
                     output = tempfile_path,
                 )
             },
