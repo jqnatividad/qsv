@@ -58,6 +58,7 @@ pub enum StatsMode {
     Schema,
     Frequency,
     FrequencyForceStats,
+    PolarsSchema,
     None,
 }
 
@@ -1995,6 +1996,7 @@ pub fn get_stats_records(
         stats_data_loaded = true;
     }
 
+    // otherwise, run stats command to generate stats.csv.data.jsonl file
     if !stats_data_loaded {
         let stats_args = crate::cmd::stats::Args {
             arg_input:            args.arg_input.clone(),
@@ -2022,7 +2024,6 @@ pub fn get_stats_records(
             flag_memcheck:        args.flag_memcheck,
         };
 
-        // otherwise, run stats command to generate stats.csv.data.jsonl file
         let tempfile = tempfile::Builder::new()
             .suffix(".stats.csv")
             .tempfile()
@@ -2031,36 +2032,55 @@ pub fn get_stats_records(
 
         let statsdatajson_path = canonical_input_path.with_extension("stats.csv.data.jsonl");
 
-        let mut stats_args_str = if mode == StatsMode::Schema {
-            // mode is GetStatsMode::Schema
-            // we're generating schema, so we need cardinality and to infer-dates
-            format!(
-                "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
-                 --cardinality --stats-jsonl --force --output {output}",
-                input = {
-                    if let Some(arg_input) = stats_args.arg_input.clone() {
-                        arg_input
-                    } else {
-                        "-".to_string()
-                    }
-                },
-                dates_whitelist = stats_args.flag_dates_whitelist,
-                output = tempfile_path,
-            )
-        } else {
-            // mode is GetStatsMode::Frequency or GetStatsMode::FrequencyForceStats
-            // we're doing frequency, so we just need cardinality
-            format!(
-                "stats {input} --cardinality --stats-jsonl --output {output}",
-                input = {
-                    if let Some(arg_input) = stats_args.arg_input.clone() {
-                        arg_input
-                    } else {
-                        "-".to_string()
-                    }
-                },
-                output = tempfile_path,
-            )
+        let mut stats_args_str = match mode {
+            StatsMode::Schema => {
+                // mode is StatsMode::Schema
+                // we're generating schema, so we need cardinality and to infer-dates
+                format!(
+                    "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
+                     --cardinality --stats-jsonl --force --output {output}",
+                    input = {
+                        if let Some(arg_input) = stats_args.arg_input.clone() {
+                            arg_input
+                        } else {
+                            "-".to_string()
+                        }
+                    },
+                    dates_whitelist = stats_args.flag_dates_whitelist,
+                    output = tempfile_path,
+                )
+            },
+            StatsMode::Frequency | StatsMode::FrequencyForceStats => {
+                // StatsMode::Frequency or StatsMode::FrequencyForceStats
+                // we're doing frequency, so we just need cardinality
+                format!(
+                    "stats {input} --cardinality --stats-jsonl --output {output}",
+                    input = {
+                        if let Some(arg_input) = stats_args.arg_input.clone() {
+                            arg_input
+                        } else {
+                            "-".to_string()
+                        }
+                    },
+                    output = tempfile_path,
+                )
+            },
+            StatsMode::PolarsSchema => {
+                // StatsMode::PolarsSchema
+                // we need data types and ranges
+                format!(
+                    "stats {input} --infer-boolean --stats-jsonl --output {output}",
+                    input = {
+                        if let Some(arg_input) = stats_args.arg_input.clone() {
+                            arg_input
+                        } else {
+                            "-".to_string()
+                        }
+                    },
+                    output = tempfile_path,
+                )
+            },
+            StatsMode::None => unreachable!(), // we returned early on None earlier
         };
         if args.flag_prefer_dmy {
             stats_args_str = format!("{stats_args_str} --prefer-dmy");
