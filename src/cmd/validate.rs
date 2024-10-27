@@ -954,7 +954,9 @@ fn to_json_instance(
                 Err(_) => Value::String(String::from_utf8_lossy(value).into_owned()),
             },
             JSONtypes::Number => match fast_float::parse(value) {
-                Ok(float) => Value::Number(Number::from_f64(float).unwrap_or(Number::from(0))),
+                Ok(float) => {
+                    Value::Number(Number::from_f64(float).unwrap_or_else(|| Number::from(0)))
+                },
                 Err(_) => {
                     return fail_clierror!(
                         "Can't cast into Number. key: {key}, value: {}",
