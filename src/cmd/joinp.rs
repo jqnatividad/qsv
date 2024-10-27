@@ -569,8 +569,7 @@ impl Args {
         // check if the left input file is snappy compressed
         // if so, we need to decompress it first
         if input1_path.extension().and_then(std::ffi::OsStr::to_str) == Some("sz") {
-            let decompressed_path =
-                util::decompress_snappy_file(&input1_path.to_path_buf(), tmpdir)?;
+            let decompressed_path = util::decompress_snappy_file(&input1_path, tmpdir)?;
             self.arg_input1 = decompressed_path;
         }
 
@@ -624,8 +623,7 @@ impl Args {
 
         // check if the right input file is snappy compressed
         if input2_path.extension().and_then(std::ffi::OsStr::to_str) == Some("sz") {
-            let decompressed_path =
-                util::decompress_snappy_file(&input2_path.to_path_buf(), tmpdir)?;
+            let decompressed_path = util::decompress_snappy_file(&input2_path, tmpdir)?;
             self.arg_input2 = decompressed_path;
         }
 
