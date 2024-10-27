@@ -58,7 +58,7 @@ diff options:
                                 first row is the header row and will be skipped during
                                 the diff. It will always appear in the output.)
     --no-headers-output         When set, the diff result won't have a header row in
-                                it's output. If not set and both CSVs have no headers,
+                                its output. If not set and both CSVs have no headers,
                                 headers in the result will be: _col_1,_col_2, etc.
     --delimiter-left <arg>      The field delimiter for reading CSV data on the left.
                                 Must be a single character. (default: ,)
