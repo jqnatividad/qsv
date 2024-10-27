@@ -940,50 +940,46 @@ fn to_json_instance(
     header_len: usize,
     record: &ByteRecord,
 ) -> CliResult<Value> {
-    let mut json_object_map: Map<String, Value> = Map::with_capacity(header_len);
+    let mut json_object_map = Map::with_capacity(header_len);
 
-    let mut lossy_string;
     for ((key, json_type), value) in header_types.iter().zip(record.iter()) {
         if value.is_empty() {
             json_object_map.insert(key.clone(), Value::Null);
             continue;
         }
 
-        let value_str = if let Ok(v) = simdutf8::basic::from_utf8(value) {
-            v
-        } else {
-            lossy_string = String::from_utf8_lossy(value).to_string();
-            &lossy_string
-        };
-
         let json_value = match json_type {
-            JSONtypes::String => Value::String(value_str.to_owned()),
-            JSONtypes::Number => {
-                if let Ok(float) = value_str.parse::<f64>() {
-                    Value::Number(Number::from_f64(float).unwrap())
-                } else {
-                    return fail_clierror!(
-                        "Can't cast into Number. key: {key}, value: {value_str}"
-                    );
-                }
+            JSONtypes::String => match simdutf8::basic::from_utf8(value) {
+                Ok(v) => Value::String(v.to_owned()),
+                Err(_) => Value::String(String::from_utf8_lossy(value).into_owned()),
             },
-            JSONtypes::Integer => {
-                if let Ok(int) = atoi_simd::parse::<i64>(value_str.as_bytes()) {
-                    Value::Number(Number::from(int))
-                } else {
+            JSONtypes::Number => match fast_float::parse(value) {
+                Ok(float) => Value::Number(Number::from_f64(float).unwrap_or(Number::from(0))),
+                Err(_) => {
                     return fail_clierror!(
-                        "Can't cast into Integer. key: {key}, value: {value_str}"
-                    );
-                }
+                        "Can't cast into Number. key: {key}, value: {}",
+                        String::from_utf8_lossy(value)
+                    )
+                },
             },
-            JSONtypes::Boolean => {
-                if let Ok(boolean) = value_str.parse::<bool>() {
-                    Value::Bool(boolean)
-                } else {
+            JSONtypes::Integer => match atoi_simd::parse::<i64>(value) {
+                Ok(int) => Value::Number(Number::from(int)),
+                Err(_) => {
                     return fail_clierror!(
-                        "Can't cast into Boolean. key: {key}, value: {value_str}"
-                    );
-                }
+                        "Can't cast into Integer. key: {key}, value: {}",
+                        String::from_utf8_lossy(value)
+                    )
+                },
+            },
+            JSONtypes::Boolean => match value {
+                b"true" | b"1" => Value::Bool(true),
+                b"false" | b"0" => Value::Bool(false),
+                _ => {
+                    return fail_clierror!(
+                        "Can't cast into Boolean. key: {key}, value: {}",
+                        String::from_utf8_lossy(value)
+                    )
+                },
             },
             JSONtypes::Unsupported => unreachable!("we should never get an unsupported JSON type"),
         };
@@ -1006,7 +1002,6 @@ fn get_json_types(headers: &ByteRecord, schema: &Value) -> CliResult<Vec<(String
     // safety: we set NULL_TYPE in main() and it's never changed
     let null_type = NULL_TYPE.get().unwrap();
 
-    let mut key_string: String;
     let mut field_def: &Value;
     let mut field_type_def: &Value;
     let mut json_type: JSONtypes;
@@ -1014,17 +1009,14 @@ fn get_json_types(headers: &ByteRecord, schema: &Value) -> CliResult<Vec<(String
 
     // iterate over each CSV field and convert to JSON type
     for header in headers {
-        // convert csv header to string. It's the key in the JSON object
-        key_string = if let Ok(s) = simdutf8::basic::from_utf8(header) {
-            s.to_owned()
+        let key = if let Ok(s) = simdutf8::basic::from_utf8(header) {
+            s
         } else {
             let s = String::from_utf8_lossy(header);
             return fail_encoding_clierror!("CSV header is not valid UTF-8: {s}");
         };
 
-        field_def = schema_properties
-            .get(key_string.clone())
-            .unwrap_or(&Value::Null);
+        field_def = schema_properties.get(key).unwrap_or(&Value::Null);
         field_type_def = field_def.get("type").unwrap_or(&Value::Null);
 
         json_type = match field_type_def {
@@ -1058,7 +1050,7 @@ fn get_json_types(headers: &ByteRecord, schema: &Value) -> CliResult<Vec<(String
             _ => JSONtypes::String,
         };
 
-        header_types.push((key_string, json_type));
+        header_types.push((key.to_owned(), json_type));
     }
     Ok(header_types)
 }
