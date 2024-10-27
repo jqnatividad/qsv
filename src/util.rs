@@ -58,6 +58,7 @@ pub enum StatsMode {
     Schema,
     Frequency,
     FrequencyForceStats,
+    #[cfg(feature = "polars")]
     PolarsSchema,
     None,
 }
@@ -2056,6 +2057,7 @@ pub fn get_stats_records(
                     output = tempfile_path,
                 )
             },
+            #[cfg(feature = "polars")]
             StatsMode::PolarsSchema => {
                 // StatsMode::PolarsSchema
                 // we need data types and ranges
