@@ -282,9 +282,6 @@ calamine = { git = "https://github.com/PrettyWood/calamine", branch = "bump-quic
 # use latest csvlens upstream with latest dependencies and fixes
 csvlens = { git = "https://github.com/YS-L/csvlens", rev = "29e46af" }
 
-# modernized fork of crc32fast, 2021 edition, MSRV 1.81, select clippy lint suggestions applied
-# crc32fast = { git = "https://github.com/jqnatividad/rust-crc32fast", branch = "modernize" }
-
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
