@@ -24,7 +24,7 @@ fn main() {
         let cargo_toml_content =
             fs::read_to_string(cargo_toml_path).expect("Failed to read Cargo.toml");
         let polars_rev = cargo_toml_content.find(QSV_POLARS_REV).map_or_else(
-            || "-unknown".to_string(),
+            || "unknown".to_string(),
             |index| {
                 let start_index = index + QSV_POLARS_REV.len();
                 let end_index = cargo_toml_content[start_index..]
@@ -34,7 +34,7 @@ fn main() {
                     .trim()
                     .to_string();
                 if final_rev.is_empty() {
-                    "-release".to_string()
+                    "release".to_string()
                 } else {
                     final_rev
                 }
