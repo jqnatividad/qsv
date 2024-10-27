@@ -188,9 +188,12 @@ sqlp options:
                               Set to 0 to do a full table scan (warning: can be slow).
                               [default: 10000]
     --cache-schema            Create and cache Polars schema JSON files.
-                              If specified and the schema file/s do not exist, it will save the
-                              inferred schemas in JSON format. Each schema file will have the same
-                              file stem as the corresponding input file, with the extension ".pschema.json"
+                              If specified and the schema file/s do not exist, it will check if a
+                              stats cache is available. If so, it will use it to derive a Polars schema
+                              and save it. If there's no stats cache, it will infer the schema 
+                              using --infer-len and save the inferred schemas. 
+                              Each schema file will have the same file stem as the corresponding
+                              input file, with the extension ".pschema.json"
                               (data.csv's Polars schema file will be data.pschema.json)
                               If the file/s exists, it will load the schema instead of inferring it
                               (ignoring --infer-len) and attempt to use it for each corresponding
@@ -288,7 +291,7 @@ use crate::{
     cmd::joinp::tsvssv_delim,
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     util,
-    util::process_input,
+    util::{get_stats_records, process_input},
     CliResult,
 };
 
@@ -770,13 +773,86 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     .with_decimal_comma(args.flag_decimal_comma)
                     .with_low_memory(args.flag_low_memory);
 
-                // --cache-schema is enabled, check if a valid pschema.json file exists for this
-                // table
                 let schema_file = table.canonicalize()?.with_extension("pschema.json");
-                if schema_file.exists()
-                    && schema_file.metadata()?.modified()? > table.metadata()?.modified()?
-                {
-                    // We have a valid pschema.json file - it exists and is newer than the table
+
+                //  check if the pschema.json file exists and is newer than the table file
+                let mut valid_schema_exists = schema_file.exists()
+                    && schema_file.metadata()?.modified()? > table.metadata()?.modified()?;
+
+                if !valid_schema_exists {
+                    // we don't have a valid pschema.json file,
+                    // check if we have stats, as we can derive pschema.json file from it
+                    let schema_args = util::SchemaArgs {
+                        flag_enum_threshold:  0,
+                        flag_ignore_case:     false,
+                        flag_strict_dates:    false,
+                        // we still get all the stats columns so we can use the stats cache
+                        flag_pattern_columns: crate::select::SelectColumns::parse("").unwrap(),
+                        flag_dates_whitelist: String::new(),
+                        flag_prefer_dmy:      false,
+                        flag_force:           false,
+                        flag_stdout:          false,
+                        flag_jobs:            Some(util::njobs(None)),
+                        flag_no_headers:      false,
+                        flag_delimiter:       args.flag_delimiter,
+                        arg_input:            Some(table.to_string_lossy().into_owned()),
+                        flag_memcheck:        false,
+                    };
+                    let (csv_fields, csv_stats) =
+                        get_stats_records(&schema_args, util::StatsMode::PolarsSchema)?;
+
+                    let mut schema = Schema::with_capacity(csv_stats.len());
+                    for (idx, stat) in csv_stats.iter().enumerate() {
+                        schema.insert(
+                            PlSmallStr::from_str(
+                                simdutf8::basic::from_utf8(csv_fields.get(idx).unwrap()).unwrap(),
+                            ),
+                            {
+                                let datatype = &stat.r#type;
+                                #[allow(clippy::match_same_arms)]
+                                match datatype.as_str() {
+                                    "String" => polars::datatypes::DataType::String,
+                                    "Integer" => {
+                                        let min = stat.min.as_ref().unwrap();
+                                        let max = stat.max.as_ref().unwrap();
+                                        if min.parse::<i32>().is_ok() && max.parse::<i32>().is_ok()
+                                        {
+                                            polars::datatypes::DataType::Int32
+                                        } else {
+                                            polars::datatypes::DataType::Int64
+                                        }
+                                    },
+                                    "Float" => {
+                                        let min = stat.min.as_ref().unwrap();
+                                        let max = stat.max.as_ref().unwrap();
+                                        if min.parse::<f32>().is_ok() && max.parse::<f32>().is_ok()
+                                        {
+                                            polars::datatypes::DataType::Float32
+                                        } else {
+                                            polars::datatypes::DataType::Float64
+                                        }
+                                    },
+                                    "Boolean" => polars::datatypes::DataType::Boolean,
+                                    "Date" => polars::datatypes::DataType::Date,
+                                    _ => polars::datatypes::DataType::String,
+                                }
+                            },
+                        );
+                    }
+                    let stats_schema = Arc::new(schema);
+                    let stats_schema_json = serde_json::to_string_pretty(&stats_schema)?;
+
+                    let mut file = BufWriter::new(File::create(&schema_file)?);
+                    file.write_all(stats_schema_json.as_bytes())?;
+                    file.flush()?;
+                    if debuglog_flag {
+                        log::debug!("Saved stats_schema to file: {}", schema_file.display());
+                    }
+                    valid_schema_exists = true;
+                }
+
+                if valid_schema_exists {
+                    // We have a valid pschema.json file!
                     // load the schema and deserialize it and use it with the lazy frame
                     let file = File::open(&schema_file)?;
                     let mut buf_reader = BufReader::new(file);
@@ -813,10 +889,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             ctx.register(table_name, lf.clone().with_optimizations(optflags));
 
             // the lazy frame's schema has been updated and --cache-schema is enabled
-            // update the pschema.json file
+            // update the pschema.json file, if necessary
             if create_schema {
                 let schema = lf.collect_schema()?;
                 let schema_json = serde_json::to_string_pretty(&schema)?;
+
                 let schema_file = table.canonicalize()?.with_extension("pschema.json");
                 let mut file = BufWriter::new(File::create(&schema_file)?);
                 file.write_all(schema_json.as_bytes())?;
