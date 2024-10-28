@@ -573,7 +573,7 @@ impl Args {
         let mut create_left_schema = self.flag_cache_schema;
         let mut left_lf = if create_left_schema {
             // cache-schema is enabled
-            let mut work_lf = LazyCsvReader::new(&self.arg_input1)
+            let mut work_left_lf = LazyCsvReader::new(&self.arg_input1)
                 .with_has_header(true)
                 .with_missing_is_null(self.flag_nulls)
                 .with_comment_prefix(comment_char.clone())
@@ -668,14 +668,14 @@ impl Args {
                 let mut schema_json = String::with_capacity(100);
                 buf_reader.read_to_string(&mut schema_json)?;
                 let schema: Schema = serde_json::from_str(&schema_json)?;
-                work_lf = work_lf.with_schema(Some(Arc::new(schema)));
+                work_left_lf = work_left_lf.with_schema(Some(Arc::new(schema)));
                 create_left_schema = false;
             } else {
                 // there is no valid pschema.json file, infer the schema using --infer-len
-                work_lf = work_lf.with_infer_schema_length(Some(self.flag_infer_len));
+                work_left_lf = work_left_lf.with_infer_schema_length(Some(self.flag_infer_len));
                 create_left_schema = true;
             }
-            work_lf.finish()?
+            work_left_lf.finish()?
         } else {
             LazyCsvReader::new(&self.arg_input1)
                 .with_has_header(true)
@@ -718,7 +718,7 @@ impl Args {
         let mut create_right_schema = self.flag_cache_schema;
         let mut right_lf = if create_right_schema {
             // cache-schema is enabled
-            let mut work_lf = LazyCsvReader::new(&self.arg_input2)
+            let mut work_right_lf = LazyCsvReader::new(&self.arg_input2)
                 .with_has_header(true)
                 .with_missing_is_null(self.flag_nulls)
                 .with_comment_prefix(comment_char)
@@ -814,14 +814,14 @@ impl Args {
                 let mut schema_json = String::with_capacity(100);
                 buf_reader.read_to_string(&mut schema_json)?;
                 let schema: Schema = serde_json::from_str(&schema_json)?;
-                work_lf = work_lf.with_schema(Some(Arc::new(schema)));
+                work_right_lf = work_right_lf.with_schema(Some(Arc::new(schema)));
                 create_right_schema = false;
             } else {
                 // there is no valid pschema.json file, infer the schema using --infer-len
-                work_lf = work_lf.with_infer_schema_length(Some(self.flag_infer_len));
+                work_right_lf = work_right_lf.with_infer_schema_length(Some(self.flag_infer_len));
                 create_right_schema = true;
             }
-            work_lf.finish()?
+            work_right_lf.finish()?
         } else {
             LazyCsvReader::new(&self.arg_input2)
                 .with_has_header(true)
@@ -840,7 +840,7 @@ impl Args {
             let schema = right_lf.collect_schema()?;
             let schema_json = serde_json::to_string_pretty(&schema)?;
 
-            let mut file = BufWriter::new(File::create(&left_schema_file)?);
+            let mut file = BufWriter::new(File::create(&right_schema_file)?);
             file.write_all(schema_json.as_bytes())?;
             file.flush()?;
             if debuglog_flag {
