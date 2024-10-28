@@ -190,7 +190,7 @@ stats options:
     --stats-jsonl             Also write the stats in JSONL format. 
                               If set, the stats will be written to <FILESTEM>.stats.csv.data.jsonl.
                               Note that this option used internally by other qsv commands
-                              (currently `frequency`, `schema` & `tojsonl`) to load cached stats. 
+                              (currently `frequency`, `schema`. `tojsonl` & `sqlp`) to load cached stats. 
                               You can preemptively create the stats-jsonl file by using
                               this option BEFORE running the `frequency`, `schema` & `tojsonl`
                               commands and they will automatically use it.
