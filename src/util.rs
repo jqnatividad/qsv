@@ -2056,7 +2056,9 @@ pub fn get_stats_records(
             StatsMode::FrequencyForceStats => {
                 // StatsMode::FrequencyForceStats
                 // we're doing frequency, so we need cardinality from a --forced stats run
-                format!("stats {input} --cardinality --stats-jsonl --force --output {tempfile_path}")
+                format!(
+                    "stats {input} --cardinality --stats-jsonl --force --output {tempfile_path}"
+                )
             },
             #[cfg(feature = "polars")]
             StatsMode::PolarsSchema => {
