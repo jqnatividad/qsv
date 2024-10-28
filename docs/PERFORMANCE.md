@@ -27,6 +27,31 @@ To enable automatic indexing:
 export QSV_AUTOINDEX_SIZE=10000000
 ```
 
+## Stats Cache
+`stats` is the primary reason qsv was created. Several projects we were working on required GUARANTEED data type inferences at speed when we first working on it in 2021. As we iterated and started additional projects, we started needing additional capabilities to enable the ["automagical metadata"](https://dathere.com/2023/11/automagical-metadata/) inferencing workflow we wanted for our data ingestion pipelines.
+
+From the original 11 summary statistics in xsv (type, sum, min/max, min/max length, mean, stddev, median, mode & cardinality ), 22 more were added incrementally over time (is_ascii, range, sort_order, sum_length, avg_length, mean_length, sem, variance, cv, nullcount, max_precision, sparsity, mad, lower outer/inner fence, q1, q2_median, q3, iqr, upper inner/outer fence, skewness, mode_count, mode_occurences, antimode, antimode_count, antimode_occurences). Check the [Wiki](https://github.com/jqnatividad/qsv/wiki/Supplemental#stats-command-output-explanation) for more info.
+
+And some of these stats were relatively expensive to compute, so qsv started caching statistics so it didn't need to recompute them if a file hasn't changed (as most of the files we were working on were historical data).
+
+Slowly, over time, we realized that the cached stats can be used to make other commands faster and smarter - thus the stats cache was born!
+
+- `frequency` uses the stats cache to short-circuit compiling frequency tables for ID columns (all unique values) by looking at the cardinality of a column.
+- `schema` uses the cache to create a JSON Schema Validation file. It uses the cache to set the data type, enum values, const values, minLength, maxLength, minimum and maximum properties in the JSON Schema file.
+- `tojsonl` uses the cache to set the JSON data type, and to infer boolean JSON properties.
+- `sqlp` uses the cache to create a Polars Schema, short-circuting Polars' schema inferencing - which is not as reliable as it depends on sampling the first N rows of a CSV, which may lead to wrong type inferences if the sample size is not large enough (which if set too large, slows down the Polars engine). As the data type inferences of `stats` are guaranteed, its not only faster, it works all the time!
+
+For the most part, the default caching behavior works transparently, though you will notice several files with the same file stem will start appearing in the same location as your CSV files. As metadata is tiny by nature and very useful on its own, a conscious decision was made not to hide them.
+
+If you want to fine-tune qsv's caching behavior, use the `--cache-threshold` option. It's one of the few options that based on its value, can be different units:
+- when greater than 1, the threshold in MILLISECONDS before caching stats results
+- when set to 0 - suppresses caching
+- when set to 1 - forces caching
+
+  As `stats` is much faster with an index. It also controls auto-indexing:
+- when set to a negative number, automatically creates an index when the input file size is greater than the absolute of the provided values in BYTES. The stats cache remains after `stats` finishes.
+- when set to a negative number AND the number ends with 5, it will automatically create an index, compile the stats, AND then delete the index as well as the stats cache files afterwards.
+
 ## CPU Optimization
 
 Modern CPUs have various features that the Rust compiler can take advantage
