@@ -2044,27 +2044,25 @@ pub fn get_stats_records(
                 // we're generating schema, so we need cardinality and to infer-dates
                 format!(
                     "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
-                     --cardinality --stats-jsonl --force --output {output}",
-                    dates_whitelist = stats_args.flag_dates_whitelist,
-                    output = tempfile_path,
+                     --cardinality --stats-jsonl --force --output {tempfile_path}",
+                    dates_whitelist = stats_args.flag_dates_whitelist
                 )
             },
-            StatsMode::Frequency | StatsMode::FrequencyForceStats => {
-                // StatsMode::Frequency or StatsMode::FrequencyForceStats
+            StatsMode::Frequency => {
+                // StatsMode::Frequency
                 // we're doing frequency, so we just need cardinality
-                format!(
-                    "stats {input} --cardinality --stats-jsonl --output {output}",
-                    output = tempfile_path,
-                )
+                format!("stats {input} --cardinality --stats-jsonl --output {tempfile_path}")
+            },
+            StatsMode::FrequencyForceStats => {
+                // StatsMode::FrequencyForceStats
+                // we're doing frequency, so we need cardinality from a --forced stats run
+                format!("stats {input} --cardinality --stats-jsonl --force --output {tempfile_path}")
             },
             #[cfg(feature = "polars")]
             StatsMode::PolarsSchema => {
                 // StatsMode::PolarsSchema
                 // we need data types and ranges
-                format!(
-                    "stats {input} --infer-boolean --stats-jsonl --output {output}",
-                    output = tempfile_path,
-                )
+                format!("stats {input} --infer-boolean --stats-jsonl --output {tempfile_path}")
             },
             StatsMode::None => unreachable!(), // we returned early on None earlier
         };
