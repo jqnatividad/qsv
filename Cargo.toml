@@ -287,6 +287,9 @@ csvlens = { git = "https://github.com/YS-L/csvlens", rev = "29e46af" }
 # see https://github.com/jan-auer/dynfmt/pull/9
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 
+# unreleased fixes
+fast-float = { git = "https://github.com/aldanor/fast-float-rust" ,rev = "83a49b8"}
+
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
 

@@ -2314,8 +2314,7 @@ dependencies = [
 [[package]]
 name = "fast-float"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95765f67b4b18863968b4a1bd5bb576f732b29a4a28c7cd84c09fa3e2875f33c"
+source = "git+https://github.com/aldanor/fast-float-rust?rev=83a49b8#83a49b8b5a530d8e950a6dbfdc11089d213b9ac9"
 
 [[package]]
 name = "fastrand"
