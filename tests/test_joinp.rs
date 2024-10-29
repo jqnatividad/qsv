@@ -146,7 +146,8 @@ fn setup(name: &str) -> Workdir {
 
     let out_file2 = wrk.path("places.csv.sz").to_string_lossy().to_string();
     let mut cmd_2 = wrk.command("snappy");
-    cmd_2.arg("compress")
+    cmd_2
+        .arg("compress")
         .arg("places.csv")
         .args(["--output", &out_file2]);
     wrk.assert_success(&mut cmd_2);
