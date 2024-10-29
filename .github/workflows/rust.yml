@@ -42,10 +42,10 @@ jobs:
         sudo service redis-server start
     - name: Update Rust
       run: rustup update
-    - name: Setup Rust-cache
-      uses: Swatinem/rust-cache@v2
-      with:
-        key: qsv-cache
+    # - name: Setup Rust-cache
+    #   uses: Swatinem/rust-cache@v2
+    #   with:
+    #     key: qsv-cache
     - name: Run tests
       env:
         RUSTFLAGS: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+avx2,+fma,+bmi1,+bmi2,+lzcnt,+pclmulqdq
