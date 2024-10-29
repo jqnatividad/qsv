@@ -531,6 +531,143 @@ impl JoinStruct {
 
 impl Args {
     fn new_join(&mut self, tmpdir: &tempfile::TempDir) -> CliResult<JoinStruct> {
+        // =============== NEW_JOIN HELPER FUNCTIONS =================
+
+        // Helper function to create a LazyFrameReader with common settings
+        fn create_lazy_reader(
+            file_path: &str,
+            comment_char: Option<&PlSmallStr>,
+            args: &Args,
+            delim: u8,
+        ) -> LazyCsvReader {
+            LazyCsvReader::new(file_path)
+                .with_has_header(true)
+                .with_missing_is_null(args.flag_nulls)
+                .with_comment_prefix(comment_char.cloned())
+                .with_separator(tsvssv_delim(file_path, delim))
+                .with_try_parse_dates(args.flag_try_parsedates)
+                .with_decimal_comma(args.flag_decimal_comma)
+                .with_low_memory(args.flag_low_memory)
+                .with_ignore_errors(args.flag_ignore_errors)
+        }
+
+        // Helper function to handle schema creation from stats
+        fn create_schema_from_stats(input_path: &Path, args: &Args) -> CliResult<Schema> {
+            let schema_args = util::SchemaArgs {
+                flag_enum_threshold:  0,
+                flag_ignore_case:     false,
+                flag_strict_dates:    false,
+                flag_pattern_columns: crate::select::SelectColumns::parse("").unwrap(),
+                flag_dates_whitelist: String::new(),
+                flag_prefer_dmy:      false,
+                flag_force:           false,
+                flag_stdout:          false,
+                flag_jobs:            Some(util::njobs(None)),
+                flag_no_headers:      false,
+                flag_delimiter:       args.flag_delimiter,
+                arg_input:            Some(input_path.to_string_lossy().into_owned()),
+                flag_memcheck:        false,
+            };
+
+            let (csv_fields, csv_stats) =
+                get_stats_records(&schema_args, util::StatsMode::PolarsSchema)?;
+
+            let mut schema = Schema::with_capacity(csv_stats.len());
+            for (idx, stat) in csv_stats.iter().enumerate() {
+                schema.insert(
+                    PlSmallStr::from_str(
+                        simdutf8::basic::from_utf8(csv_fields.get(idx).unwrap()).unwrap(),
+                    ),
+                    {
+                        let datatype = &stat.r#type;
+                        #[allow(clippy::match_same_arms)]
+                        match datatype.as_str() {
+                            "String" => polars::datatypes::DataType::String,
+                            "Integer" => {
+                                let min = stat.min.as_ref().unwrap();
+                                let max = stat.max.as_ref().unwrap();
+                                if min.parse::<i32>().is_ok() && max.parse::<i32>().is_ok() {
+                                    polars::datatypes::DataType::Int32
+                                } else {
+                                    polars::datatypes::DataType::Int64
+                                }
+                            },
+                            "Float" => {
+                                let min = stat.min.as_ref().unwrap();
+                                let max = stat.max.as_ref().unwrap();
+                                if min.parse::<f32>().is_ok() && max.parse::<f32>().is_ok() {
+                                    polars::datatypes::DataType::Float32
+                                } else {
+                                    polars::datatypes::DataType::Float64
+                                }
+                            },
+                            "Boolean" => polars::datatypes::DataType::Boolean,
+                            "Date" => polars::datatypes::DataType::Date,
+                            _ => polars::datatypes::DataType::String,
+                        }
+                    },
+                );
+            }
+            Ok(schema)
+        }
+
+        // Helper function to setup a LazyFrame with schema handling
+        #[inline]
+        fn setup_lazy_frame(
+            input_path: &Path,
+            comment_char: Option<&PlSmallStr>,
+            args: &Args,
+            delim: u8,
+            debuglog_flag: bool,
+        ) -> CliResult<(LazyFrame, bool)> {
+            let schema_file = input_path.canonicalize()?.with_extension("pschema.json");
+            let mut create_schema = args.flag_cache_schema;
+
+            let mut reader =
+                create_lazy_reader(input_path.to_str().unwrap(), comment_char, args, delim);
+
+            if create_schema {
+                let mut valid_schema_exists = schema_file.exists()
+                    && schema_file.metadata()?.modified()? > input_path.metadata()?.modified()?;
+
+                if !valid_schema_exists {
+                    let schema = create_schema_from_stats(input_path, args)?;
+                    let stats_schema = Arc::new(schema);
+                    let stats_schema_json = serde_json::to_string_pretty(&stats_schema)?;
+
+                    let mut file = BufWriter::new(File::create(&schema_file)?);
+                    file.write_all(stats_schema_json.as_bytes())?;
+                    file.flush()?;
+                    if debuglog_flag {
+                        log::debug!("Saved schema to file: {}", schema_file.display());
+                    }
+                    valid_schema_exists = true;
+                }
+
+                if valid_schema_exists {
+                    let file = File::open(&schema_file)?;
+                    let mut buf_reader = BufReader::new(file);
+                    let mut schema_json = String::with_capacity(100);
+                    buf_reader.read_to_string(&mut schema_json)?;
+                    let schema: Schema = serde_json::from_str(&schema_json)?;
+                    reader = reader.with_schema(Some(Arc::new(schema)));
+                    create_schema = false;
+                } else {
+                    reader = reader.with_infer_schema_length(Some(args.flag_infer_len));
+                    create_schema = true;
+                }
+            } else {
+                reader = reader.with_infer_schema_length(if args.flag_infer_len == 0 {
+                    None
+                } else {
+                    Some(args.flag_infer_len)
+                });
+            }
+
+            Ok((reader.finish()?, create_schema))
+        }
+
+        // ============ START OF NEW_JOIN MAIN CODE ==============
         let debuglog_flag = log::log_enabled!(log::Level::Debug);
 
         let delim = if let Some(delimiter) = self.flag_delimiter {
@@ -545,13 +682,7 @@ impl Args {
             None
         };
 
-        let num_rows = if self.flag_infer_len == 0 {
-            None
-        } else {
-            Some(self.flag_infer_len)
-        };
-
-        // check if the input files exist
+        // Check if input files exist
         let mut input1_path = PathBuf::from(&self.arg_input1);
         if !input1_path.exists() {
             return fail_clierror!("Input file {} does not exist.", self.arg_input1);
@@ -561,299 +692,72 @@ impl Args {
             return fail_clierror!("Input file {} does not exist.", self.arg_input2);
         }
 
-        // check if the left input file is snappy compressed
-        // if so, we need to decompress it first
+        // Handle snappy compression for left input
         if input1_path.extension().and_then(std::ffi::OsStr::to_str) == Some("sz") {
             let decompressed_path = util::decompress_snappy_file(&input1_path, tmpdir)?;
             self.arg_input1.clone_from(&decompressed_path);
             input1_path = PathBuf::from(decompressed_path);
         }
-        let left_schema_file = input1_path.canonicalize()?.with_extension("pschema.json");
 
-        let mut create_left_schema = self.flag_cache_schema;
-        let mut left_lf = if create_left_schema {
-            // cache-schema is enabled
-            let mut work_left_lf = LazyCsvReader::new(&self.arg_input1)
-                .with_has_header(true)
-                .with_missing_is_null(self.flag_nulls)
-                .with_comment_prefix(comment_char.clone())
-                .with_separator(tsvssv_delim(&self.arg_input1, delim))
-                .with_try_parse_dates(self.flag_try_parsedates)
-                .with_decimal_comma(self.flag_decimal_comma)
-                .with_low_memory(self.flag_low_memory)
-                .with_ignore_errors(self.flag_ignore_errors);
-
-            // check if a valid pschema.json file exists for this CSV
-            let mut valid_leftschema_exists = left_schema_file.exists()
-                && left_schema_file.metadata()?.modified()? > input1_path.metadata()?.modified()?;
-
-            if !valid_leftschema_exists {
-                // we don't have a valid left schema, check if we have stats
-                // and derive the left schema from it
-                let schema_args = util::SchemaArgs {
-                    flag_enum_threshold:  0,
-                    flag_ignore_case:     false,
-                    flag_strict_dates:    false,
-                    // we still get all the stats columns so we can use the stats cache
-                    flag_pattern_columns: crate::select::SelectColumns::parse("").unwrap(),
-                    flag_dates_whitelist: String::new(),
-                    flag_prefer_dmy:      false,
-                    flag_force:           false,
-                    flag_stdout:          false,
-                    flag_jobs:            Some(util::njobs(None)),
-                    flag_no_headers:      false,
-                    flag_delimiter:       self.flag_delimiter,
-                    arg_input:            Some(input1_path.to_string_lossy().into_owned()),
-                    flag_memcheck:        false,
-                };
-                let (csv_fields, csv_stats) =
-                    get_stats_records(&schema_args, util::StatsMode::PolarsSchema)?;
-
-                let mut schema = Schema::with_capacity(csv_stats.len());
-                for (idx, stat) in csv_stats.iter().enumerate() {
-                    schema.insert(
-                        PlSmallStr::from_str(
-                            simdutf8::basic::from_utf8(csv_fields.get(idx).unwrap()).unwrap(),
-                        ),
-                        {
-                            let datatype = &stat.r#type;
-                            #[allow(clippy::match_same_arms)]
-                            match datatype.as_str() {
-                                "String" => polars::datatypes::DataType::String,
-                                "Integer" => {
-                                    let min = stat.min.as_ref().unwrap();
-                                    let max = stat.max.as_ref().unwrap();
-                                    if min.parse::<i32>().is_ok() && max.parse::<i32>().is_ok() {
-                                        polars::datatypes::DataType::Int32
-                                    } else {
-                                        polars::datatypes::DataType::Int64
-                                    }
-                                },
-                                "Float" => {
-                                    let min = stat.min.as_ref().unwrap();
-                                    let max = stat.max.as_ref().unwrap();
-                                    if min.parse::<f32>().is_ok() && max.parse::<f32>().is_ok() {
-                                        polars::datatypes::DataType::Float32
-                                    } else {
-                                        polars::datatypes::DataType::Float64
-                                    }
-                                },
-                                "Boolean" => polars::datatypes::DataType::Boolean,
-                                "Date" => polars::datatypes::DataType::Date,
-                                _ => polars::datatypes::DataType::String,
-                            }
-                        },
-                    );
-                }
-                let stats_schema = Arc::new(schema);
-                let stats_schema_json = serde_json::to_string_pretty(&stats_schema)?;
-
-                let mut file = BufWriter::new(File::create(&left_schema_file)?);
-                file.write_all(stats_schema_json.as_bytes())?;
-                file.flush()?;
-                if debuglog_flag {
-                    log::debug!(
-                        "Saved stats_left_schema to file: {}",
-                        left_schema_file.display()
-                    );
-                }
-                valid_leftschema_exists = true;
-            }
-
-            if valid_leftschema_exists {
-                // We have a valid pschema.json file - it exists and is newer than the table
-                // load the schema and deserialize it and use it with the lazy frame
-                let file = File::open(&left_schema_file)?;
-                let mut buf_reader = BufReader::new(file);
-                let mut schema_json = String::with_capacity(100);
-                buf_reader.read_to_string(&mut schema_json)?;
-                let schema: Schema = serde_json::from_str(&schema_json)?;
-                work_left_lf = work_left_lf.with_schema(Some(Arc::new(schema)));
-                create_left_schema = false;
-            } else {
-                // there is no valid pschema.json file, infer the schema using --infer-len
-                work_left_lf = work_left_lf.with_infer_schema_length(Some(self.flag_infer_len));
-                create_left_schema = true;
-            }
-            work_left_lf.finish()?
-        } else {
-            LazyCsvReader::new(&self.arg_input1)
-                .with_has_header(true)
-                .with_missing_is_null(self.flag_nulls)
-                .with_comment_prefix(comment_char.clone())
-                .with_separator(tsvssv_delim(&self.arg_input1, delim))
-                .with_infer_schema_length(num_rows)
-                .with_try_parse_dates(self.flag_try_parsedates)
-                .with_decimal_comma(self.flag_decimal_comma)
-                .with_low_memory(self.flag_low_memory)
-                .with_ignore_errors(self.flag_ignore_errors)
-                .finish()?
-        };
+        // Setup left LazyFrame
+        let (mut left_lf, create_left_schema) = setup_lazy_frame(
+            &input1_path,
+            comment_char.as_ref(),
+            self,
+            delim,
+            debuglog_flag,
+        )?;
 
         if create_left_schema {
             let schema = left_lf.collect_schema()?;
             let schema_json = serde_json::to_string_pretty(&schema)?;
-
-            let mut file = BufWriter::new(File::create(&left_schema_file)?);
+            let schema_file = input1_path.canonicalize()?.with_extension("pschema.json");
+            let mut file = BufWriter::new(File::create(&schema_file)?);
             file.write_all(schema_json.as_bytes())?;
             file.flush()?;
             if debuglog_flag {
-                log::debug!("Saved left schema to file: {}", left_schema_file.display());
+                log::debug!("Saved left schema to file: {}", schema_file.display());
             }
         }
 
+        // Apply left filter if needed
         if let Some(filter_left) = &self.flag_filter_left {
             let filter_left_expr = polars::sql::sql_expr(filter_left)?;
             left_lf = left_lf.filter(filter_left_expr);
         }
 
-        // check if the right input file is snappy compressed
+        // Handle snappy compression for right input
         if input2_path.extension().and_then(std::ffi::OsStr::to_str) == Some("sz") {
             let decompressed_path = util::decompress_snappy_file(&input2_path, tmpdir)?;
             self.arg_input2.clone_from(&decompressed_path);
             input2_path = PathBuf::from(decompressed_path);
         }
-        let right_schema_file = input2_path.canonicalize()?.with_extension("pschema.json");
 
-        let mut create_right_schema = self.flag_cache_schema;
-        let mut right_lf = if create_right_schema {
-            // cache-schema is enabled
-            let mut work_right_lf = LazyCsvReader::new(&self.arg_input2)
-                .with_has_header(true)
-                .with_missing_is_null(self.flag_nulls)
-                .with_comment_prefix(comment_char)
-                .with_separator(tsvssv_delim(&self.arg_input2, delim))
-                .with_try_parse_dates(self.flag_try_parsedates)
-                .with_decimal_comma(self.flag_decimal_comma)
-                .with_low_memory(self.flag_low_memory)
-                .with_ignore_errors(self.flag_ignore_errors);
-
-            // check if a valid pschema.json file exists for this CSV
-            let mut valid_rightschema_exists = right_schema_file.exists()
-                && right_schema_file.metadata()?.modified()?
-                    > input2_path.metadata()?.modified()?;
-
-            if !valid_rightschema_exists {
-                // we don't have a valid right schema, check if we have stats
-                // and derive the right schema from it
-                let schema_args = util::SchemaArgs {
-                    flag_enum_threshold:  0,
-                    flag_ignore_case:     false,
-                    flag_strict_dates:    false,
-                    // we still get all the stats columns so we can use the stats cache
-                    flag_pattern_columns: crate::select::SelectColumns::parse("").unwrap(),
-                    flag_dates_whitelist: String::new(),
-                    flag_prefer_dmy:      false,
-                    flag_force:           false,
-                    flag_stdout:          false,
-                    flag_jobs:            Some(util::njobs(None)),
-                    flag_no_headers:      false,
-                    flag_delimiter:       self.flag_delimiter,
-                    arg_input:            Some(input2_path.to_string_lossy().into_owned()),
-                    flag_memcheck:        false,
-                };
-                let (csv_fields, csv_stats) =
-                    get_stats_records(&schema_args, util::StatsMode::PolarsSchema)?;
-
-                let mut schema = Schema::with_capacity(csv_stats.len());
-                for (idx, stat) in csv_stats.iter().enumerate() {
-                    schema.insert(
-                        PlSmallStr::from_str(
-                            simdutf8::basic::from_utf8(csv_fields.get(idx).unwrap()).unwrap(),
-                        ),
-                        {
-                            let datatype = &stat.r#type;
-                            #[allow(clippy::match_same_arms)]
-                            match datatype.as_str() {
-                                "String" => polars::datatypes::DataType::String,
-                                "Integer" => {
-                                    let min = stat.min.as_ref().unwrap();
-                                    let max = stat.max.as_ref().unwrap();
-                                    if min.parse::<i32>().is_ok() && max.parse::<i32>().is_ok() {
-                                        polars::datatypes::DataType::Int32
-                                    } else {
-                                        polars::datatypes::DataType::Int64
-                                    }
-                                },
-                                "Float" => {
-                                    let min = stat.min.as_ref().unwrap();
-                                    let max = stat.max.as_ref().unwrap();
-                                    if min.parse::<f32>().is_ok() && max.parse::<f32>().is_ok() {
-                                        polars::datatypes::DataType::Float32
-                                    } else {
-                                        polars::datatypes::DataType::Float64
-                                    }
-                                },
-                                "Boolean" => polars::datatypes::DataType::Boolean,
-                                "Date" => polars::datatypes::DataType::Date,
-                                _ => polars::datatypes::DataType::String,
-                            }
-                        },
-                    );
-                }
-                let stats_schema = Arc::new(schema);
-                let stats_schema_json = serde_json::to_string_pretty(&stats_schema)?;
-
-                let mut file = BufWriter::new(File::create(&right_schema_file)?);
-                file.write_all(stats_schema_json.as_bytes())?;
-                file.flush()?;
-                if debuglog_flag {
-                    log::debug!(
-                        "Saved stats_right_schema to file: {}",
-                        right_schema_file.display()
-                    );
-                }
-                valid_rightschema_exists = true;
-            }
-
-            if valid_rightschema_exists {
-                // We have a valid pschema.json file - it exists and is newer than the table
-                // load the schema and deserialize it and use it with the lazy frame
-                let file = File::open(&right_schema_file)?;
-                let mut buf_reader = BufReader::new(file);
-                let mut schema_json = String::with_capacity(100);
-                buf_reader.read_to_string(&mut schema_json)?;
-                let schema: Schema = serde_json::from_str(&schema_json)?;
-                work_right_lf = work_right_lf.with_schema(Some(Arc::new(schema)));
-                create_right_schema = false;
-            } else {
-                // there is no valid pschema.json file, infer the schema using --infer-len
-                work_right_lf = work_right_lf.with_infer_schema_length(Some(self.flag_infer_len));
-                create_right_schema = true;
-            }
-            work_right_lf.finish()?
-        } else {
-            LazyCsvReader::new(&self.arg_input2)
-                .with_has_header(true)
-                .with_missing_is_null(self.flag_nulls)
-                .with_comment_prefix(comment_char)
-                .with_separator(tsvssv_delim(&self.arg_input2, delim))
-                .with_infer_schema_length(num_rows)
-                .with_try_parse_dates(self.flag_try_parsedates)
-                .with_decimal_comma(self.flag_decimal_comma)
-                .with_low_memory(self.flag_low_memory)
-                .with_ignore_errors(self.flag_ignore_errors)
-                .finish()?
-        };
+        // Setup right LazyFrame
+        let (mut right_lf, create_right_schema) = setup_lazy_frame(
+            &input2_path,
+            comment_char.as_ref(),
+            self,
+            delim,
+            debuglog_flag,
+        )?;
 
         if create_right_schema {
             let schema = right_lf.collect_schema()?;
             let schema_json = serde_json::to_string_pretty(&schema)?;
-
-            let mut file = BufWriter::new(File::create(&right_schema_file)?);
+            let schema_file = input2_path.canonicalize()?.with_extension("pschema.json");
+            let mut file = BufWriter::new(File::create(&schema_file)?);
             file.write_all(schema_json.as_bytes())?;
             file.flush()?;
             if debuglog_flag {
-                log::debug!(
-                    "Saved right schema to file: {}",
-                    right_schema_file.display()
-                );
+                log::debug!("Saved right schema to file: {}", schema_file.display());
             }
         }
 
+        // Apply right filter if needed
         if let Some(filter_right) = &self.flag_filter_right {
-            let filter_right_exprt = polars::sql::sql_expr(filter_right)?;
-            right_lf = right_lf.filter(filter_right_exprt);
+            let filter_right_expr = polars::sql::sql_expr(filter_right)?;
+            right_lf = right_lf.filter(filter_right_expr);
         }
 
         Ok(JoinStruct {
