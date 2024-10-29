@@ -20,6 +20,26 @@ macro_rules! joinp_test {
     };
 }
 
+macro_rules! joinp_test_cache_schema {
+    ($name:ident, $fun:expr) => {
+        mod $name {
+            use std::process;
+
+            #[allow(unused_imports)]
+            use super::{make_rows, setup};
+            use crate::workdir::Workdir;
+
+            #[test]
+            fn headers() {
+                let wrk = setup(stringify!($name));
+                let mut cmd = wrk.command("joinp");
+                cmd.args(&["city", "cities.csv", "city", "places.csv", "--cache-schema"]);
+                $fun(wrk, cmd);
+            }
+        }
+    };
+}
+
 macro_rules! joinp_test_tab {
     ($name0:ident, $fun:expr) => {
         mod $name0 {
@@ -125,11 +145,11 @@ fn setup(name: &str) -> Workdir {
     drop(cmd);
 
     let out_file2 = wrk.path("places.csv.sz").to_string_lossy().to_string();
-    let mut cmd2 = wrk.command("snappy");
-    cmd2.arg("compress")
+    let mut cmd_2 = wrk.command("snappy");
+    cmd_2.arg("compress")
         .arg("places.csv")
         .args(["--output", &out_file2]);
-    wrk.assert_success(&mut cmd2);
+    wrk.assert_success(&mut cmd_2);
 
     let out_file3 = wrk.path("places.ssv.sz").to_string_lossy().to_string();
     let mut cmd3 = wrk.command("snappy");
@@ -164,6 +184,44 @@ joinp_test!(joinp_inner, |wrk: Workdir, mut cmd: process::Command| {
     );
     assert_eq!(got, expected);
 });
+
+joinp_test_cache_schema!(
+    joinp_inner_cache_schema,
+    |wrk: Workdir, mut cmd: process::Command| {
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+            ],
+        );
+        assert_eq!(got, expected);
+        assert!(wrk.path("cities.pschema.json").exists());
+        let cities_schema = std::fs::read_to_string(wrk.path("cities.pschema.json")).unwrap();
+        assert_eq!(
+            cities_schema,
+            r#"{
+  "fields": {
+    "city": "String",
+    "state": "String"
+  }
+}"#
+        );
+        assert!(wrk.path("places.pschema.json").exists());
+        let places_schema = std::fs::read_to_string(wrk.path("places.pschema.json")).unwrap();
+        assert_eq!(
+            places_schema,
+            r#"{
+  "fields": {
+    "city": "String",
+    "place": "String"
+  }
+}"#
+        );
+    }
+);
 
 joinp_test_tab!(
     joinp_inner_tab,
