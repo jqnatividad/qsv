@@ -1523,23 +1523,34 @@ fn sqlp_issue2014() {
 
     wrk.assert_success(&mut cmd);
 
-    let mut cmd2 = wrk.command("slice"); // DevSkim: ignore DS126858
-    cmd2.arg(output_file.clone()); // DevSkim: ignore DS126858
-
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2); // DevSkim: ignore DS126858
+    let mut cmd = wrk.command("snappy");
+    cmd.arg("decompress").arg(output_file.clone());
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         ["id;item;price"],
         ["0;wallet;9.99"],
         ["1;comb;1.39"],
         ["2;pencil;0.49"],
     ];
+    assert_eq!(got, expected);
+
+    let mut cmd = wrk.command("slice");
+    cmd.arg(output_file.clone());
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["id", "item", "price"],
+        svec!["0", "wallet", "9.99"],
+        svec!["1", "comb", "1.39"],
+        svec!["2", "pencil", "0.49"],
+    ];
 
     assert_eq!(got, expected);
 
-    let mut cmd2 = wrk.command("headers"); // DevSkim: ignore DS126858
-    cmd2.arg(output_file); // DevSkim: ignore DS126858
+    let mut cmd = wrk.command("headers");
+    cmd.arg(output_file);
 
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2); // DevSkim: ignore DS126858
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![["1   id"], ["2   item"], ["3   price"]];
 
     assert_eq!(got, expected);
