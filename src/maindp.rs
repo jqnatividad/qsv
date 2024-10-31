@@ -92,6 +92,7 @@ mod clitypes;
 mod cmd;
 mod config;
 mod index;
+mod lookup;
 mod odhtcache;
 mod select;
 mod util;
