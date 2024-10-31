@@ -656,7 +656,7 @@ impl Config {
 /// If the file extension doesn't match known types, it returns the default delimiter.
 pub fn get_delim_by_extension(path: &Path, default_delim: u8) -> (String, u8, bool) {
     let path_str = path.to_str().unwrap_or_default().to_ascii_lowercase();
-    
+
     // we already lowercased the path_str, so allow this false positive lint
     #[allow(clippy::case_sensitive_file_extension_comparisons)]
     let snappy = path_str.ends_with(".sz");
