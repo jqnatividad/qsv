@@ -655,29 +655,32 @@ impl Config {
 ///
 /// If the file extension doesn't match known types, it returns the default delimiter.
 pub fn get_delim_by_extension(path: &Path, default_delim: u8) -> (String, u8, bool) {
-    let file_extension = path
-        .extension()
-        .unwrap_or_default()
-        .to_str()
-        .unwrap()
-        .to_ascii_lowercase();
-
     let path_str = path.to_str().unwrap_or_default().to_ascii_lowercase();
+    
+    // we already lowercased the path_str, so allow this false positive lint
+    #[allow(clippy::case_sensitive_file_extension_comparisons)]
     let snappy = path_str.ends_with(".sz");
 
-    let delim = if path_str.ends_with(".csv.sz") {
-        b','
-    } else if path_str.ends_with(".tsv.sz") || path_str.ends_with(".tab.sz") {
-        b'\t'
-    } else if path_str.ends_with(".ssv.sz") {
-        b';'
+    // Get the extension before .sz if it's a snappy file, otherwise get the normal extension
+    let file_extension = if snappy {
+        path_str
+            .strip_suffix(".sz")
+            .and_then(|s| s.split('.').last())
+            .unwrap_or("")
+            .to_string()
     } else {
-        match file_extension.as_str() {
-            "tsv" | "tab" => b'\t',
-            "ssv" => b';',
-            "csv" => b',',
-            _ => default_delim,
-        }
+        path.extension()
+            .unwrap_or_default()
+            .to_str()
+            .unwrap()
+            .to_ascii_lowercase()
+    };
+
+    let delim = match file_extension.as_str() {
+        "tsv" | "tab" => b'\t',
+        "ssv" => b';',
+        "csv" => b',',
+        _ => default_delim,
     };
 
     (file_extension, delim, snappy)
@@ -720,7 +723,7 @@ mod tests {
     fn test_snappy_csv_extension() {
         let path = PathBuf::from("test.csv.sz");
         let (ext, delim, snappy) = get_delim_by_extension(&path, b',');
-        assert_eq!(ext, "sz");
+        assert_eq!(ext, "csv");
         assert_eq!(delim, b',');
         assert!(snappy);
     }
@@ -729,7 +732,7 @@ mod tests {
     fn test_snappy_tsv_extension() {
         let path = PathBuf::from("test.tsv.sz");
         let (ext, delim, snappy) = get_delim_by_extension(&path, b',');
-        assert_eq!(ext, "sz");
+        assert_eq!(ext, "tsv");
         assert_eq!(delim, b'\t');
         assert!(snappy);
     }
