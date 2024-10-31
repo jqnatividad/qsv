@@ -242,7 +242,6 @@ use std::{
     io::Write,
     path::Path,
     sync::atomic::{AtomicBool, AtomicI8, AtomicU16, Ordering},
-    time::Instant,
 };
 
 use csv_index::RandomAccessSimple;
@@ -2088,314 +2087,73 @@ fn setup_helpers(
     //                         if called from the MAIN or END scripts, or
     //                         if the lookup table is empty.
     //
-    let qsv_register_lookup = luau.create_function(move |luau, (lookup_name, mut lookup_table_uri, cache_age_secs): (String, String, i64)| {
-        const MSG_PREFIX: &str = "qsv_register_lookup() - ";
-
-        if Stage::current() != Some(Stage::Begin) {
-            return helper_err!("qsv_register_lookup", "can only be called from the BEGIN script.");
-        }
-
-        let call_parameters = format!("qsv_lookup_register({lookup_name}, {lookup_table_uri}, {cache_age_secs})");
-
-        let mut cached_csv_exists = false;
-        let mut cached_csv_age_secs = 0_i64;
-        let mut cached_csv_size = 0;
-        let mut cache_csv_last_modified: Option<std::time::SystemTime> = None;
-        let qsv_cache_dir: String = luau.globals().raw_get(QSV_CACHE_DIR)?;
-        let cached_csv_path = Path::new(&qsv_cache_dir).join(format!("{lookup_name}.csv"));
-
-        // check if lookup_table_uri is a file in the local filesystem
-        let lookup_table_path = Path::new(&lookup_table_uri);
-        let lookup_table_is_file = lookup_table_path.exists();
-        if lookup_table_is_file {
-            debug!("{MSG_PREFIX}{lookup_table_uri} is a file in the local filesystem");
-        } else if cached_csv_path.exists() {
-
-            if cache_age_secs < 0 {
-                // delete the cached CSV file
-                debug!("{MSG_PREFIX}deleting cached CSV file {}", cached_csv_path.display());
-                std::fs::remove_file(&cached_csv_path)?;
-            } else {
-                // get metadata for the cached CSV file
-                cached_csv_exists = true;
-                let metadata = cached_csv_path.metadata()?;
-                cache_csv_last_modified = Some(metadata.modified()?);
-                let modified_secs = cache_csv_last_modified.unwrap().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-                let now_secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-                cached_csv_size = metadata.len();
-
-                // if cache_age_secs is 0, the cached file never expires
-                cached_csv_age_secs = if cache_age_secs > 0 {
-                        (now_secs - modified_secs).try_into().unwrap_or(0_i64)
-                } else {
-                    0_i64
-                };
-            }
-        }
-
-        // if the lookup is not a file in the local filesystem, check if we can use the cached CSV
-        // i.e. if the cached CSV exists and is not older than cache_age_secs or set not to expire, and not empty
-        // otherwise, we will re-download it
-        if !lookup_table_is_file && cached_csv_exists && cached_csv_age_secs <= cache_age_secs && cached_csv_size > 0 {
-            lookup_table_uri = cached_csv_path.display().to_string();
-            log::info!("{MSG_PREFIX}Using cached lookup table {lookup_table_uri}");
-        } else {
-            // if the lookup_table_uri starts with "dathere://", prepend the repo URL to the lookup table
-            if let Some(lookup_url) = lookup_table_uri.strip_prefix("dathere://") {
-                lookup_table_uri = format!("https://raw.githubusercontent.com/dathere/qsv-lookup-tables/main/lookup-tables/{lookup_url}");
+    let qsv_register_lookup = luau.create_function(
+        move |luau, (lookup_name, lookup_table_uri, cache_age_secs): (String, String, i64)| {
+            if Stage::current() != Some(Stage::Begin) {
+                return helper_err!(
+                    "qsv_register_lookup",
+                    "can only be called from the BEGIN script."
+                );
             }
 
-            let mut lookup_ckan = false;
-            let mut resource_search = false;
-            if let Some(mut lookup_url) = lookup_table_uri.strip_prefix("ckan://") {
-                lookup_ckan = true;
-                // it's a CKAN resource. If it ends with a '?', we'll do a resource_search
-                lookup_url = lookup_url.trim();
-                if lookup_url.ends_with('?') {
-                    lookup_table_uri = format!("{ckan_api_url}/resource_search?query=name:{lookup_url}");
-                    lookup_table_uri.pop(); // remove the trailing '?'
-                    resource_search = true;
-                } else {
-                    // otherwise, we do a resource_show
-                    lookup_table_uri = format!("{ckan_api_url}/resource_show?id={lookup_url}");
+            let qsv_cache_dir: String = luau.globals().raw_get(QSV_CACHE_DIR)?;
+
+            let lookup_table_opts = crate::lookup::LookupTableOptions {
+                name: lookup_name.clone(),
+                uri: lookup_table_uri.clone(),
+                cache_age_secs,
+                cache_dir: qsv_cache_dir,
+                delimiter,
+                ckan_api_url: Some(ckan_api_url.clone()),
+                ckan_token: ckan_token.clone(),
+                timeout_secs: TIMEOUT_SECS.load(Ordering::Relaxed),
+            };
+
+            let result = match crate::lookup::load_lookup_table(&lookup_table_opts) {
+                Ok(result) => result,
+                Err(e) => return helper_err!("qsv_register_lookup", "{}", e),
+            };
+
+            // Create Lua table from the lookup data
+            let lookup_table = luau.create_table()?;
+            let mut rdr = Config::new(Some(result.filepath).as_ref())
+                .delimiter(delimiter)
+                .comment(Some(b'#'))
+                .no_headers(false)
+                .reader()?;
+
+            let headers = result.headers;
+            let mut record;
+            for result in rdr.records() {
+                record = result.unwrap_or_default();
+                let key = record.get(0).unwrap_or_default().trim();
+                let inside_table = luau.create_table()?;
+                for (i, header) in headers.iter().skip(1).enumerate() {
+                    inside_table.raw_set(header, record.get(i + 1).unwrap_or_default().trim())?;
                 }
+                lookup_table.raw_set(key, inside_table)?;
             }
 
-            let lookup_on_url = lookup_table_uri.to_lowercase().starts_with("http");
+            luau.globals().raw_set(lookup_name.clone(), lookup_table)?;
 
-            let cache_file_path = Path::new(&qsv_cache_dir).join(format!("{lookup_name}.csv"));
-
-            if lookup_on_url {
-                use reqwest::{blocking::Client, Url};
-
-                let client_timeout = std::time::Duration::from_secs(TIMEOUT_SECS.load(Ordering::Relaxed) as u64);
-
-                let client = match Client::builder()
-                    // safety: we're using a validated QSV_USER_AGENT or if it's not set,
-                    // the default user agent                    
-                    .user_agent(util::set_user_agent(None).unwrap())
-                    .brotli(true)
-                    .gzip(true)
-                    .deflate(true)
-                    .zstd(true)
-                    .use_rustls_tls()
-                    .http2_adaptive_window(true)
-                    .connection_verbose(log_enabled!(log::Level::Trace))
-                    .timeout(client_timeout)
-                    .build()
-                {
-                    Ok(c) => c,
-                    Err(e) => {
-                        return helper_err!("qsv_register_lookup", "Cannot build reqwest client to download lookup CSV: {e}.");
-                    }
-                };
-
-                let now = std::time::SystemTime::now();
-                let now_dt_utc: chrono::DateTime<chrono::Utc> = now.into();
-                let download_start = Instant::now();
-                let mut last_modified_rfc8222 = now_dt_utc.to_rfc2822();
-                let mut write_csv_contents = true;
-                let lookup_csv_response = if lookup_ckan {
-                    // we're using the ckan scheme, so we need to get the resource
-
-                    let mut headers = reqwest::header::HeaderMap::new();
-
-                    if let Some(ckan_token) = &ckan_token {
-                        // there's a ckan token, so use it
-                        headers.insert(
-                            reqwest::header::AUTHORIZATION,
-                            reqwest::header::HeaderValue::from_str(ckan_token).unwrap(),
-                        );
-                    }
-
-                    debug!("{MSG_PREFIX}Downloading lookup CSV from {}...", lookup_table_uri.clone());
-
-                    // first, check if this is a resource query (i.e. ends with a question mark)
-                    if resource_search {
-                        // it is a resource query, so let's do a resource_search
-                        // and get the first resource with a matching name
-
-                        let validated_url = match Url::parse(&lookup_table_uri) {
-                            Ok(url) => url,
-                            Err(e) => {
-                                return helper_err!("qsv_register_lookup", "Invalid resource_search url {e}.");
-                            }
-                        };
-
-                        let resource_search_result = match client.get(validated_url).headers(headers.clone()).send() {
-                            Ok(response) => response.text().unwrap_or_default(),
-                            Err(e) => {
-                                return helper_err!("qsv_register_lookup", "Cannot find resource name with resource_search: {e}.");
-                            }
-                        };
-
-                        let resource_search_json: serde_json::Value = match serde_json::from_str(&resource_search_result) {
-                            Ok(json) => json,
-                            Err(e) => {
-                                return helper_err!("qsv_register_lookup", "Invalid resource_search json {e}.");
-                            }
-                        };
-
-                        let Some(resource_id) = resource_search_json["result"]["results"][0]["id"].as_str() else {
-                            return helper_err!("qsv_register_lookup", "Cannot find a resource name.");
-                        };
-
-                        lookup_table_uri = format!("{ckan_api_url}/resource_show?id={resource_id}");
-                    }
-
-                    // get resource_show json and get the resource URL
-                    let resource_show_result = match client.get(lookup_table_uri).headers(headers.clone()).send() {
-                        Ok(response) => response.text().unwrap_or_default(),
-                        Err(e) => {
-                            return helper_err!("qsv_register_lookup", "CKAN scheme used. Cannot get lookup CSV resource: {e}.");
-                        }
-                    };
-
-                    let resource_show_json: serde_json::Value = match serde_json::from_str(&resource_show_result) {
-                        Ok(json) => json,
-                        Err(e) => {
-                            return helper_err!("qsv_register_lookup", "Invalid resource_show json: {e}.");
-                        }
-                    };
-
-                    let Some(url) = resource_show_json["result"]["url"].as_str() else {
-                        return helper_err!("qsv_register_lookup", "Cannot get resource URL from resource_show JSON response.: {resource_show_json}");
-                    };
-
-                    match client.get(url).headers(headers).send() {
-                        Ok(response) => response,
-                        Err(e) => {
-                            return helper_err!("qsv_register_lookup", r#"Cannot read lookup CSV at "{url}": {e}."#);
-                        }
-                    }
-                } else {
-                    // we're not using the ckan scheme, so just get the CSV
-
-                    let validated_url = match Url::parse(&lookup_table_uri) {
-                        Ok(url) => url,
-                        Err(e) => {
-                            return helper_err!("qsv_register_lookup", "Invalid lookup CSV url {e}.");
-                        }
-                    };
-
-                    let mut headers = reqwest::header::HeaderMap::new();
-
-                    if let Some(modified) = cache_csv_last_modified {
-                        // a cached CSV exists, we need to use the If-Modified-Since header
-                        // to avoid downloading the CSV again if it hasn't changed
-                        let last_modified: chrono::DateTime<chrono::Utc> = modified.into();
-                        last_modified_rfc8222 = last_modified.to_rfc2822();
-
-                        (headers).insert(
-                            reqwest::header::IF_MODIFIED_SINCE,
-                            reqwest::header::HeaderValue::from_str(&last_modified_rfc8222).unwrap(),
-                        );
-                    }
-
-                    match client.get(validated_url.clone()).headers(headers).send() {
-                        Ok(response) => response,
-                        Err(e) => {
-                            return helper_err!("qsv_register_lookup", r#"Cannot read lookup CSV at "{validated_url}": {e}."#);
-                        }
-                    }
-                };
-
-                let lookup_csv_contents = {
-                    let response_status = lookup_csv_response.status();
-                    if response_status == reqwest::StatusCode::NOT_MODIFIED {
-                        // the CSV hasn't changed, so we can just use the cached CSV
-                        debug!("Lookup CSV hasn't changed, so using cached CSV.");
-                        write_csv_contents = false;
-                    } else if response_status.is_success() {
-                        // the CSV has changed, so we need to download it
-                        write_csv_contents = true;
-                    } else {
-                        match lookup_csv_response.error_for_status_ref() {
-                            Ok(_) => (),
-                            Err(e) => {
-                                return helper_err!("qsv_register_lookup", "Cannot read lookup CSV at url: {e}.");
-                            }
-                        }
-                    }
-                    lookup_csv_response.text().unwrap_or_default()
-                };
-
-                if write_csv_contents && !lookup_csv_contents.is_empty() {
-                    // write the CSV contents to the cache file
-                    info!("Writing lookup CSV to cache file: {}", cache_file_path.display());
-                    let mut cache_file = match std::fs::File::create(&cache_file_path) {
-                        Ok(f) => f,
-                        Err(e) => {
-                            return helper_err!("qsv_register_lookup", 
-                                "Cannot create cache file {}: {e}.", cache_file_path.display());
-                        }
-                    };
-
-                    // add a comment to the top of the file with the parameters used to download the CSV,
-                    // the last-modified date of the CSV, and how long it took to download it in ms
-                    writeln!(cache_file, "# {call_parameters}")?;
-                    writeln!(cache_file, "# Last-Modified: {last_modified_rfc8222}")?;
-                    let download_elapsed = download_start.elapsed().as_millis();
-                    writeln!(cache_file, "# Download-duration-ms: {download_elapsed}")?;
-                    cache_file.write_all(lookup_csv_contents.as_bytes())?;
-
-                    // explicitly flush and close the file
-                    cache_file.flush()?;
-                    drop(cache_file);
-                }
-
-                lookup_table_uri = cache_file_path.to_string_lossy().to_string();
-            }
-        }
-
-        let lookup_table = luau.create_table()?;
-        let mut record: csv::StringRecord;
-
-        let conf = Config::new(Some(lookup_table_uri.clone()).as_ref())
-            .delimiter(delimiter)
-            .comment(Some(b'#'))
-            .no_headers(false);
-
-        let mut rdr = conf.reader()?;
-
-        let headers = match rdr.headers() {
-            Ok(headers) => headers.clone(),
-            Err(e) => {
-                return helper_err!("qsv_register_lookup", "Cannot read headers of lookup table: {e}");
-            }
-        };
-        let mut key;
-        for result in rdr.records() {
-            record = result.unwrap_or_default();
-            key = record.get(0).unwrap_or_default().trim();
-            let inside_table = luau.create_table()?;
-            // we skip the first column, as its the lookup key
+            // Return headers table
+            let headers_table = luau.create_table()?;
             for (i, header) in headers.iter().skip(1).enumerate() {
-                inside_table.raw_set(header, record.get(i + 1).unwrap_or_default().trim())?;
+                headers_table.raw_set(i + 1, header)?;
             }
-            lookup_table.raw_set(key, inside_table)?;
-        }
 
-        luau.globals()
-            .raw_set(lookup_name, lookup_table)?;
+            if headers_table.raw_len() == 0 {
+                return helper_err!("qsv_register_lookup", "Lookup table is empty.");
+            }
 
-        // now that we've successfully loaded the lookup table, we return the headers
-        // as a table so the user can use them to access the values
-        let headers_table = luau.create_table()?;
+            info!(
+                "qsv_register_lookup({}, {}, {}) successfully registered.",
+                lookup_name, lookup_table_uri, cache_age_secs
+            );
 
-        // we skip the first column, which is the key
-        for (i, header) in headers.iter().skip(1).enumerate() {
-            headers_table.raw_set(i + 1, header)?;
-        }
-
-        if headers_table.raw_len() == 0 {
-            return helper_err!("qsv_register_lookup", "Lookup table is empty.");
-        }
-
-        info!("{call_parameters} successfully registered.");
-
-        Ok(headers_table)
-    })?;
+            Ok(headers_table)
+        },
+    )?;
     luau.globals()
         .set("qsv_register_lookup", qsv_register_lookup)?;
 
