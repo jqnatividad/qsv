@@ -1021,7 +1021,7 @@ fn to_json_instance(
                 Ok(v) => Value::String(v.to_owned()),
                 Err(_) => Value::String(String::from_utf8_lossy(value).into_owned()),
             },
-            JSONtypes::Number => match fast_float::parse(value) {
+            JSONtypes::Number => match fast_float2::parse(value) {
                 Ok(float) => {
                     Value::Number(Number::from_f64(float).unwrap_or_else(|| Number::from(0)))
                 },

@@ -1344,7 +1344,7 @@ impl Stats {
                     }
                 } else {
                     // safety: we know the sample is a valid f64, so we can use unwrap
-                    let n = fast_float::parse(sample).unwrap();
+                    let n = fast_float2::parse(sample).unwrap();
                     if let Some(v) = self.median.as_mut() {
                         v.add(n);
                     }
@@ -1560,7 +1560,7 @@ impl Stats {
         let stotlen =
             if let Some((stotlen_work, sum)) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
                 if typ == FieldType::TFloat {
-                    if let Ok(f64_val) = fast_float::parse::<f64, &[u8]>(sum.as_bytes()) {
+                    if let Ok(f64_val) = fast_float2::parse::<f64, &[u8]>(sum.as_bytes()) {
                         pieces.push(util::round_num(f64_val, round_places));
                     } else {
                         pieces.push(format!("ERROR: Cannot convert {sum} to a float."));
@@ -1863,7 +1863,7 @@ impl FieldType {
             }
 
             // Check for float
-            if fast_float::parse::<f64, &[u8]>(s.as_bytes()).is_ok() {
+            if fast_float2::parse::<f64, &[u8]>(s.as_bytes()).is_ok() {
                 return (FieldType::TFloat, None);
             }
 
@@ -1963,7 +1963,7 @@ impl TypedSum {
         match typ {
             TFloat => {
                 self.stotlen = self.stotlen.saturating_add(sample.len() as u64);
-                if let Ok(float_sample) = fast_float::parse::<f64, &[u8]>(sample) {
+                if let Ok(float_sample) = fast_float2::parse::<f64, &[u8]>(sample) {
                     if let Some(ref mut f) = self.float {
                         *f += float_sample;
                     } else {
@@ -1975,7 +1975,7 @@ impl TypedSum {
                 self.stotlen = self.stotlen.saturating_add(sample.len() as u64);
                 if let Some(ref mut float) = self.float {
                     // safety: we know that the sample is a valid f64
-                    *float += fast_float::parse::<f64, &[u8]>(sample).unwrap();
+                    *float += fast_float2::parse::<f64, &[u8]>(sample).unwrap();
                 } else {
                     // so we don't panic on overflow/underflow, use saturating_add
                     self.integer = self
@@ -2058,7 +2058,7 @@ impl TypedMinMax {
         match typ {
             TString | TNull => {},
             TFloat => {
-                let n = fast_float::parse::<f64, &[u8]>(sample).unwrap();
+                let n = fast_float2::parse::<f64, &[u8]>(sample).unwrap();
 
                 self.floats.add(n);
                 self.integers.add(n as i64);
