@@ -2,7 +2,9 @@ static USAGE: &str = r#"
 Validates CSV data using two modes:
 
 JSON SCHEMA VALIDATION MODE:
-This mode is invoked if a JSON Schema file is provided.
+===========================
+
+This mode is invoked if a JSON Schema file (draft 2020-12) is provided.
 
 The CSV data is validated against the JSON Schema. If the CSV data is valid, no output
 files are created and the command returns an exit code of 0.
@@ -17,8 +19,8 @@ A "validation-errors.tsv" report is also created with the following columns:
   * error: a validation error message detailing why the field is invalid
 
 It uses the JSON Schema Validation Specification (draft 2020-12) to validate the CSV.
-It validates not only the structure of the file, but the data types and domain/range of the
-fields as well. See https://json-schema.org/draft/2020-12/json-schema-validation.html
+It validates the structure of the file, as well as the data types and domain/range of the fields.
+See https://json-schema.org/draft/2020-12/json-schema-validation.html
 
 qsv supports a custom format - `currency`. This format will only accept a valid currency, defined as: 
 
@@ -33,21 +35,29 @@ qsv supports a custom format - `currency`. This format will only accept a valid 
 qsv also supports a custom keyword - `dynamicEnum`. It allows for dynamic validation against a CSV.
 This is useful for validating against a set of values unknown at the time of schema creation or
 when the set of valid values is dynamic or too large to hardcode into the schema.
-`dynamicEnum` can be used to validate against a CSV file on the local filesystem or a URL (http/https,
-dathere and ckan schemes supported):
+`dynamicEnum` can be used to validate against a CSV file on the local filesystem or a URL
+(http/https, dathere and ckan schemes supported). The "dynamicEnum" value has the form:
 
-  // get data.csv; the cache it as data.csv with a default cache age of 3600 seconds
+   dynamicEnum = "[cache_name;cache_age]|URL" where cache_name and cache_age are optional
+
+  // get data.csv; cache it as data.csv with a default cache age of 3600 seconds
+  // i.e. the cached data.csv expires after 1 hour
   dynamicEnum = "https://example.com/data.csv"
 
   // get data.csv; cache it as custom_name.csv, cache age 600 seconds
   dynamicEnum = "custom_name;600|https://example.com/data.csv"
 
+  // get data.csv; cache it as data.csv, cache age 800 seconds
+  dynamicEnum = ";800|https://example.com/data.csv"
+
   // get the top matching result for nyc_neighborhoods (signaled by trailing ?),
-  // cache it as nyc_neighborhood_data (required)
+  // cache it as nyc_neighborhood_data.csv (NOTE: cache name is required when using CKAN scheme)
   // with a default cache age of 3600 seconds
+  // be sure to set --ckan-api, otherwise it will default to datHere's CKAN (data.dathere.com)
   dynamicEnum = "nyc_neighborhood_data|ckan:://nyc_neighborhoods?"
 
   // get CKAN resource with id 1234567, cache it as resname, 3600 secs cache age
+  // note that if the resource is a private resource, you'll need to set --ckan-token
   dynamicEnum = "resname|ckan:://1234567"
 
   // same as above but with a cache age of 100 seconds
@@ -90,8 +100,10 @@ If piped from stdin, the filenames will use `stdin.csv` as the base filename. Fo
    * stdin.csv.validation-errors.tsv
 
 RFC 4180 VALIDATION MODE:
-If run without a JSON Schema file, the CSV is validated if it complies with qsv's interpretation of
-the RFC 4180 CSV standard (see https://github.com/jqnatividad/qsv#rfc-4180-csv-standard).
+========================
+
+If run without a JSON Schema file, the CSV is validated for RFC 4180 CSV standard compliance
+(see https://github.com/jqnatividad/qsv#rfc-4180-csv-standard).
 
 It also confirms if the CSV is UTF-8 encoded.
 
@@ -325,93 +337,121 @@ impl Keyword for DynEnumValidator {
     }
 }
 
-#[allow(dead_code)]
+/// Parse the dynamicEnum URI string to extract cache name and age
+/// Format: "[cache_name;cache_age]|URL" where cache_name and cache_age are optional
+fn parse_dynenum_uri(uri: &str) -> (String, i64) {
+    const DEFAULT_CACHE_AGE_SECS: i64 = 3600; // 1 hour
+    const DEFAULT_LOOKUP_NAME: &str = "dynenum";
+
+    if !uri.contains('|') {
+        return (
+            uri.split('/')
+                .last()
+                .unwrap_or(DEFAULT_LOOKUP_NAME)
+                .trim_end_matches(".csv")
+                .to_string(),
+            DEFAULT_CACHE_AGE_SECS,
+        );
+    }
+
+    let cache_config = uri.split('|').next().unwrap();
+
+    if !cache_config.contains(';') {
+        return (cache_config.to_owned(), DEFAULT_CACHE_AGE_SECS);
+    }
+
+    let parts: Vec<&str> = cache_config.split(';').collect();
+    let cache_age = parts[1].parse::<i64>().unwrap_or(DEFAULT_CACHE_AGE_SECS);
+    let cache_name = parts[0].to_string();
+
+    (
+        if cache_name.is_empty() {
+            cache_config.to_string()
+        } else {
+            cache_name
+        },
+        cache_age,
+    )
+}
+
+/// Factory function that creates a DynEnumValidator for validating against dynamic enums loaded
+/// from CSV files.
+///
+/// This function takes a CSV file path or URL and loads its first column into a HashSet to validate
+/// against. The CSV can be loaded from:
+/// - Local filesystem
+/// - HTTP/HTTPS URLs
+/// - CKAN resources (requires --ckan-api and optionally --ckan-token)
+/// - datHere lookup tables
+///
+/// The dynamicEnum value format is: "[cache_name;cache_age]|URL" where cache_name and cache_age are
+/// optional. Examples:
+/// - "https://example.com/data.csv" - Cache as data.csv with 1 hour default cache
+/// - "custom_name;600|https://example.com/data.csv" - Cache as custom_name.csv for 600 seconds
+/// - "resname|ckan://1234567" - Get CKAN resource ID 1234567, cache as resname.csv
+///
+/// # Arguments
+/// * `_parent` - Parent JSON Schema object (unused)
+/// * `value` - The dynamicEnum value string specifying the CSV source
+/// * `location` - Location in the schema for error reporting
+///
+/// # Returns
+/// * `Ok(Box<DynEnumValidator>)` - Validator initialized with values from first CSV column
+/// * `Err(ValidationError)` - If loading/parsing CSV fails or value is not a string
 fn dyn_enum_validator_factory<'a>(
     _parent: &'a Map<String, Value>,
     value: &'a Value,
     location: Location,
 ) -> Result<Box<dyn Keyword>, ValidationError<'a>> {
-    if let Value::String(uri) = value {
-        let mut cache_age_secs: i64 = 3600; // 1 hour default cache
-        let lookup_name = if uri.contains('|') {
-            let name_work = uri.split('|').next().unwrap().to_owned();
-            if name_work.contains(';') {
-                let parts: Vec<&str> = name_work.split(';').collect();
-                if let Ok(age) = parts[1].parse::<i64>() {
-                    cache_age_secs = age;
-                }
-                parts[0].to_string()
-            } else {
-                name_work
-            }
-        } else {
-            uri.split('/')
-                .last()
-                .unwrap_or("dynenum")
-                .trim_end_matches(".csv")
-                .to_string()
-        };
-
-        let ckan_token = if let Some(token) = CKAN_TOKEN.get() {
-            token.clone()
-        } else {
-            None
-        };
-
-        let delimiter = if let Some(delim) = DELIMITER.get() {
-            *delim
-        } else {
-            None
-        };
-
-        // Create lookup table options
-        let opts = LookupTableOptions {
-            name: lookup_name,
-            uri: uri.clone(),
-            cache_age_secs,
-            cache_dir: QSV_CACHE_DIR.get().unwrap().to_string(),
-            delimiter,
-            ckan_api_url: CKAN_API.get().cloned(),
-            ckan_token,
-            timeout_secs: TIMEOUT_SECS.load(Ordering::Relaxed),
-        };
-
-        // Load the lookup table
-        let lookup_result = match load_lookup_table(&opts) {
-            Ok(result) => result,
-            Err(e) => {
-                return fail_validation_error!("Error loading dynamicEnum lookup table: {}", e)
-            },
-        };
-
-        // Read the first column into a HashSet
-        let mut enum_set = HashSet::with_capacity(50);
-        let rconfig = Config::new(Some(lookup_result.filepath).as_ref());
-        let mut rdr = match rconfig.flexible(true).comment(Some(b'#')).reader() {
-            Ok(reader) => reader,
-            Err(e) => return fail_validation_error!("Error opening dynamicEnum file: {e}"),
-        };
-
-        for result in rdr.records() {
-            match result {
-                Ok(record) => {
-                    if let Some(value) = record.get(0) {
-                        enum_set.insert(value.to_owned());
-                    }
-                },
-                Err(e) => return fail_validation_error!("Error reading dynamicEnum file - {e}"),
-            };
-        }
-
-        Ok(Box::new(DynEnumValidator::new(enum_set)))
-    } else {
-        Err(ValidationError::custom(
+    let uri = value.as_str().ok_or_else(|| {
+        ValidationError::custom(
             Location::default(),
             location,
             value,
             "'dynamicEnum' must be set to a CSV file on the local filesystem or on a URL.",
-        ))
+        )
+    })?;
+
+    let (lookup_name, cache_age_secs) = parse_dynenum_uri(uri);
+
+    // Create lookup table options
+    let opts = LookupTableOptions {
+        name: lookup_name,
+        uri: uri.to_string(),
+        cache_age_secs,
+        cache_dir: QSV_CACHE_DIR.get().unwrap().to_string(),
+        delimiter: DELIMITER.get().copied().flatten(),
+        ckan_api_url: CKAN_API.get().cloned(),
+        ckan_token: CKAN_TOKEN.get().and_then(|t| t.clone()),
+        timeout_secs: TIMEOUT_SECS.load(Ordering::Relaxed),
+    };
+
+    // Load the lookup table
+    let lookup_result = match load_lookup_table(&opts) {
+        Ok(result) => result,
+        Err(e) => return fail_validation_error!("Error loading dynamicEnum lookup table: {}", e),
+    };
+
+    // Read the first column into a HashSet
+    let mut enum_set = HashSet::with_capacity(50);
+    let rconfig = Config::new(Some(lookup_result.filepath).as_ref());
+    let mut rdr = match rconfig.flexible(true).comment(Some(b'#')).reader() {
+        Ok(reader) => reader,
+        Err(e) => return fail_validation_error!("Error opening dynamicEnum file: {e}"),
+    };
+
+    for result in rdr.records() {
+        match result {
+            Ok(record) => {
+                if let Some(value) = record.get(0) {
+                    enum_set.insert(value.to_owned());
+                }
+            },
+            Err(e) => return fail_validation_error!("Error reading dynamicEnum file - {e}"),
+        };
     }
+
+    Ok(Box::new(DynEnumValidator::new(enum_set)))
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
