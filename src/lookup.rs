@@ -1,4 +1,5 @@
 use std::{
+    fs,
     io::Write,
     path::Path,
     time::{Instant, SystemTime},
@@ -7,6 +8,9 @@ use std::{
 use log::{debug, info};
 use reqwest::blocking::Client;
 use serde_json::Value;
+use simple_expand_tilde::expand_tilde;
+
+use crate::CliError;
 
 pub struct LookupTableOptions {
     pub name:           String,
@@ -22,6 +26,29 @@ pub struct LookupTableOptions {
 pub struct LookupTableResult {
     pub filepath: String,
     pub headers:  csv::StringRecord,
+}
+
+pub fn set_qsv_cache_dir(cache_dir: &str) -> Result<String, CliError> {
+    let qsv_cache_dir = if let Ok(cache_path) = std::env::var("QSV_CACHE_DIR") {
+        // if QSV_CACHE_DIR env var is set, check if it exists. If it doesn't, create it.
+        if cache_path.starts_with('~') {
+            // expand the tilde
+            let expanded_dir = expand_tilde(&cache_path).unwrap();
+            expanded_dir.to_string_lossy().to_string()
+        } else {
+            cache_path
+        }
+    } else if cache_dir.starts_with('~') {
+        // expand the tilde
+        let expanded_dir = expand_tilde(&cache_dir).unwrap();
+        expanded_dir.to_string_lossy().to_string()
+    } else {
+        cache_dir.to_string()
+    };
+    if !Path::new(&qsv_cache_dir).exists() {
+        fs::create_dir_all(&qsv_cache_dir)?;
+    }
+    Ok(qsv_cache_dir)
 }
 
 pub fn load_lookup_table(
@@ -124,10 +151,12 @@ pub fn load_lookup_table(
     let mut rdr = conf.reader()?;
     let headers = rdr.headers()?.clone();
 
-    Ok(LookupTableResult {
+    let lur = LookupTableResult {
         filepath: lookup_table_uri,
         headers,
-    })
+    };
+
+    Ok(lur)
 }
 
 fn download_lookup_table(
