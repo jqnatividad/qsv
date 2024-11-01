@@ -221,7 +221,7 @@ semver = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_urlencoded = { version = "0.7", optional = true }
-simple-expand-tilde = { version = "0.4.3", optional = true }
+simple-expand-tilde = "0.4"
 smallvec = "1"
 snap = "1"
 strsim = { version = "0.11", optional = true }
@@ -357,18 +357,10 @@ fetch = [
     "publicsuffix",
     "redis",
     "serde_urlencoded",
-    "simple-expand-tilde",
 ]
 foreach = ["local-encoding"]
-geocode = [
-    "bytemuck",
-    "cached",
-    "geosuggest-core",
-    "geosuggest-utils",
-    "phf",
-    "simple-expand-tilde",
-]
-luau = ["mlua", "sanitize-filename", "simple-expand-tilde"]
+geocode = ["bytemuck", "cached", "geosuggest-core", "geosuggest-utils", "phf"]
+luau = ["mlua", "sanitize-filename"]
 polars = ["dep:polars", "bytemuck"]
 prompt = ["rfd"]
 python = ["pyo3"]
