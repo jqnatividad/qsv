@@ -40,7 +40,7 @@ pub fn set_qsv_cache_dir(cache_dir: &str) -> Result<String, CliError> {
         }
     } else if cache_dir.starts_with('~') {
         // expand the tilde
-        let expanded_dir = expand_tilde(&cache_dir).unwrap();
+        let expanded_dir = expand_tilde(cache_dir).unwrap();
         expanded_dir.to_string_lossy().to_string()
     } else {
         cache_dir.to_string()

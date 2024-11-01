@@ -359,7 +359,7 @@ fn dyn_enum_validator_factory<'a>(
         };
 
         let delimiter = if let Some(delim) = DELIMITER.get() {
-            delim.clone()
+            *delim
         } else {
             None
         };
@@ -368,11 +368,11 @@ fn dyn_enum_validator_factory<'a>(
         let opts = LookupTableOptions {
             name: lookup_name,
             uri: uri.clone(),
-            cache_age_secs: cache_age_secs,
+            cache_age_secs,
             cache_dir: QSV_CACHE_DIR.get().unwrap().to_string(),
             delimiter,
             ckan_api_url: CKAN_API.get().cloned(),
-            ckan_token: ckan_token,
+            ckan_token,
             timeout_secs: TIMEOUT_SECS.load(Ordering::Relaxed),
         };
 
