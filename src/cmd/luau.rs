@@ -250,11 +250,11 @@ use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{debug, info, log_enabled};
 use mlua::{Lua, LuaSerdeExt, Value};
 use serde::Deserialize;
-use simple_expand_tilde::expand_tilde;
 
+// use simple_expand_tilde::expand_tilde;
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
-    util, CliError, CliResult,
+    lookup, util, CliError, CliResult,
 };
 
 #[allow(dead_code)]
@@ -570,25 +570,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // check if qsv_registerlookup_used is set, if it is, setup the qsv_cache directory
     if qsv_register_lookup_used {
-        let qsv_cache_dir = if let Ok(cache_path) = std::env::var("QSV_CACHE_DIR") {
-            // if QSV_CACHE_DIR env var is set, check if it exists. If it doesn't, create it.
-            if cache_path.starts_with('~') {
-                // expand the tilde
-                let expanded_dir = expand_tilde(&cache_path).unwrap();
-                expanded_dir.to_string_lossy().to_string()
-            } else {
-                cache_path
-            }
-        } else if args.flag_cache_dir.starts_with('~') {
-            // expand the tilde
-            let expanded_dir = expand_tilde(&args.flag_cache_dir).unwrap();
-            expanded_dir.to_string_lossy().to_string()
-        } else {
-            args.flag_cache_dir.clone()
-        };
-        if !Path::new(&qsv_cache_dir).exists() {
-            fs::create_dir_all(&qsv_cache_dir)?;
-        }
+        let qsv_cache_dir = lookup::set_qsv_cache_dir(&args.flag_cache_dir)?;
 
         info!("Using cache directory: {qsv_cache_dir}");
         globals.raw_set(QSV_CACHE_DIR, qsv_cache_dir)?;

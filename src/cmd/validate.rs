@@ -33,7 +33,29 @@ qsv supports a custom format - `currency`. This format will only accept a valid 
 qsv also supports a custom keyword - `dynamicEnum`. It allows for dynamic validation against a CSV.
 This is useful for validating against a set of values unknown at the time of schema creation or
 when the set of valid values is dynamic or too large to hardcode into the schema.
-`dynamicEnum` can be used to validate against a CSV file on the local filesystem or on a URL (http/https).
+`dynamicEnum` can be used to validate against a CSV file on the local filesystem or a URL (http/https,
+dathere and ckan schemes supported):
+
+  // get data.csv; the cache it as data.csv with a default cache age of 3600 seconds
+  dynamicEnum = "https://example.com/data.csv"
+
+  // get data.csv; cache it as custom_name.csv, cache age 600 seconds
+  dynamicEnum = "custom_name;600|https://example.com/data.csv"
+
+  // get the top matching result for nyc_neighborhoods (signaled by trailing ?),
+  // cache it as nyc_neighborhood_data (required)
+  // with a default cache age of 3600 seconds
+  dynamicEnum = "nyc_neighborhood_data|ckan:://nyc_neighborhoods?"
+
+  // get CKAN resource with id 1234567, cache it as resname, 3600 secs cache age
+  dynamicEnum = "resname|ckan:://1234567"
+
+  // same as above but with a cache age of 100 seconds
+  dynamicEnum = "resname;100|ckan:://1234567
+
+  // get us_states.csv from datHere lookup tables
+  dynamicEnum = "dathere://us_states.csv"
+
 Only the first column of the CSV file is read and used for validation.
 
 You can create a JSON Schema file from a reference CSV file using the `qsv schema` command.
@@ -113,6 +135,17 @@ Validate options:
                                less than 50000 rows. [default: 50000]
     --timeout <seconds>        Timeout for downloading json-schemas on URLs and for
                                'dynamicEnum' lookups on URLs. [default: 30]
+    --cache-dir <dir>          The directory to use for caching downloaded dynamicEnum resources.
+                               If the directory does not exist, qsv will attempt to create it.
+                               If the QSV_CACHE_DIR envvar is set, it will be used instead.
+                               [default: ~/.qsv-cache]
+    --ckan-api <url>           The URL of the CKAN API to use for downloading dynamicEnum
+                               resources with the "ckan://" scheme.
+                               If the QSV_CKAN_API envvar is set, it will be used instead.
+                               [default: https://data.dathere.com/api/3/action]
+    --ckan-token <token>       The CKAN API token to use. Only required if downloading
+                               private resources.
+                               If the QSV_CKAN_TOKEN envvar is set, it will be used instead.
 
 Common options:
     -h, --help                 Display this message
@@ -158,17 +191,23 @@ use rayon::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
-use tempfile::NamedTempFile;
 
+use crate::lookup::{load_lookup_table, LookupTableOptions};
+// use tempfile::NamedTempFile;
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
-    util, CliError, CliResult,
+    lookup, util, CliError, CliResult,
 };
 
 // to save on repeated init/allocs
 static NULL_TYPE: OnceLock<Value> = OnceLock::new();
 
 static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(30);
+
+static QSV_CACHE_DIR: OnceLock<String> = OnceLock::new();
+static CKAN_API: OnceLock<String> = OnceLock::new();
+static CKAN_TOKEN: OnceLock<Option<String>> = OnceLock::new();
+static DELIMITER: OnceLock<Option<Delimiter>> = OnceLock::new();
 
 /// write to stderr and log::error, using ValidationError
 macro_rules! fail_validation_error {
@@ -204,6 +243,9 @@ struct Args {
     arg_input:         Option<String>,
     arg_json_schema:   Option<String>,
     flag_timeout:      u16,
+    flag_cache_dir:    String,
+    flag_ckan_api:     String,
+    flag_ckan_token:   Option<String>,
 }
 
 enum JSONtypes {
@@ -290,60 +332,66 @@ fn dyn_enum_validator_factory<'a>(
     location: Location,
 ) -> Result<Box<dyn Keyword>, ValidationError<'a>> {
     if let Value::String(uri) = value {
-        let temp_download = match NamedTempFile::new() {
-            Ok(file) => file,
-            Err(e) => return fail_validation_error!("Failed to create temporary file: {}", e),
-        };
-
-        let dynenum_path = if uri.starts_with("http") {
-            let valid_url = reqwest::Url::parse(uri).map_err(|e| {
-                ValidationError::custom(
-                    Location::default(),
-                    location,
-                    value,
-                    format!("Error parsing dynamicEnum URL: {e}"),
-                )
-            })?;
-
-            // download the CSV file from the URL
-            let download_timeout = TIMEOUT_SECS.load(Ordering::Relaxed);
-            let future = util::download_file(
-                valid_url.as_str(),
-                temp_download.path().to_path_buf(),
-                false,
-                None,
-                Some(download_timeout),
-                None,
-            );
-            match tokio::runtime::Runtime::new() {
-                Ok(runtime) => {
-                    if let Err(e) = runtime.block_on(future) {
-                        return fail_validation_error!("Error downloading dynamicEnum file - {e}");
-                    }
-                },
-                Err(e) => {
-                    return fail_validation_error!("Error creating Tokio runtime - {e}");
-                },
+        let mut cache_age_secs: i64 = 3600; // 1 hour default cache
+        let lookup_name = if uri.contains('|') {
+            let name_work = uri.split('|').next().unwrap().to_owned();
+            if name_work.contains(';') {
+                let parts: Vec<&str> = name_work.split(';').collect();
+                if let Ok(age) = parts[1].parse::<i64>() {
+                    cache_age_secs = age;
+                }
+                parts[0].to_string()
+            } else {
+                name_work
             }
-
-            temp_download.path().to_str().unwrap().to_string()
         } else {
-            // its a local file
-            let uri_path = std::path::Path::new(uri);
-            let uri_exists = uri_path.exists();
-            if !uri_exists {
-                return fail_validation_error!("dynamicEnum file not found - {uri}");
-            }
-            uri_path.to_str().unwrap().to_string()
+            uri.split('/')
+                .last()
+                .unwrap_or("dynenum")
+                .trim_end_matches(".csv")
+                .to_string()
         };
 
-        // read the first column into a HashSet
+        let ckan_token = if let Some(token) = CKAN_TOKEN.get() {
+            token.clone()
+        } else {
+            None
+        };
+
+        let delimiter = if let Some(delim) = DELIMITER.get() {
+            delim.clone()
+        } else {
+            None
+        };
+
+        // Create lookup table options
+        let opts = LookupTableOptions {
+            name: lookup_name,
+            uri: uri.clone(),
+            cache_age_secs: cache_age_secs,
+            cache_dir: QSV_CACHE_DIR.get().unwrap().to_string(),
+            delimiter,
+            ckan_api_url: CKAN_API.get().cloned(),
+            ckan_token: ckan_token,
+            timeout_secs: TIMEOUT_SECS.load(Ordering::Relaxed),
+        };
+
+        // Load the lookup table
+        let lookup_result = match load_lookup_table(&opts) {
+            Ok(result) => result,
+            Err(e) => {
+                return fail_validation_error!("Error loading dynamicEnum lookup table: {}", e)
+            },
+        };
+
+        // Read the first column into a HashSet
         let mut enum_set = HashSet::with_capacity(50);
-        let rconfig = Config::new(Some(dynenum_path).as_ref());
-        let mut rdr = match rconfig.flexible(true).reader() {
+        let rconfig = Config::new(Some(lookup_result.filepath).as_ref());
+        let mut rdr = match rconfig.flexible(true).comment(Some(b'#')).reader() {
             Ok(reader) => reader,
             Err(e) => return fail_validation_error!("Error opening dynamicEnum file: {e}"),
         };
+
         for result in rdr.records() {
             match result {
                 Ok(record) => {
@@ -379,6 +427,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_delimiter.is_some() {
         rconfig = rconfig.delimiter(args.flag_delimiter);
     }
+    DELIMITER.set(args.flag_delimiter).unwrap();
 
     let mut rdr = rconfig.reader()?;
 
@@ -616,6 +665,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.byte_headers()?.clone();
     let header_len = headers.len();
+
+    let qsv_cache_dir = lookup::set_qsv_cache_dir(&args.flag_cache_dir)?;
+    QSV_CACHE_DIR.set(qsv_cache_dir)?;
+
+    // check the QSV_CKAN_API environment variable
+    let ckan_api = if let Ok(api) = std::env::var("QSV_CKAN_API") {
+        api
+    } else {
+        args.flag_ckan_api.clone()
+    };
+    CKAN_API.set(ckan_api)?;
+
+    // check the QSV_CKAN_TOKEN environment variable
+    let ckan_token = if let Ok(token) = std::env::var("QSV_CKAN_TOKEN") {
+        Some(token)
+    } else {
+        args.flag_ckan_token.clone()
+    };
+    CKAN_TOKEN.set(ckan_token).unwrap();
 
     // parse and compile supplied JSON Schema
     let (schema_json, schema_compiled): (Value, Validator) =
@@ -1325,6 +1393,9 @@ mod tests_for_schema_validation {
 
 #[test]
 fn test_validate_currency_email_dynamicenum_validator() {
+    let qsv_cache_dir = lookup::set_qsv_cache_dir("~/.qsv-cache").unwrap();
+    QSV_CACHE_DIR.get_or_init(|| qsv_cache_dir);
+
     fn schema_currency_json() -> Value {
         serde_json::json!({
             "$id": "https://example.com/person.schema.json",
@@ -1516,6 +1587,9 @@ fn test_validate_currency_email_dynamicenum_validator() {
 
 #[test]
 fn test_load_json_via_url() {
+    let qsv_cache_dir = lookup::set_qsv_cache_dir("~/.qsv-cache").unwrap();
+    QSV_CACHE_DIR.get_or_init(|| qsv_cache_dir);
+
     let json_string_result = load_json("https://geojson.org/schema/FeatureCollection.json");
     assert!(&json_string_result.is_ok());
 
@@ -1526,6 +1600,9 @@ fn test_load_json_via_url() {
 
 #[test]
 fn test_dyn_enum_validator() {
+    let qsv_cache_dir = lookup::set_qsv_cache_dir("~/.qsv-cache").unwrap();
+    QSV_CACHE_DIR.get_or_init(|| qsv_cache_dir);
+
     let schema = json!({"dynamicEnum": "https://raw.githubusercontent.com/jqnatividad/qsv/refs/heads/master/resources/test/fruits.csv", "type": "string"});
     let validator = jsonschema::options()
         .with_keyword("dynamicEnum", dyn_enum_validator_factory)
