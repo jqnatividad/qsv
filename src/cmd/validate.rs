@@ -894,9 +894,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut validation_error_messages: Vec<String> = Vec::with_capacity(50);
     let flag_trim = args.flag_trim;
 
-    // amortize buffer allocation
-    let mut buffer = itoa::Buffer::new();
-
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
     // loop exits when batch is empty.
@@ -905,7 +902,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match rdr.read_byte_record(&mut record) {
                 Ok(true) => {
                     row_number += 1;
-                    record.push_field(buffer.format(row_number).as_bytes());
+                    record.push_field(itoa::Buffer::new().format(row_number).as_bytes());
                     if flag_trim {
                         record.trim();
                     }

@@ -1358,10 +1358,10 @@ impl Stats {
                         v.add(&n);
                     }
                     if t == TFloat {
-                        let mut buffer = ryu::Buffer::new();
+                        let mut ryu_buffer = ryu::Buffer::new();
                         // safety: we know that n is a valid f64
                         // so there will always be a fraction part, even if it's 0
-                        let fractpart = buffer.format_finite(n).split('.').next_back().unwrap();
+                        let fractpart = ryu_buffer.format_finite(n).split('.').next_back().unwrap();
                         self.max_precision = std::cmp::max(
                             self.max_precision,
                             (if *fractpart == *"0" {
@@ -2008,13 +2008,12 @@ impl TypedSum {
                     )),
                 }
             },
-            TFloat => {
-                let mut fbuffer = ryu::Buffer::new();
-                Some((
-                    self.stotlen,
-                    fbuffer.format(self.float.unwrap_or(0.0)).to_owned(),
-                ))
-            },
+            TFloat => Some((
+                self.stotlen,
+                ryu::Buffer::new()
+                    .format(self.float.unwrap_or(0.0))
+                    .to_owned(),
+            )),
             TString => Some((self.stotlen, String::new())),
         }
     }

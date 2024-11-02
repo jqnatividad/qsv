@@ -184,7 +184,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     #[allow(unused_assignments)]
     let mut header_vec: Vec<u8> = Vec::with_capacity(tables.len());
-    let mut buffer = itoa::Buffer::new();
+    let mut itoa_buffer = itoa::Buffer::new();
     let mut pct_decimal: Decimal;
     let mut final_pct_decimal: Decimal;
     let mut pct_string: String;
@@ -259,7 +259,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             row = vec![
                 &*header_vec,
                 &*value,
-                buffer.format(count).as_bytes(),
+                itoa_buffer.format(count).as_bytes(),
                 pct_string.as_bytes(),
             ];
             wtr.write_record(row)?;

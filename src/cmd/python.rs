@@ -211,9 +211,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if rconfig.no_headers {
         headers = csv::StringRecord::new();
 
-        let mut buffer = itoa::Buffer::new();
         for i in 0..headers_len {
-            headers.push_field(buffer.format(i));
+            headers.push_field(itoa::Buffer::new().format(i));
         }
     } else {
         if !args.cmd_filter {

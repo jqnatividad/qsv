@@ -243,7 +243,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // amortize allocations
     let mut record = csv::ByteRecord::new();
     let mut counter: u64 = args.flag_start;
-    let mut itoa_buffer = itoa::Buffer::new();
     #[allow(unused_assignments)]
     let mut colcopy: Vec<u8> = Vec::with_capacity(20);
     let increment = args.flag_increment.unwrap_or(1);
@@ -255,7 +254,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     while rdr.read_byte_record(&mut record)? {
         match enum_operation {
             EnumOperation::Increment => {
-                record.push_field(itoa_buffer.format(counter).as_bytes());
+                record.push_field(itoa::Buffer::new().format(counter).as_bytes());
                 counter += increment;
             },
             EnumOperation::Uuid4 => {

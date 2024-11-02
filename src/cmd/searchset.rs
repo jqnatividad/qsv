@@ -237,7 +237,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut m;
     let mut matched = false;
     let mut matches: Vec<usize> = Vec::with_capacity(20);
-    let mut buffer = itoa::Buffer::new();
 
     while rdr.read_byte_record(&mut record)? {
         row_ctr += 1;
@@ -270,7 +269,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if do_match_list {
             flag_rowi += 1;
             flag_column = if m {
-                buffer.format(flag_rowi).clone_into(&mut matched_rows);
+                itoa::Buffer::new()
+                    .format(flag_rowi)
+                    .clone_into(&mut matched_rows);
                 if args.flag_invert_match {
                     matched_rows.as_bytes().to_vec()
                 } else {

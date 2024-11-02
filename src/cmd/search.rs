@@ -197,7 +197,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut match_ctr: u64 = 0;
     let mut row_ctr: u64 = 0;
     let mut m;
-    let mut buffer = itoa::Buffer::new();
     let invert_match = args.flag_invert_match;
 
     #[allow(unused_assignments)]
@@ -277,7 +276,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             if flag_flag {
                 flag_rowi += 1;
                 match_row = if m {
-                    buffer.format(flag_rowi).clone_into(&mut matched_rows);
+                    itoa::Buffer::new()
+                        .format(flag_rowi)
+                        .clone_into(&mut matched_rows);
                     matched_rows.as_bytes()
                 } else {
                     b"0"
@@ -360,7 +361,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if flag_flag {
             flag_rowi += 1;
             match_row = if m {
-                buffer.format(flag_rowi).clone_into(&mut matched_rows);
+                itoa::Buffer::new()
+                    .format(flag_rowi)
+                    .clone_into(&mut matched_rows);
                 matched_rows.as_bytes()
             } else {
                 b"0"

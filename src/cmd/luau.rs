@@ -1299,8 +1299,6 @@ fn map_computedvalue(
                 record.clear();
             }
             let mut columns_inserted = 0_u8;
-            let mut ibuffer = itoa::Buffer::new();
-            let mut nbuffer = ryu::Buffer::new();
             table.for_each::<String, Value>(|_k, v| {
                 if new_column_count > 0 && columns_inserted >= new_column_count {
                     // we ignore table values more than the number of
@@ -1308,9 +1306,11 @@ fn map_computedvalue(
                     return Ok(());
                 }
                 match v {
-                    Value::Integer(intval) => record.push_field(ibuffer.format(intval)),
+                    Value::Integer(intval) => record.push_field(itoa::Buffer::new().format(intval)),
                     Value::String(strval) => record.push_field(&strval.to_string_lossy()),
-                    Value::Number(number) => record.push_field(nbuffer.format_finite(number)),
+                    Value::Number(number) => {
+                        record.push_field(ryu::Buffer::new().format_finite(number));
+                    },
                     Value::Boolean(boolean) => {
                         record.push_field(if boolean { "true" } else { "false" });
                     },
@@ -1735,8 +1735,7 @@ fn setup_helpers(
                 record = result.unwrap_or_default();
 
                 let key = if key_idx == usize::MAX {
-                    let mut buffer = itoa::Buffer::new();
-                    buffer.format(row_idx).to_owned()
+                    itoa::Buffer::new().format(row_idx).to_owned()
                 } else {
                     record.get(key_idx).unwrap_or_default().trim().to_string()
                 };
