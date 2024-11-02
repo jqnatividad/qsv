@@ -756,9 +756,6 @@ impl FilenameTemplate {
         let filename = self.filename(unique_value);
         let full_path = path.as_ref().join(filename);
         if let Some(parent) = full_path.parent() {
-            // We may be called concurrently, especially by parallel `qsv
-            // split`, so be careful to avoid the `create_dir_all` race
-            // condition.
             create_dir_all(parent)?;
         }
         let spath = Some(full_path.display().to_string());
