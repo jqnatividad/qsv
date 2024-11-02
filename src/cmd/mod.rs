@@ -93,6 +93,8 @@ pub mod sqlp;
 pub mod stats;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod table;
+#[cfg(any(feature = "feature_capable", feature = "datapusher_plus"))]
+pub mod template;
 #[cfg(all(feature = "to", feature = "feature_capable"))]
 pub mod to;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
