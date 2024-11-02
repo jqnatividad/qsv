@@ -141,7 +141,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
-    // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
 
     // Seeding RNG

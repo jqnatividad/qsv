@@ -387,7 +387,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut batch = Vec::with_capacity(batchsize);
     let mut batch_results = Vec::with_capacity(batchsize);
 
-    // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
 
     // main loop to read CSV and construct batches for parallel processing.

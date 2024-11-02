@@ -248,7 +248,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .delimiter(args.flag_delimiter_output)
         .writer()?;
 
-    // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
 
     let Ok(csv_diff) = CsvByteDiffBuilder::new()

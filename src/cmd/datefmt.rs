@@ -254,7 +254,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut batch_record = csv::StringRecord::new();
 
-    // set RAYON_NUM_THREADS
     let num_jobs = util::njobs(args.flag_jobs);
 
     // reuse batch buffers

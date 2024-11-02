@@ -159,7 +159,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             util::mem_file_check(&path, false, args.flag_memcheck)?;
         }
 
-        // set RAYON_NUM_THREADS for parallel sort
         util::njobs(args.flag_jobs);
 
         let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;

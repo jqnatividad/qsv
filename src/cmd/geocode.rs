@@ -1115,7 +1115,6 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     let mut batch = Vec::with_capacity(batchsize);
     let mut batch_results = Vec::with_capacity(batchsize);
 
-    // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
 
     let invalid_result = args.flag_invalid_result.unwrap_or_default();

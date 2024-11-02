@@ -974,7 +974,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         row_idx += 1;
     }
 
-    // set RAYON_NUM_THREADS
     let ncpus = util::njobs(args.flag_jobs);
 
     // set chunk_size to number of rows per core/thread

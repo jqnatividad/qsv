@@ -884,7 +884,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // amortize memory allocation by reusing record
     let mut record = csv::ByteRecord::with_capacity(500, header_len);
 
-    // set RAYON_NUM_THREADS
     let num_jobs = util::njobs(args.flag_jobs);
 
     // reuse batch buffer
