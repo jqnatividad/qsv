@@ -124,7 +124,8 @@ pub fn max_jobs() -> usize {
 }
 
 /// Given a desired number of cores to use
-/// returns number of cores to actually use.
+/// returns number of cores to actually use and set
+/// rayon global thread pool size accordingly.
 /// If desired is None, zero, or greater than available cores,
 /// returns max_jobs, which is equal to number of available cores
 /// If desired is Some and less than available cores,
@@ -138,8 +139,14 @@ pub fn njobs(flag_jobs: Option<usize>) -> usize {
             jobs
         }
     });
-    env::set_var("RAYON_NUM_THREADS", itoa::Buffer::new().format(jobs_to_use));
-    // log::info!("Using {jobs_to_use} jobs...");
+    if let Err(e) = rayon::ThreadPoolBuilder::new()
+        .num_threads(jobs_to_use)
+        .build_global()
+    {
+        log::warn!("Failed to set global thread pool size to {jobs_to_use}: {e}");
+    } else {
+        log::info!("Using {jobs_to_use} jobs...");
+    }
     jobs_to_use
 }
 
