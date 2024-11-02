@@ -3855,7 +3855,10 @@ version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c9ca8daf4b0b4029777f1bc6e1aedd1aec7b74c276a43bc6f620a8e1a1c0a90e"
 dependencies = [
+ "percent-encoding",
  "serde",
+ "serde_json",
+ "v_htmlescape",
 ]
 
 [[package]]
@@ -5418,6 +5421,7 @@ dependencies = [
  "localzone",
  "log",
  "mimalloc",
+ "minijinja",
  "mlua",
  "newline-converter",
  "num_cpus",
@@ -7407,6 +7411,12 @@ dependencies = [
  "uuid",
  "vsimd",
 ]
+
+[[package]]
+name = "v_htmlescape"
+version = "0.15.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e8257fbc510f0a46eb602c10215901938b5c2a7d5e70fc11483b1d3c9b5b18c"
 
 [[package]]
 name = "valuable"
