@@ -192,6 +192,7 @@ fn main() -> QsvExitCode {
     enabled_commands.push_str(
         "    stats       Infer data types and compute summary statistics
     table       Align CSV data into columns
+    template    Render templates using CSV data
     tojsonl     Convert CSV to newline-delimited JSON\n",
     );
 
@@ -393,6 +394,7 @@ enum Command {
     SqlP,
     Stats,
     Table,
+    Template,
     Transpose,
     #[cfg(all(feature = "to", feature = "feature_capable"))]
     To,
@@ -489,6 +491,7 @@ impl Command {
             Command::SqlP => cmd::sqlp::run(argv),
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
+            Command::Template => cmd::template::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
             #[cfg(all(feature = "to", feature = "feature_capable"))]
             Command::To => cmd::to::run(argv),

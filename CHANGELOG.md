@@ -3817,7 +3817,7 @@ the response, the HTTP status code, and if its a cache hit.
 request the URL again. https://github.com/jqnatividad/qsv/pull/393
 
 ### Changed
-* `fetch`: fast defaults. Now tries to go as fast as possible, leveraging dynamic throttling (using RateLimit and Rety-After headers) 
+* `fetch`: fast defaults. Now tries to go as fast as possible, leveraging dynamic throttling (using RateLimit and Retry-After headers) 
 but aborting after 100 errors. Also added a separate error progress bar. https://github.com/jqnatividad/qsv/pull/388
 * Smarter `tojsonl`. Now scans CSV file and infers data types and uses the appropriate JSON data type https://github.com/jqnatividad/qsv/pull/389
 * `tojsonl` is also multithreaded https://github.com/jqnatividad/qsv/pull/392

@@ -140,6 +140,12 @@ local-encoding = { version = "0.2", optional = true }
 localzone = { version = "0.3", features = ["auto_validation"] }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
+minijinja = { version = "2", features = [
+    "json",
+    "loop_controls",
+    "speedups",
+    "urlencode",
+] }
 mlua = { version = "0.10", features = [
     "luau",
     "luau-jit",
