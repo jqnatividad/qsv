@@ -654,18 +654,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         report_wtr.write_byte_record(&report_headers)?;
     }
 
-    let mut template_content = String::new();
-    let mut build_payload = false;
-    let payload_env_option = if let Some(template_file) = args.flag_payload_tpl {
-        template_content = fs::read_to_string(template_file)?;
-        let mut env = Environment::new();
-        env.add_template("template", &template_content)?;
-        build_payload = true;
-        Some(env)
-    } else {
-        None
-    };
-
     // amortize memory allocations
     // why optimize for mem & speed, when we're just doing single-threaded, throttled URL fetches?
     // we still optimize since fetch is backed by a memoized cache (in memory or Redis, when --redis
@@ -712,10 +700,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .collect();
 
     let debug_flag = log_enabled!(Debug);
+
+    let mut template_content = String::new();
+    let build_payload: bool;
     let mut rendered_json: Value;
-    let payload_env = if build_payload {
-        payload_env_option.unwrap()
+    let payload_env = if let Some(template_file) = args.flag_payload_tpl {
+        template_content = fs::read_to_string(template_file)?;
+        let mut env = Environment::new();
+        env.add_template("template", &template_content)?;
+        build_payload = true;
+        env
     } else {
+        build_payload = false;
         Environment::empty()
     };
 
