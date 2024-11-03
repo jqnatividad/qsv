@@ -1540,7 +1540,6 @@ fn fetchpost_payload_template() {
 
     let mut cmd = wrk.command("fetchpost");
     cmd.arg("https://httpbin.org/post")
-        .arg("1-")
         .arg("--payload-tpl")
         .arg("payload.tpl")
         .arg("--new-column")
@@ -1556,32 +1555,32 @@ fn fetchpost_payload_template() {
             "Smith",
             "35",
             "New York",
-            r#"{"args":{},"data":"","files":{},"form":{"age":"35","city":"New York","firstName":"John","lastName":"Smith"},"headers":{"Accept":"*/*","Accept-Encoding":"zstd;q=1.0, br;q=0.8, gzip;q=0.6, deflate;q=0.4, *;q=0.2","Content-Length":"50","Content-Type":"application/x-www-form-urlencoded","Host":"httpbin.org","User-Agent":"qsv/0.137.0 (aarch64-apple-darwin; fetchpost; compiled; https://github.com/jqnatividad/qsv)","X-Amzn-Trace-Id":"Root=1-6727a9d5-6b2f608527e3b127729e8409"},"json":null,"origin":"149.88.100.35","url":"https://httpbin.org/post"}"#
+            r#"{"args":{},"data":"firstName=John&lastName=Smith&age=35&city=New+York","files":{},"form":{},"headers"#
         ],
         svec![
             "Jane",
             "Doe",
             "28",
             "Los Angeles",
-            r#"{"args":{},"data":"","files":{},"form":{"age":"28","city":"Los Angeles","firstName":"Jane","lastName":"Doe"},"headers":{"Accept":"*/*","Accept-Encoding":"zstd;q=1.0, br;q=0.8, gzip;q=0.6, deflate;q=0.4, *;q=0.2","Content-Length":"51","Content-Type":"application/x-www-form-urlencoded","Host":"httpbin.org","User-Agent":"qsv/0.137.0 (aarch64-apple-darwin; fetchpost; compiled; https://github.com/jqnatividad/qsv)","X-Amzn-Trace-Id":"Root=1-6727a9d5-47c9d7ed1247562762fdd379"},"json":null,"origin":"149.88.100.35","url":"https://httpbin.org/post"}"#
+            r#"{"args":{},"data":"firstName=Jane&lastName=Doe&age=28&city=Los+Angeles","files":{},"form":{},"header"#
         ],
         svec![
             "Bob",
             "Jones",
             "42",
             "Chicago",
-            r#"{"args":{},"data":"","files":{},"form":{"age":"42","city":"Chicago","firstName":"Bob","lastName":"Jones"},"headers":{"Accept":"*/*","Accept-Encoding":"zstd;q=1.0, br;q=0.8, gzip;q=0.6, deflate;q=0.4, *;q=0.2","Content-Length":"48","Content-Type":"application/x-www-form-urlencoded","Host":"httpbin.org","User-Agent":"qsv/0.137.0 (aarch64-apple-darwin; fetchpost; compiled; https://github.com/jqnatividad/qsv)","X-Amzn-Trace-Id":"Root=1-6727a9d5-784c0cdf4d78bf1257f9a4d4"},"json":null,"origin":"149.88.100.35","url":"https://httpbin.org/post"}"#
+            r#"{"args":{},"data":"firstName=Bob&lastName=Jones&age=42&city=Chicago","files":{},"form":{},"headers":"#
         ],
     ];
 
     for (got_row, expected_row) in got.iter().skip(1).zip(expected.iter().skip(1)) {
         // Assert first 4 columns match
         assert_eq!(&got_row[..4], &expected_row[..4]);
-        // Assert the first 50 characters of response column match
+        // Assert the first 100 characters of response column match
         assert_eq!(
-            &got_row[4][..50],
-            &expected_row[4][..50],
-            "Response column first 50 chars mismatch"
+            &got_row[4][..100],
+            &expected_row[4][..100],
+            "Response column first 100 chars mismatch"
         );
     }
 }
@@ -1612,7 +1611,6 @@ fn fetchpost_payload_template_with_report() {
 
     let mut cmd = wrk.command("fetchpost");
     cmd.arg("https://httpbin.org/post")
-        .arg("1-")
         .arg("--payload-tpl")
         .arg("payload.tpl")
         .arg("--new-column")
@@ -1630,10 +1628,10 @@ fn fetchpost_payload_template_with_report() {
             "Smith",
             "35",
             "New York",
-            r#"{"args":{},"data":"","files":{},"form":{"age":"35","city":"New York","firstName":"John","lastName":"Smith"},"headers":{"Accept":"*/*","Accept-Encoding":"zstd;q=1.0, br;q=0.8, gzip;q=0.6, deflate;q=0.4, *;q=0.2","Content-Length":"50","Content-Type":"application/x-www-form-urlencoded","Host":"httpbin.org","User-Agent":"qsv/0.137.0 (aarch64-apple-darwin; fetchpost; compiled; https://github.com/jqnatividad/qsv)","X-Amzn-Trace-Id":"Root=1-6727a9d5-6b2f608527e3b127729e8409"},"json":null,"origin":"149.88.100.35","url":"https://httpbin.org/post"}"#
+            r#"{"args":{},"data":"firstName=John&lastName=Smith&age=35&city=New+York","files":{},"form":{},"headers"#
         ],
         svec![
-            "Jane",
+            "Janet",
             "Doe",
             "28",
             "Los Angeles",
@@ -1651,11 +1649,11 @@ fn fetchpost_payload_template_with_report() {
     for (got_row, expected_row) in got.iter().skip(1).zip(expected.iter().skip(1)) {
         // Assert first 4 columns match
         assert_eq!(&got_row[..4], &expected_row[..4]);
-        // Assert the first 50 characters of response column match
+        // Assert the first 100 characters of response column match
         assert_eq!(
-            &got_row[4][..50],
-            &expected_row[4][..50],
-            "Response column first 50 chars mismatch"
+            &got_row[4][..100],
+            &expected_row[4][..100],
+            "Response column first 100 chars mismatch"
         );
     }
 
