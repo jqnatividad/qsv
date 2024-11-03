@@ -316,9 +316,9 @@ strum_macros = { git = "https://github.com/jqnatividad/strum", branch = "bump-ph
 # BUILD NOTE: Be sure to set QSV_POLARS_REV below to the latest commit short hash or tag 
 # of polars/py-polars before building qsv. This allows us to show the polars rev/tag in --version.
 # if we are using a release version of Rust Polars, leave QSV_POLARS_REV empty
-# QSV_POLARS_REV=40f8f5d
+# QSV_POLARS_REV=1eb2fcc
 # polars = { git = "https://github.com/pola-rs/polars", tag = "rs-0.42.2" }
-polars = { git = "https://github.com/pola-rs/polars", rev = "40f8f5d" }
+polars = { git = "https://github.com/pola-rs/polars", rev = "1eb2fcc" }
 
 [features]
 default = ["mimalloc"]
