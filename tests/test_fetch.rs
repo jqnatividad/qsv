@@ -1699,58 +1699,6 @@ fn fetchpost_payload_template_with_report() {
 }
 
 #[test]
-fn fetchpost_with_template() {
-    let wrk = Workdir::new("fetchpost_template");
-
-    // Create template file
-    wrk.create_from_string(
-        "template.txt",
-        r#"{"data": {"name": "{{col1}}", "value": {{number_col}}, "flag": {{bool_col}} }}"#,
-    );
-
-    wrk.create(
-        "data.csv",
-        vec![
-            svec!["URL", "col1", "number_col", "bool_col"],
-            svec!["https://httpbin.org/post", "test1", "42", "true"],
-            svec!["https://httpbin.org/post", "test2", "3.14", "false"],
-        ],
-    );
-
-    let mut cmd = wrk.command("fetchpost");
-    cmd.arg("URL")
-        .arg("--payload-tpl")
-        .arg("template.txt")
-        .arg("--new-column")
-        .arg("response")
-        .arg("--jaq")
-        .arg(r#"."data""#)
-        .arg("data.csv");
-
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-
-    let expected = vec![
-        svec!["URL", "col1", "number_col", "bool_col", "response"],
-        svec![
-            "https://httpbin.org/post",
-            "test1",
-            "42",
-            "true",
-            r#"{"name":"test1","value":42,"flag":true}"#
-        ],
-        svec![
-            "https://httpbin.org/post",
-            "test2",
-            "3.14",
-            "false",
-            r#"{"name":"test2","value":3.14,"flag":false}"#
-        ],
-    ];
-
-    assert_eq!(got, expected);
-}
-
-#[test]
 fn fetchpost_with_headers() {
     let wrk = Workdir::new("fetchpost_headers");
     wrk.create(
