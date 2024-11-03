@@ -3,7 +3,8 @@ Renders a template using CSV data with the MiniJinja template engine.
 https://docs.rs/minijinja/latest/minijinja/
 
 Each CSV row is used to populate the template, with column headers used as variable names.
-The template syntax follows the Jinja2 template language.
+The template syntax follows the Jinja2 template language with additional custom filters
+(see bottom of file).
 
 Example template:
   Dear {{ name }},
@@ -205,8 +206,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
-// CUSTOM FILTERS ===============================================
+// CUSTOM MINIJINJA FILTERS =========================================
 
+/// Returns a substring of the input string from start index to end index (exclusive).
+/// If end is not provided, returns substring from start to end of string.
+/// Returns empty string if indices are invalid.
 fn substr(value: &str, start: u32, end: Option<u32>) -> String {
     let end = end.unwrap_or(value.len() as _);
     value
@@ -215,6 +219,8 @@ fn substr(value: &str, start: u32, end: Option<u32>) -> String {
         .into()
 }
 
+/// Formats a float number string with the specified decimal precision.
+/// Returns empty string if input cannot be parsed as float.
 fn format_float(value: &str, precision: u32) -> String {
     value
         .parse::<f64>()
@@ -222,12 +228,16 @@ fn format_float(value: &str, precision: u32) -> String {
         .unwrap_or_default()
 }
 
+/// Formats an integer with thousands separators (e.g. "1,234,567").
+/// Returns empty string if input cannot be parsed as integer.
 fn human_count(value: &str) -> String {
     atoi_simd::parse::<u64>(value.as_bytes())
         .map(|num| indicatif::HumanCount(num).to_string())
         .unwrap_or_default()
 }
 
+/// Formats a float number with thousands separators (e.g. "1,234,567.89").
+/// Returns empty string if input cannot be parsed as float.
 fn human_float_count(value: &str) -> String {
     value
         .parse::<f64>()
@@ -235,12 +245,16 @@ fn human_float_count(value: &str) -> String {
         .unwrap_or_default()
 }
 
+/// Formats bytes using binary prefixes (e.g. "1.5 GiB").
+/// Returns empty string if input cannot be parsed as integer.
 fn human_bytes(value: &str) -> String {
     atoi_simd::parse::<u64>(value.as_bytes())
         .map(|num| indicatif::HumanBytes(num).to_string())
         .unwrap_or_default()
 }
 
+/// Rounds a float number to specified number of decimal places.
+/// Returns empty string if input cannot be parsed as float.
 fn round_num(value: &str, places: u32) -> String {
     value
         .parse::<f64>()
@@ -248,6 +262,9 @@ fn round_num(value: &str, places: u32) -> String {
         .unwrap_or_default()
 }
 
+/// Converts string to boolean.
+/// Returns true for "true", "1", or "yes" (case insensitive).
+/// Returns false for all other values.
 fn str_to_bool(value: &str) -> bool {
     matches!(value.to_ascii_lowercase().as_str(), "true" | "1" | "yes")
 }
