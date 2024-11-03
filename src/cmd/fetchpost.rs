@@ -4,10 +4,12 @@ Fetchpost fetches data from web services for every row using HTTP Post.
 As opposed to fetch, which uses HTTP Get.
 
 CSV data is posted using two methods:
-1. Column-list using the <column-list> argument
-   The columns are used to construct the form data.
-2. MiniJinja template using the --payload-tpl <file> option
-   The template file is used to construct the JSON payload.
+1. As an HTML Form using using the <column-list> argument
+   The columns are used to construct the HTML form data and posted to the server
+   as a URL-encoded form. (content-type: application/x-www-form-urlencoded)
+2. As a JSON payload using a MiniJinja template with the --payload-tpl <file> option
+   The template file is used to construct the JSON payload and posted to the server
+   as JSON. (content-type: application/json)
 
 Fetchpost is integrated with `jaq` (a jq clone) to directly parse out values from an API JSON response.
 (See https://github.com/01mf02/jaq for more info on how to use the jaq JSON Query Language)
@@ -124,7 +126,7 @@ $ qsv fetchpost https://httpbin.org/post col1-col3 data.csv -H "X-Api-Key:TEST_K
 For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_fetch.rs.
 
 Usage:
-    qsv fetchpost (<url-column> <column-list>) [--jaq <selector> | --jaqfile <file>] [--http-header <k:v>...] [options] [<input>]
+    qsv fetchpost (<url-column>) (<column-list> | --payload-tpl <file>) [--jaq <selector> | --jaqfile <file>] [--http-header <k:v>...] [options] [<input>]
     qsv fetchpost --help
 
 Fetchpost arguments:
@@ -498,6 +500,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     info!("RATE LIMIT: {rate_limit}");
 
+    // build the payload if --payload-tpl is used
+    let mut template_content = String::new();
+    let build_payload: bool;
+    let mut rendered_json: Value;
+    let payload_env = if let Some(template_file) = args.flag_payload_tpl {
+        template_content = fs::read_to_string(template_file)?;
+        let mut env = Environment::new();
+        env.add_template("template", &template_content)?;
+        build_payload = true;
+        env
+    } else {
+        build_payload = false;
+        Environment::empty()
+    };
+
     let http_headers: HeaderMap = {
         let mut map = HeaderMap::with_capacity(args.flag_http_header.len() + 1);
         for header in args.flag_http_header {
@@ -532,10 +549,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             reqwest::header::ACCEPT_ENCODING,
             HeaderValue::from_str(DEFAULT_ACCEPT_ENCODING).unwrap(),
         );
-        map.append(
-            reqwest::header::CONTENT_TYPE,
-            HeaderValue::from_str("application/x-www-form-urlencoded").unwrap(),
-        );
+
+        if build_payload {
+            map.append(
+                reqwest::header::CONTENT_TYPE,
+                HeaderValue::from_str("application/json").unwrap(),
+            );
+        } else {
+            map.append(
+                reqwest::header::CONTENT_TYPE,
+                HeaderValue::from_str("application/x-www-form-urlencoded").unwrap(),
+            );
+        }
         if args.flag_compress {
             map.append(
                 reqwest::header::CONTENT_ENCODING,
@@ -700,20 +725,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .collect();
 
     let debug_flag = log_enabled!(Debug);
-
-    let mut template_content = String::new();
-    let build_payload: bool;
-    let mut rendered_json: Value;
-    let payload_env = if let Some(template_file) = args.flag_payload_tpl {
-        template_content = fs::read_to_string(template_file)?;
-        let mut env = Environment::new();
-        env.add_template("template", &template_content)?;
-        build_payload = true;
-        env
-    } else {
-        build_payload = false;
-        Environment::empty()
-    };
 
     while rdr.read_byte_record(&mut record)? {
         if show_progress {
