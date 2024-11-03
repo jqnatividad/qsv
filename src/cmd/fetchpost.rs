@@ -3,6 +3,12 @@ static USAGE: &str = r#"
 Fetchpost fetches data from web services for every row using HTTP Post.
 As opposed to fetch, which uses HTTP Get.
 
+CSV data is posted using two methods:
+1. Column-list using the <column-list> argument
+   The columns are used to construct the form data.
+2. MiniJinja template using the --payload-tpl <file> option
+   The template file is used to construct the JSON payload.
+
 Fetchpost is integrated with `jaq` (a jq clone) to directly parse out values from an API JSON response.
 (See https://github.com/01mf02/jaq for more info on how to use the jaq JSON Query Language)
 
@@ -121,7 +127,7 @@ Usage:
     qsv fetchpost (<url-column> <column-list>) [--jaq <selector> | --jaqfile <file>] [--http-header <k:v>...] [options] [<input>]
     qsv fetchpost --help
 
-Fetchpost options:
+Fetchpost arguments:
     <url-column>               Name of the column with the URL.
                                Otherwise, if the argument starts with `http`, the URL to use.
     <column-list>              Comma-delimited list of columns to insert into the HTTP Post body.
@@ -130,6 +136,10 @@ Fetchpost options:
                                with more indexing). Column ranges can also be specified. Finally, columns
                                can be selected using regular expressions.
                                See 'qsv select --help' for examples.
+
+Fetchpost options:
+    -t, --payload-tpl <file>   Instead of <column-list>, use a MiniJinja template to construct a
+                               JSON payload in the HTTP Post body.
     -c, --new-column <name>    Put the fetched values in a new column. Specifying this option
                                results in a CSV. Otherwise, the output is in JSONL format.
     --jaq <selector>           Apply jaq selector to API returned JSON response.
@@ -241,6 +251,7 @@ use log::{
     debug, error, info, log_enabled, warn,
     Level::{Debug, Trace, Warn},
 };
+use minijinja::Environment;
 use rand::Rng;
 use regex::Regex;
 use reqwest::{
@@ -249,7 +260,6 @@ use reqwest::{
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
-use simdutf8::basic::from_utf8;
 use simple_expand_tilde::expand_tilde;
 use url::Url;
 
@@ -265,6 +275,7 @@ use crate::{
 
 #[derive(Deserialize)]
 struct Args {
+    flag_payload_tpl:    Option<String>,
     flag_new_column:     Option<String>,
     flag_jaq:            Option<String>,
     flag_jaqfile:        Option<String>,
@@ -439,13 +450,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // validate column-list is a list of valid column names
-    let cl_config = Config::new(args.arg_input.as_ref())
-        .delimiter(args.flag_delimiter)
-        .trim(csv::Trim::All)
-        .no_headers(args.flag_no_headers)
-        .select(args.arg_column_list.clone());
+    let cl_config = if args.flag_payload_tpl.is_none() {
+        Config::new(args.arg_input.as_ref())
+            .delimiter(args.flag_delimiter)
+            .trim(csv::Trim::All)
+            .no_headers(args.flag_no_headers)
+            .select(args.arg_column_list.clone())
+    } else {
+        Config::new(args.arg_input.as_ref())
+            .delimiter(args.flag_delimiter)
+            .trim(csv::Trim::All)
+            .no_headers(args.flag_no_headers)
+            // we're constructing a payload, ensure all the columns are selected
+            .select(SelectColumns::parse("1-")?)
+    };
     let col_list = cl_config.selection(&headers)?;
-    debug!("column-list: {col_list:?}");
 
     // check if the url_column arg was passed as a URL literal
     // or as a column selector
@@ -635,6 +654,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         report_wtr.write_byte_record(&report_headers)?;
     }
 
+    let mut template_content = String::new();
+    let mut build_payload = false;
+    let payload_env_option = if let Some(template_file) = args.flag_payload_tpl {
+        template_content = fs::read_to_string(template_file)?;
+        let mut env = Environment::new();
+        env.add_template("template", &template_content)?;
+        build_payload = true;
+        Some(env)
+    } else {
+        None
+    };
+
     // amortize memory allocations
     // why optimize for mem & speed, when we're just doing single-threaded, throttled URL fetches?
     // we still optimize since fetch is backed by a memoized cache (in memory or Redis, when --redis
@@ -681,6 +712,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .collect();
 
     let debug_flag = log_enabled!(Debug);
+    let mut rendered_json: Value;
+    let payload_env = if build_payload {
+        payload_env_option.unwrap()
+    } else {
+        Environment::empty()
+    };
 
     while rdr.read_byte_record(&mut record)? {
         if show_progress {
@@ -697,10 +734,22 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             form_body_jsonmap.insert(
                 (header_key_vec[*col_idx]).to_string(),
                 serde_json::Value::String(
-                    from_utf8(&record[*col_idx]).unwrap_or_default().to_owned(),
+                    simdutf8::basic::from_utf8(record.get(*col_idx).unwrap_or_default())
+                        .unwrap_or_default()
+                        .to_owned(),
                 ),
             );
         }
+
+        if build_payload {
+            rendered_json = serde_json::from_str(
+                &payload_env
+                    .get_template("template")?
+                    .render(&form_body_jsonmap)?,
+            )?;
+            form_body_jsonmap.clone_from(rendered_json.as_object().ok_or("Expected JSON object")?);
+        }
+
         if debug_flag {
             // deserializing the form_body_jsonmap to a string is expensive
             // so we only do it when debug is enabled
@@ -709,7 +758,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         if literal_url_used {
             url.clone_from(&literal_url);
-        } else if let Ok(s) = from_utf8(&record[column_index]) {
+        } else if let Ok(s) = simdutf8::basic::from_utf8(&record[column_index]) {
             s.clone_into(&mut url);
         } else {
             url = String::new();

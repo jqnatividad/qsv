@@ -1513,3 +1513,187 @@ fn fetchpost_simple_report() {
 
     assert_eq!(got, expected);
 }
+
+#[test]
+fn fetchpost_payload_template() {
+    let wrk = Workdir::new("fetchpost_tpl");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["first_name", "last_name", "age", "city"],
+            svec!["John", "Smith", "35", "New York"],
+            svec!["Jane", "Doe", "28", "Los Angeles"],
+            svec!["Bob", "Jones", "42", "Chicago"],
+        ],
+    );
+
+    // Create template file
+    wrk.create_from_string(
+        "payload.tpl",
+        r#"{
+    "firstName": "{{ first_name }}",
+    "lastName": "{{ last_name }}",
+    "age": {{ age }},
+    "city": "{{ city }}"
+}"#,
+    );
+
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("https://httpbin.org/post")
+        .arg("1-")
+        .arg("--payload-tpl")
+        .arg("payload.tpl")
+        .arg("--new-column")
+        .arg("response")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let expected = vec![
+        svec!["first_name", "last_name", "age", "city", "response"],
+        svec![
+            "John",
+            "Smith",
+            "35",
+            "New York",
+            r#"{"args":{},"data":"","files":{},"form":{"age":"35","city":"New York","firstName":"John","lastName":"Smith"},"headers":{"Accept":"*/*","Accept-Encoding":"zstd;q=1.0, br;q=0.8, gzip;q=0.6, deflate;q=0.4, *;q=0.2","Content-Length":"50","Content-Type":"application/x-www-form-urlencoded","Host":"httpbin.org","User-Agent":"qsv/0.137.0 (aarch64-apple-darwin; fetchpost; compiled; https://github.com/jqnatividad/qsv)","X-Amzn-Trace-Id":"Root=1-6727a9d5-6b2f608527e3b127729e8409"},"json":null,"origin":"149.88.100.35","url":"https://httpbin.org/post"}"#
+        ],
+        svec![
+            "Jane",
+            "Doe",
+            "28",
+            "Los Angeles",
+            r#"{"args":{},"data":"","files":{},"form":{"age":"28","city":"Los Angeles","firstName":"Jane","lastName":"Doe"},"headers":{"Accept":"*/*","Accept-Encoding":"zstd;q=1.0, br;q=0.8, gzip;q=0.6, deflate;q=0.4, *;q=0.2","Content-Length":"51","Content-Type":"application/x-www-form-urlencoded","Host":"httpbin.org","User-Agent":"qsv/0.137.0 (aarch64-apple-darwin; fetchpost; compiled; https://github.com/jqnatividad/qsv)","X-Amzn-Trace-Id":"Root=1-6727a9d5-47c9d7ed1247562762fdd379"},"json":null,"origin":"149.88.100.35","url":"https://httpbin.org/post"}"#
+        ],
+        svec![
+            "Bob",
+            "Jones",
+            "42",
+            "Chicago",
+            r#"{"args":{},"data":"","files":{},"form":{"age":"42","city":"Chicago","firstName":"Bob","lastName":"Jones"},"headers":{"Accept":"*/*","Accept-Encoding":"zstd;q=1.0, br;q=0.8, gzip;q=0.6, deflate;q=0.4, *;q=0.2","Content-Length":"48","Content-Type":"application/x-www-form-urlencoded","Host":"httpbin.org","User-Agent":"qsv/0.137.0 (aarch64-apple-darwin; fetchpost; compiled; https://github.com/jqnatividad/qsv)","X-Amzn-Trace-Id":"Root=1-6727a9d5-784c0cdf4d78bf1257f9a4d4"},"json":null,"origin":"149.88.100.35","url":"https://httpbin.org/post"}"#
+        ],
+    ];
+
+    for (got_row, expected_row) in got.iter().skip(1).zip(expected.iter().skip(1)) {
+        // Assert first 4 columns match
+        assert_eq!(&got_row[..4], &expected_row[..4]);
+        // Assert the first 50 characters of response column match
+        assert_eq!(
+            &got_row[4][..50],
+            &expected_row[4][..50],
+            "Response column first 50 chars mismatch"
+        );
+    }
+}
+
+#[test]
+fn fetchpost_payload_template_with_report() {
+    let wrk = Workdir::new("fetchpost_tpl_report");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["first_name", "last_name", "age", "city"],
+            svec!["John", "Smith", "35", "New York"],
+            svec!["Jane", "Doe", "28", "Los Angeles"],
+            svec!["Bob", "Jones", "42", "Chicago"],
+        ],
+    );
+
+    // Create template file
+    wrk.create_from_string(
+        "payload.tpl",
+        r#"{
+    "firstName": "{{ first_name }}",
+    "lastName": "{{ last_name }}",
+    "age": {{ age }},
+    "city": "{{ city }}"
+}"#,
+    );
+
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("https://httpbin.org/post")
+        .arg("1-")
+        .arg("--payload-tpl")
+        .arg("payload.tpl")
+        .arg("--new-column")
+        .arg("response")
+        .arg("--report")
+        .arg("short")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let expected = vec![
+        svec!["first_name", "last_name", "age", "city", "response"],
+        svec![
+            "John",
+            "Smith",
+            "35",
+            "New York",
+            r#"{"args":{},"data":"","files":{},"form":{"age":"35","city":"New York","firstName":"John","lastName":"Smith"},"headers":{"Accept":"*/*","Accept-Encoding":"zstd;q=1.0, br;q=0.8, gzip;q=0.6, deflate;q=0.4, *;q=0.2","Content-Length":"50","Content-Type":"application/x-www-form-urlencoded","Host":"httpbin.org","User-Agent":"qsv/0.137.0 (aarch64-apple-darwin; fetchpost; compiled; https://github.com/jqnatividad/qsv)","X-Amzn-Trace-Id":"Root=1-6727a9d5-6b2f608527e3b127729e8409"},"json":null,"origin":"149.88.100.35","url":"https://httpbin.org/post"}"#
+        ],
+        svec![
+            "Jane",
+            "Doe",
+            "28",
+            "Los Angeles",
+            r#"{"args":{},"data":"","files":{},"form":{"age":"28","city":"Los Angeles","firstName":"Jane","lastName":"Doe"},"headers":{"Accept":"*/*","Accept-Encoding":"zstd;q=1.0, br;q=0.8, gzip;q=0.6, deflate;q=0.4, *;q=0.2","Content-Length":"51","Content-Type":"application/x-www-form-urlencoded","Host":"httpbin.org","User-Agent":"qsv/0.137.0 (aarch64-apple-darwin; fetchpost; compiled; https://github.com/jqnatividad/qsv)","X-Amzn-Trace-Id":"Root=1-6727a9d5-47c9d7ed1247562762fdd379"},"json":null,"origin":"149.88.100.35","url":"https://httpbin.org/post"}"#
+        ],
+        svec![
+            "Bob",
+            "Jones",
+            "42",
+            "Chicago",
+            r#"{"args":{},"data":"","files":{},"form":{"age":"42","city":"Chicago","firstName":"Bob","lastName":"Jones"},"headers":{"Accept":"*/*","Accept-Encoding":"zstd;q=1.0, br;q=0.8, gzip;q=0.6, deflate;q=0.4, *;q=0.2","Content-Length":"48","Content-Type":"application/x-www-form-urlencoded","Host":"httpbin.org","User-Agent":"qsv/0.137.0 (aarch64-apple-darwin; fetchpost; compiled; https://github.com/jqnatividad/qsv)","X-Amzn-Trace-Id":"Root=1-6727a9d5-784c0cdf4d78bf1257f9a4d4"},"json":null,"origin":"149.88.100.35","url":"https://httpbin.org/post"}"#
+        ],
+    ];
+
+    for (got_row, expected_row) in got.iter().skip(1).zip(expected.iter().skip(1)) {
+        // Assert first 4 columns match
+        assert_eq!(&got_row[..4], &expected_row[..4]);
+        // Assert the first 50 characters of response column match
+        assert_eq!(
+            &got_row[4][..50],
+            &expected_row[4][..50],
+            "Response column first 50 chars mismatch"
+        );
+    }
+
+    let mut cmd = wrk.command("select");
+    cmd.arg("url,form,status,cache_hit,retries,response")
+        .arg(wrk.load_test_file("data.csv.fetchpost-report.tsv"));
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let expected = vec![
+        svec!["url", "form", "status", "cache_hit", "retries", "response"],
+        svec![
+            "https://httpbin.org/post",
+            "{\"bool_col\": String(\"true\"), \"col1\": String(\"a\"), \"number_col\": \
+             String(\"42\")}",
+            "200",
+            "0",
+            "0",
+            r#"{"bool_col": String("true"), "col1": String("a"), "number_col": String("42")}"#
+        ],
+        svec![
+            "https://httpbin.org/post",
+            "{\"bool_col\": String(\"false\"), \"col1\": String(\"b\"), \"number_col\": \
+             String(\"3.14\")}",
+            "200",
+            "0",
+            "0",
+            r#"{"bool_col": String("false"), "col1": String("b"), "number_col": String("3.14")}"#
+        ],
+        svec![
+            "https://httpbin.org/post",
+            "{\"bool_col\": String(\"true\"), \"col1\": String(\"c\"), \"number_col\": \
+             String(\"666\")}",
+            "200",
+            "0",
+            "0",
+            r#"{"bool_col": String("true"), "col1": String("c"), "number_col": String("666")}"#
+        ],
+    ];
+    assert_eq!(got, expected);
+}
