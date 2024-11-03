@@ -1697,3 +1697,125 @@ fn fetchpost_payload_template_with_report() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn fetchpost_with_template() {
+    let wrk = Workdir::new("fetchpost_template");
+
+    // Create template file
+    wrk.create_from_string(
+        "template.txt",
+        r#"{"data": {"name": "{{col1}}", "value": {{number_col}}, "flag": {{bool_col}} }}"#,
+    );
+
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1", "number_col", "bool_col"],
+            svec!["https://httpbin.org/post", "test1", "42", "true"],
+            svec!["https://httpbin.org/post", "test2", "3.14", "false"],
+        ],
+    );
+
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("--payload-tpl")
+        .arg("template.txt")
+        .arg("--new-column")
+        .arg("response")
+        .arg("--jaq")
+        .arg(r#"."data""#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let expected = vec![
+        svec!["URL", "col1", "number_col", "bool_col", "response"],
+        svec![
+            "https://httpbin.org/post",
+            "test1",
+            "42",
+            "true",
+            r#"{"name":"test1","value":42,"flag":true}"#
+        ],
+        svec![
+            "https://httpbin.org/post",
+            "test2",
+            "3.14",
+            "false",
+            r#"{"name":"test2","value":3.14,"flag":false}"#
+        ],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn fetchpost_with_headers() {
+    let wrk = Workdir::new("fetchpost_headers");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1"],
+            svec!["https://httpbin.org/post", "test"],
+        ],
+    );
+
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("col1")
+        .arg("--http-header")
+        .arg("X-Test-Header:test123")
+        .arg("--http-header")
+        .arg("X-Another-Header:abc")
+        .arg("--jaq")
+        .arg(r#"."headers""#)
+        .arg("data.csv");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+    assert!(got.contains("X-Test-Header"));
+    assert!(got.contains("test123"));
+    assert!(got.contains("X-Another-Header"));
+    assert!(got.contains("abc"));
+}
+
+#[test]
+fn fetchpost_disk_cache() {
+    let wrk = Workdir::new("fetchpost_disk");
+
+    // Create temp dir for cache
+    use std::{env, fs};
+    let temp_dir = env::temp_dir().join("fp_dcache_test");
+    fs::create_dir_all(&temp_dir).unwrap();
+    let dc_dir = temp_dir.as_os_str().to_str().unwrap();
+
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1"],
+            svec!["https://httpbin.org/post", "test"],
+        ],
+    );
+
+    let mut cmd = wrk.command("fetchpost");
+    (&mut *cmd
+        .arg("URL")
+        .arg("col1")
+        .arg("--disk-cache")
+        .arg("--disk-cache-dir")
+        .arg(dc_dir))
+        .arg("--jaq")
+        .arg(r#"."form""#)
+        .arg("data.csv");
+
+    // First request should not be cached
+    let got1 = wrk.stdout::<String>(&mut cmd);
+
+    // Second request should be cached
+    let got2 = wrk.stdout::<String>(&mut cmd);
+
+    assert_eq!(&got1, &got2);
+
+    // Clean up
+    fs::remove_dir_all(temp_dir).unwrap();
+}
