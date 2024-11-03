@@ -294,15 +294,15 @@ fn template_output_custom_filename() {
     cmd.arg("--template-file")
         .arg("template.txt")
         .arg("--outfilename")
-        .arg("{{name}}_greeting.txt")
+        .arg("{{name}}_greeting-{{ QSV_ROWNO }}.txt")
         .arg("data.csv")
         .arg(outdir);
 
     wrk.assert_success(&mut cmd);
 
     // Check that files were created with custom naming
-    let file1 = wrk.read_to_string(&format!("{outdir}/John_greeting.txt"));
-    let file2 = wrk.read_to_string(&format!("{outdir}/Jane_greeting.txt"));
+    let file1 = wrk.read_to_string(&format!("{outdir}/John_greeting-1.txt"));
+    let file2 = wrk.read_to_string(&format!("{outdir}/Jane_greeting-2.txt"));
 
     assert_eq!(file1, "Greetings from New York!");
     assert_eq!(file2, "Greetings from Boston!");
