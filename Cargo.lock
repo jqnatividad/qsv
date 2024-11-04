@@ -2860,9 +2860,9 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.15.0"
+version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e087f84d4f86bf4b218b927129862374b72199ae7d8657835f1e89000eea4fb"
+checksum = "3a9bfc1af68b1726ea47d3d5109de126281def866b33970e10fbab11b5dafab3"
 dependencies = [
  "allocator-api2",
  "equivalent",
@@ -3259,7 +3259,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "707907fe3c25f5424cce2cb7e1cbcafee6bdbe735ca90ef77c29e84591e5b9da"
 dependencies = [
  "equivalent",
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
  "serde",
 ]
 
@@ -3752,7 +3752,7 @@ version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "234cf4f4a04dc1f57e24b96cc0cd600cf2af460d4161ac5ecdd0af8e1f3b2a38"
 dependencies = [
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
 ]
 
 [[package]]
@@ -4683,7 +4683,7 @@ dependencies = [
  "ethnum",
  "fast-float2",
  "getrandom",
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
  "itoa",
  "itoap",
  "lz4",
@@ -4742,7 +4742,7 @@ dependencies = [
  "comfy-table",
  "either",
  "hashbrown 0.14.5",
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
  "indexmap",
  "num-traits",
  "once_cell",
@@ -4784,7 +4784,7 @@ source = "git+https://github.com/jqnatividad/polars?branch=bump-fs4-to-0.11#21f6
 dependencies = [
  "ahash",
  "bitflags 2.6.0",
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
  "num-traits",
  "once_cell",
  "polars-arrow",
@@ -4816,7 +4816,7 @@ dependencies = [
  "fs4",
  "futures",
  "glob",
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
  "home",
  "itoa",
  "memchr",
@@ -4856,7 +4856,7 @@ dependencies = [
  "chrono",
  "chrono-tz 0.8.6",
  "fallible-streaming-iterator",
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
  "indexmap",
  "itoa",
  "num-traits",
@@ -4929,7 +4929,7 @@ dependencies = [
  "chrono",
  "chrono-tz 0.8.6",
  "either",
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
  "hex",
  "indexmap",
  "jsonpath_lib_polars_vendor",
@@ -4965,7 +4965,7 @@ dependencies = [
  "ethnum",
  "flate2",
  "futures",
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
  "lz4",
  "num-traits",
  "polars-arrow",
@@ -4999,7 +4999,7 @@ dependencies = [
  "crossbeam-queue",
  "enum_dispatch",
  "futures",
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
  "num-traits",
  "polars-arrow",
  "polars-compute",
@@ -5030,7 +5030,7 @@ dependencies = [
  "ciborium",
  "either",
  "futures",
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
  "memmap2",
  "num-traits",
  "once_cell",
@@ -5154,7 +5154,7 @@ dependencies = [
  "bytemuck",
  "bytes",
  "compact_str",
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
  "indexmap",
  "libc",
  "memmap2",
@@ -5416,7 +5416,7 @@ dependencies = [
  "governor",
  "grex",
  "gzp",
- "hashbrown 0.15.0",
+ "hashbrown 0.15.1",
  "indexmap",
  "indicatif",
  "itertools",
