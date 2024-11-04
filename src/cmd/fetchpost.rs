@@ -502,16 +502,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // build the payload if --payload-tpl is used
     let mut template_content = String::new();
-    let build_payload: bool;
+    let json_payload: bool;
     let mut rendered_json: Value;
     let payload_env = if let Some(template_file) = args.flag_payload_tpl {
         template_content = fs::read_to_string(template_file)?;
         let mut env = Environment::new();
         env.add_template("template", &template_content)?;
-        build_payload = true;
+        json_payload = true;
         env
     } else {
-        build_payload = false;
+        json_payload = false;
         Environment::empty()
     };
 
@@ -550,7 +550,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             HeaderValue::from_str(DEFAULT_ACCEPT_ENCODING).unwrap(),
         );
 
-        if build_payload {
+        if json_payload {
             map.append(
                 reqwest::header::CONTENT_TYPE,
                 HeaderValue::from_str("application/json").unwrap(),
@@ -650,8 +650,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .clone()
             .unwrap_or_else(|| "stdin.csv".to_string());
 
-        report_wtr =
-            Config::new(Some(report_path.clone() + FETCHPOST_REPORT_SUFFIX).as_ref()).writer()?;
+        report_wtr = Config::new(Some(report_path.clone() + FETCHPOST_REPORT_SUFFIX).as_ref())
+            .flexible(true)
+            .writer()?;
         let mut report_headers = if report == ReportKind::Detailed {
             headers.clone()
         } else {
@@ -748,7 +749,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             );
         }
 
-        if build_payload {
+        if json_payload {
             rendered_json = serde_json::from_str(
                 &payload_env
                     .get_template("template")?
@@ -779,6 +780,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     intermediate_value = get_cached_response(
                         &url,
                         &form_body_jsonmap,
+                        json_payload,
                         &client,
                         &limiter,
                         jaq_selector.as_ref(),
@@ -799,6 +801,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     intermediate_value = get_diskcache_response(
                         &url,
                         &form_body_jsonmap,
+                        json_payload,
                         &client,
                         &limiter,
                         jaq_selector.as_ref(),
@@ -823,6 +826,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     intermediate_redis_value = get_redis_response(
                         &url,
                         &form_body_jsonmap,
+                        json_payload,
                         &client,
                         &limiter,
                         jaq_selector.as_ref(),
@@ -865,6 +869,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     final_response = get_response(
                         &url,
                         &form_body_jsonmap,
+                        json_payload,
                         &client,
                         &limiter,
                         jaq_selector.as_ref(),
@@ -924,7 +929,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if args.flag_max_errors > 0 && running_error_count >= args.flag_max_errors {
             break;
         }
-    }
+    } // main read loop
 
     report_wtr.flush()?;
 
@@ -1015,6 +1020,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 fn get_cached_response(
     url: &str,
     form_body_jsonmap: &serde_json::Map<String, Value>,
+    json_payload: bool,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jaq: Option<&String>,
@@ -1027,6 +1033,7 @@ fn get_cached_response(
     Return::new(get_response(
         url,
         form_body_jsonmap,
+        json_payload,
         client,
         limiter,
         flag_jaq,
@@ -1046,7 +1053,7 @@ fn get_cached_response(
     ty = "cached::DiskCache<String, FetchResponse>",
     cache_prefix_block = r##"{ "dc_" }"##,
     key = "String",
-    convert = r#"{ format!("{}{:?}{:?}{}{}{}{}", url, form_body_jsonmap, flag_jaq, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
+    convert = r#"{ format!("{}{:?}{}{:?}{}{}{}{}", url, form_body_jsonmap, json_payload, flag_jaq, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
     create = r##"{
         let cache_dir = DISKCACHE_DIR.get().unwrap();
         let diskcache_config = DISKCACHECONFIG.get().unwrap();
@@ -1067,6 +1074,7 @@ fn get_cached_response(
 fn get_diskcache_response(
     url: &str,
     form_body_jsonmap: &serde_json::Map<String, Value>,
+    json_payload: bool,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jaq: Option<&String>,
@@ -1080,6 +1088,7 @@ fn get_diskcache_response(
         get_response(
             url,
             form_body_jsonmap,
+            json_payload,
             client,
             limiter,
             flag_jaq,
@@ -1098,7 +1107,7 @@ fn get_diskcache_response(
 #[io_cached(
     ty = "cached::RedisCache<String, String>",
     key = "String",
-    convert = r#"{ format!("{}{:?}{:?}{}{}{}{}", url, form_body_jsonmap, flag_jaq, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
+    convert = r#"{ format!("{}{:?}{}{:?}{}{}{}{}", url, form_body_jsonmap, json_payload, flag_jaq, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
     create = r##" {
         let redis_config = REDISCONFIG.get().unwrap();
         let rediscache = RedisCache::new("fp", redis_config.ttl_secs)
@@ -1121,6 +1130,7 @@ fn get_diskcache_response(
 fn get_redis_response(
     url: &str,
     form_body_jsonmap: &serde_json::Map<String, Value>,
+    json_payload: bool,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jaq: Option<&String>,
@@ -1134,6 +1144,7 @@ fn get_redis_response(
         serde_json::to_string(&get_response(
             url,
             form_body_jsonmap,
+            json_payload,
             client,
             limiter,
             flag_jaq,
@@ -1152,6 +1163,7 @@ fn get_redis_response(
 fn get_response(
     url: &str,
     form_body_jsonmap: &serde_json::Map<String, Value>,
+    json_payload: bool,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jaq: Option<&String>,
@@ -1227,10 +1239,17 @@ fn get_response(
         }
 
         // send the actual request
-        let form_body_raw = serde_urlencoded::to_string(form_body_jsonmap)
-            .unwrap()
-            .as_bytes()
-            .to_owned();
+        let form_body_raw = if json_payload {
+            serde_json::to_string(&form_body_jsonmap)
+                .unwrap()
+                .as_bytes()
+                .to_owned()
+        } else {
+            serde_urlencoded::to_string(form_body_jsonmap)
+                .unwrap()
+                .as_bytes()
+                .to_owned()
+        };
         let resp_result = if flag_compress {
             // gzip the request body
             let mut gz_enc = GzEncoder::new(Vec::new(), Compression::default());
