@@ -331,8 +331,8 @@ module completions {
   export extern "qsv fetch" [
     --url-template
     --new-column
-    --jql
-    --jqlfile
+    --jaq
+    --jaqfile
     --pretty
     --rate-limit
     --timeout
@@ -360,8 +360,8 @@ module completions {
   export extern "qsv fetchpost" [
     --payload-tpl
     --new-column
-    --jql
-    --jqlfile
+    --jaq
+    --jaqfile
     --pretty
     --rate-limit
     --timeout

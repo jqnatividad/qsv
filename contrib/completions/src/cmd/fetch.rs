@@ -4,8 +4,8 @@ pub fn fetch_cmd() -> Command {
     Command::new("fetch").args([
         arg!(--"url-template"),
         arg!(--"new-column"),
-        arg!(--jql),
-        arg!(--jqlfile),
+        arg!(--jaq),
+        arg!(--jaqfile),
         arg!(--pretty),
         arg!(--"rate-limit"),
         arg!(--timeout),

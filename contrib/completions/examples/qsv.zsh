@@ -455,8 +455,8 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 '--url-template[]' \
 '--new-column[]' \
-'--jql[]' \
-'--jqlfile[]' \
+'--jaq[]' \
+'--jaqfile[]' \
 '--pretty[]' \
 '--rate-limit[]' \
 '--timeout[]' \
@@ -486,8 +486,8 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 '--payload-tpl[]' \
 '--new-column[]' \
-'--jql[]' \
-'--jqlfile[]' \
+'--jaq[]' \
+'--jaqfile[]' \
 '--pretty[]' \
 '--rate-limit[]' \
 '--timeout[]' \

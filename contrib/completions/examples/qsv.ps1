@@ -452,8 +452,8 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         'qsv;fetch' {
             [CompletionResult]::new('--url-template', 'url-template', [CompletionResultType]::ParameterName, 'url-template')
             [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
-            [CompletionResult]::new('--jql', 'jql', [CompletionResultType]::ParameterName, 'jql')
-            [CompletionResult]::new('--jqlfile', 'jqlfile', [CompletionResultType]::ParameterName, 'jqlfile')
+            [CompletionResult]::new('--jaq', 'jaq', [CompletionResultType]::ParameterName, 'jaq')
+            [CompletionResult]::new('--jaqfile', 'jaqfile', [CompletionResultType]::ParameterName, 'jaqfile')
             [CompletionResult]::new('--pretty', 'pretty', [CompletionResultType]::ParameterName, 'pretty')
             [CompletionResult]::new('--rate-limit', 'rate-limit', [CompletionResultType]::ParameterName, 'rate-limit')
             [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
@@ -482,8 +482,8 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         'qsv;fetchpost' {
             [CompletionResult]::new('--payload-tpl', 'payload-tpl', [CompletionResultType]::ParameterName, 'payload-tpl')
             [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
-            [CompletionResult]::new('--jql', 'jql', [CompletionResultType]::ParameterName, 'jql')
-            [CompletionResult]::new('--jqlfile', 'jqlfile', [CompletionResultType]::ParameterName, 'jqlfile')
+            [CompletionResult]::new('--jaq', 'jaq', [CompletionResultType]::ParameterName, 'jaq')
+            [CompletionResult]::new('--jaqfile', 'jaqfile', [CompletionResultType]::ParameterName, 'jaqfile')
             [CompletionResult]::new('--pretty', 'pretty', [CompletionResultType]::ParameterName, 'pretty')
             [CompletionResult]::new('--rate-limit', 'rate-limit', [CompletionResultType]::ParameterName, 'rate-limit')
             [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
