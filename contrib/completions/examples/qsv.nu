@@ -331,8 +331,8 @@ module completions {
   export extern "qsv fetch" [
     --url-template
     --new-column
-    --jaq
-    --jaqfile
+    --jql
+    --jqlfile
     --pretty
     --rate-limit
     --timeout
@@ -358,9 +358,10 @@ module completions {
   ]
 
   export extern "qsv fetchpost" [
+    --payload-tpl
     --new-column
-    --jaq
-    --jaqfile
+    --jql
+    --jqlfile
     --pretty
     --rate-limit
     --timeout
@@ -1365,6 +1366,17 @@ module completions {
     --help(-h)                # Print help
   ]
 
+  export extern "qsv template" [
+    --template
+    --template-file
+    --outfilename
+    --customfilter-error
+    --output
+    --no-headers
+    --delimiter
+    --help(-h)                # Print help
+  ]
+
   export extern "qsv to" [
     --print-package
     --dump
@@ -1756,6 +1768,9 @@ module completions {
   ]
 
   export extern "qsv help table" [
+  ]
+
+  export extern "qsv help template" [
   ]
 
   export extern "qsv help to" [

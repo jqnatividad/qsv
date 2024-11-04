@@ -85,6 +85,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('sqlp', 'sqlp', [CompletionResultType]::ParameterValue, 'sqlp')
             [CompletionResult]::new('stats', 'stats', [CompletionResultType]::ParameterValue, 'stats')
             [CompletionResult]::new('table', 'table', [CompletionResultType]::ParameterValue, 'table')
+            [CompletionResult]::new('template', 'template', [CompletionResultType]::ParameterValue, 'template')
             [CompletionResult]::new('to', 'to', [CompletionResultType]::ParameterValue, 'to')
             [CompletionResult]::new('tojsonl', 'tojsonl', [CompletionResultType]::ParameterValue, 'tojsonl')
             [CompletionResult]::new('transpose', 'transpose', [CompletionResultType]::ParameterValue, 'transpose')
@@ -451,8 +452,8 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         'qsv;fetch' {
             [CompletionResult]::new('--url-template', 'url-template', [CompletionResultType]::ParameterName, 'url-template')
             [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
-            [CompletionResult]::new('--jaq', 'jaq', [CompletionResultType]::ParameterName, 'jaq')
-            [CompletionResult]::new('--jaqfile', 'jaqfile', [CompletionResultType]::ParameterName, 'jaqfile')
+            [CompletionResult]::new('--jql', 'jql', [CompletionResultType]::ParameterName, 'jql')
+            [CompletionResult]::new('--jqlfile', 'jqlfile', [CompletionResultType]::ParameterName, 'jqlfile')
             [CompletionResult]::new('--pretty', 'pretty', [CompletionResultType]::ParameterName, 'pretty')
             [CompletionResult]::new('--rate-limit', 'rate-limit', [CompletionResultType]::ParameterName, 'rate-limit')
             [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
@@ -479,9 +480,10 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             break
         }
         'qsv;fetchpost' {
+            [CompletionResult]::new('--payload-tpl', 'payload-tpl', [CompletionResultType]::ParameterName, 'payload-tpl')
             [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
-            [CompletionResult]::new('--jaq', 'jaq', [CompletionResultType]::ParameterName, 'jaq')
-            [CompletionResult]::new('--jaqfile', 'jaqfile', [CompletionResultType]::ParameterName, 'jaqfile')
+            [CompletionResult]::new('--jql', 'jql', [CompletionResultType]::ParameterName, 'jql')
+            [CompletionResult]::new('--jqlfile', 'jqlfile', [CompletionResultType]::ParameterName, 'jqlfile')
             [CompletionResult]::new('--pretty', 'pretty', [CompletionResultType]::ParameterName, 'pretty')
             [CompletionResult]::new('--rate-limit', 'rate-limit', [CompletionResultType]::ParameterName, 'rate-limit')
             [CompletionResult]::new('--timeout', 'timeout', [CompletionResultType]::ParameterName, 'timeout')
@@ -1586,6 +1588,18 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
+        'qsv;template' {
+            [CompletionResult]::new('--template', 'template', [CompletionResultType]::ParameterName, 'template')
+            [CompletionResult]::new('--template-file', 'template-file', [CompletionResultType]::ParameterName, 'template-file')
+            [CompletionResult]::new('--outfilename', 'outfilename', [CompletionResultType]::ParameterName, 'outfilename')
+            [CompletionResult]::new('--customfilter-error', 'customfilter-error', [CompletionResultType]::ParameterName, 'customfilter-error')
+            [CompletionResult]::new('--output', 'output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('--no-headers', 'no-headers', [CompletionResultType]::ParameterName, 'no-headers')
+            [CompletionResult]::new('--delimiter', 'delimiter', [CompletionResultType]::ParameterName, 'delimiter')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
         'qsv;to' {
             [CompletionResult]::new('--print-package', 'print-package', [CompletionResultType]::ParameterName, 'print-package')
             [CompletionResult]::new('--dump', 'dump', [CompletionResultType]::ParameterName, 'dump')
@@ -1797,6 +1811,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('sqlp', 'sqlp', [CompletionResultType]::ParameterValue, 'sqlp')
             [CompletionResult]::new('stats', 'stats', [CompletionResultType]::ParameterValue, 'stats')
             [CompletionResult]::new('table', 'table', [CompletionResultType]::ParameterValue, 'table')
+            [CompletionResult]::new('template', 'template', [CompletionResultType]::ParameterValue, 'template')
             [CompletionResult]::new('to', 'to', [CompletionResultType]::ParameterValue, 'to')
             [CompletionResult]::new('tojsonl', 'tojsonl', [CompletionResultType]::ParameterValue, 'tojsonl')
             [CompletionResult]::new('transpose', 'transpose', [CompletionResultType]::ParameterValue, 'transpose')
@@ -2081,6 +2096,9 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             break
         }
         'qsv;help;table' {
+            break
+        }
+        'qsv;help;template' {
             break
         }
         'qsv;help;to' {

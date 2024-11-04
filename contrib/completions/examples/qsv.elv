@@ -82,6 +82,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand sqlp 'sqlp'
             cand stats 'stats'
             cand table 'table'
+            cand template 'template'
             cand to 'to'
             cand tojsonl 'tojsonl'
             cand transpose 'transpose'
@@ -413,8 +414,8 @@ set edit:completion:arg-completer[qsv] = {|@words|
         &'qsv;fetch'= {
             cand --url-template 'url-template'
             cand --new-column 'new-column'
-            cand --jaq 'jaq'
-            cand --jaqfile 'jaqfile'
+            cand --jql 'jql'
+            cand --jqlfile 'jqlfile'
             cand --pretty 'pretty'
             cand --rate-limit 'rate-limit'
             cand --timeout 'timeout'
@@ -440,9 +441,10 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --help 'Print help'
         }
         &'qsv;fetchpost'= {
+            cand --payload-tpl 'payload-tpl'
             cand --new-column 'new-column'
-            cand --jaq 'jaq'
-            cand --jaqfile 'jaqfile'
+            cand --jql 'jql'
+            cand --jqlfile 'jqlfile'
             cand --pretty 'pretty'
             cand --rate-limit 'rate-limit'
             cand --timeout 'timeout'
@@ -1457,6 +1459,17 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand -h 'Print help'
             cand --help 'Print help'
         }
+        &'qsv;template'= {
+            cand --template 'template'
+            cand --template-file 'template-file'
+            cand --outfilename 'outfilename'
+            cand --customfilter-error 'customfilter-error'
+            cand --output 'output'
+            cand --no-headers 'no-headers'
+            cand --delimiter 'delimiter'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
         &'qsv;to'= {
             cand --print-package 'print-package'
             cand --dump 'dump'
@@ -1654,6 +1667,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand sqlp 'sqlp'
             cand stats 'stats'
             cand table 'table'
+            cand template 'template'
             cand to 'to'
             cand tojsonl 'tojsonl'
             cand transpose 'transpose'
@@ -1854,6 +1868,8 @@ set edit:completion:arg-completer[qsv] = {|@words|
         &'qsv;help;stats'= {
         }
         &'qsv;help;table'= {
+        }
+        &'qsv;help;template'= {
         }
         &'qsv;help;to'= {
             cand postgres 'postgres'
