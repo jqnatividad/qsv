@@ -367,7 +367,7 @@ Score (rounded): 3.1
 Active: true
 Float with commas: 1,234,567
 Name: Ja
-Amount: 
+Amount: <FILTER_ERROR>
 Bytes: 1.00 GiB
 Score (2 decimals): 2.72
 Score (rounded): 2.7
