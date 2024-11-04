@@ -14,7 +14,8 @@ use crate::cmd::{
     schema::schema_cmd, search::search_cmd, searchset::searchset_cmd, select::select_cmd,
     slice::slice_cmd, snappy::snappy_cmd, sniff::sniff_cmd, sort::sort_cmd,
     sortcheck::sortcheck_cmd, split::split_cmd, sqlp::sqlp_cmd, stats::stats_cmd, table::table_cmd,
-    to::to_cmd, tojsonl::tojsonl_cmd, transpose::transpose_cmd, validate::validate_cmd,
+    template::template_cmd, to::to_cmd, tojsonl::tojsonl_cmd, transpose::transpose_cmd,
+    validate::validate_cmd,
 };
 
 pub fn build_cli() -> Command {
@@ -84,6 +85,7 @@ pub fn build_cli() -> Command {
             sqlp_cmd(),
             stats_cmd(),
             table_cmd(),
+            template_cmd(),
             to_cmd(),
             tojsonl_cmd(),
             transpose_cmd(),

@@ -55,6 +55,7 @@ pub mod split;
 pub mod sqlp;
 pub mod stats;
 pub mod table;
+pub mod template;
 pub mod to;
 pub mod tojsonl;
 pub mod transpose;
