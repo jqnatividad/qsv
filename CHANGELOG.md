@@ -6,6 +6,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.138.0] - 2024-11-04
+
+## What's Changed
+* build(deps): bump flexi_logger from 0.29.3 to 0.29.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/2229
+* build(deps): bump bytes from 1.7.2 to 1.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2231
+* build(deps): bump serde from 1.0.210 to 1.0.211 by @dependabot in https://github.com/jqnatividad/qsv/pull/2232
+* build(deps): bump simd-json from 0.14.1 to 0.14.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2235
+* build(deps): bump jsonschema from 0.24.0 to 0.24.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2234
+* build(deps): bump serde from 1.0.211 to 1.0.213 by @dependabot in https://github.com/jqnatividad/qsv/pull/2236
+* build(deps): bump tokio from 1.40.0 to 1.41.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2237
+* build(deps): bump jsonschema from 0.24.1 to 0.24.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2238
+* build(deps): bump azure/trusted-signing-action from 0.4.0 to 0.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2239
+* build(deps): bump jsonschema from 0.24.2 to 0.24.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2240
+* build(deps): bump regex from 1.11.0 to 1.11.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2242
+* build(deps): bump actions/setup-python from 5.2.0 to 5.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2243
+* build(deps): bump jsonschema from 0.25.0 to 0.25.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2244
+* `deps`: bump mlua from 0.9 to 0.10 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2249
+* `deps`: bump jsonschema from 0.25 to 0.26 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2251
+* fix documentation typo: it's → its by @tmtmtmtm in https://github.com/jqnatividad/qsv/pull/2254
+* bump Polars from 0.43.1 at py-1.11.0 tag to 0.44.0 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2255
+* `sqlp`: derive polars schema from stats cache by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2256
+* build(deps): bump reqwest from 0.12.8 to 0.12.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/2258
+* build(deps): bump serde from 1.0.213 to 1.0.214 by @dependabot in https://github.com/jqnatividad/qsv/pull/2259
+* build(deps): bump jsonschema from 0.26.0 to 0.26.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2260
+* build(deps): bump flexi_logger from 0.29.4 to 0.29.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/2261
+* add lookup table module by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2262
+* `validate`: add `dynamicEnum` lookup support by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2265
+* build(deps): bump flexi_logger from 0.29.5 to 0.29.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/2266
+* add new `template` cmd by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2267
+* `fetchpost`: add `--payload-tpl <file>` option to construct payload using MiniJinja by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2268
+
+
+**Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.137.0...0.138.0
+
 ## [0.137.0] - 2024-10-20
 
 ### Highlights:
