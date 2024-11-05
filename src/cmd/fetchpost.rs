@@ -7,9 +7,12 @@ CSV data is posted using two methods:
 1. As an HTML Form using using the <column-list> argument
    The columns are used to construct the HTML form data and posted to the server
    as a URL-encoded form. (content-type: application/x-www-form-urlencoded)
-2. As a JSON payload using a MiniJinja template with the --payload-tpl <file> option
-   The template file is used to construct the JSON payload and posted to the server
-   as JSON. (content-type: application/json)
+2. As a payload using a MiniJinja template with the --payload-tpl <file> option
+   The template file is used to construct the payload and posted to the server
+   as JSON by default (content-type: application/json), with automatic checking if the
+   rendered template is valid JSON.
+   The --content-type option can override the expected content type. However, it is
+   the user's responsiblity to ensure the content-type format is valid.
 
 Fetchpost is integrated with `jaq` (a jq clone) to directly parse out values from an API JSON response.
 (See https://github.com/01mf02/jaq for more info on how to use the jaq JSON Query Language)
@@ -141,7 +144,12 @@ Fetchpost arguments:
 
 Fetchpost options:
     -t, --payload-tpl <file>   Instead of <column-list>, use a MiniJinja template to construct a
-                               JSON payload in the HTTP Post body.
+                               JSON payload in the HTTP Post body. You can also use --payload-tpl to construct
+                               a non-JSON payload, but --content-type will have to be set manually.
+    --content-type <arg>       Overrides auto-content types for `--column-list` (`application/x-www-form-urlencoded`)
+                               and `--payload-tpl` (`application/json`). Typical alternative values are
+                               `multipart/form-data` and `text/plain`. It is the responsibility of the user to
+                               format the payload accordingly using --payload-tpl.
     -c, --new-column <name>    Put the fetched values in a new column. Specifying this option
                                results in a CSV. Otherwise, the output is in JSONL format.
     --jaq <selector>           Apply jaq selector to API returned JSON response.
@@ -275,9 +283,27 @@ use crate::{
     util, CliError, CliResult,
 };
 
+#[derive(PartialEq, Eq, Copy, Clone)]
+enum ContentType {
+    Form,
+    Json,
+    Manual,
+}
+
+impl std::fmt::Display for ContentType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ContentType::Form => write!(f, "Form"),
+            ContentType::Json => write!(f, "Json"),
+            ContentType::Manual => write!(f, "Manual"),
+        }
+    }
+}
+
 #[derive(Deserialize)]
 struct Args {
     flag_payload_tpl:    Option<String>,
+    flag_content_type:   Option<String>,
     flag_new_column:     Option<String>,
     flag_jaq:            Option<String>,
     flag_jaqfile:        Option<String>,
@@ -502,16 +528,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // build the payload if --payload-tpl is used
     let mut template_content = String::new();
-    let json_payload: bool;
+    let mut payload_content_type: ContentType;
     let mut rendered_json: Value;
     let payload_env = if let Some(template_file) = args.flag_payload_tpl {
         template_content = fs::read_to_string(template_file)?;
         let mut env = Environment::new();
         env.add_template("template", &template_content)?;
-        json_payload = true;
+        payload_content_type = ContentType::Json;
         env
     } else {
-        json_payload = false;
+        payload_content_type = ContentType::Form;
         Environment::empty()
     };
 
@@ -550,7 +576,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             HeaderValue::from_str(DEFAULT_ACCEPT_ENCODING).unwrap(),
         );
 
-        if json_payload {
+        if let Some(content_type) = args.flag_content_type {
+            payload_content_type = ContentType::Manual;
+            map.append(
+                reqwest::header::CONTENT_TYPE,
+                HeaderValue::from_str(&content_type).unwrap(),
+            );
+        } else if payload_content_type == ContentType::Json {
             map.append(
                 reqwest::header::CONTENT_TYPE,
                 HeaderValue::from_str("application/json").unwrap(),
@@ -749,13 +781,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             );
         }
 
-        if json_payload {
-            rendered_json = serde_json::from_str(
-                &payload_env
-                    .get_template("template")?
-                    .render(&form_body_jsonmap)?,
-            )?;
-            form_body_jsonmap.clone_from(rendered_json.as_object().ok_or("Expected JSON object")?);
+        if payload_content_type != ContentType::Form {
+            let rendered_template = payload_env
+                .get_template("template")?
+                .render(&form_body_jsonmap)?;
+            rendered_json = if payload_content_type == ContentType::Json {
+                serde_json::from_str::<serde_json::Value>(&rendered_template).map_err(|e| {
+                    CliError::Other(format!("Invalid JSON payload: {e}\n{rendered_template}"))
+                })?
+            } else {
+                // ContentType:Manual
+                // Wrap raw payload in a JSON object with qsv_plaintext key
+                json!({
+                    "qsv_plaintext": rendered_template
+                })
+            };
+            // safety: rendered_json is now guaranteed to be a valid JSON object
+            form_body_jsonmap.clone_from(rendered_json.as_object().unwrap());
         }
 
         if debug_flag {
@@ -780,7 +822,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     intermediate_value = get_cached_response(
                         &url,
                         &form_body_jsonmap,
-                        json_payload,
+                        payload_content_type,
                         &client,
                         &limiter,
                         jaq_selector.as_ref(),
@@ -801,7 +843,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     intermediate_value = get_diskcache_response(
                         &url,
                         &form_body_jsonmap,
-                        json_payload,
+                        payload_content_type,
                         &client,
                         &limiter,
                         jaq_selector.as_ref(),
@@ -826,7 +868,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     intermediate_redis_value = get_redis_response(
                         &url,
                         &form_body_jsonmap,
-                        json_payload,
+                        payload_content_type,
                         &client,
                         &limiter,
                         jaq_selector.as_ref(),
@@ -869,7 +911,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     final_response = get_response(
                         &url,
                         &form_body_jsonmap,
-                        json_payload,
+                        payload_content_type,
                         &client,
                         &limiter,
                         jaq_selector.as_ref(),
@@ -1020,7 +1062,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 fn get_cached_response(
     url: &str,
     form_body_jsonmap: &serde_json::Map<String, Value>,
-    json_payload: bool,
+    payload_content_type: ContentType,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jaq: Option<&String>,
@@ -1033,7 +1075,7 @@ fn get_cached_response(
     Return::new(get_response(
         url,
         form_body_jsonmap,
-        json_payload,
+        payload_content_type,
         client,
         limiter,
         flag_jaq,
@@ -1053,7 +1095,7 @@ fn get_cached_response(
     ty = "cached::DiskCache<String, FetchResponse>",
     cache_prefix_block = r##"{ "dc_" }"##,
     key = "String",
-    convert = r#"{ format!("{}{:?}{}{:?}{}{}{}{}", url, form_body_jsonmap, json_payload, flag_jaq, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
+    convert = r#"{ format!("{}{:?}{}{:?}{}{}{}{}", url, form_body_jsonmap, payload_content_type, flag_jaq, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
     create = r##"{
         let cache_dir = DISKCACHE_DIR.get().unwrap();
         let diskcache_config = DISKCACHECONFIG.get().unwrap();
@@ -1074,7 +1116,7 @@ fn get_cached_response(
 fn get_diskcache_response(
     url: &str,
     form_body_jsonmap: &serde_json::Map<String, Value>,
-    json_payload: bool,
+    payload_content_type: ContentType,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jaq: Option<&String>,
@@ -1088,7 +1130,7 @@ fn get_diskcache_response(
         get_response(
             url,
             form_body_jsonmap,
-            json_payload,
+            payload_content_type,
             client,
             limiter,
             flag_jaq,
@@ -1107,7 +1149,7 @@ fn get_diskcache_response(
 #[io_cached(
     ty = "cached::RedisCache<String, String>",
     key = "String",
-    convert = r#"{ format!("{}{:?}{}{:?}{}{}{}{}", url, form_body_jsonmap, json_payload, flag_jaq, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
+    convert = r#"{ format!("{}{:?}{}{:?}{}{}{}{}", url, form_body_jsonmap, payload_content_type, flag_jaq, flag_store_error, flag_pretty, flag_compress, include_existing_columns) }"#,
     create = r##" {
         let redis_config = REDISCONFIG.get().unwrap();
         let rediscache = RedisCache::new("fp", redis_config.ttl_secs)
@@ -1130,7 +1172,7 @@ fn get_diskcache_response(
 fn get_redis_response(
     url: &str,
     form_body_jsonmap: &serde_json::Map<String, Value>,
-    json_payload: bool,
+    payload_content_type: ContentType,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jaq: Option<&String>,
@@ -1144,7 +1186,7 @@ fn get_redis_response(
         serde_json::to_string(&get_response(
             url,
             form_body_jsonmap,
-            json_payload,
+            payload_content_type,
             client,
             limiter,
             flag_jaq,
@@ -1163,7 +1205,7 @@ fn get_redis_response(
 fn get_response(
     url: &str,
     form_body_jsonmap: &serde_json::Map<String, Value>,
-    json_payload: bool,
+    payload_content_type: ContentType,
     client: &reqwest::blocking::Client,
     limiter: &governor::RateLimiter<NotKeyed, InMemoryState, DefaultClock, NoOpMiddleware>,
     flag_jaq: Option<&String>,
@@ -1239,16 +1281,22 @@ fn get_response(
         }
 
         // send the actual request
-        let form_body_raw = if json_payload {
-            serde_json::to_string(&form_body_jsonmap)
+        let form_body_raw = match payload_content_type {
+            ContentType::Json => serde_json::to_string(&form_body_jsonmap)
                 .unwrap()
                 .as_bytes()
-                .to_owned()
-        } else {
-            serde_urlencoded::to_string(form_body_jsonmap)
+                .to_owned(),
+            ContentType::Form => serde_urlencoded::to_string(form_body_jsonmap)
                 .unwrap()
                 .as_bytes()
-                .to_owned()
+                .to_owned(),
+            ContentType::Manual => form_body_jsonmap
+                .values()
+                .next()
+                .map(std::string::ToString::to_string)
+                .unwrap_or_default()
+                .as_bytes()
+                .to_owned(),
         };
         let resp_result = if flag_compress {
             // gzip the request body
