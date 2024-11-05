@@ -3,6 +3,7 @@ Renders a template using CSV data with the MiniJinja template engine.
 https://docs.rs/minijinja/latest/minijinja/
 
 Each CSV row is used to populate the template, with column headers used as variable names.
+Non-alphanumeric characters in column headers are replaced with an underscore ("_").
 The template syntax follows the Jinja2 template language with additional custom filters
 (see bottom of file).
 
@@ -12,6 +13,7 @@ Example template:
     Status: {% if active|str_to_bool is true %}Active{% else %}Inactive{% endif %}
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_template.rs.
+For a relatively complex MiniJinja template, see https://github.com/jqnatividad/qsv/blob/master/scripts/template.tpl
 
 Usage:
     qsv template [options] [--template <str> | --template-file <file>] [<input>] [<outdir> | --output <file>]
@@ -130,7 +132,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let headers = if args.flag_no_headers {
         csv::StringRecord::new()
     } else {
-        rdr.headers()?.clone()
+        let headers = rdr.headers()?.clone();
+        let sanitized_headers: Vec<String> = headers
+            .iter()
+            .map(|h| {
+                h.chars()
+                    .map(|c| if c.is_alphanumeric() { c } else { '_' })
+                    .collect()
+            })
+            .collect();
+        csv::StringRecord::from(sanitized_headers)
     };
     let context_capacity = if args.flag_no_headers {
         rdr.headers()?.len()
