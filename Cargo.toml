@@ -286,8 +286,8 @@ csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-opt
 # use calamine with unreleased fixes
 calamine = { git = "https://github.com/tafia/calamine", rev = "cf86fa7" }
 
-# use latest csvlens upstream with latest dependencies and fixes
-csvlens = { git = "https://github.com/YS-L/csvlens", rev = "29e46af" }
+# use our fork until PR is merged removing unneeded arboard features
+csvlens = { git = "https://github.com/jqnatividad/csvlens", branch = "arboard-remove-unneeded-image-data-feature" }
 
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
