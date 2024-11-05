@@ -12,7 +12,7 @@ CSV data is posted using two methods:
    as JSON by default (content-type: application/json), with automatic checking if the
    rendered template is valid JSON.
    The --content-type option can override the expected content type. However, it is
-   the user's responsiblity to ensure the content-type format is valid.
+   the user's responsibility to ensure the content-type format is valid.
 
 Fetchpost is integrated with `jaq` (a jq clone) to directly parse out values from an API JSON response.
 (See https://github.com/01mf02/jaq for more info on how to use the jaq JSON Query Language)
@@ -579,7 +579,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         );
 
         if let Some(content_type) = args.flag_content_type {
-            payload_content_type = ContentType::Manual;
+            // if the user set --content-type and uses one of these known content-types,
+            // change payload_content_type accordingly so it can take advantage of auto
+            // validation of JSON and url encoding of URL Forms.
+            payload_content_type = match content_type.to_lowercase().as_str() {
+                "application/json" => ContentType::Json,
+                "application/x-www-form-urlencoded" => ContentType::Form,
+                _ => ContentType::Manual,
+            };
             map.append(
                 reqwest::header::CONTENT_TYPE,
                 HeaderValue::from_str(&content_type).unwrap(),
@@ -1285,13 +1292,21 @@ fn get_response(
         // send the actual request
         let form_body_raw = match payload_content_type {
             ContentType::Json => serde_json::to_string(&form_body_jsonmap)
-                .unwrap()
+                .unwrap() // safety: we know form_body_jsonmap is a valid JSON at this point
                 .as_bytes()
                 .to_owned(),
-            ContentType::Form => serde_urlencoded::to_string(form_body_jsonmap)
-                .unwrap()
-                .as_bytes()
-                .to_owned(),
+            ContentType::Form => match serde_urlencoded::to_string(form_body_jsonmap) {
+                Ok(form_str) => form_str.as_bytes().to_owned(),
+                Err(e) => {
+                    let err_msg = format!("Failed to encode form data: {e}");
+                    error!("{err_msg}");
+                    if flag_store_error {
+                        err_msg.as_bytes().to_owned()
+                    } else {
+                        String::new().as_bytes().to_owned()
+                    }
+                },
+            },
             ContentType::Manual => form_body_jsonmap
                 .values()
                 .next()
