@@ -143,13 +143,15 @@ Fetchpost arguments:
                                See 'qsv select --help' for examples.
 
 Fetchpost options:
-    -t, --payload-tpl <file>   Instead of <column-list>, use a MiniJinja template to construct a
-                               JSON payload in the HTTP Post body. You can also use --payload-tpl to construct
+    -t, --payload-tpl <file>   Instead of <column-list>, use a MiniJinja template file to render a JSON
+                               payload in the HTTP Post body. You can also use --payload-tpl to render
                                a non-JSON payload, but --content-type will have to be set manually.
-    --content-type <arg>       Overrides auto-content types for `--column-list` (`application/x-www-form-urlencoded`)
-                               and `--payload-tpl` (`application/json`). Typical alternative values are
-                               `multipart/form-data` and `text/plain`. It is the responsibility of the user to
-                               format the payload accordingly using --payload-tpl.
+                               If a rendered JSON is invalid, `fetchpost` will abort and return an error.
+    --content-type <arg>       Overrides automatic content types for `<column-list>` 
+                               (`application/x-www-form-urlencoded`) and `--payload-tpl` (`application/json`).
+                               Typical alternative values are `multipart/form-data` and `text/plain`.
+                               It is the responsibility of the user to format the payload accordingly
+                               when using --payload-tpl.
     -c, --new-column <name>    Put the fetched values in a new column. Specifying this option
                                results in a CSV. Otherwise, the output is in JSONL format.
     --jaq <selector>           Apply jaq selector to API returned JSON response.
@@ -294,7 +296,7 @@ impl std::fmt::Display for ContentType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ContentType::Form => write!(f, "Form"),
-            ContentType::Json => write!(f, "Json"),
+            ContentType::Json => write!(f, "JSON"),
             ContentType::Manual => write!(f, "Manual"),
         }
     }
