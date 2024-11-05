@@ -10,11 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Highlights:
 * __New `template` command for rendering templates with CSV data.__  
-This should allow users to generate very complex documents (Form letters, JSON/XML files, etc.) with the powerful [MiniJinja template engine](https://docs.rs/minijinja/latest/minijinja/) ([Example template](https://github.com/jqnatividad/qsv/blob/master/scripts/template.tpl))   
+This should allow users to generate very complex documents (Form letters, JSON/XML files, etc.) with the powerful [MiniJinja template engine](https://docs.rs/minijinja/latest/minijinja/) ([Example template](https://github.com/jqnatividad/qsv/blob/master/scripts/template.tpl)).   
 
 * __New `lookup` module for fetching reference data from remote and local files.__  
 In addition to the typical `http`/`https` schemes for remote files, qsv adds two additional schemes - `CKAN://` and `datHere://`, fetching lookup data from a CKAN site or [datHere maintained](https://data.dathere.com) [reference data](https://github.com/dathere/qsv-lookup-tables) respectively. The lookup module has simple file-based caching as well to minimize repeated fetching of typically static reference data (default cache age: 600 seconds).  
-The `lookup` module is now being used by the `luau` (for its `[qsv_register_lookup](https://github.com/jqnatividad/qsv/blob/9036430b1902701eaf60058afce7823810968099/src/cmd/luau.rs#L2034-L2070)` helper) and `validate` (for its `[dynamicEnum](https://github.com/jqnatividad/qsv/blob/9036430b1902701eaf60058afce7823810968099/src/cmd/validate.rs#L35-L72)` custom JSON Schema keyword) commands. More commands will take advantage of this module over time (e.g. `apply`, `geocode`, `template`, `sqlp`, etc.) to do extended lookups (e.g. lookup Census information given spatiotemporal data - like demographic info of a Census tract).
+The `lookup` module is now being used by the `luau` (for its [`qsv_register_lookup`](https://github.com/jqnatividad/qsv/blob/9036430b1902701eaf60058afce7823810968099/src/cmd/luau.rs#L2034-L2070) helper) and `validate` (for its [`dynamicEnum`](https://github.com/jqnatividad/qsv/blob/9036430b1902701eaf60058afce7823810968099/src/cmd/validate.rs#L35-L72) custom JSON Schema keyword) commands. More commands will take advantage of this module over time (e.g. `apply`, `geocode`, `template`, `sqlp`, etc.) to do extended lookups (e.g. lookup Census information given spatiotemporal data - like demographic info of a Census tract).
 * __Enhanced `fetchpost` with MiniJinja templating for payload construction.__  
 Previously, `fetchpost` was limited to posting url-encoded HTML Form data. Now with the `--payload-tpl` and `--content-type` options, users can render and post request bodies using MiniJinja using other content types as well (typically `application/json`, `text/plain`, `multipart/form-data`).
 * __Improved Polars integration with automatic schema detection__  
@@ -23,7 +23,7 @@ The `joinp` and `sqlp` commands now use qsv's stats cache to automatically deter
   2. More accurate data type detection since the stats cache analyzes the entire dataset, not just a sample
 * __`fast-float2` crate for faster float parsing__  
 Casting string/bytes to float is now much faster ([2 to 8x faster than Rust's standard library](https://github.com/Alexhuszagh/fast-float-rust?tab=readme-ov-file#performance)) with `fast-float2`.
-* __Major dependency updates including Polars 0.44.2, Luau 0.650, mlua 0.10 and jsonschema 0.26.1__  
+* __Major dependency updates including [Polars 0.44.2](https://github.com/pola-rs/polars/releases/tag/rs-0.44.2), [Luau 0.650](https://github.com/luau-lang/luau/releases/tag/0.650), [mlua 0.10.0](https://github.com/mlua-rs/mlua/releases/tag/v0.10.0) and [jsonschema 0.26.1](https://github.com/Stranger6667/jsonschema/releases/tag/rust-v0.26.1)__  
 These core crates underpin much of qsv's functionality. Using the latest version of these crates allow qsv to stay true to its goal of being the [fastest and most comprehensive data-wrangling toolkit](https://github.com/jqnatividad/qsv?tab=readme-ov-file#goals--non-goals).
 
 ---
