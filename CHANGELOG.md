@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.138.0] - 2024-11-05
 
+## Highlights:
+* __New `template` command for rendering templates with CSV data.__  
+This should allow users to generate very complex documents (Form letters, JSON/XML files, etc.) with the powerful [MiniJinja template engine](https://docs.rs/minijinja/latest/minijinja/) ([Example template](https://github.com/jqnatividad/qsv/blob/master/scripts/template.tpl))
+* __New `lookup` module for fetching reference data from remote and local files.__  
+In addition to the typical `http`/`https` schemes for remote files, qsv adds two additional schemes - `CKAN://` and `datHere://`, fetching lookup data from a CKAN site or [datHere maintained reference data](https://data.dathere.com) respectively. The lookup module has simple file-based caching as well to minimize repeated fetching of typically static reference data (default cache age: 600 seconds).  
+The `lookup` module is now being used by the `luau` (for its `qsv_register_lookup` helper) and `validate` (for its `dynamicEnum` custom JSON Schema keyword) commands. More commands will take advantage of this module over time (e.g. `apply`, `geocode`, `template`, `sqlp`, etc.).
+* __Enhanced `fetchpost` with MiniJinja templating for payload construction.__  
+Previously, `fetchpost` was limited to posting url-encoded HTML Form data. Now with the `--payload-tpl` and `--content-type` options, users can post other content types as well (typically `application/json`, `text/plain`, `multipart/form-data`).
+* __Improved Polars integration - auto-schema derivation from stats cache for `joinp` and `sqlp` commands.__  
+Typically, Polars infers a input's schema (primarily column data types) by scanning the first N (default: 10,000 rows, adjustable with `--infer-len` option) rows, before compiling its query plan. Not only does this take time, its also not reliable, as its just sampling the first N rows.
+Now, both `sqlp` and `joinp` leverages the stats cache to not only skip this schema inferencing step, saving time, but also the stats cache data type inferences are GUARANTEED.
+* __`fast-float2` crate for faster float parsing__  
+Casting string/bytes to float is now much faster ([2 to 8x faster than Rust's standard library](https://github.com/Alexhuszagh/fast-float-rust?tab=readme-ov-file#performance)) with `fast-float2`.
+* __Major dependency updates including Polars 0.44.2, Luau 0.650, mlua 0.10 and jsonschema 0.26.1__  
+These core crates underpin much of qsv's functionality. Using the latest version of these crates allow qsv to stay true to its goal of being the [fastest and most comprehensive data-wrangling toolkit](https://github.com/jqnatividad/qsv?tab=readme-ov-file#goals--non-goals).
+
+---
+
 ### Added
 * added lookup module - enabling fetching and caching of reference data from remote and local files https://github.com/jqnatividad/qsv/pull/2262
 * `fetchpost`: add `--payload-tpl <file>` and `--content-type` options to construct payload using MiniJinja with the appropriate content-type https://github.com/jqnatividad/qsv/pull/2268 https://github.com/jqnatividad/qsv/commit/592149867997da6ac56d20a7e7f84252b2baeb2a
