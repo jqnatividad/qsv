@@ -351,6 +351,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -l progressbar
 complete -c qsv -n "__fish_qsv_using_subcommand fetch" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l payload-tpl
+complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l content-type
 complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l new-column
 complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l jaq
 complete -c qsv -n "__fish_qsv_using_subcommand fetchpost" -l jaqfile

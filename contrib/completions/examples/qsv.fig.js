@@ -915,6 +915,9 @@ const completion: Fig.Spec = {
           name: "--payload-tpl",
         },
         {
+          name: "--content-type",
+        },
+        {
           name: "--new-column",
         },
         {

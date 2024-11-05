@@ -359,6 +359,7 @@ module completions {
 
   export extern "qsv fetchpost" [
     --payload-tpl
+    --content-type
     --new-column
     --jaq
     --jaqfile

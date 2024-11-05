@@ -481,6 +481,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
         }
         'qsv;fetchpost' {
             [CompletionResult]::new('--payload-tpl', 'payload-tpl', [CompletionResultType]::ParameterName, 'payload-tpl')
+            [CompletionResult]::new('--content-type', 'content-type', [CompletionResultType]::ParameterName, 'content-type')
             [CompletionResult]::new('--new-column', 'new-column', [CompletionResultType]::ParameterName, 'new-column')
             [CompletionResult]::new('--jaq', 'jaq', [CompletionResultType]::ParameterName, 'jaq')
             [CompletionResult]::new('--jaqfile', 'jaqfile', [CompletionResultType]::ParameterName, 'jaqfile')

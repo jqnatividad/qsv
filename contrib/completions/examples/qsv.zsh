@@ -485,6 +485,7 @@ _arguments "${_arguments_options[@]}" : \
 (fetchpost)
 _arguments "${_arguments_options[@]}" : \
 '--payload-tpl[]' \
+'--content-type[]' \
 '--new-column[]' \
 '--jaq[]' \
 '--jaqfile[]' \

@@ -3,6 +3,7 @@ use clap::{arg, Command};
 pub fn fetchpost_cmd() -> Command {
     Command::new("fetchpost").args([
         arg!(--"payload-tpl"),
+        arg!(--"content-type"),
         arg!(--"new-column"),
         arg!(--jaq),
         arg!(--jaqfile),

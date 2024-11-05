@@ -442,6 +442,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
         }
         &'qsv;fetchpost'= {
             cand --payload-tpl 'payload-tpl'
+            cand --content-type 'content-type'
             cand --new-column 'new-column'
             cand --jaq 'jaq'
             cand --jaqfile 'jaqfile'
