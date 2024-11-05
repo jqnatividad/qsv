@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=5.3.2
+bm_version=5.4.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -653,6 +653,7 @@ run --index stats_everything_index_j1 "$qsv_bin" stats "$data" --force --everyth
 run --index stats_everything_index_j1_with_cache "$qsv_bin" stats "$data" --everything -j 1
 run --index stats_everything_sorted_index "$qsv_bin" stats data_sorted.csv --force --everything
 run table "$qsv_bin" table "$data"
+run template "$qsv_bin" template --template-file template.tpl "$data"
 run to_xlsx "$qsv_bin" to xlsx benchmark_work.xlsx "$data"
 run to_sqlite "$qsv_bin" to sqlite benchmark_work.db "$data"
 run to_datapackage "$qsv_bin" to datapackage benchmark_work.json "$data"
