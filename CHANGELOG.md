@@ -6,37 +6,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.138.0] - 2024-11-04
+## [0.138.0] - 2024-11-05
 
-## What's Changed
-* build(deps): bump flexi_logger from 0.29.3 to 0.29.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/2229
-* build(deps): bump bytes from 1.7.2 to 1.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2231
-* build(deps): bump serde from 1.0.210 to 1.0.211 by @dependabot in https://github.com/jqnatividad/qsv/pull/2232
-* build(deps): bump simd-json from 0.14.1 to 0.14.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2235
-* build(deps): bump jsonschema from 0.24.0 to 0.24.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2234
-* build(deps): bump serde from 1.0.211 to 1.0.213 by @dependabot in https://github.com/jqnatividad/qsv/pull/2236
-* build(deps): bump tokio from 1.40.0 to 1.41.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2237
-* build(deps): bump jsonschema from 0.24.1 to 0.24.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2238
-* build(deps): bump azure/trusted-signing-action from 0.4.0 to 0.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2239
-* build(deps): bump jsonschema from 0.24.2 to 0.24.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2240
-* build(deps): bump regex from 1.11.0 to 1.11.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2242
+### Added
+* added lookup module - enabling fetching and caching of reference data from remote and local files https://github.com/jqnatividad/qsv/pull/2262
+* `fetchpost`: add `--payload-tpl <file>` and `--content-type` options to construct payload using MiniJinja with the appropriate content-type https://github.com/jqnatividad/qsv/pull/2268 https://github.com/jqnatividad/qsv/commit/592149867997da6ac56d20a7e7f84252b2baeb2a
+* `joinp`: derive polars schema from stats cache https://github.com/jqnatividad/qsv/commit/86fe22ee4e3677dc702eaf21175c60ceb8166001
+* `sqlp`: derive polars schema from stats cache https://github.com/jqnatividad/qsv/pull/2256
+* `template`: new command to render MiniJinja templates with CSV data https://github.com/jqnatividad/qsv/pull/2267
+* `validate`: add `dynamicEnum` lookup support https://github.com/jqnatividad/qsv/pull/2265
+* `contrib(completions)`: add template command and update fetchpost by @rzmk in https://github.com/jqnatividad/qsv/pull/2269
+* add `fast-float2` dependency for faster bytes to float conversion https://github.com/jqnatividad/qsv/commit/7590e4ed171eeb6804845e1b54bec0fa26cca706 https://github.com/jqnatividad/qsv/commit/3ca30aa878ed3c4dc58944d46f53fb0c4b955356
+
+### Changed
+* `luau`: adapt to mlua 0.10 API changes https://github.com/jqnatividad/qsv/commit/268cb45a04a49360befb81af76cc1cddd6307286
+* `luau`: refactored stage management https://github.com/jqnatividad/qsv/commit/31ef58a82b8f80fe0b29260f9170f10220c73714
+* `luau`: now uses the lookup module https://github.com/jqnatividad/qsv/commit/2f4be3473a90252df4fd559a5f3b38246a3da696
+* `stats`: minor perf refactoring https://github.com/jqnatividad/qsv/commit/6cdd6ea94adbae063e7fb6d9da71dac0c86adc12
 * build(deps): bump actions/setup-python from 5.2.0 to 5.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2243
-* build(deps): bump jsonschema from 0.25.0 to 0.25.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2244
-* `deps`: bump mlua from 0.9 to 0.10 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2249
-* `deps`: bump jsonschema from 0.25 to 0.26 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2251
-* fix documentation typo: it's → its by @tmtmtmtm in https://github.com/jqnatividad/qsv/pull/2254
-* bump Polars from 0.43.1 at py-1.11.0 tag to 0.44.0 by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2255
-* `sqlp`: derive polars schema from stats cache by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2256
-* build(deps): bump reqwest from 0.12.8 to 0.12.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/2258
-* build(deps): bump serde from 1.0.213 to 1.0.214 by @dependabot in https://github.com/jqnatividad/qsv/pull/2259
-* build(deps): bump jsonschema from 0.26.0 to 0.26.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2260
+* build(deps): bump azure/trusted-signing-action from 0.4.0 to 0.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2239
+* build(deps): bump bytes from 1.7.2 to 1.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2231
+* build(deps): bump flexi_logger from 0.29.3 to 0.29.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/2229
 * build(deps): bump flexi_logger from 0.29.4 to 0.29.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/2261
-* add lookup table module by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2262
-* `validate`: add `dynamicEnum` lookup support by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2265
 * build(deps): bump flexi_logger from 0.29.5 to 0.29.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/2266
-* add new `template` cmd by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2267
-* `fetchpost`: add `--payload-tpl <file>` option to construct payload using MiniJinja by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2268
+* build(deps): bump hashbrown from 0.15.0 to 0.15.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2270
+* build(deps): bump jsonschema from 0.24.0 to 0.24.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2234
+* build(deps): bump jsonschema from 0.24.1 to 0.24.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2238
+* build(deps): bump jsonschema from 0.24.2 to 0.24.3 by @dependabot in https://github.com/jqnatividad/qsv/pull/2240
+* build(deps): bump jsonschema from 0.25.0 to 0.25.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2244
+* build(deps): bump jsonschema from 0.26.0 to 0.26.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2260
+* build(deps): bump regex from 1.11.0 to 1.11.1 by @dependabot in https://github.com/jqnatividad/qsv/pull/2242
+* build(deps): bump reqwest from 0.12.8 to 0.12.9 by @dependabot in https://github.com/jqnatividad/qsv/pull/2258
+* build(deps): bump serde from 1.0.210 to 1.0.211 by @dependabot in https://github.com/jqnatividad/qsv/pull/2232
+* build(deps): bump serde from 1.0.211 to 1.0.213 by @dependabot in https://github.com/jqnatividad/qsv/pull/2236
+* build(deps): bump serde from 1.0.213 to 1.0.214 by @dependabot in https://github.com/jqnatividad/qsv/pull/2259
+* build(deps): bump simd-json from 0.14.1 to 0.14.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2235
+* build(deps): bump tokio from 1.40.0 to 1.41.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2237
+* `deps`: use calamine upstream with unreleased fixes https://github.com/jqnatividad/qsv/commit/4cc7f37e9c34b712ae2c5f43c018b2d6a6655ebb
+* `deps`: use our csvlens fork untl PR removing unneeded arboard features is merged https://github.com/jqnatividad/qsv/commit/bb3232205b7a948848c2949bcaf3b54e54f3d49b
+* `deps`: bump jsonschema from 0.25 to 0.26 https://github.com/jqnatividad/qsv/pull/2251
+* `deps`: bump embedded Luau from 0.640 to 0.650 https://github.com/jqnatividad/qsv/commit/8c54b875bf8768849b128ab15d96c33b02be180b https://github.com/jqnatividad/qsv/commit/aca30b072ecb6bb22d7edbe8ddef348649a5d699
+* `deps`: bump mlua from 0.9 to 0.10  https://github.com/jqnatividad/qsv/pull/2249
+* `deps`: bump Polars from 0.43.1 at py-1.11.0 tag to latest 0.44.2 upstream by @jqnatividad in https://github.com/jqnatividad/qsv/pull/2255 https://github.com/jqnatividad/qsv/commit/0e40a4429b4ef219ab7a11c91767e95778470ef2
+* apply select clippy lint suggestions
+* updated indirect dependencies
+* aligned Rust nightly to Polars nightly - 2024-10-28 - https://github.com/jqnatividad/qsv/commit/245bcb55af416960aa603c05de960289f6125c5c
 
+### Fixed
+* fix documentation typo: it's → its by @tmtmtmtm in https://github.com/jqnatividad/qsv/pull/2254
+
+### Removed
+* removed need to set RAYON_NUM_THREADS env var and just call the Rayon API directly https://github.com/jqnatividad/qsv/commit/aa6ef89eceac89c3d1ed19068e0e23a451c4402d
+* removed unneeded `create_dir_all_threadsafe` helper now that std::create_dir_all is threadsafe https://github.com/jqnatividad/qsv/commit/d0af83bfbd0430fa22f039bd00615380110f456e
 
 **Full Changelog**: https://github.com/jqnatividad/qsv/compare/0.137.0...0.138.0
 
