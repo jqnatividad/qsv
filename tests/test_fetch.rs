@@ -1716,3 +1716,69 @@ fn fetchpost_disk_cache() {
     // Clean up
     fs::remove_dir_all(temp_dir).unwrap();
 }
+
+#[test]
+fn fetchpost_content_type() {
+    let wrk = Workdir::new("fetchpost_content_type");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "message"],
+            svec!["https://httpbin.org/post", "Hello World"],
+        ],
+    );
+
+    // Create template file
+    wrk.create_from_string("payload.tpl", "Greeting: {{ message }}");
+
+    // Test plain text content type
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("--payload-tpl")
+        .arg("payload.tpl")
+        .arg("--content-type")
+        .arg("text/plain")
+        .arg("--jaq")
+        .arg(r#"."data""#)
+        .arg("data.csv");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+    assert_eq!(got, "\"\"Greeting: Hello World\"\"");
+
+    // Create JSON template file
+    wrk.create_from_string(
+        "jsonpayload.tpl",
+        r#"{
+    "URL": "{{ URL }}",
+    "Message": "{{ message }}",
+}"#,
+    );
+
+    // Test custom JSON content type
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("--payload-tpl")
+        .arg("jsonpayload.tpl")
+        .arg("--content-type")
+        .arg("application/json")
+        .arg("--jaq")
+        .arg(r#"."json""#)
+        .arg("data.csv");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+    assert_eq!(
+        got,
+        "\"{\n    \"URL\": \"https://httpbin.org/post\",\n    \"Message\": \"Hello World\",\n}\""
+    );
+
+    // Test form data content type
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("message")
+        .arg("--jaq")
+        .arg(r#"."form""#)
+        .arg("data.csv");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+    assert_eq!(got, "{\"message\":\"Hello World\"}");
+}
