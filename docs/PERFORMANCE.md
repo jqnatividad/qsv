@@ -39,7 +39,7 @@ Slowly, over time, we realized that the cached stats can be used to make other c
 - `frequency` uses the stats cache to short-circuit compiling frequency tables for ID columns (all unique values) by looking at the cardinality of a column.
 - `schema` uses the cache to create a JSON Schema Validation file. It uses the cache to set the data type, enum values, const values, minLength, maxLength, minimum and maximum properties in the JSON Schema file.
 - `tojsonl` uses the cache to set the JSON data type, and to infer boolean JSON properties.
-- `sqlp` uses the cache to create a Polars Schema, short-circuting Polars' schema inferencing - which is not as reliable as it depends on sampling the first N rows of a CSV, which may lead to wrong type inferences if the sample size is not large enough (which if set too large, slows down the Polars engine). As the data type inferences of `stats` are guaranteed, its not only faster, it works all the time!
+- `sqlp` and `joinp` uses the cache to create a Polars Schema, short-circuting Polars' schema inferencing - which is not as reliable as it depends on sampling the first N rows of a CSV, which may lead to wrong type inferences if the sample size is not large enough (which if set too large, slows down the Polars engine). As the data type inferences of `stats` are guaranteed, its not only faster, it works all the time!
 
 For the most part, the default caching behavior works transparently, though you will notice several files with the same file stem will start appearing in the same location as your CSV files. As metadata is tiny by nature and very useful on its own, a conscious decision was made not to hide them.
 
