@@ -10,15 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Highlights:
 * __New `template` command for rendering templates with CSV data.__  
-This should allow users to generate very complex documents (Form letters, JSON/XML files, etc.) with the powerful [MiniJinja template engine](https://docs.rs/minijinja/latest/minijinja/) ([Example template](https://github.com/jqnatividad/qsv/blob/master/scripts/template.tpl))
+This should allow users to generate very complex documents (Form letters, JSON/XML files, etc.) with the powerful [MiniJinja template engine](https://docs.rs/minijinja/latest/minijinja/) ([Example template](https://github.com/jqnatividad/qsv/blob/master/scripts/template.tpl))   
+
 * __New `lookup` module for fetching reference data from remote and local files.__  
-In addition to the typical `http`/`https` schemes for remote files, qsv adds two additional schemes - `CKAN://` and `datHere://`, fetching lookup data from a CKAN site or [datHere maintained reference data](https://data.dathere.com) respectively. The lookup module has simple file-based caching as well to minimize repeated fetching of typically static reference data (default cache age: 600 seconds).  
-The `lookup` module is now being used by the `luau` (for its `qsv_register_lookup` helper) and `validate` (for its `dynamicEnum` custom JSON Schema keyword) commands. More commands will take advantage of this module over time (e.g. `apply`, `geocode`, `template`, `sqlp`, etc.).
+In addition to the typical `http`/`https` schemes for remote files, qsv adds two additional schemes - `CKAN://` and `datHere://`, fetching lookup data from a CKAN site or [datHere maintained](https://data.dathere.com) [reference data](https://github.com/dathere/qsv-lookup-tables) respectively. The lookup module has simple file-based caching as well to minimize repeated fetching of typically static reference data (default cache age: 600 seconds).  
+The `lookup` module is now being used by the `luau` (for its `[qsv_register_lookup](https://github.com/jqnatividad/qsv/blob/9036430b1902701eaf60058afce7823810968099/src/cmd/luau.rs#L2034-L2070)` helper) and `validate` (for its `[dynamicEnum](https://github.com/jqnatividad/qsv/blob/9036430b1902701eaf60058afce7823810968099/src/cmd/validate.rs#L35-L72)` custom JSON Schema keyword) commands. More commands will take advantage of this module over time (e.g. `apply`, `geocode`, `template`, `sqlp`, etc.) to do extended lookups (e.g. lookup Census information given spatiotemporal data - like demographic info of a Census tract).
 * __Enhanced `fetchpost` with MiniJinja templating for payload construction.__  
-Previously, `fetchpost` was limited to posting url-encoded HTML Form data. Now with the `--payload-tpl` and `--content-type` options, users can post other content types as well (typically `application/json`, `text/plain`, `multipart/form-data`).
-* __Improved Polars integration - auto-schema derivation from stats cache for `joinp` and `sqlp` commands.__  
-Typically, Polars infers a input's schema (primarily column data types) by scanning the first N (default: 10,000 rows, adjustable with `--infer-len` option) rows, before compiling its query plan. Not only does this take time, its also not reliable, as its just sampling the first N rows.
-Now, both `sqlp` and `joinp` leverages the stats cache to not only skip this schema inferencing step, saving time, but also the stats cache data type inferences are GUARANTEED.
+Previously, `fetchpost` was limited to posting url-encoded HTML Form data. Now with the `--payload-tpl` and `--content-type` options, users can render and post request bodies using MiniJinja using other content types as well (typically `application/json`, `text/plain`, `multipart/form-data`).
+* __Improved Polars integration with automatic schema detection__  
+The `joinp` and `sqlp` commands now use qsv's stats cache to automatically determine column data types, rather than having Polars scan a sample of rows. This provides two key benefits:
+  1. Faster execution by skipping Polars' schema inference step
+  2. More accurate data type detection since the stats cache analyzes the entire dataset, not just a sample
 * __`fast-float2` crate for faster float parsing__  
 Casting string/bytes to float is now much faster ([2 to 8x faster than Rust's standard library](https://github.com/Alexhuszagh/fast-float-rust?tab=readme-ov-file#performance)) with `fast-float2`.
 * __Major dependency updates including Polars 0.44.2, Luau 0.650, mlua 0.10 and jsonschema 0.26.1__  
