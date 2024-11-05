@@ -1738,19 +1738,19 @@ fn fetchpost_content_type() {
         .arg("payload.tpl")
         .arg("--content-type")
         .arg("text/plain")
-        .arg("--jaq")
-        .arg(r#"."data""#)
         .arg("data.csv");
 
     let got = wrk.stdout::<String>(&mut cmd);
-    assert_eq!(got, "\"\"Greeting: Hello World\"\"");
+    assert!(got.starts_with(
+        r#"{"args":{},"data":"\"Greeting: Hello World\"","files":{},"form":{},"headers":{"#
+    ));
 
     // Create JSON template file
     wrk.create_from_string(
         "jsonpayload.tpl",
         r#"{
     "URL": "{{ URL }}",
-    "Message": "{{ message }}",
+    "Message": "{{ message }}"
 }"#,
     );
 
@@ -1768,7 +1768,7 @@ fn fetchpost_content_type() {
     let got = wrk.stdout::<String>(&mut cmd);
     assert_eq!(
         got,
-        "\"{\n    \"URL\": \"https://httpbin.org/post\",\n    \"Message\": \"Hello World\",\n}\""
+        r#"{"Message":"Hello World","URL":"https://httpbin.org/post"}"#
     );
 
     // Test form data content type
@@ -1780,5 +1780,5 @@ fn fetchpost_content_type() {
         .arg("data.csv");
 
     let got = wrk.stdout::<String>(&mut cmd);
-    assert_eq!(got, "{\"message\":\"Hello World\"}");
+    assert_eq!(got, r#"{"message":"Hello World"}"#);
 }
