@@ -9,21 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.138.0] - 2024-11-05
 
 ## Highlights:
-* __New `template` command for rendering templates with CSV data.__  
+* __:star: New `template` command for rendering templates with CSV data.__  
 This should allow users to generate very complex documents (Form letters, JSON/XML files, etc.) with the powerful [MiniJinja template engine](https://docs.rs/minijinja/latest/minijinja/) ([Example template](https://github.com/jqnatividad/qsv/blob/master/scripts/template.tpl)).   
 
-* __New `lookup` module for fetching reference data from remote and local files.__  
+* __:star: New `lookup` module for fetching reference data from remote and local files.__  
 In addition to the typical `http`/`https` schemes for remote files, qsv adds two additional schemes - `CKAN://` and `datHere://`, fetching lookup data from a CKAN site or [datHere maintained](https://data.dathere.com) [reference data](https://github.com/dathere/qsv-lookup-tables) respectively. The lookup module has simple file-based caching as well to minimize repeated fetching of typically static reference data (default cache age: 600 seconds).  
 The `lookup` module is now being used by the `luau` (for its [`qsv_register_lookup`](https://github.com/jqnatividad/qsv/blob/9036430b1902701eaf60058afce7823810968099/src/cmd/luau.rs#L2034-L2070) helper) and `validate` (for its [`dynamicEnum`](https://github.com/jqnatividad/qsv/blob/9036430b1902701eaf60058afce7823810968099/src/cmd/validate.rs#L35-L72) custom JSON Schema keyword) commands. More commands will take advantage of this module over time (e.g. `apply`, `geocode`, `template`, `sqlp`, etc.) to do extended lookups (e.g. lookup Census information given spatiotemporal data - like demographic info of a Census tract).
-* __Enhanced `fetchpost` with MiniJinja templating for payload construction.__  
+* __:sparkles: Enhanced `fetchpost` with MiniJinja templating for payload construction.__  
 Previously, `fetchpost` was limited to posting url-encoded HTML Form data. Now with the `--payload-tpl` and `--content-type` options, users can render and post request bodies using MiniJinja using other content types as well (typically `application/json`, `text/plain`, `multipart/form-data`).
-* __Improved Polars integration with automatic schema detection__  
+* __:sparkles: Improved Polars integration with automatic schema detection__  
 The `joinp` and `sqlp` commands now use qsv's stats cache to automatically determine column data types, rather than having Polars scan a sample of rows. This provides two key benefits:
   1. Faster execution by skipping Polars' schema inference step
   2. More accurate data type detection since the stats cache analyzes the entire dataset, not just a sample
-* __`fast-float2` crate for faster float parsing__  
+* __:running: `fast-float2` crate for faster float parsing__  
 Casting string/bytes to float is now much faster ([2 to 8x faster than Rust's standard library](https://github.com/Alexhuszagh/fast-float-rust?tab=readme-ov-file#performance)) with `fast-float2`.
-* __Major dependency updates including [Polars 0.44.2](https://github.com/pola-rs/polars/releases/tag/rs-0.44.2), [Luau 0.650](https://github.com/luau-lang/luau/releases/tag/0.650), [mlua 0.10.0](https://github.com/mlua-rs/mlua/releases/tag/v0.10.0) and [jsonschema 0.26.1](https://github.com/Stranger6667/jsonschema/releases/tag/rust-v0.26.1)__  
+* __:muscle: Major dependency updates including [Polars 0.44.2](https://github.com/pola-rs/polars/releases/tag/rs-0.44.2), [Luau 0.650](https://github.com/luau-lang/luau/releases/tag/0.650), [mlua 0.10.0](https://github.com/mlua-rs/mlua/releases/tag/v0.10.0) and [jsonschema 0.26.1](https://github.com/Stranger6667/jsonschema/releases/tag/rust-v0.26.1)__  
 These core crates underpin much of qsv's functionality. Using the latest version of these crates allow qsv to stay true to its goal of being the [fastest and most comprehensive data-wrangling toolkit](https://github.com/jqnatividad/qsv?tab=readme-ov-file#goals--non-goals).
 
 ---
@@ -37,6 +37,7 @@ These core crates underpin much of qsv's functionality. Using the latest version
 * `validate`: add `dynamicEnum` lookup support https://github.com/jqnatividad/qsv/pull/2265
 * `contrib(completions)`: add template command and update fetchpost by @rzmk in https://github.com/jqnatividad/qsv/pull/2269
 * add `fast-float2` dependency for faster bytes to float conversion https://github.com/jqnatividad/qsv/commit/7590e4ed171eeb6804845e1b54bec0fa26cca706 https://github.com/jqnatividad/qsv/commit/3ca30aa878ed3c4dc58944d46f53fb0c4b955356
+* added more benchmarks for new/updated commands https://github.com/jqnatividad/qsv/commit/f8a1d4fff11d78860c102c1375653822ee95ca58 https://github.com/jqnatividad/qsv/commit/cd7e480de5ff1e2766a16b8d21767b76fbf10d35
 
 ### Changed
 * `luau`: adapt to mlua 0.10 API changes https://github.com/jqnatividad/qsv/commit/268cb45a04a49360befb81af76cc1cddd6307286
@@ -46,6 +47,7 @@ These core crates underpin much of qsv's functionality. Using the latest version
 * build(deps): bump actions/setup-python from 5.2.0 to 5.3.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2243
 * build(deps): bump azure/trusted-signing-action from 0.4.0 to 0.5.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2239
 * build(deps): bump bytes from 1.7.2 to 1.8.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2231
+* build(deps): bump cached from 0.53.1 to 0.54.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2272
 * build(deps): bump flexi_logger from 0.29.3 to 0.29.4 by @dependabot in https://github.com/jqnatividad/qsv/pull/2229
 * build(deps): bump flexi_logger from 0.29.4 to 0.29.5 by @dependabot in https://github.com/jqnatividad/qsv/pull/2261
 * build(deps): bump flexi_logger from 0.29.5 to 0.29.6 by @dependabot in https://github.com/jqnatividad/qsv/pull/2266
@@ -62,6 +64,7 @@ These core crates underpin much of qsv's functionality. Using the latest version
 * build(deps): bump serde from 1.0.213 to 1.0.214 by @dependabot in https://github.com/jqnatividad/qsv/pull/2259
 * build(deps): bump simd-json from 0.14.1 to 0.14.2 by @dependabot in https://github.com/jqnatividad/qsv/pull/2235
 * build(deps): bump tokio from 1.40.0 to 1.41.0 by @dependabot in https://github.com/jqnatividad/qsv/pull/2237
+* `deps`: updated our fork of the csv crate with more perf optimizations https://github.com/jqnatividad/qsv/commit/eae7d764bd31d717bdf123646ea85c81ed829829
 * `deps`: use calamine upstream with unreleased fixes https://github.com/jqnatividad/qsv/commit/4cc7f37e9c34b712ae2c5f43c018b2d6a6655ebb
 * `deps`: use our csvlens fork untl PR removing unneeded arboard features is merged https://github.com/jqnatividad/qsv/commit/bb3232205b7a948848c2949bcaf3b54e54f3d49b
 * `deps`: bump jsonschema from 0.25 to 0.26 https://github.com/jqnatividad/qsv/pull/2251
