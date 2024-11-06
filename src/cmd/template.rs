@@ -54,10 +54,9 @@ use std::{
 
 use minijinja::Environment;
 use serde::Deserialize;
-use serde_json::Value;
 
 use crate::{
-    config::{Config, Delimiter},
+    config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     util, CliError, CliResult,
 };
 
@@ -143,14 +142,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .collect();
         csv::StringRecord::from(sanitized_headers)
     };
-    let context_capacity = if args.flag_no_headers {
-        rdr.headers()?.len()
-    } else {
-        headers.len()
-    };
-
-    // Reuse context and pre-allocate
-    let mut context = serde_json::Map::with_capacity(context_capacity);
 
     // Set up output handling
     let output_to_dir = args.arg_outdir.is_some();
@@ -177,8 +168,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         None
     } else {
         Some(match args.flag_output {
-            Some(file) => Box::new(BufWriter::new(fs::File::create(file)?)) as Box<dyn Write>,
-            None => Box::new(BufWriter::new(std::io::stdout())) as Box<dyn Write>,
+            Some(file) => Box::new(BufWriter::with_capacity(
+                DEFAULT_WTR_BUFFER_CAPACITY,
+                fs::File::create(file)?,
+            )) as Box<dyn Write>,
+            None => Box::new(BufWriter::with_capacity(
+                DEFAULT_WTR_BUFFER_CAPACITY,
+                std::io::stdout(),
+            )) as Box<dyn Write>,
         })
     };
 
@@ -188,28 +185,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rendered = String::new();
     #[allow(unused_assignments)]
     let mut outfilename = String::new();
+    let mut context = simd_json::owned::Object::default();
 
     // Process each record
     for record in rdr.records() {
         row_number += 1;
         curr_record.clone_from(&record?);
-        context.clear();
 
         if args.flag_no_headers {
             // Use numeric, column 1-based indices (e.g. _c1, _c2, etc.)
             for (i, field) in curr_record.iter().enumerate() {
-                context.insert(format!("_c{}", i + 1), Value::String(field.to_string()));
+                context.insert(
+                    format!("_c{}", i + 1),
+                    simd_json::OwnedValue::String(field.to_owned()),
+                );
             }
         } else {
             // Use header names
             for (header, field) in headers.iter().zip(curr_record.iter()) {
-                context.insert(header.to_string(), Value::String(field.to_string()));
+                context.insert(
+                    header.to_string(),
+                    simd_json::OwnedValue::String(field.to_owned()),
+                );
             }
         }
         // Always add row number to context
         context.insert(
             QSV_ROWNO.to_string(),
-            Value::Number(serde_json::Number::from(row_number)),
+            simd_json::OwnedValue::from(row_number),
         );
 
         // Render template with record data
@@ -231,8 +234,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             write!(writer, "{rendered}")?;
             writer.flush()?;
         } else if let Some(ref mut w) = wtr {
-            write!(w, "{rendered}")?;
+            w.write_all(rendered.as_bytes())?;
         }
+        context.clear();
     }
 
     if let Some(mut w) = wtr {
