@@ -97,6 +97,9 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install libwayland-dev
+    - uses: actions/setup-python@v5.3.0
+      with:
+        python-version: '3.12'
     - name: Build qsv-nightly
       # env:
       #   RUSTFLAGS: --emit=asm
