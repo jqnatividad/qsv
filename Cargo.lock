@@ -1138,9 +1138,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.1.35"
+version = "1.1.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f57c4b4da2a9d619dd035f27316d7a426305b75be93d09e92f2b9229c34feaf"
+checksum = "baee610e9452a8f6f0a1b6194ec09ff9e2d85dea54432acdae41aa0761c95d70"
 dependencies = [
  "jobserver",
  "libc",
@@ -1685,7 +1685,7 @@ dependencies = [
 [[package]]
 name = "csv"
 version = "1.3.0"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#f2c22500da5b0faf0b3a734876b47031b0f80b57"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized-non-allocating-byterecord-trim#7dc27608571317ee5f01f37fcbaf80ea4c049ded"
 dependencies = [
  "csv-core",
  "itoa",
@@ -1697,7 +1697,7 @@ dependencies = [
 [[package]]
 name = "csv-core"
 version = "0.1.11"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#f2c22500da5b0faf0b3a734876b47031b0f80b57"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized-non-allocating-byterecord-trim#7dc27608571317ee5f01f37fcbaf80ea4c049ded"
 dependencies = [
  "memchr",
 ]
@@ -1720,7 +1720,7 @@ dependencies = [
 [[package]]
 name = "csv-index"
 version = "0.1.6"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized#f2c22500da5b0faf0b3a734876b47031b0f80b57"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized-non-allocating-byterecord-trim#7dc27608571317ee5f01f37fcbaf80ea4c049ded"
 dependencies = [
  "byteorder",
  "csv",
@@ -1945,9 +1945,9 @@ dependencies = [
 
 [[package]]
 name = "derive_arbitrary"
-version = "1.4.0"
+version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d475dfebcb4854d596b17b09f477616f80f17a550517f2b3615d8c205d5c802b"
+checksum = "30542c1ad912e0e3d22a1935c290e12e8a29d704a420177a31faad4a601a0800"
 dependencies = [
  "proc-macro2",
  "quote",
