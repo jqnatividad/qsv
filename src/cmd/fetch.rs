@@ -1,6 +1,6 @@
 #![allow(unused_assignments)]
 static USAGE: &str = r#"
-Fetches data from web services for every row using HTTP Get.
+Send/Fetch data to/from web services for every row using HTTP Get.
 
 Fetch is integrated with `jaq` (a jq clone) to directly parse out values from an API JSON response.
 (See https://github.com/01mf02/jaq for more info on how to use the jaq JSON Query Language)
@@ -43,8 +43,8 @@ If you don't want responses to be cached at all, use the --no-cache flag.
 NETWORK OPTIONS:
 Fetch recognizes RateLimit and Retry-After headers and dynamically throttles requests
 to be as fast as allowed. The --rate-limit option sets the maximum number of queries per second
-(QPS) to be made. The default is 0, which means to go as fast as possible,
-automatically throttling as required.
+(QPS) to be made. The default is 0, which means to go as fast as possible, automatically
+throttling as required, based on rate-limit and retry-after response headers.
 
 To use a proxy, set the environment variables HTTP_PROXY, HTTPS_PROXY or ALL_PROXY
 (e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
