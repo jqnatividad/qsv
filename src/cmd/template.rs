@@ -4,8 +4,8 @@ https://docs.rs/minijinja/latest/minijinja/
 
 Each CSV row is used to populate the template, with column headers used as variable names.
 Non-alphanumeric characters in column headers are replaced with an underscore ("_").
-The template syntax follows the Jinja2 template language with additional custom filters
-(see bottom of file).
+The template syntax follows the Jinja2 template language with additional custom functions/filters
+from minijinja_contrib and custom filters defined in this command (see bottom of source).
 
 Example:
 data.csv:
@@ -64,6 +64,7 @@ use std::{
 };
 
 use minijinja::Environment;
+use minijinja_contrib::pycompat::unknown_method_callback;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::IntoParallelRefIterator,
@@ -129,7 +130,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // Set up minijinja environment
     let mut env = Environment::new();
 
-    // Add custom filters
+    // Add minijinja_contrib functions/filters
+    // see https://docs.rs/minijinja-contrib/latest/minijinja_contrib/
+    minijinja_contrib::add_to_environment(&mut env);
+    env.set_unknown_method_callback(unknown_method_callback);
+
+    // Add our own custom filters
     env.add_filter("substr", substr);
     env.add_filter("format_float", format_float);
     env.add_filter("human_count", human_count);
@@ -175,6 +181,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // Create filename environment once if needed
     let filename_env = if output_to_dir && args.flag_outfilename != QSV_ROWNO {
         let mut env = Environment::new();
+        minijinja_contrib::add_to_environment(&mut env);
+        env.set_unknown_method_callback(unknown_method_callback);
         env.add_template("filename", &args.flag_outfilename)?;
         Some(env)
     } else {
