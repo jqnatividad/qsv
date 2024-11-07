@@ -500,3 +500,153 @@ fn template_filter_error() {
     let expected = "Alice: \nBob: 123.45";
     assert_eq!(got, expected);
 }
+
+#[test]
+fn template_contrib_filters() {
+    let wrk = Workdir::new("template_contrib_filters");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["text", "num", "datalist", "url"],
+            svec![
+                "hello WORLD",
+                "12345.6789",
+                "a,b,c",
+                "https://example.com/path?q=test&lang=en"
+            ],
+            svec![
+                "Testing 123",
+                "-98765.4321",
+                "1,2,3",
+                "http://localhost:8080/api"
+            ],
+        ],
+    );
+
+    // Test various minijinja_contrib filters
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            // String filters
+            "capitalize: {{text|capitalize}}\n",
+            "title: {{text|title}}\n",
+            "upper: {{text|upper}}\n",
+            "lower: {{text|lower}}\n",
+            // URL encode
+            "urlencode: {{text|urlencode}}\n",
+            // List filters
+            "split: {{datalist|split(',')|join('|')}}\n",
+            "first: {{datalist|split(',')|first}}\n",
+            "last: {{datalist|split(',')|last}}\n",
+            // Add newline between records
+            "\n"
+        ))
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = concat!(
+        "capitalize: Hello world\n",
+        "title: Hello World\n",
+        "upper: HELLO WORLD\n",
+        "lower: hello world\n",
+        "urlencode: hello%20WORLD\n",
+        "split: a|b|c\n",
+        "first: a\n",
+        "last: c\n",
+        "capitalize: Testing 123\n",
+        "title: Testing 123\n",
+        "upper: TESTING 123\n",
+        "lower: testing 123\n",
+        "urlencode: Testing%20123\n",
+        "split: 1|2|3\n",
+        "first: 1\n",
+        "last: 3",
+    );
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn template_contrib_functions() {
+    let wrk = Workdir::new("template_contrib_functions");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["num_messages", "date_col"],
+            svec!["1", "2023-06-24T16:37:22+00:00"],
+            svec!["2", "1999-12-24T16:37:22+12:00"],
+        ],
+    );
+
+    // Test various minijinja_contrib functions
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            "pluralize: You have {{ num_messages }} message{{ num_messages|int|pluralize }}\n",
+            "now: {{now()|datetimeformat|length > 2}}\n", // Just verify we get a non-empty string
+            "dtformat: {{date_col|datetimeformat(format=\"long\", tz=\"EST\")}}\n",
+            "\n\n"
+        ))
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = concat!(
+        "pluralize: You have 1 message\n",
+        "now: true\n",
+        "dtformat: June 24 2023 11:37:22\n",
+        "\n",
+        "pluralize: You have 2 messages\n",
+        "now: true\n",
+        "dtformat: December 23 1999 23:37:22",
+    );
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn template_pycompat_filters() {
+    let wrk = Workdir::new("template_pycompat_filters");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["text", "num", "mixed"],
+            svec!["Hello World!", "123", "ABC123xyz  "],
+            svec!["TESTING", "abc", "  Hello  "],
+        ],
+    );
+
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            // Test string methods from Python compatibility
+            "isascii: {{text.isascii()}}\n",
+            "isdigit: {{num.isdigit()}}\n",
+            "startswith: {{text.startswith('Hello')}}\n",
+            "isnumeric: {{num.isnumeric()}}\n",
+            "isupper: {{text.isupper()}}\n",
+            "replace: {{mixed.replace('ABC', 'XYZ')}}\n",
+            "rfind: {{mixed.rfind('xyz')}}\n",
+            "rstrip: {{mixed.rstrip()}}\n",
+            "\n"
+        ))
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = concat!(
+        "isascii: true\n",
+        "isdigit: true\n",
+        "startswith: true\n",
+        "isnumeric: true\n",
+        "isupper: false\n",
+        "replace: XYZ123xyz  \n",
+        "rfind: 6\n",
+        "rstrip: ABC123xyz\n",
+        "isascii: true\n",
+        "isdigit: false\n",
+        "startswith: false\n",
+        "isnumeric: false\n",
+        "isupper: true\n",
+        "replace:   Hello  \n",
+        "rfind: -1\n",
+        "rstrip:   Hello",
+    );
+    assert_eq!(got, expected);
+}
