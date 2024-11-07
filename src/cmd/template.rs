@@ -7,9 +7,15 @@ Non-alphanumeric characters in column headers are replaced with an underscore ("
 The template syntax follows the Jinja2 template language with additional custom filters
 (see bottom of file).
 
+Example:
+data.csv:
+  "first name","last name",balance,"loyalty points",active
+  alice,jones,100.50,1000,true
+  bob,smith,200.75,2000,false
+
 Example template:
-  Dear {{ name }},
-    Your account balance is {{ balance|format_float(2) }} with {{ points|human_count }} points!
+  Dear {{ first_name|title }} {{ last_name|title }}!
+    Your account balance is {{ balance|format_float(2) }} with {{ loyalty_points|human_count }} points!
     Status: {% if active|str_to_bool is true %}Active{% else %}Inactive{% endif %}
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_template.rs.
