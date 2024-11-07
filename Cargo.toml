@@ -215,7 +215,7 @@ reqwest = { version = "0.12", features = [
 rfd = { version = "0.15", optional = true }
 rust_decimal = { version = "1.36", default-features = false }
 ryu = "1"
-sanitize-filename = { version = "0.5", optional = true }
+sanitize-filename = { version = "0.6", optional = true }
 simd-json = "0.14"
 self_update = { version = "0.41", features = [
     "archive-zip",
