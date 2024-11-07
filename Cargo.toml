@@ -146,6 +146,14 @@ minijinja = { version = "2", features = [
     "speedups",
     "urlencode",
 ] }
+minijinja-contrib = { version = "2", features = [
+    "datetime",
+    "pycompat",
+    "rand",
+    "time",
+    "time-tz",
+    "timezone",
+] }
 mlua = { version = "0.10", features = [
     "luau",
     "luau-jit",
