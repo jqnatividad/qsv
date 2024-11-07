@@ -2,20 +2,29 @@ static USAGE: &str = r#"
 Renders a template using CSV data with the MiniJinja template engine.
 https://docs.rs/minijinja/latest/minijinja/
 
-Each CSV row is used to populate the template, with column headers used as variable names.
-Non-alphanumeric characters in column headers are replaced with an underscore ("_").
-The template syntax follows the Jinja2 template language with additional custom functions/filters
-from minijinja_contrib and custom filters defined in this command (see bottom of source).
+This command processes each row of the CSV file, making the column values available as variables.
+Each row is rendered using the template.  Column headers become variable names, with any
+special characters converted to underscores.
+
+Templates use Jinja2 syntax and can access an extensive library of built-in filters/functions,
+with additional ones from minijinja_contrib https://docs.rs/minijinja-contrib/latest/minijinja_contrib/.
+Additional qsv custom filters are also documented at the end of this file.
+
+If the <outdir> argument is specified, it will create a file for each row in <outdir>, with
+the filename rendered using --outfilename option.
+Otherwise, ALL the rendered rows will be sent to STDOUT or the designated --output. 
 
 Example:
 data.csv:
   "first name","last name",balance,"loyalty points",active
   alice,jones,100.50,1000,true
   bob,smith,200.75,2000,false
+  john,doe,10,1,true
 
 Example template:
   Dear {{ first_name|title }} {{ last_name|title }}!
-    Your account balance is {{ balance|format_float(2) }} with {{ loyalty_points|human_count }} points!
+    Your account balance is {{ balance|format_float(2) }}
+       with {{ loyalty_points|human_count }} point{{ loyalty_points|int|pluralize }}!
     Status: {% if active|str_to_bool is true %}Active{% else %}Inactive{% endif %}
 
 For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_template.rs.
@@ -36,8 +45,8 @@ template options:
                                 files to write to <outdir>. If set to just QSV_ROWNO, the filestem
                                 is set to the current rowno of the record, padded with leading
                                 zeroes, with the ".txt" extension (e.g. 001.txt, 002.txt, etc.)
-                                Note that the QSV_ROWNO variable is also available in the context
-                                if you want to use it in the filename template.
+                                Note that the all the fields, including QSV_ROWNO, are available
+                                when defining the filename template.
                                 [default: QSV_ROWNO]
     --customfilter-error <msg>  The value to return when a custom filter returns an error.
                                 Use "<empty string>" to return an empty string.
@@ -389,6 +398,8 @@ fn human_bytes(value: &str) -> String {
 }
 
 /// Rounds a float number to specified number of decimal places.
+/// Round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
+/// https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
 /// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as float.
 fn round_num(value: &str, places: u32) -> String {
     value.parse::<f64>().map_or_else(
