@@ -428,3 +428,75 @@ Alice is a minor.
 Bob is an adult.";
     assert_eq!(got, expected);
 }
+
+#[test]
+fn template_render_error() {
+    let wrk = Workdir::new("template_render_error");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "age"],
+            svec!["Alice", "25"],
+            svec!["Bob", "30"],
+        ],
+    );
+
+    // Test invalid template syntax with default error message
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg("Hello {{name}, invalid syntax!")
+        .arg("data.csv");
+
+    wrk.assert_err(&mut *&mut cmd);
+    let got: String = wrk.output_stderr(&mut cmd);
+    let expected =
+        "syntax error: unexpected `}}`, expected end of variable block (in template:1)\n";
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn template_filter_error() {
+    let wrk = Workdir::new("template_filter_error");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "amount"],
+            svec!["Alice", "not_a_number"],
+            svec!["Bob", "123.45"],
+        ],
+    );
+
+    // Test filter error with default error message
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg("{{name}}: {{amount|format_float(2)}}\n\n")
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "Alice: <FILTER_ERROR>\nBob: 123.45";
+    assert_eq!(got, expected);
+
+    // Test custom filter error message
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg("{{name}}: {{amount|format_float(2)}}\n\n")
+        .arg("--customfilter-error")
+        .arg("INVALID NUMBER")
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "Alice: INVALID NUMBER\nBob: 123.45";
+    assert_eq!(got, expected);
+
+    // Test empty string as filter error
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg("{{name}}: {{amount|format_float(2)}}\n\n")
+        .arg("--customfilter-error")
+        .arg("<empty string>")
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = "Alice: \nBob: 123.45";
+    assert_eq!(got, expected);
+}
