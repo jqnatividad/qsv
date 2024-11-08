@@ -21,13 +21,18 @@ data.csv:
   bob,smith,200.75,2000,false
   john,doe,10,1,true
 
-Example template:
+template.tpl
   Dear {{ first_name|title }} {{ last_name|title }}!
     Your account balance is {{ balance|format_float(2) }}
        with {{ loyalty_points|human_count }} point{{ loyalty_points|int|pluralize }}!
+    {% set loyalty_value = loyalty_points|int / 100 -%}
+    Value of Points: {{ loyalty_value }} 
+    Final Balance: {{ balance|int - loyalty_value }}
     Status: {% if active|str_to_bool is true %}Active{% else %}Inactive{% endif %}
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_template.rs.
+qsv template --template-file template.tpl data.csv
+
+For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_template.rs.
 For a relatively complex MiniJinja template, see https://github.com/jqnatividad/qsv/blob/master/scripts/template.tpl
 
 Usage:
