@@ -181,6 +181,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         sanitized_headers.push(QSV_ROWNO.to_owned());
         csv::StringRecord::from(sanitized_headers)
     };
+    let headers_len = headers.len();
 
     // Set up output handling
     let output_to_dir = args.arg_outdir.is_some();
@@ -266,7 +267,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .map(|record| {
                 let curr_record = record;
 
-                let mut context = simd_json::owned::Object::default();
+                let mut context = simd_json::owned::Object::with_capacity(headers_len);
                 let mut row_number = 0_u64;
 
                 if no_headers {
@@ -364,6 +365,8 @@ fn substr(value: &str, start: u32, end: Option<u32>) -> String {
 /// Formats a float number string with the specified decimal precision.
 /// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as float.
 fn format_float(value: &str, precision: u32) -> String {
+    // Prevent excessive precision
+    let precision = precision.min(16);
     value.parse::<f64>().map_or_else(
         |_| FILTER_ERROR.get().unwrap().clone(),
         |num| format!("{:.1$}", num, precision as usize),
@@ -412,5 +415,8 @@ fn round_num(value: &str, places: u32) -> String {
 /// Returns true for "true", "1", or "yes" (case insensitive).
 /// Returns false for all other values.
 fn str_to_bool(value: &str) -> bool {
-    matches!(value.to_ascii_lowercase().as_str(), "true" | "1" | "yes")
+    matches!(
+        value.to_ascii_lowercase().as_str(),
+        "true" | "1" | "yes" | "t" | "y"
+    )
 }
