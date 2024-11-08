@@ -189,8 +189,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut row_no = 0_u64;
     let mut rowcount = 0;
 
+    let use_rowno_filename = args.flag_outfilename == QSV_ROWNO;
+
     // Create filename environment once if needed
-    let filename_env = if output_to_dir && args.flag_outfilename != QSV_ROWNO {
+    let filename_env = if output_to_dir && !use_rowno_filename {
         let mut env = Environment::new();
         minijinja_contrib::add_to_environment(&mut env);
         env.set_unknown_method_callback(unknown_method_callback);
@@ -313,7 +315,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     .unwrap_or_else(|_| "RENDERING ERROR".to_owned());
 
                 if output_to_dir {
-                    let outfilename = if args.flag_outfilename == QSV_ROWNO {
+                    let outfilename = if use_rowno_filename {
                         // Pad row number with required number of leading zeroes
                         format!("{row_number:0width$}.txt")
                     } else {
