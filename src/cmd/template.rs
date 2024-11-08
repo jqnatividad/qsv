@@ -79,6 +79,7 @@ use rayon::{
     prelude::IntoParallelRefIterator,
 };
 use serde::Deserialize;
+use simd_json::BorrowedValue;
 
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
@@ -267,7 +268,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .map(|record| {
                 let curr_record = record;
 
-                let mut context = simd_json::owned::Object::with_capacity(headers_len);
+                let mut context = simd_json::borrowed::Object::default();
+                context.reserve(headers_len);
                 let mut row_number = 0_u64;
 
                 if no_headers {
@@ -279,13 +281,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                             // set the last field to QSV_ROWNO
                             row_number = atoi_simd::parse::<u64>(field.as_bytes()).unwrap();
                             context.insert(
-                                QSV_ROWNO.to_owned(),
-                                simd_json::OwnedValue::String(field.to_owned()),
+                                std::borrow::Cow::Borrowed(QSV_ROWNO),
+                                BorrowedValue::String(std::borrow::Cow::Borrowed(field)),
                             );
                         } else {
                             context.insert(
-                                format!("_c{}", i + 1),
-                                simd_json::OwnedValue::String(field.to_owned()),
+                                format!("_c{}", i + 1).into(),
+                                BorrowedValue::String(std::borrow::Cow::Borrowed(field)),
                             );
                         }
                     }
@@ -293,8 +295,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     // Use header names
                     for (header, field) in headers.iter().zip(curr_record.iter()) {
                         context.insert(
-                            header.to_string(),
-                            simd_json::OwnedValue::String(field.to_owned()),
+                            std::borrow::Cow::Borrowed(header),
+                            BorrowedValue::String(std::borrow::Cow::Borrowed(field)),
                         );
                         // when headers are defined, the last one is QSV_ROWNO
                         if header == QSV_ROWNO {
