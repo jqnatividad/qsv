@@ -211,6 +211,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut wtr = if output_to_dir {
         None
     } else {
+        // we use a bigger BufWriter buffer here than the default 8k as ALL the output
+        // is going to one destination and we want to minimize I/O syscalls
         Some(match args.flag_output {
             Some(file) => Box::new(BufWriter::with_capacity(
                 DEFAULT_WTR_BUFFER_CAPACITY,
@@ -330,11 +332,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             })
             .collect_into_vec(&mut batch_results);
 
+        let mut rendered_size = 0_usize;
         for result_record in &batch_results {
             if output_to_dir {
                 let outpath = std::path::Path::new(args.arg_outdir.as_ref().unwrap())
                     .join(result_record.0.clone());
-                let mut writer = BufWriter::new(fs::File::create(outpath)?);
+                // if output_to_dir is true, we'll be writing a LOT of files and this
+                // hot loop will be I/O bound
+                // we optimize the size of the BufWriter buffer here
+                // so that it's only one I/O syscall per row
+                rendered_size = result_record.1.len();
+                let mut writer =
+                    BufWriter::with_capacity(rendered_size, fs::File::create(outpath)?);
                 write!(writer, "{}", result_record.1)?;
                 writer.flush()?;
             } else if let Some(ref mut w) = wtr {
