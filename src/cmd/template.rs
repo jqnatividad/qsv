@@ -208,7 +208,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         fs::create_dir_all(args.arg_outdir.as_ref().unwrap())?;
     }
 
-    let mut wtr = if output_to_dir {
+    let mut bulk_wtr = if output_to_dir {
         None
     } else {
         // we use a bigger BufWriter buffer here than the default 8k as ALL the output
@@ -332,27 +332,34 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             })
             .collect_into_vec(&mut batch_results);
 
-        let mut rendered_size = 0_usize;
+        let mut outpath = std::path::PathBuf::new();
         for result_record in &batch_results {
             if output_to_dir {
-                let outpath = std::path::Path::new(args.arg_outdir.as_ref().unwrap())
-                    .join(result_record.0.clone());
-                // if output_to_dir is true, we'll be writing a LOT of files and this
-                // hot loop will be I/O bound
+                // safety: this is safe as output_to_dir = args.arg_outdir.is_some()
+                outpath.push(args.arg_outdir.as_ref().unwrap());
+                outpath.push(&result_record.0);
+
+                // if output_to_dir is true, we'll be writing a LOT of files (one for each row)
+                // and this hot loop will be I/O bound
                 // we optimize the size of the BufWriter buffer here
                 // so that it's only one I/O syscall per row
-                rendered_size = result_record.1.len();
-                let mut writer =
-                    BufWriter::with_capacity(rendered_size, fs::File::create(outpath)?);
-                write!(writer, "{}", result_record.1)?;
-                writer.flush()?;
-            } else if let Some(ref mut w) = wtr {
+                let mut row_writer =
+                    BufWriter::with_capacity(result_record.1.len(), fs::File::create(&outpath)?);
+                row_writer.write_all(result_record.1.as_bytes())?;
+                row_writer.flush()?;
+
+                outpath.clear();
+            } else if let Some(ref mut w) = bulk_wtr {
                 w.write_all(result_record.1.as_bytes())?;
             }
         }
 
         batch.clear();
     } // end batch loop
+
+    if let Some(mut w) = bulk_wtr {
+        w.flush()?;
+    }
 
     Ok(())
 }
