@@ -264,6 +264,7 @@ use log::{
     Level::{Debug, Trace, Warn},
 };
 use minijinja::Environment;
+use minijinja_contrib::pycompat::unknown_method_callback;
 use rand::Rng;
 use regex::Regex;
 use reqwest::{
@@ -535,6 +536,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let payload_env = if let Some(template_file) = args.flag_payload_tpl {
         template_content = fs::read_to_string(template_file)?;
         let mut env = Environment::new();
+        env.set_unknown_method_callback(unknown_method_callback);
         env.add_template("template", &template_content)?;
         payload_content_type = ContentType::Json;
         env
