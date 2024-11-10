@@ -281,7 +281,7 @@ newline-converter = "0.3"
 # rusqlite = { version = "0.32", features = ["bundled"] }
 
 quickcheck  = { version = "1", default-features = false }
-serial_test = { version = "3.1", features = ["file_locks"] }
+serial_test = { version = "3.2", features = ["file_locks"] }
 
 [patch.crates-io]
 # use our tweaked fork of csv crate
