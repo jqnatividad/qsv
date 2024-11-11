@@ -3,8 +3,8 @@ Renders a template using CSV data with the MiniJinja template engine.
 https://docs.rs/minijinja/latest/minijinja/
 
 This command processes each row of the CSV file, making the column values available as variables.
-Each row is rendered using the template.  Column headers become variable names, with any
-special characters converted to underscores.
+Each row is rendered using the template. Column headers become variable names, with non-alphanumeric
+characters converted to underscore (_).
 
 Templates use Jinja2 syntax and can access an extensive library of built-in filters/functions,
 with additional ones from minijinja_contrib https://docs.rs/minijinja-contrib/latest/minijinja_contrib/.
@@ -332,7 +332,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // render filename with record data using context
                         // if the filename cannot be rendered, set the filename so the user
                         // can easily find the record which caused the rendering error
-                        // e.g. FILENAME_RENDING_ERROR-00035.txt is the 35th record in a CSV
+                        // e.g. FILENAME_RENDERING_ERROR-00035.txt is the 35th record in a CSV
                         // with at least 10000 rows (the three leading zeros)
                         filename_template.render(&context).unwrap_or_else(|_| {
                             format!("FILENAME_RENDERING_ERROR-{row_number:0width$}.txt")
