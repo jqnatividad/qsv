@@ -198,16 +198,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // Create filename template once if needed
     #[allow(unused_assignments)]
-    let mut filename_env: Environment<'_> = Environment::empty();
+    let mut filename_env = Environment::empty();
     let filename_template = if output_to_dir && !use_rowno_filename {
+        // actually init the MiniJinja environment with default filters, tests and globals loaded
         filename_env = Environment::new();
+
         minijinja_contrib::add_to_environment(&mut filename_env);
         filename_env.set_unknown_method_callback(unknown_method_callback);
         filename_env.add_template("filename", &args.flag_outfilename)?;
-        Some(filename_env.get_template("filename"))
+        filename_env.get_template("filename")?
     } else {
         rowcount = util::count_rows(&rconfig)?;
-        None
+        filename_env.template_from_str("")?
     };
     // Get width of rowcount for padding leading zeroes
     // when rendering --outfilename
@@ -237,7 +239,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // reuse batch buffers
     #[allow(unused_assignments)]
     let mut batch_record = csv::StringRecord::new();
-    let mut batch = Vec::with_capacity(batchsize);
+    let mut batch: Vec<csv::StringRecord> = Vec::with_capacity(batchsize);
     // batch_results stores the results of template rendering for each batch:
     // - First tuple element is the optional output filename (when writing to directory)
     // - Second tuple element is the rendered template content
@@ -317,7 +319,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
 
-                // Render template using record data in context
+                // Render template with record data using context
                 let rendered = template
                     .render(&context)
                     .unwrap_or_else(|_| "RENDERING ERROR".to_owned());
@@ -327,22 +329,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // Pad row number with required number of leading zeroes
                         format!("{row_number:0width$}.txt")
                     } else {
-                        // render filename using record data in context
-                        // safety: filename_template is defined, so its safe to unwrap
-                        filename_template
-                            .as_ref()
-                            .unwrap()
-                            .as_ref()
-                            .unwrap()
-                            .render(&context)
-                            // if the filename cannot be rendered, set the filename so the user
-                            // can easily find the record which caused the rendering error
-                            // e.g. FILENAME_RENDING_ERROR-00035.txt is the 35th record in a CSV
-                            // with at least 10000 rows (the three
-                            // leading zeros)
-                            .unwrap_or_else(|_| {
-                                format!("FILENAME_RENDERING_ERROR-{row_number:0width$}.txt")
-                            })
+                        // render filename with record data using context
+                        // if the filename cannot be rendered, set the filename so the user
+                        // can easily find the record which caused the rendering error
+                        // e.g. FILENAME_RENDING_ERROR-00035.txt is the 35th record in a CSV
+                        // with at least 10000 rows (the three
+                        // leading zeros)
+                        filename_template.render(&context).unwrap_or_else(|_| {
+                            format!("FILENAME_RENDERING_ERROR-{row_number:0width$}.txt")
+                        })
                     };
                     (Some(outfilename), rendered)
                 } else {
