@@ -236,7 +236,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut batch_record = csv::StringRecord::new();
     let mut batch = Vec::with_capacity(batchsize);
-    let mut batch_results = Vec::with_capacity(batchsize);
+    // batch_results stores the results of template rendering for each batch:
+    // - First tuple element is the optional output filename (when writing to directory)
+    // - Second tuple element is the rendered template content
+    let mut batch_results: Vec<(Option<String>, String)> = Vec::with_capacity(batchsize);
 
     let no_headers = args.flag_no_headers;
 
