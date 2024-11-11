@@ -196,13 +196,15 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let use_rowno_filename = args.flag_outfilename == QSV_ROWNO;
 
-    // Create filename environment once if needed
-    let filename_env = if output_to_dir && !use_rowno_filename {
-        let mut env = Environment::new();
-        minijinja_contrib::add_to_environment(&mut env);
-        env.set_unknown_method_callback(unknown_method_callback);
-        env.add_template("filename", &args.flag_outfilename)?;
-        Some(env)
+    // Create filename template once if needed
+    #[allow(unused_assignments)]
+    let mut filename_env: Environment<'_> = Environment::empty();
+    let filename_template = if output_to_dir && !use_rowno_filename {
+        filename_env = Environment::new();
+        minijinja_contrib::add_to_environment(&mut filename_env);
+        filename_env.set_unknown_method_callback(unknown_method_callback);
+        filename_env.add_template("filename", &args.flag_outfilename)?;
+        Some(filename_env.get_template("filename"))
     } else {
         rowcount = util::count_rows(&rconfig)?;
         None
@@ -326,10 +328,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         format!("{row_number:0width$}.txt")
                     } else {
                         // render filename using record data in context
-                        filename_env
+                        // safety: filename_template is defined, so its safe to unwrap
+                        filename_template
                             .as_ref()
                             .unwrap()
-                            .get_template("filename")
+                            .as_ref()
                             .unwrap()
                             .render(&context)
                             // if the filename cannot be rendered, set the filename so the user
