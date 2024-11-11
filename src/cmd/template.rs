@@ -50,7 +50,7 @@ template options:
                                 files to write to <outdir>. If set to just QSV_ROWNO, the filestem
                                 is set to the current rowno of the record, padded with leading
                                 zeroes, with the ".txt" extension (e.g. 001.txt, 002.txt, etc.)
-                                Note that the all the fields, including QSV_ROWNO, are available
+                                Note that all the fields, including QSV_ROWNO, are available
                                 when defining the filename template.
                                 [default: QSV_ROWNO]
     --customfilter-error <msg>  The value to return when a custom filter returns an error.
@@ -211,11 +211,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // when rendering --outfilename
     let width = rowcount.to_string().len();
 
-    if output_to_dir {
-        fs::create_dir_all(args.arg_outdir.as_ref().unwrap())?;
-    }
-
     let mut bulk_wtr = if output_to_dir {
+        fs::create_dir_all(args.arg_outdir.as_ref().unwrap())?;
         None
     } else {
         // we use a bigger BufWriter buffer here than the default 8k as ALL the output
@@ -281,6 +278,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 context.reserve(headers_len);
                 let mut row_number = 0_u64;
 
+                // add the fields of the current record to the context
                 if no_headers {
                     // Use numeric, column 1-based indices (e.g. _c1, _c2, etc.)
                     let headers_len = curr_record.len();
@@ -314,7 +312,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
 
-                // Render template with record data
+                // Render template using record data in context
                 let rendered = template
                     .render(&context)
                     .unwrap_or_else(|_| "RENDERING ERROR".to_owned());
@@ -324,17 +322,25 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // Pad row number with required number of leading zeroes
                         format!("{row_number:0width$}.txt")
                     } else {
+                        // render filename using record data in context
                         filename_env
                             .as_ref()
                             .unwrap()
                             .get_template("filename")
                             .unwrap()
                             .render(&context)
-                            .unwrap_or_else(|_| "FILENAME RENDERING ERROR".to_owned())
+                            // if the filename cannot be rendered, set the filename so the user
+                            // can easily find the record which caused the rendering error
+                            // e.g. FILENAME_RENDING_ERROR-00035.txt is the 35th record in a CSV
+                            // with at least 10000 rows (the three
+                            // leading zeros)
+                            .unwrap_or_else(|_| {
+                                format!("FILENAME_RENDERING_ERROR-{row_number:0width$}.txt")
+                            })
                     };
-                    (outfilename, rendered)
+                    (Some(outfilename), rendered)
                 } else {
-                    (String::new(), rendered)
+                    (None, rendered)
                 }
             })
             .collect_into_vec(&mut batch_results);
@@ -343,8 +349,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         for result_record in &batch_results {
             if output_to_dir {
                 // safety: this is safe as output_to_dir = args.arg_outdir.is_some()
+                // and result_record.0 (the filename to use) is_some()
                 outpath.push(args.arg_outdir.as_ref().unwrap());
-                outpath.push(&result_record.0);
+                outpath.push(result_record.0.as_deref().unwrap());
 
                 // if output_to_dir is true, we'll be writing a LOT of files (one for each row)
                 // and this hot loop will be I/O bound
