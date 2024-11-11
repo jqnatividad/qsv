@@ -333,8 +333,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // if the filename cannot be rendered, set the filename so the user
                         // can easily find the record which caused the rendering error
                         // e.g. FILENAME_RENDING_ERROR-00035.txt is the 35th record in a CSV
-                        // with at least 10000 rows (the three
-                        // leading zeros)
+                        // with at least 10000 rows (the three leading zeros)
                         filename_template.render(&context).unwrap_or_else(|_| {
                             format!("FILENAME_RENDERING_ERROR-{row_number:0width$}.txt")
                         })
