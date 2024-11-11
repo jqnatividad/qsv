@@ -236,6 +236,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_urlencoded = { version = "0.7", optional = true }
 simple-expand-tilde = "0.4"
+sled = { version = "0.34", optional = true }
 smallvec = "1"
 snap = "1"
 strsim = { version = "0.11", optional = true }
@@ -305,11 +306,17 @@ dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
 
+# use indicatif upstream with updated dependency replacing unmaintained `instant` with `web-time`
+indicatif = { git = "https://github.com/console-rs/indicatif", rev = "83da31e" }
+
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
 
 # use upstream publicsuffix with unreleased dependency bumps
 publicsuffix = { git = "https://github.com/rushmorem/publicsuffix", rev = "b300356" }
+
+# use our patched fork of sled to get rid of unmaintained instant
+sled = { git = "https://github.com/jqnatividad/sled", branch = "v0.34.7-bumped-parking_lot_to_0.12" }
 
 # use our fork of strum with bumped phf dependency. They're holding back as they have a conservative
 # MSRV policy, while qsv has an aggressive MSRV policy to always require Rust stable
@@ -325,9 +332,9 @@ strum_macros = { git = "https://github.com/jqnatividad/strum", branch = "bump-ph
 # BUILD NOTE: Be sure to set QSV_POLARS_REV below to the latest commit short hash or tag 
 # of polars/py-polars before building qsv. This allows us to show the polars rev/tag in --version.
 # if we are using a release version of Rust Polars, leave QSV_POLARS_REV empty
-# QSV_POLARS_REV=9c08893
+# QSV_POLARS_REV=62ef918
 # polars = { git = "https://github.com/pola-rs/polars", tag = "rs-0.42.2" }
-polars = { git = "https://github.com/pola-rs/polars", rev = "9c08893" }
+polars = { git = "https://github.com/pola-rs/polars", rev = "62ef918" }
 [features]
 default = ["mimalloc"]
 distrib_features = [
@@ -368,9 +375,17 @@ fetch = [
     "publicsuffix",
     "redis",
     "serde_urlencoded",
+    "sled",
 ]
 foreach = ["local-encoding"]
-geocode = ["bytemuck", "cached", "geosuggest-core", "geosuggest-utils", "phf"]
+geocode = [
+    "bytemuck",
+    "cached",
+    "geosuggest-core",
+    "geosuggest-utils",
+    "phf",
+    "sled",
+]
 luau = ["mlua", "sanitize-filename"]
 polars = ["dep:polars", "bytemuck"]
 prompt = ["rfd"]
