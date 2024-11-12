@@ -306,9 +306,6 @@ dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
 
-# use indicatif upstream with updated dependency replacing unmaintained `instant` with `web-time`
-indicatif = { git = "https://github.com/console-rs/indicatif", rev = "83da31e" }
-
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
 
