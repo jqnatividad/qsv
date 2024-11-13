@@ -208,11 +208,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         filename_env.add_template("filename", &args.flag_outfilename)?;
         filename_env.get_template("filename")?
     } else {
-        rowcount = util::count_rows(&rconfig)?;
         filename_env.template_from_str("")?
     };
+
     // Get width of rowcount for padding leading zeroes
-    // when rendering --outfilename
+    rowcount = util::count_rows(&rconfig)?;
     let width = rowcount.to_string().len();
 
     let mut bulk_wtr = if output_to_dir {
