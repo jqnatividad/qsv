@@ -1245,8 +1245,6 @@ fn joinp_asof_date_diffcolnames_sqlfilter() {
     assert_eq!(got, expected);
 }
 
-// ... existing code ...
-
 #[test]
 fn joinp_ignore_case() {
     let wrk = Workdir::new("joinp_ignore_case");
