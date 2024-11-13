@@ -1244,3 +1244,46 @@ fn joinp_asof_date_diffcolnames_sqlfilter() {
     ];
     assert_eq!(got, expected);
 }
+
+// ... existing code ...
+
+#[test]
+fn joinp_ignore_case() {
+    let wrk = Workdir::new("joinp_ignore_case");
+
+    // Create test data with mixed case cities
+    wrk.create(
+        "cities_mixed.csv",
+        vec![
+            svec!["city", "state"],
+            svec!["BOSTON", "MA"],
+            svec!["new york", "NY"],
+            svec!["San Francisco", "CA"],
+            svec!["BUFFALO", "NY"],
+        ],
+    );
+
+    wrk.create(
+        "places_mixed.csv",
+        vec![
+            svec!["city", "place"],
+            svec!["Boston", "Logan Airport"],
+            svec!["boston", "Boston Garden"],
+            svec!["BUFFALO", "Ralph Wilson Stadium"],
+            svec!["orlando", "Disney World"],
+        ],
+    );
+
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["city", "cities_mixed.csv", "city", "places_mixed.csv"])
+        .arg("--ignore-case");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["city", "state", "city_right", "place"],
+        svec!["BOSTON", "MA", "Boston", "Logan Airport"],
+        svec!["BOSTON", "MA", "boston", "Boston Garden"],
+        svec!["BUFFALO", "NY", "BUFFALO", "Ralph Wilson Stadium"],
+    ];
+    assert_eq!(got, expected);
+}
