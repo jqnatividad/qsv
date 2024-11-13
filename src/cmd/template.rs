@@ -72,6 +72,7 @@ Common options:
                                 as headers. Templates must use numeric 1-based indices
                                 with the "_c" prefix.(e.g. col1: {{_c1}} col2: {{_c2}})
     --delimiter <sep>           Field separator for reading CSV [default: ,]
+    -p, --progressbar           Show progress bars. Not valid for stdin.
 "#;
 
 use std::{
@@ -80,6 +81,7 @@ use std::{
     sync::OnceLock,
 };
 
+use indicatif::{ProgressBar, ProgressDrawTarget};
 use minijinja::Environment;
 use minijinja_contrib::pycompat::unknown_method_callback;
 use rayon::{
@@ -109,6 +111,7 @@ struct Args {
     flag_batch:              usize,
     flag_delimiter:          Option<Delimiter>,
     flag_no_headers:         bool,
+    flag_progressbar:        bool,
 }
 
 static FILTER_ERROR: OnceLock<String> = OnceLock::new();
@@ -195,7 +198,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // Set up output handling
     let output_to_dir = args.arg_outdir.is_some();
     let mut row_no = 0_u64;
-    let mut rowcount = 0;
 
     let use_rowno_filename = args.flag_outfilename == QSV_ROWNO;
 
@@ -215,7 +217,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
 
     // Get width of rowcount for padding leading zeroes
-    rowcount = util::count_rows(&rconfig)?;
+    let rowcount = util::count_rows(&rconfig)?;
     let width = rowcount.to_string().len();
 
     let mut bulk_wtr = if output_to_dir {
@@ -238,6 +240,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let num_jobs = util::njobs(args.flag_jobs);
     let batchsize = util::optimal_batch_size(&rconfig, args.flag_batch, num_jobs);
+
+    // prep progress bar
+    let show_progress =
+        (args.flag_progressbar || util::get_envvar_flag("QSV_PROGRESSBAR")) && !rconfig.is_stdin();
+
+    let progress = ProgressBar::with_draw_target(None, ProgressDrawTarget::stderr_with_hz(5));
+    if show_progress {
+        util::prep_progress(&progress, rowcount);
+    } else {
+        progress.set_draw_target(ProgressDrawTarget::hidden());
+    }
 
     // reuse batch buffers
     #[allow(unused_assignments)]
@@ -371,8 +384,16 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         }
 
+        if show_progress {
+            progress.inc(batch.len() as u64);
+        }
+
         batch.clear();
     } // end batch loop
+
+    if show_progress {
+        util::finish_progress(&progress);
+    }
 
     if let Some(mut w) = bulk_wtr {
         w.flush()?;
