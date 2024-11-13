@@ -6,8 +6,9 @@ This command processes each row of the CSV file, making the column values availa
 Each row is rendered using the template. Column headers become variable names, with non-alphanumeric
 characters converted to underscore (_).
 
-Templates use Jinja2 syntax and can access an extensive library of built-in filters/functions,
-with additional ones from minijinja_contrib https://docs.rs/minijinja-contrib/latest/minijinja_contrib/.
+Templates use Jinja2 syntax (https://jinja.palletsprojects.com/en/stable/templates/) 
+and can access an extensive library of built-in filters/functions, with additional ones
+from minijinja_contrib https://docs.rs/minijinja-contrib/latest/minijinja_contrib/.
 Additional qsv custom filters are also documented at the end of this file.
 
 If the <outdir> argument is specified, it will create a file for each row in <outdir>, with
@@ -25,6 +26,8 @@ template.tpl
   Dear {{ first_name|title }} {{ last_name|title }}!
     Your account balance is {{ balance|format_float(2) }}
        with {{ loyalty_points|human_count }} point{{ loyalty_points|int|pluralize }}!
+    {# This is a comment and will not be rendered. The closing minus sign in this
+       block tells MiniJinja to trim whitespaces -#}
     {% set loyalty_value = loyalty_points|int / 100 -%}
     Value of Points: {{ loyalty_value }} 
     Final Balance: {{ balance|int - loyalty_value }}
