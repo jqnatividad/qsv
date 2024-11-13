@@ -29,6 +29,7 @@ joinp arguments:
     Note that <input1> is the left CSV data set and <input2> is the right CSV data set.
 
 joinp options:
+    -i, --ignore-case      When set, joins are done case insensitively.
     --left                 Do a 'left outer' join. This returns all rows in
                            first CSV data set, including rows with no
                            corresponding row in the second data set. When no
@@ -250,6 +251,7 @@ struct Args {
     flag_output:           Option<String>,
     flag_delimiter:        Option<Delimiter>,
     flag_quiet:            bool,
+    flag_ignore_case:      bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -384,6 +386,7 @@ struct JoinStruct {
     time_format:      Option<String>,
     float_precision:  Option<usize>,
     null_value:       String,
+    ignore_case:      bool,
 }
 
 impl JoinStruct {
@@ -393,16 +396,69 @@ impl JoinStruct {
         validation: JoinValidation,
         asof_join: bool,
     ) -> CliResult<(usize, usize)> {
-        let left_selcols: Vec<_> = self
+        let mut left_selcols: Vec<_> = self
             .left_sel
             .split(',')
             .map(polars::lazy::dsl::col)
             .collect();
-        let right_selcols: Vec<_> = self
+        let mut right_selcols: Vec<_> = self
             .right_sel
             .split(',')
             .map(polars::lazy::dsl::col)
             .collect();
+
+        // If ignore_case is enabled, create lowercase versions of the join columns
+        if self.ignore_case {
+            // Create temporary lowercase versions of join columns in left dataframe
+            for col in &left_selcols {
+                self.left_lf = self
+                    .left_lf
+                    .with_column(col.clone().str().to_lowercase().alias(&format!(
+                        "_qsv-{}-lower",
+                        col.to_string()
+                            .trim_start_matches(r#"col(""#)
+                            .trim_end_matches(r#"")"#)
+                    )));
+            }
+
+            // Create temporary lowercase versions of join columns in right dataframe
+            for col in &right_selcols {
+                self.right_lf = self
+                    .right_lf
+                    .with_column(col.clone().str().to_lowercase().alias(&format!(
+                        "_qsv-{}-lower",
+                        col.to_string()
+                            .trim_start_matches(r#"col(""#)
+                            .trim_end_matches(r#"")"#)
+                    )));
+            }
+
+            // Create new vectors for the lowercase column names
+            let left_selcols_w: Vec<_> = left_selcols
+                .iter()
+                .map(|col| {
+                    polars::lazy::dsl::col(&format!(
+                        "_qsv-{}-lower",
+                        col.to_string()
+                            .trim_start_matches(r#"col(""#)
+                            .trim_end_matches(r#"")"#)
+                    ))
+                })
+                .collect();
+            left_selcols = left_selcols_w;
+            let right_selcols_w: Vec<_> = right_selcols
+                .iter()
+                .map(|col| {
+                    polars::lazy::dsl::col(&format!(
+                        "_qsv-{}-lower",
+                        col.to_string()
+                            .trim_start_matches(r#"col(""#)
+                            .trim_end_matches(r#"")"#)
+                    ))
+                })
+                .collect();
+            right_selcols = right_selcols_w;
+        }
 
         let left_selcols_len = left_selcols.len();
         let right_selcols_len = right_selcols.len();
@@ -496,6 +552,20 @@ impl JoinStruct {
         } else {
             join_results
         };
+
+        // if self.ignore_case, remove the temporary lowercase columns from the dataframe
+        if self.ignore_case {
+            // Get all column names
+            let cols = results_df.get_column_names();
+            // Filter out the lowercase columns (those with "_qsv-*-lower" pattern)
+            let keep_cols: Vec<String> = cols
+                .iter()
+                .filter(|&col| !(col.starts_with("_qsv-") && col.ends_with("-lower")))
+                .map(|&s| s.to_string())
+                .collect();
+            // Select only the non-lowercase columns
+            results_df = results_df.select(keep_cols)?;
+        }
 
         let mut out_delim = self.delim;
         let mut out_writer = match self.output {
@@ -780,6 +850,7 @@ impl Args {
             } else {
                 self.flag_null_value.clone()
             },
+            ignore_case: self.flag_ignore_case,
         })
     }
 }
