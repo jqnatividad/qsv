@@ -232,7 +232,7 @@ fn test_input_trim_fields() {
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
-        svec!["column1   ", "column2   "],
+        svec!["column1", "column2"],
         svec!["a", "1"],
         svec!["c", "3"],
         svec!["e", "5"],
