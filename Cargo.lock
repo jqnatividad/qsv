@@ -341,12 +341,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arc-swap"
-version = "1.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69f7f8c3906b62b754cd5326047894316021dcfe5a194c8ea52bdd94934a3457"
-
-[[package]]
 name = "argminmax"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1079,7 +1073,7 @@ dependencies = [
  "hashbrown 0.14.5",
  "once_cell",
  "r2d2",
- "redis 0.25.4",
+ "redis",
  "rmp-serde",
  "serde",
  "serde_json",
@@ -1138,9 +1132,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.0"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1aeb932158bd710538c73702db6945cb68a8fb08c519e6e12706b94263b36db8"
+checksum = "fd9de9f2205d5ef3fd67e685b0df337994ddd4495e2a28d185500d0e1edfea47"
 dependencies = [
  "jobserver",
  "libc",
@@ -5327,7 +5321,7 @@ dependencies = [
  "rand_hc",
  "rand_xoshiro",
  "rayon",
- "redis 0.27.5",
+ "redis",
  "regex",
  "reqwest",
  "rfd",
@@ -5709,22 +5703,6 @@ dependencies = [
  "ryu",
  "sha1_smol",
  "socket2",
- "url",
-]
-
-[[package]]
-name = "redis"
-version = "0.27.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81cccf17a692ce51b86564334614d72dcae1def0fd5ecebc9f02956da74352b5"
-dependencies = [
- "ahash",
- "arc-swap",
- "combine",
- "itoa",
- "num-bigint",
- "percent-encoding",
- "ryu",
  "url",
 ]
 
