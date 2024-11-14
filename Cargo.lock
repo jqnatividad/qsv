@@ -341,6 +341,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arc-swap"
+version = "1.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69f7f8c3906b62b754cd5326047894316021dcfe5a194c8ea52bdd94934a3457"
+
+[[package]]
 name = "argminmax"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1063,8 +1069,7 @@ dependencies = [
 [[package]]
 name = "cached"
 version = "0.54.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9718806c4a2fe9e8a56fd736f97b340dd10ed1be8ed733ed50449f351dc33cae"
+source = "git+https://github.com/jaemk/cached?rev=bbf457e#bbf457e8f9f386d2da105f553a08ff60669f4cdb"
 dependencies = [
  "ahash",
  "cached_proc_macro",
@@ -1085,8 +1090,7 @@ dependencies = [
 [[package]]
 name = "cached_proc_macro"
 version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f42a145ed2d10dce2191e1dcf30cfccfea9026660e143662ba5eec4017d5daa"
+source = "git+https://github.com/jaemk/cached?rev=bbf457e#bbf457e8f9f386d2da105f553a08ff60669f4cdb"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -1097,8 +1101,7 @@ dependencies = [
 [[package]]
 name = "cached_proc_macro_types"
 version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ade8366b8bd5ba243f0a58f036cc0ca8a2f069cff1a2351ef1cac6b083e16fc0"
+source = "git+https://github.com/jaemk/cached?rev=bbf457e#bbf457e8f9f386d2da105f553a08ff60669f4cdb"
 
 [[package]]
 name = "calamine"
@@ -5691,13 +5694,15 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "0.25.4"
+version = "0.27.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0d7a6955c7511f60f3ba9e86c6d02b3c3f144f8c24b288d1f4e18074ab8bbec"
+checksum = "81cccf17a692ce51b86564334614d72dcae1def0fd5ecebc9f02956da74352b5"
 dependencies = [
  "ahash",
+ "arc-swap",
  "combine",
  "itoa",
+ "num-bigint",
  "percent-encoding",
  "r2d2",
  "ryu",

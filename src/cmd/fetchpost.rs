@@ -433,11 +433,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         if args.flag_flush_cache {
-            // TODO: replace deprecated redis::execute once we bump redis to 0.27
-            // redis::cmd("FLUSHDB")
-            //     .exec(&mut redis_conn)
-            //     .map_err(|_| "Cannot flush Redis cache")?;
-            redis::cmd("FLUSHDB").execute(&mut redis_conn);
+            redis::cmd("FLUSHDB")
+                .exec(&mut redis_conn)
+                .map_err(|_| "Cannot flush Redis cache")?;
             info!("flushed Redis database.");
         }
         CacheType::Redis

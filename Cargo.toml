@@ -203,7 +203,7 @@ rand = "0.8"
 rand_hc = "0.3"
 rand_xoshiro = "0.6"
 rayon = "1.10"
-redis = { version = "0.25", features = [
+redis = { version = "0.27", features = [
     "ahash",
     "tcp_nodelay",
 ], default-features = false, optional = true }
@@ -292,6 +292,9 @@ serial_test = { version = "3.2", features = ["file_locks"] }
 csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized-non-allocating-byterecord-trim" }
 csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized-non-allocating-byterecord-trim" }
 csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized-non-allocating-byterecord-trim" }
+
+# use cached with bumped redis using 0.27
+cached = { git = "https://github.com/jaemk/cached", rev = "bbf457e" }
 
 # use calamine with unreleased fixes
 calamine = { git = "https://github.com/tafia/calamine", rev = "cf86fa7" }
