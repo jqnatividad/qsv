@@ -1659,8 +1659,8 @@ dependencies = [
 
 [[package]]
 name = "csv"
-version = "1.3.0"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized-non-allocating-byterecord-trim#7dc27608571317ee5f01f37fcbaf80ea4c049ded"
+version = "1.3.1"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized-non-allocating-byterecord-trim#d6902bc4ff9cc1510537d5850a4f89de95650909"
 dependencies = [
  "csv-core",
  "itoa",
@@ -1672,7 +1672,7 @@ dependencies = [
 [[package]]
 name = "csv-core"
 version = "0.1.11"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized-non-allocating-byterecord-trim#7dc27608571317ee5f01f37fcbaf80ea4c049ded"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized-non-allocating-byterecord-trim#d6902bc4ff9cc1510537d5850a4f89de95650909"
 dependencies = [
  "memchr",
 ]
@@ -1695,7 +1695,7 @@ dependencies = [
 [[package]]
 name = "csv-index"
 version = "0.1.6"
-source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized-non-allocating-byterecord-trim#7dc27608571317ee5f01f37fcbaf80ea4c049ded"
+source = "git+https://github.com/jqnatividad/rust-csv?branch=qsv-optimized-non-allocating-byterecord-trim#d6902bc4ff9cc1510537d5850a4f89de95650909"
 dependencies = [
  "byteorder",
  "csv",
