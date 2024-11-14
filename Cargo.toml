@@ -309,9 +309,6 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
 
-# use upstream publicsuffix with unreleased dependency bumps
-publicsuffix = { git = "https://github.com/rushmorem/publicsuffix", rev = "b300356" }
-
 # use our patched fork of sled to get rid of unmaintained instant
 sled = { git = "https://github.com/jqnatividad/sled", branch = "v0.34.7-bumped-parking_lot_to_0.12" }
 
