@@ -413,7 +413,7 @@ impl JoinStruct {
             for col in &left_selcols {
                 self.left_lf = self
                     .left_lf
-                    .with_column(col.clone().str().to_lowercase().alias(&format!(
+                    .with_column(col.clone().str().to_lowercase().alias(format!(
                         "_qsv-{}-lower",
                         col.to_string()
                             .trim_start_matches(r#"col(""#)
@@ -425,7 +425,7 @@ impl JoinStruct {
             for col in &right_selcols {
                 self.right_lf = self
                     .right_lf
-                    .with_column(col.clone().str().to_lowercase().alias(&format!(
+                    .with_column(col.clone().str().to_lowercase().alias(format!(
                         "_qsv-{}-lower",
                         col.to_string()
                             .trim_start_matches(r#"col(""#)
@@ -437,7 +437,7 @@ impl JoinStruct {
             let left_selcols_w: Vec<_> = left_selcols
                 .iter()
                 .map(|col| {
-                    polars::lazy::dsl::col(&format!(
+                    polars::lazy::dsl::col(format!(
                         "_qsv-{}-lower",
                         col.to_string()
                             .trim_start_matches(r#"col(""#)
@@ -449,7 +449,7 @@ impl JoinStruct {
             let right_selcols_w: Vec<_> = right_selcols
                 .iter()
                 .map(|col| {
-                    polars::lazy::dsl::col(&format!(
+                    polars::lazy::dsl::col(format!(
                         "_qsv-{}-lower",
                         col.to_string()
                             .trim_start_matches(r#"col(""#)
