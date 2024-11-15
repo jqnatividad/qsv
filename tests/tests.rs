@@ -40,8 +40,9 @@ mod test_behead;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_cat;
 #[cfg(all(
-    any(feature = "feature_capable", feature = "lite"),
-    any(target_os = "windows", target_os = "macos")
+    any(feature = "feature_capable"),
+    any(target_os = "windows", target_os = "macos"),
+    feature = "clipboard",
 ))]
 mod test_clipboard;
 mod test_combos;
