@@ -335,6 +335,7 @@ enum Command {
     Apply,
     Behead,
     Cat,
+    #[cfg(all(feature = "clipboard", feature = "feature_capable"))]
     Clipboard,
     Count,
     Datefmt,
@@ -428,6 +429,7 @@ impl Command {
             #[cfg(all(feature = "apply", feature = "feature_capable"))]
             Command::Apply => cmd::apply::run(argv),
             Command::Cat => cmd::cat::run(argv),
+            #[cfg(all(feature = "clipboard", feature = "feature_capable"))]
             Command::Clipboard => cmd::clipboard::run(argv),
             Command::Count => cmd::count::run(argv),
             Command::Datefmt => cmd::datefmt::run(argv),
