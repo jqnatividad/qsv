@@ -93,9 +93,15 @@ fn main() -> QsvExitCode {
 
     enabled_commands.push_str(
         "    behead      Drop header from CSV file
-    cat         Concatenate by row or column
-    clipboard   Provide input from clipboard or output to clipboard
-    count       Count records
+    cat         Concatenate by row or column\n",
+    );
+
+    #[cfg(all(feature = "clipboard", feature = "feature_capable"))]
+    enabled_commands
+        .push_str("    clipboard   Provide input from clipboard or output to clipboard\n");
+
+    enabled_commands.push_str(
+        "    count       Count records
     datefmt     Format date/datetime strings
     dedup       Remove redundant rows
     describegpt Infer extended metadata using a LLM
