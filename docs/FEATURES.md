@@ -17,6 +17,7 @@
 * `self_update` - enable self-update engine, checking GitHub for the latest release. Note that if you manually built qsv, `self-update` will only alert you about new releases (it checks GitHub for the latest release 10% of the time upon startup unless the `QSV_NO_UPDATE` environment variable is set). It will NOT offer the choice to update itself to the prebuilt binaries published on GitHub.  
 You need not worry that your manually built qsv will be overwritten by a self-update.  
 To check if your qsv build will have the option to self-update, run `qsv --version`. If you see `self_update` in the enabled features, and QSV_KIND is `prebuilt*` at the end, then you have the option to self-update.
+* `ui` - enables commands that require linking UI libraries - `clipboard`, `lens` and `prompt`. Disable this feature if you're building for a headless environment. Note that `qsvdp` and `qsvlite` does not enable the `ui` feature by default.
 
 * `feature_capable` - enable to build `qsv` binary variant which is feature-capable.
 * `all_features` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,geocode,lens,luau,polars,prompt,python,to,self_update).
