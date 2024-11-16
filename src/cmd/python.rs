@@ -100,8 +100,7 @@ py options:
     -b, --batch <size>     The number of rows per batch to process before
                            releasing memory and acquiring a new GILpool.
                            Set to 0 to process the entire file in one batch.
-                           See https://pyo3.rs/v0.22.0/memory.html#gil-bound-memory
-                           for more info. [default: 30000]
+                           [default: 50000]
 
 Common options:
     -h, --help             Display this message
@@ -296,7 +295,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         Python::with_gil(|py| -> PyResult<()> {
-            let curr_batch = batch.clone();
+            let batch_ref = &mut batch;
+
             let helpers =
                 PyModule::from_code(py, &helpers_code, &helpers_filename, &helpers_module_name)?;
             let batch_globals = PyDict::new(py);
@@ -329,7 +329,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             let error_result = intern!(py, "<ERROR>");
 
-            for mut record in curr_batch {
+            for record in batch_ref.iter_mut() {
                 // Initializing locals
                 let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
 
@@ -368,7 +368,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let value: String = result.extract()?;
 
                     record.push_field(&value);
-                    if let Err(e) = wtr.write_record(&record) {
+                    if let Err(e) = wtr.write_record(&*record) {
                         // we do this since we cannot use the ? operator here
                         // since this closure returns a PyResult
                         // this is converted to a CliError::Other anyway
@@ -383,7 +383,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let include_record: bool = result.extract().unwrap_or(false);
 
                     if include_record {
-                        if let Err(e) = wtr.write_record(&record) {
+                        if let Err(e) = wtr.write_record(&*record) {
                             return Err(pyo3::PyErr::new::<pyo3::exceptions::PyIOError, _>(
                                 format!("cannot write record ({e})"),
                             ));
