@@ -3482,9 +3482,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.162"
+version = "0.2.164"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18d287de67fe55fd7e1581fe933d965a5a9477b38e949cfa9f8574ef01506398"
+checksum = "433bfe06b8c75da9b2e3fbea6e5329ff87748f0b144ef75306e674c3f6f7c13f"
 
 [[package]]
 name = "libflate"
@@ -5179,9 +5179,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3"
-version = "0.22.6"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f402062616ab18202ae8319da13fa4279883a2b8a9d9f83f20dbade813ce1884"
+checksum = "d51da03e17ef97ae4185cd606a4b316e04bb6f047d66913d6b57d4e6acfb41ec"
 dependencies = [
  "cfg-if",
  "indoc",
@@ -5197,9 +5197,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-build-config"
-version = "0.22.6"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b14b5775b5ff446dd1056212d778012cbe8a0fbffd368029fd9e25b514479c38"
+checksum = "455f646b3d007fb6d85cffccff9c7dfb752f24ec9fb0a04cb49537e7e9bdc2dd"
 dependencies = [
  "once_cell",
  "target-lexicon",
@@ -5207,9 +5207,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-ffi"
-version = "0.22.6"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ab5bcf04a2cdcbb50c7d6105de943f543f9ed92af55818fd17b660390fc8636"
+checksum = "432fc20d4dd419f8d1dd402a659bb42e75430706b50d367cc978978778638084"
 dependencies = [
  "libc",
  "pyo3-build-config",
@@ -5217,9 +5217,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-macros"
-version = "0.22.6"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fd24d897903a9e6d80b968368a34e1525aeb719d568dba8b3d4bfa5dc67d453"
+checksum = "ae1cd532e9356f90d1be1317d8bf51873e4a9468b9305b950c20e8aef786cc16"
 dependencies = [
  "proc-macro2",
  "pyo3-macros-backend",
@@ -5229,9 +5229,9 @@ dependencies = [
 
 [[package]]
 name = "pyo3-macros-backend"
-version = "0.22.6"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36c011a03ba1e50152b4b394b479826cad97e7a21eb52df179cd91ac411cbfbe"
+checksum = "975b289b3d3901442a6def73eedf8251dc1aed2cdc0a80d1c4f3998d868a97aa"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -5939,9 +5939,9 @@ dependencies = [
 
 [[package]]
 name = "rust_xlsxwriter"
-version = "0.79.2"
+version = "0.79.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc1177ca2a7ef6913b27e4975af716edb555366ad2ed85949bada55feeedaec6"
+checksum = "97e650675ad893babf50ddc992e2d3a355ce438798a52a5ea28b8885b248e821"
 dependencies = [
  "tempfile",
  "zip",
@@ -6069,9 +6069,9 @@ dependencies = [
 
 [[package]]
 name = "scc"
-version = "2.2.4"
+version = "2.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8d25269dd3a12467afe2e510f69fb0b46b698e5afb296b59f2145259deaf8e8"
+checksum = "66b202022bb57c049555430e11fc22fea12909276a80a4c3d368da36ac1d88ed"
 dependencies = [
  "sdd",
 ]
