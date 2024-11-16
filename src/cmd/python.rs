@@ -115,7 +115,7 @@ Common options:
     -p, --progressbar      Show progress bars. Not valid for stdin.
 "#;
 
-use std::fs;
+use std::{ffi::CString, fs};
 
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use log::{error, log_enabled, Level::Debug};
@@ -253,6 +253,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // reuse batch buffers
     let mut batch = Vec::with_capacity(batch_size);
 
+    // safety: safe to unwrap as these are statically defined
+    let helpers_code = CString::new(HELPERS).unwrap();
+    let helpers_filename = CString::new("qsv_helpers.py").unwrap();
+    let helpers_module_name = CString::new("qsv_helpers").unwrap();
+
+    let user_helpers_code = CString::new(helper_text)
+        .map_err(|e| format!("Failed to create CString from helper text: {e}"))?;
+
+    // safety: safe to unwrap as these are statically defined
+    let user_helpers_filename = CString::new("qsv_user_helpers.py").unwrap();
+    let user_helpers_module_name = CString::new("qsv_uh").unwrap();
+
+    let arg_script = CString::new(args.arg_script)
+        .map_err(|e| format!("Failed to create CString from script: {e}"))?;
+
     // main loop to read CSV and construct batches.
     // we batch python operations so that the GILPool does not get very large
     // as we release the pool after each batch
@@ -282,19 +297,24 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         Python::with_gil(|py| -> PyResult<()> {
             let curr_batch = batch.clone();
-            let helpers = PyModule::from_code_bound(py, HELPERS, "qsv_helpers.py", "qsv_helpers")?;
-            let batch_globals = PyDict::new_bound(py);
-            let batch_locals = PyDict::new_bound(py);
+            let helpers =
+                PyModule::from_code(py, &helpers_code, &helpers_filename, &helpers_module_name)?;
+            let batch_globals = PyDict::new(py);
+            let batch_locals = PyDict::new(py);
 
-            let user_helpers =
-                PyModule::from_code_bound(py, &helper_text, "qsv_user_helpers.py", "qsv_uh")?;
+            let user_helpers = PyModule::from_code(
+                py,
+                &user_helpers_code,
+                &user_helpers_filename,
+                &user_helpers_module_name,
+            )?;
             batch_globals.set_item(intern!(py, "qsv_uh"), user_helpers)?;
 
             // Global imports
-            let builtins = PyModule::import_bound(py, "builtins")?;
-            let math_module = PyModule::import_bound(py, "math")?;
-            let random_module = PyModule::import_bound(py, "random")?;
-            let datetime_module = PyModule::import_bound(py, "datetime")?;
+            let builtins = PyModule::import(py, "builtins")?;
+            let math_module = PyModule::import(py, "math")?;
+            let random_module = PyModule::import(py, "random")?;
+            let datetime_module = PyModule::import(py, "datetime")?;
 
             batch_globals.set_item("__builtins__", builtins)?;
             batch_globals.set_item("math", math_module)?;
@@ -330,7 +350,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 py_row.call_method1(intern!(py, "_update_underlying_data"), (row_data,))?;
 
                 let result = py
-                    .eval_bound(&args.arg_script, Some(&batch_globals), Some(&batch_locals))
+                    .eval(&arg_script, Some(&batch_globals), Some(&batch_locals))
                     .map_err(|e| {
                         e.print_and_set_sys_last_vars(py);
                         error_count += 1;
