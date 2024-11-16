@@ -196,7 +196,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
-    let do_match_list = args.flag_flag.map_or(false, |column_name| {
+    let do_match_list = args.flag_flag.is_some_and(|column_name| {
         headers.push_field(column_name.as_bytes());
         true
     });

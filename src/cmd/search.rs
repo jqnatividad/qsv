@@ -165,7 +165,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let mut matches_only = false;
 
-    let flag_flag = args.flag_flag.map_or(false, |column_name| {
+    let flag_flag = args.flag_flag.is_some_and(|column_name| {
         // if --flag column is "M", then we only output the M column
         if column_name == "M" {
             headers.clear();

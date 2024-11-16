@@ -366,10 +366,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     } else if std::path::Path::new(&args.arg_main_script)
         .extension()
-        .map_or(false, |ext| ext.eq_ignore_ascii_case("luau"))
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("luau"))
         || std::path::Path::new(&args.arg_main_script)
             .extension()
-            .map_or(false, |ext| ext.eq_ignore_ascii_case("lua"))
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("lua"))
     {
         match fs::read_to_string(args.arg_main_script.clone()) {
             Ok(file_contents) => file_contents,
@@ -428,10 +428,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         } else if std::path::Path::new(begin)
             .extension()
-            .map_or(false, |ext| ext.eq_ignore_ascii_case("luau"))
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("luau"))
             || std::path::Path::new(begin)
                 .extension()
-                .map_or(false, |ext| ext.eq_ignore_ascii_case("lua"))
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("lua"))
         {
             match fs::read_to_string(begin.clone()) {
                 Ok(file_contents) => file_contents,
@@ -464,10 +464,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         } else if std::path::Path::new(end)
             .extension()
-            .map_or(false, |ext| ext.eq_ignore_ascii_case("luau"))
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("luau"))
             || std::path::Path::new(end)
                 .extension()
-                .map_or(false, |ext| ext.eq_ignore_ascii_case("lua"))
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("lua"))
         {
             match fs::read_to_string(end.clone()) {
                 Ok(file_contents) => file_contents,

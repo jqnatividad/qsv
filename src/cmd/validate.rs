@@ -304,7 +304,7 @@ impl From<ValidationError<'_>> for CliError {
 #[inline]
 /// Checks if a given string represents a valid currency format.
 fn currency_format_checker(s: &str) -> bool {
-    Currency::from_str(s).map_or(false, |c| {
+    Currency::from_str(s).is_ok_and(|c| {
         if c.symbol().is_empty() {
             true // allow empty currency symbol
         } else {

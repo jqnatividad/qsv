@@ -633,7 +633,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // check if the input is a SQL script (ends with .sql)
     let is_sql_script = std::path::Path::new(&args.arg_sql)
         .extension()
-        .map_or(false, |ext| ext.eq_ignore_ascii_case("sql"));
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("sql"));
 
     // if infer_len is 0, its not a SQL script, and there is only one input CSV, we can infer the
     // schema of the CSV more intelligently by counting the number of rows in the file instead of
@@ -699,7 +699,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         && comment_char.is_none()
         && std::path::Path::new(&args.arg_input[0])
             .extension()
-            .map_or(false, |ext| ext.eq_ignore_ascii_case("csv"))
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("csv"))
     {
         // replace all instances of the FROM clause case-insensitive in the SQL query with the
         // read_csv function using a regex
@@ -993,7 +993,7 @@ pub fn compress_output_if_needed(
     if let Some(output) = output_file {
         if std::path::Path::new(&output)
             .extension()
-            .map_or(false, |ext| ext.eq_ignore_ascii_case("sz"))
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("sz"))
         {
             log::info!("Compressing output with Snappy");
 
