@@ -83,13 +83,21 @@ Some usage examples:
 For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_py.rs.
 
 Usage:
-    qsv py map [options] -n <script> [<input>]
-    qsv py map [options] <new-column> <script> [<input>]
-    qsv py map --helper <file> [options] <new-column> <script> [<input>]
-    qsv py filter [options] <script> [<input>]
+    qsv py map [options] -n <expression> [<input>]
+    qsv py map [options] <new-column> <expression> [<input>]
+    qsv py map --helper <file> [options] <new-column> <expression> [<input>]
+    qsv py filter [options] <expression> [<input>]
     qsv py map --help
     qsv py filter --help
     qsv py --help
+
+py argument:
+    <expression>           Can either be a python expression, or if it starts with
+                           "file:" or ends with ".py" - the filepath from which to
+                           load the python expression.
+                           Note that argument expects a SINGLE expression, and not
+                           a full-blown python script. Use the --helper option
+                           to load helper code that you can call from the expression.
 
 py options:
     -f, --helper <file>    File containing Python code that's loaded into the 
@@ -117,7 +125,6 @@ Common options:
 use std::{ffi::CString, fs};
 
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::{log_enabled, Level::Debug};
 use pyo3::{
     intern,
     prelude::*,
@@ -164,7 +171,7 @@ struct Args {
     cmd_map:          bool,
     cmd_filter:       bool,
     arg_new_column:   Option<String>,
-    arg_script:       String,
+    arg_expression:   String,
     flag_batch:       usize,
     flag_helper:      Option<String>,
     arg_input:        Option<String>,
@@ -189,12 +196,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
 
-    if log_enabled!(Debug) {
+    let debug_flag = log::log_enabled!(log::Level::Debug);
+
+    if debug_flag {
         Python::with_gil(|py| {
             let msg = format!("Detected python={}", py.version());
             winfo!("{msg}");
         });
     }
+
+    let expression = if let Some(expression_filepath) = args.arg_expression.strip_prefix("file:") {
+        match fs::read_to_string(expression_filepath) {
+            Ok(file_contents) => file_contents,
+            Err(e) => return fail_clierror!("Cannot load Python expression from file: {e}"),
+        }
+    } else if std::path::Path::new(&args.arg_expression)
+        .extension()
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("py"))
+    {
+        match fs::read_to_string(args.arg_expression.clone()) {
+            Ok(file_contents) => file_contents,
+            Err(e) => return fail_clierror!("Cannot load .py file: {e}"),
+        }
+    } else {
+        args.arg_expression.clone()
+    };
 
     let mut helper_text = String::new();
     if let Some(helper_file) = args.flag_helper {
@@ -264,11 +290,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let user_helpers_filename = CString::new("qsv_user_helpers.py").unwrap();
     let user_helpers_module_name = CString::new("qsv_uh").unwrap();
 
-    let arg_script = CString::new(args.arg_script)
-        .map_err(|e| format!("Failed to create CString from script: {e}"))?;
+    let arg_expression = CString::new(expression)
+        .map_err(|e| format!("Failed to create CString from expression: {e}"))?;
 
     let mut row_number = 0_u64;
-    let debug_flag = log::log_enabled!(Debug);
 
     // main loop to read CSV and construct batches.
     // we batch python operations so that the GILPool does not get very large
@@ -359,20 +384,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                 py_row.call_method1(intern!(py, "_update_underlying_data"), (row_data,))?;
 
-                let result = py
-                    .eval(&arg_script, Some(&batch_globals), Some(&batch_locals))
-                    .map_err(|e| {
-                        e.print_and_set_sys_last_vars(py);
-                        error_count += 1;
-                        if debug_flag {
-                            log::error!("{e:?}");
-                        }
-                        format!(
-                            "Evaluation of given expression in row {row_number} failed with the \
-                             above error!"
-                        )
-                    })
-                    .unwrap_or_else(|_| error_result.clone().into_any());
+                let result =
+                    match py.eval(&arg_expression, Some(&batch_globals), Some(&batch_locals)) {
+                        Ok(r) => r,
+                        Err(e) => {
+                            error_count += 1;
+                            if debug_flag {
+                                log::error!("Expression error:{row_number}-{e:?}");
+                            }
+                            e.print_and_set_sys_last_vars(py);
+                            error_result.clone().into_any()
+                        },
+                    };
 
                 if args.cmd_map {
                     let result = helpers

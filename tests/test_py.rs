@@ -238,6 +238,97 @@ def celsius_to_fahrenheit(celsius):
 }
 
 #[test]
+fn py_map_userhelper_and_loadfile() {
+    let wrk = Workdir::new("py");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["letter", "number"],
+            svec!["a", "1"],
+            svec!["b", "2"],
+            svec!["c", "6"],
+            svec!["d", "7"],
+            svec!["e", "fib of 8"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "user_helper.py",
+        r#"
+def fibonacci(input):
+    try:
+      float(input)
+    except ValueError:
+      return "incorrect input - not a number"
+    sinput = str(input)
+    if not float(sinput).is_integer():
+        return "incorrect input - not a whole number"
+
+    n = int(sinput)
+    if n < 0:
+        return "incorrect input - negative number"
+    elif n == 0:
+        return 0
+    elif n == 1 or n == 2:
+        return 1
+    else:
+        return fibonacci(n-1) + fibonacci(n-2)
+
+
+def celsius_to_fahrenheit(celsius):
+    try:
+        float(celsius)
+    except ValueError:
+        return "incorrect input - not a float"
+    fahrenheit = (float(celsius) * 9/5) + 32
+    return f'{fahrenheit:.1f}'
+"#,
+    );
+
+    wrk.create_from_string("testfile.py", "qsv_uh.fibonacci(number)");
+
+    let mut cmd = wrk.command("py");
+    cmd.arg("map")
+        .arg("--helper")
+        .arg("user_helper.py")
+        .arg("fib")
+        .arg("testfile.py")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "fib"],
+        svec!["a", "1", "1"],
+        svec!["b", "2", "1"],
+        svec!["c", "6", "8"],
+        svec!["d", "7", "13"],
+        svec!["e", "fib of 8", "incorrect input - not a number"],
+    ];
+    assert_eq!(got, expected);
+
+    wrk.create_from_string("testfile2.code", "qsv_uh.celsius_to_fahrenheit(number)");
+
+    let mut cmd = wrk.command("py");
+    cmd.arg("map")
+        .arg("--helper")
+        .arg("user_helper.py")
+        .arg("fahrenheit")
+        .arg("file:testfile2.code")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["letter", "number", "fahrenheit"],
+        svec!["a", "1", "33.8"],
+        svec!["b", "2", "35.6"],
+        svec!["c", "6", "42.8"],
+        svec!["d", "7", "44.6"],
+        svec!["e", "fib of 8", "incorrect input - not a float"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn py_map_col_positional() {
     let wrk = Workdir::new("py");
     wrk.create(
