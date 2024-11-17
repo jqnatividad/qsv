@@ -2041,8 +2041,8 @@ pub fn get_stats_records(
                 // StatsMode::FrequencyForceStats
                 // we're doing frequency, so we need cardinality from a --forced stats run
                 format!(
-                    "stats\t{input}\t--cardinality\t--stats-jsonl\t--force\t--output\\
-                     t{tempfile_path}"
+                    "stats\t{input}\t--cardinality\t--stats-jsonl\t--force\
+                    \t--output\t{tempfile_path}"
                 )
             },
             #[cfg(feature = "polars")]
