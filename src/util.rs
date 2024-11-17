@@ -2017,57 +2017,60 @@ pub fn get_stats_records(
         } else {
             "-".to_string()
         };
+        // we do rustfmt::skip here as it was breaking the stats cmdline along strange
+        // boundaries, causing CI errors.
+        // This is because we're using tab characters (/t) to separate args to fix #2294,
+        #[rustfmt::skip]
         let mut stats_args_str = match mode {
             StatsMode::Schema => {
                 // mode is StatsMode::Schema
                 // we're generating schema, so we need cardinality and to infer-dates
                 format!(
-                    "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
-                     --cardinality --stats-jsonl --force --output {tempfile_path}",
+                    "stats\t{input}\t--round\t4\t--cardinality\
+                    \t--infer-dates\t--dates-whitelist\t{dates_whitelist}\
+                    \t--stats-jsonl\t--force\t--output\t{tempfile_path}",
                     dates_whitelist = stats_args.flag_dates_whitelist
                 )
             },
             StatsMode::Frequency => {
                 // StatsMode::Frequency
                 // we're doing frequency, so we just need cardinality
-                format!("stats {input} --cardinality --stats-jsonl --output {tempfile_path}")
+                format!("stats\t{input}\t--cardinality\t--stats-jsonl\t--output\t{tempfile_path}")
             },
             StatsMode::FrequencyForceStats => {
                 // StatsMode::FrequencyForceStats
                 // we're doing frequency, so we need cardinality from a --forced stats run
                 format!(
-                    "stats {input} --cardinality --stats-jsonl --force --output {tempfile_path}"
+                    "stats\t{input}\t--cardinality\t--stats-jsonl\t--force\
+                    \t--output\t{tempfile_path}"
                 )
             },
             #[cfg(feature = "polars")]
             StatsMode::PolarsSchema => {
                 // StatsMode::PolarsSchema
                 // we need data types and ranges
-                format!("stats {input} --infer-boolean --stats-jsonl --output {tempfile_path}")
+                format!("stats\t{input}\t--infer-boolean\t--stats-jsonl\t--output\t{tempfile_path}")
             },
             StatsMode::None => unreachable!(), // we returned early on None earlier
         };
         if args.flag_prefer_dmy {
-            stats_args_str = format!("{stats_args_str} --prefer-dmy");
+            stats_args_str = format!("{stats_args_str}\t--prefer-dmy");
         }
         if args.flag_no_headers {
-            stats_args_str = format!("{stats_args_str} --no-headers");
+            stats_args_str = format!("{stats_args_str}\t--no-headers");
         }
         if let Some(delimiter) = args.flag_delimiter {
             let delim = delimiter.as_byte() as char;
-            stats_args_str = format!("{stats_args_str} --delimiter {delim}");
+            stats_args_str = format!("{stats_args_str}\t--delimiter\t{delim}");
         }
         if args.flag_memcheck {
-            stats_args_str = format!("{stats_args_str} --memcheck");
+            stats_args_str = format!("{stats_args_str}\t--memcheck");
         }
-        if let Some(mut jobs) = stats_args.flag_jobs {
-            if jobs > 2 {
-                jobs -= 1; // leave one core for the main thread
-            }
-            stats_args_str = format!("{stats_args_str} --jobs {jobs}");
+        if let Some(jobs) = stats_args.flag_jobs {
+            stats_args_str = format!("{stats_args_str}\t--jobs\t{jobs}");
         }
 
-        let stats_args_vec: Vec<&str> = stats_args_str.split_whitespace().collect();
+        let stats_args_vec: Vec<&str> = stats_args_str.split('\t').collect();
 
         let qsv_bin = std::env::current_exe().unwrap();
         let mut stats_cmd = std::process::Command::new(qsv_bin);
