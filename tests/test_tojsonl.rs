@@ -29,6 +29,31 @@ fn tojsonl_simple() {
 
 #[test]
 #[serial]
+fn tojsonl_2294() {
+    let wrk = Workdir::new("tojsonl_simple");
+    wrk.create(
+        "file.csv",
+        vec![
+            svec!["col1", "col2", "col3"],
+            svec!["a", "b", "c"],
+            svec!["d", "e", "f"],
+        ],
+    );
+
+    wrk.create_subdir("qsv test").unwrap();
+    std::fs::rename(wrk.path("file.csv"), wrk.path("qsv test").join("file.csv")).unwrap();
+
+    let mut cmd = wrk.command("tojsonl");
+    cmd.arg("qsv test/file.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"col1":"a","col2":"b","col3":"c"}
+{"col1":"d","col2":"e","col3":"f"}"#;
+    assert_eq!(got, expected);
+}
+
+#[test]
+#[serial]
 fn tojsonl_boolean() {
     let wrk = Workdir::new("tojsonl");
     wrk.create(
