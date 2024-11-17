@@ -117,7 +117,7 @@ Common options:
 use std::{ffi::CString, fs};
 
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::{error, log_enabled, Level::Debug};
+use log::{log_enabled, Level::Debug};
 use pyo3::{
     intern,
     prelude::*,
@@ -267,6 +267,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let arg_script = CString::new(args.arg_script)
         .map_err(|e| format!("Failed to create CString from script: {e}"))?;
 
+    let mut row_number = 0_u64;
+    let debug_flag = log::log_enabled!(Debug);
+
     // main loop to read CSV and construct batches.
     // we batch python operations so that the GILPool does not get very large
     // as we release the pool after each batch
@@ -330,6 +333,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let error_result = intern!(py, "<ERROR>");
 
             for record in batch_ref.iter_mut() {
+                row_number += 1;
+
                 // Initializing locals
                 let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
 
@@ -341,9 +346,14 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     .take(headers_len)
                     .for_each(|(i, key)| {
                         let cell_value = record.get(i).unwrap_or_default();
-                        batch_locals
-                            .set_item(key, cell_value)
-                            .expect("cannot set_item");
+                        let _ = batch_locals.set_item(key, cell_value).map_err(|e| {
+                            error_count += 1;
+                            if debug_flag {
+                                log::error!(
+                                    "Failed to set item in batch_locals: {row_number}-{e:?}"
+                                );
+                            }
+                        });
                         row_data.push(cell_value);
                     });
 
@@ -354,10 +364,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     .map_err(|e| {
                         e.print_and_set_sys_last_vars(py);
                         error_count += 1;
-                        if log_enabled!(Debug) {
-                            error!("{e:?}");
+                        if debug_flag {
+                            log::error!("{e:?}");
                         }
-                        "Evaluation of given expression failed with the above error!"
+                        format!(
+                            "Evaluation of given expression in row {row_number} failed with the \
+                             above error!"
+                        )
                     })
                     .unwrap_or_else(|_| error_result.clone().into_any());
 
@@ -373,7 +386,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         // since this closure returns a PyResult
                         // this is converted to a CliError::Other anyway
                         return Err(pyo3::PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                            "cannot write record ({e})"
+                            "cannot write record ({row_number}-{e})"
                         )));
                     }
                 } else if args.cmd_filter {
@@ -385,7 +398,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if include_record {
                         if let Err(e) = wtr.write_record(&*record) {
                             return Err(pyo3::PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                                format!("cannot write record ({e})"),
+                                format!("cannot write record ({row_number}-{e})"),
                             ));
                         }
                     }
