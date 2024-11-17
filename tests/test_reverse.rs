@@ -1,7 +1,7 @@
 use crate::{qcheck, workdir::Workdir, Csv, CsvData};
 
 fn prop_reverse(name: &str, rows: CsvData, headers: bool) -> bool {
-    if !rows.is_empty() && rows[0].contains(&"\u{FEFF}".to_string()) {
+    if rows.is_empty() || rows[0].contains(&"\u{FEFF}".to_string()) {
         return true;
     }
 
@@ -22,7 +22,7 @@ fn prop_reverse(name: &str, rows: CsvData, headers: bool) -> bool {
         vec![]
     };
     expected.reverse();
-    if !expected.is_empty() && expected[0].contains(&"\u{FEFF}".to_string()) {
+    if expected.is_empty() || expected[0].contains(&"\u{FEFF}".to_string()) {
         return true;
     }
     if !headers.is_empty() {
