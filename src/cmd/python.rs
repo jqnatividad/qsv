@@ -384,17 +384,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
                 py_row.call_method1(intern!(py, "_update_underlying_data"), (row_data,))?;
 
-                let result = match py.eval(&arg_expression, Some(&batch_globals), Some(&batch_locals)) {
-                    Ok(r) => r,
-                    Err(e) => {
-                        error_count += 1;
-                        if debug_flag {
-                            log::error!("Expression error:{row_number}-{e:?}"); 
-                        }
-                        e.print_and_set_sys_last_vars(py);
-                        error_result.clone().into_any()
-                    }
-                };
+                let result =
+                    match py.eval(&arg_expression, Some(&batch_globals), Some(&batch_locals)) {
+                        Ok(r) => r,
+                        Err(e) => {
+                            error_count += 1;
+                            if debug_flag {
+                                log::error!("Expression error:{row_number}-{e:?}");
+                            }
+                            e.print_and_set_sys_last_vars(py);
+                            error_result.clone().into_any()
+                        },
+                    };
 
                 if args.cmd_map {
                     let result = helpers
