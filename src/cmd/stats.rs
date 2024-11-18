@@ -772,7 +772,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             let stats_sr_vec = args.stats_to_records(stats);
             let mut work_br;
-            let mut stats_br_vec: Vec<csv::ByteRecord> = Vec::new();
+
+            // prealloc. we add 4 for the 4 addl dataset-level stats
+            let mut stats_br_vec: Vec<csv::ByteRecord> = Vec::with_capacity(stats_sr_vec.len() + 4);
 
             let stats_headers_sr = args.stat_headers();
             wtr.write_record(&stats_headers_sr)?;
@@ -784,7 +786,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     header.to_vec()
                 };
                 let stat = stat.iter().map(str::as_bytes);
-                // work_var = vec![&*header].into_iter().chain(stat);
                 work_br = csv::ByteRecord::from_iter(vec![&*header].into_iter().chain(stat));
                 wtr.write_record(&work_br)?;
                 stats_br_vec.push(work_br);
