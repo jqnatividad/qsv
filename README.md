@@ -85,7 +85,7 @@
 | [sqlp](/src/cmd/sqlp.rs#L2)<br>✨📇🚀🐻‍❄️🗄️🪄 | Run [Polars](https://pola.rs) SQL queries against several CSVs - converting queries to blazing-fast [LazyFrame](https://docs.pola.rs/user-guide/lazy/using/) expressions, processing larger than memory CSV files. Query results can be saved in CSV, JSON, JSONL, Parquet, Apache Arrow IPC and Apache Avro formats. |
 | [stats](/src/cmd/stats.rs#L2)<br>📇🤯🏎️👆🪄 | Compute [summary statistics](https://en.wikipedia.org/wiki/Summary_statistics) (sum, min/max/range, sort order, min/max/sum/avg length, mean, standard error of the mean (SEM), stddev, variance, Coefficient of Variation (CV), nullcount, max precision, sparsity, quartiles, Interquartile Range (IQR), lower/upper fences, skewness, median, mode/s, antimode/s & cardinality) & make GUARANTEED data type inferences (Null, String, Float, Integer, Date, DateTime, Boolean) for each column in a CSV ([more info](https://github.com/jqnatividad/qsv/wiki/Supplemental#stats-command-output-explanation)).<br>Uses multithreading to go faster if an index is present (with an index, can compile "streaming" stats on NYC's 311 data (15gb, 28m rows) in less than 7.3 seconds!). |
 | [table](/src/cmd/table.rs#L2)<br>🤯 | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter). To interactively view a CSV, use the `lens` command. |
-| [template](/src/cmd/template.rs#L2)<br>📇🚀 | Renders a template using CSV data with the [MiniJinja](https://docs.rs/minijinja/latest/minijinja/) template engine. |
+| [template](/src/cmd/template.rs#L2)<br>📇🚀🔣 | Renders a template using CSV data with the [MiniJinja](https://docs.rs/minijinja/latest/minijinja/) template engine. |
 | [to](/src/cmd/to.rs#L2)<br>✨🚀🗄️ | Convert CSV files to [PostgreSQL](https://www.postgresql.org), [SQLite](https://www.sqlite.org/index.html), XLSX and [Data Package](https://datahub.io/docs/data-packages/tabular). |
 | [tojsonl](/src/cmd/tojsonl.rs#L3)<br>📇😣🚀🔣🪄 | Smartly converts CSV to a newline-delimited JSON ([JSONL](https://jsonlines.org/)/[NDJSON](http://ndjson.org/)). By scanning the CSV first, it "smartly" infers the appropriate JSON data type for each column. See `jsonl` command to convert JSONL to CSV. |
 | [transpose](/src/cmd/transpose.rs#L2)<br>🤯 | Transpose rows/columns of a CSV.  |
@@ -99,7 +99,7 @@
 😣: uses additional memory proportional to the cardinality of the columns in the CSV.  
 🧠: expensive operations are memoized with available inter-session Redis/Disk caching for fetch commands.  
 🗄️: [Extended input support](#extended-input-support).  
-🐻‍❄️: command powered by [![polars 0.44.2](https://img.shields.io/badge/polars-0.44.2-blue) at the py-1.13.1 tag](https://github.com/pola-rs/polars/releases/tag/py-1.13.1).  
+🐻‍❄️: command powered by [![polars 0.44.2](https://img.shields.io/badge/polars-0.44.2-blue) at the py-1.14.0 tag](https://github.com/pola-rs/polars/releases/tag/py-1.14.0).  
 🤖: command uses Natural Language Processing & General AI techniques.  
 🏎️: multithreaded and/or faster when an index (📇) is available.  
 🚀: multithreaded even without an index.  
@@ -187,7 +187,7 @@ To find out what features are enabled in a package/distro's qsv, run `qsv --vers
 
 In the true spirit of open source, these packages are maintained by volunteers who wanted to make qsv easier to install in various environments. They are much appreciated, and we loosely collaborate with the package maintainers through GitHub, but know that these packages are maintained by third-parties.
 
-datHere also maintains a Debian package targeting the latest Ubuntu LTS on x86_64 architecture.
+datHere also maintains a Debian package targeting the latest Ubuntu LTS on x86_64 architecture to make it easier to install qsv with DataPusher+.
 
 To install qsv on Ubuntu/Debian:
 
