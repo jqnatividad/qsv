@@ -161,7 +161,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     env.add_filter("format_float", format_float);
     env.add_filter("human_count", human_count);
     env.add_filter("human_float_count", human_float_count);
-    env.add_filter("human_bytes", human_bytes);
     env.add_filter("round_num", round_num);
     env.add_filter("str_to_bool", str_to_bool);
     // TODO: Add lookup filter
@@ -447,15 +446,6 @@ fn human_float_count(value: &str) -> String {
     )
 }
 
-/// Formats bytes using binary prefixes (e.g. "1.5 GiB").
-/// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as integer.
-fn human_bytes(value: &str) -> String {
-    atoi_simd::parse::<u64>(value.as_bytes()).map_or_else(
-        |_| FILTER_ERROR.get().unwrap().clone(),
-        |num| indicatif::HumanBytes(num).to_string(),
-    )
-}
-
 /// Rounds a float number to specified number of decimal places.
 /// Round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
 /// https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
@@ -468,7 +458,7 @@ fn round_num(value: &str, places: u32) -> String {
 }
 
 /// Converts string to boolean.
-/// Returns true for "true", "1", or "yes" (case insensitive).
+/// Returns true for "true", "1", "yes", "t" or "y" (case insensitive).
 /// Returns false for all other values.
 fn str_to_bool(value: &str) -> bool {
     matches!(
