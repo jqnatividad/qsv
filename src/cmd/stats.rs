@@ -801,31 +801,36 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             for _ in 2..num_stats_fields {
                 dataset_stats_br.push_field(b"");
             }
-            dataset_stats_br.push_field(itoa::Buffer::new().format(*record_count).as_bytes());
+            let ds_record_count = itoa::Buffer::new()
+                .format(*record_count)
+                .as_bytes()
+                .to_owned();
+            dataset_stats_br.push_field(&ds_record_count);
             wtr.write_record(&dataset_stats_br)?;
-            stats_br_vec.push(dataset_stats_br.clone());
 
             dataset_stats_br.clear();
             dataset_stats_br.push_field(b"_qsv_columncount");
             for _ in 2..num_stats_fields {
                 dataset_stats_br.push_field(b"");
             }
-            dataset_stats_br.push_field(itoa::Buffer::new().format(headers.len()).as_bytes());
+            let ds_column_count = itoa::Buffer::new()
+                .format(headers.len())
+                .as_bytes()
+                .to_owned();
+            dataset_stats_br.push_field(&ds_column_count);
             wtr.write_record(&dataset_stats_br)?;
-            stats_br_vec.push(dataset_stats_br.clone());
 
             dataset_stats_br.clear();
             dataset_stats_br.push_field(b"_qsv_filesize_bytes");
             for _ in 2..num_stats_fields {
                 dataset_stats_br.push_field(b"");
             }
-            dataset_stats_br.push_field(
-                itoa::Buffer::new()
-                    .format(fs::metadata(&path)?.len())
-                    .as_bytes(),
-            );
+            let ds_filesize_bytes = itoa::Buffer::new()
+                .format(fs::metadata(&path)?.len())
+                .as_bytes()
+                .to_owned();
+            dataset_stats_br.push_field(&ds_filesize_bytes);
             wtr.write_record(&dataset_stats_br)?;
-            stats_br_vec.push(dataset_stats_br.clone());
 
             // compute the hash using stats, instead of scanning the entire file
             // so the performance is constant regardless of file size
@@ -847,6 +852,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         std::hash::Hash::hash(field, &mut hasher);
                     }
                 }
+                // we also add the dataset level stats to the hash
+                std::hash::Hash::hash(&ds_record_count, &mut hasher);
+                std::hash::Hash::hash(&ds_column_count, &mut hasher);
+                std::hash::Hash::hash(&ds_filesize_bytes, &mut hasher);
                 std::hash::Hasher::finish(&hasher)
             };
 
@@ -857,7 +866,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             dataset_stats_br.push_field(itoa::Buffer::new().format(stats_hash).as_bytes());
             wtr.write_record(&dataset_stats_br)?;
-            stats_br_vec.push(dataset_stats_br);
 
             // update the stats args json metadata
             current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
