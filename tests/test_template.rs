@@ -348,9 +348,9 @@ fn template_custom_filters() {
     wrk.create_from_string(
         "template.txt",
         "Name: {{ name|substr(0,2) }}\nAmount: {{ amount|human_count }}\nBytes: {{ \
-         bytes|human_bytes }}\nScore (2 decimals): {{ score|format_float(2) }}\nScore (rounded): \
-         {{ score|round_num(1) }}\nActive: {{ active|str_to_bool }}\nFloat with commas: {{ \
-         amount|human_float_count }}\n\n",
+         bytes|float|filesizeformat }} {{bytes|float|filesizeformat(true) }}\nScore (2 decimals): \
+         {{ score|format_float(2) }}\nScore (rounded): {{ score|round_num(1) }}\nActive: {{ \
+         active|str_to_bool }}\nFloat with commas: {{ amount|human_float_count }}\n\n",
     );
 
     let mut cmd = wrk.command("template");
@@ -361,14 +361,14 @@ fn template_custom_filters() {
     let got: String = wrk.stdout(&mut cmd);
     let expected = r#"Name: Jo
 Amount: 1,234,567
-Bytes: 1.00 MiB
+Bytes: 1.0 MB 1.0 MiB
 Score (2 decimals): 3.14
 Score (rounded): 3.1
 Active: true
 Float with commas: 1,234,567
 Name: Ja
 Amount: <FILTER_ERROR>
-Bytes: 1.00 GiB
+Bytes: 1.1 GB 1.0 GiB
 Score (2 decimals): 2.72
 Score (rounded): 2.7
 Active: false
