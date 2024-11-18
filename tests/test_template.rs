@@ -421,7 +421,7 @@ fn template_conditional() {
 
     wrk.create_from_string(
         "template.txt",
-        "{{ name }} is {% if age|round_banker(0) >= '18' %}an adult{% else %}a minor{% endif \
+        "{{ name }} is {% if age|round_banker(0)|int >= 18 %}an adult{% else %}a minor{% endif \
          %}.\n\n",
     );
 
