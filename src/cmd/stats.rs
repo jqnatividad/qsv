@@ -242,7 +242,9 @@ with ~500 tests.
 
 use std::{
     default::Default,
-    fmt, fs, io,
+    fmt, fs,
+    hash::BuildHasher,
+    io,
     io::Write,
     iter::repeat,
     path::{Path, PathBuf},
@@ -769,6 +771,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }?;
 
             let stats_sr_vec = args.stats_to_records(stats);
+            let mut work_br;
+            let mut stats_br_vec: Vec<csv::ByteRecord> = Vec::new();
 
             let stats_headers_sr = args.stat_headers();
             wtr.write_record(&stats_headers_sr)?;
@@ -780,8 +784,76 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     header.to_vec()
                 };
                 let stat = stat.iter().map(str::as_bytes);
-                wtr.write_record(vec![&*header].into_iter().chain(stat))?;
+                // work_var = vec![&*header].into_iter().chain(stat);
+                work_br = csv::ByteRecord::from_iter(vec![&*header].into_iter().chain(stat));
+                wtr.write_record(&work_br)?;
+                stats_br_vec.push(work_br);
             }
+
+            // add the dataset-level stats
+            let num_stats_fields = stats_headers_sr.len();
+            let mut dataset_stats_br = csv::ByteRecord::with_capacity(128, num_stats_fields);
+            dataset_stats_br.push_field(b"_qsv_rowcount");
+            for _ in 2..num_stats_fields {
+                dataset_stats_br.push_field(b"");
+            }
+            dataset_stats_br.push_field(itoa::Buffer::new().format(*record_count).as_bytes());
+            wtr.write_record(&dataset_stats_br)?;
+            stats_br_vec.push(dataset_stats_br.to_owned());
+
+            dataset_stats_br.clear();
+            dataset_stats_br.push_field(b"_qsv_columncount");
+            for _ in 2..num_stats_fields {
+                dataset_stats_br.push_field(b"");
+            }
+            dataset_stats_br.push_field(itoa::Buffer::new().format(headers.len()).as_bytes());
+            wtr.write_record(&dataset_stats_br)?;
+            stats_br_vec.push(dataset_stats_br.to_owned());
+
+            dataset_stats_br.clear();
+            dataset_stats_br.push_field(b"_qsv_filesize_bytes");
+            for _ in 2..num_stats_fields {
+                dataset_stats_br.push_field(b"");
+            }
+            dataset_stats_br.push_field(
+                itoa::Buffer::new()
+                    .format(fs::metadata(&path)?.len())
+                    .as_bytes(),
+            );
+            wtr.write_record(&dataset_stats_br)?;
+            stats_br_vec.push(dataset_stats_br.to_owned());
+
+            // compute the hash using stats, instead of scanning the entire file
+            // so the performance is constant regardless of file size
+            let stats_hash = {
+                #[allow(deprecated)]
+                // we use "deprecated" SipHasher explicitly instead of DefaultHasher,
+                // even though, it is the current DefaultHasher since Rust 1.7.0
+                // as we want the hash to be deterministic and stable across Rust versions
+                // DefaultHasher may change in future Rust versions
+                let mut hasher =
+                    std::hash::BuildHasherDefault::<std::hash::SipHasher>::default().build_hasher();
+                for record in &stats_br_vec {
+                    for (i, field) in record.iter().enumerate() {
+                        // we only do the first 20 stats columns to compute the hash as those
+                        // columns are always the same, even if other stats --options are used
+                        if i >= 20 {
+                            break;
+                        }
+                        std::hash::Hash::hash(field, &mut hasher);
+                    }
+                }
+                std::hash::Hasher::finish(&hasher)
+            };
+
+            dataset_stats_br.clear();
+            dataset_stats_br.push_field(b"_qsv_hash");
+            for _ in 2..num_stats_fields {
+                dataset_stats_br.push_field(b"");
+            }
+            dataset_stats_br.push_field(itoa::Buffer::new().format(stats_hash).as_bytes());
+            wtr.write_record(&dataset_stats_br)?;
+            stats_br_vec.push(dataset_stats_br);
 
             // update the stats args json metadata
             current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
@@ -1144,6 +1216,10 @@ impl Args {
                 "antimode_occurrences",
             ]);
         }
+
+        // we add the _qsv_value field at the end for dataset-level stats
+        fields.push("_qsv_value");
+
         csv::StringRecord::from(fields)
     }
 }
@@ -1790,6 +1866,9 @@ impl Stats {
         // mode/modes/antimodes & cardinality
         // append it here to preserve legacy ordering of columns
         pieces.extend_from_slice(&mc_pieces);
+
+        // add an empty field for _qsv_value
+        pieces.push(empty());
 
         csv::StringRecord::from(pieces)
     }
