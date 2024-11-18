@@ -786,7 +786,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     header.to_vec()
                 };
                 let stat = stat.iter().map(str::as_bytes);
-                work_br = csv::ByteRecord::from_iter(vec![&*header].into_iter().chain(stat));
+                work_br = vec![&*header]
+                    .into_iter()
+                    .chain(stat)
+                    .collect::<csv::ByteRecord>();
                 wtr.write_record(&work_br)?;
                 stats_br_vec.push(work_br);
             }
@@ -800,7 +803,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             dataset_stats_br.push_field(itoa::Buffer::new().format(*record_count).as_bytes());
             wtr.write_record(&dataset_stats_br)?;
-            stats_br_vec.push(dataset_stats_br.to_owned());
+            stats_br_vec.push(dataset_stats_br.clone());
 
             dataset_stats_br.clear();
             dataset_stats_br.push_field(b"_qsv_columncount");
@@ -809,7 +812,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
             dataset_stats_br.push_field(itoa::Buffer::new().format(headers.len()).as_bytes());
             wtr.write_record(&dataset_stats_br)?;
-            stats_br_vec.push(dataset_stats_br.to_owned());
+            stats_br_vec.push(dataset_stats_br.clone());
 
             dataset_stats_br.clear();
             dataset_stats_br.push_field(b"_qsv_filesize_bytes");
@@ -822,7 +825,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     .as_bytes(),
             );
             wtr.write_record(&dataset_stats_br)?;
-            stats_br_vec.push(dataset_stats_br.to_owned());
+            stats_br_vec.push(dataset_stats_br.clone());
 
             // compute the hash using stats, instead of scanning the entire file
             // so the performance is constant regardless of file size
