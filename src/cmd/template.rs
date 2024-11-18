@@ -22,6 +22,11 @@ data.csv:
   bob,smith,200.75,2000,false
   john,doe,10,1,true
 
+NOTE: All variables are of type String and will need to be cast with the `|float` or `|int`
+  filters for math operations and when a MiniJinja filter/function requires it.
+  qsv's custom filters (substr, format_float, human_count, human_float_count, round_banker &
+  str_to_bool) do not require casting for convenience.
+
 template.tpl
   Dear {{ first_name|title }} {{ last_name|title }}!
     Your account balance is {{ balance|format_float(2) }}
@@ -161,7 +166,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     env.add_filter("format_float", format_float);
     env.add_filter("human_count", human_count);
     env.add_filter("human_float_count", human_float_count);
-    env.add_filter("round_num", round_num);
+    env.add_filter("round_banker", round_banker);
     env.add_filter("str_to_bool", str_to_bool);
     // TODO: Add lookup filter
 
@@ -450,7 +455,7 @@ fn human_float_count(value: &str) -> String {
 /// Round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
 /// https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
 /// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as float.
-fn round_num(value: &str, places: u32) -> String {
+fn round_banker(value: &str, places: u32) -> String {
     value.parse::<f64>().map_or_else(
         |_| FILTER_ERROR.get().unwrap().clone(),
         |num| util::round_num(num, places),
