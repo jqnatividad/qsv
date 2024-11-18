@@ -339,7 +339,13 @@ fn template_custom_filters() {
         "data.csv",
         vec![
             svec!["name", "amount", "bytes", "score", "active"],
-            svec!["John", "1234567", "1048576", "3.14159", "yes"],
+            svec![
+                "John",
+                "1234567",
+                "1048576",
+                "3.14159265358979323846",
+                "yes"
+            ],
             svec!["Jane", "7654321.04", "1073741824", "2.71828", "no"],
         ],
     );
@@ -349,8 +355,9 @@ fn template_custom_filters() {
         "template.txt",
         "Name: {{ name|substr(0,2) }}\nAmount: {{ amount|human_count }}\nBytes: {{ \
          bytes|float|filesizeformat }} {{bytes|float|filesizeformat(true) }}\nScore (2 decimals): \
-         {{ score|format_float(2) }}\nScore (rounded): {{ score|round_num(1) }}\nActive: {{ \
-         active|str_to_bool }}\nFloat with commas: {{ amount|human_float_count }}\n\n",
+         {{ score|format_float(2) }}\nScore (rounded): {{ score|round_banker(4) }} \
+         {{score|float|round(4) }}\nActive: {{ active|str_to_bool }}\nFloat with commas: {{ \
+         amount|human_float_count }}\n\n",
     );
 
     let mut cmd = wrk.command("template");
@@ -363,14 +370,14 @@ fn template_custom_filters() {
 Amount: 1,234,567
 Bytes: 1.0 MB 1.0 MiB
 Score (2 decimals): 3.14
-Score (rounded): 3.1
+Score (rounded): 3.1416 3.1416
 Active: true
 Float with commas: 1,234,567
 Name: Ja
 Amount: <FILTER_ERROR>
 Bytes: 1.1 GB 1.0 GiB
 Score (2 decimals): 2.72
-Score (rounded): 2.7
+Score (rounded): 2.7183 2.7183
 Active: false
 Float with commas: 7,654,321.04"#;
     assert_eq!(got, expected);
@@ -414,7 +421,8 @@ fn template_conditional() {
 
     wrk.create_from_string(
         "template.txt",
-        "{{ name }} is {% if age|round_num(0) >= '18' %}an adult{% else %}a minor{% endif %}.\n\n",
+        "{{ name }} is {% if age|round_banker(0) >= '18' %}an adult{% else %}a minor{% endif \
+         %}.\n\n",
     );
 
     let mut cmd = wrk.command("template");
