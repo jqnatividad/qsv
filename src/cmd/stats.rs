@@ -773,8 +773,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let stats_sr_vec = args.stats_to_records(stats);
             let mut work_br;
 
-            // prealloc. we add 4 for the 4 addl dataset-level stats
-            let mut stats_br_vec: Vec<csv::ByteRecord> = Vec::with_capacity(stats_sr_vec.len() + 4);
+            // vec we use to compute dataset-level fingerprint hash
+            let mut stats_br_vec: Vec<csv::ByteRecord> = Vec::with_capacity(stats_sr_vec.len());
 
             let stats_headers_sr = args.stat_headers();
             wtr.write_record(&stats_headers_sr)?;
@@ -799,57 +799,39 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let mut dataset_stats_br = csv::ByteRecord::with_capacity(128, num_stats_fields);
 
             // Helper closure to write a dataset stat row
-            let write_dataset_stat = |name: &[u8],
-                                      value: &[u8],
-                                      br: &mut csv::ByteRecord,
-                                      wtr: &mut csv::Writer<_>|
-             -> CliResult<()> {
-                br.clear();
-                br.push_field(name);
+            let mut write_dataset_stat = |name: &[u8], value: &[u8]| -> CliResult<()> {
+                dataset_stats_br.clear();
+                dataset_stats_br.push_field(name);
                 // Fill middle columns with empty strings
                 for _ in 2..num_stats_fields {
-                    br.push_field(b"");
+                    dataset_stats_br.push_field(b"");
                 }
                 // write _qsv_value as last column
-                br.push_field(value);
-                wtr.write_byte_record(br).map_err(|e| e.into())
+                dataset_stats_br.push_field(value);
+                wtr.write_byte_record(&dataset_stats_br)
+                    .map_err(std::convert::Into::into)
             };
 
             // Write _qsv_rowcount
             let ds_record_count = itoa::Buffer::new()
                 .format(*record_count)
                 .as_bytes()
-                .to_owned();
-            write_dataset_stat(
-                b"_qsv_rowcount",
-                &ds_record_count,
-                &mut dataset_stats_br,
-                &mut wtr,
-            )?;
+                .to_vec();
+            write_dataset_stat(b"_qsv_rowcount", &ds_record_count)?;
 
             // Write _qsv_columncount
             let ds_column_count = itoa::Buffer::new()
                 .format(headers.len())
                 .as_bytes()
-                .to_owned();
-            write_dataset_stat(
-                b"_qsv_columncount",
-                &ds_column_count,
-                &mut dataset_stats_br,
-                &mut wtr,
-            )?;
+                .to_vec();
+            write_dataset_stat(b"_qsv_columncount", &ds_column_count)?;
 
             // Write _qsv_filesize_bytes
             let ds_filesize_bytes = itoa::Buffer::new()
                 .format(fs::metadata(&path)?.len())
                 .as_bytes()
-                .to_owned();
-            write_dataset_stat(
-                b"_qsv_filesize_bytes",
-                &ds_filesize_bytes,
-                &mut dataset_stats_br,
-                &mut wtr,
-            )?;
+                .to_vec();
+            write_dataset_stat(b"_qsv_filesize_bytes", &ds_filesize_bytes)?;
 
             // Compute hash of stats for data fingerprinting
             let stats_hash = {
@@ -878,9 +860,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 std::hash::Hasher::finish(&hasher)
             };
 
-            // Write _qsv_hash
-            let hash_bytes = itoa::Buffer::new().format(stats_hash).as_bytes().to_owned();
-            write_dataset_stat(b"_qsv_hash", &hash_bytes, &mut dataset_stats_br, &mut wtr)?;
+            // Write _qsv_hash dataset fingerprint
+            let hash_bytes = itoa::Buffer::new().format(stats_hash).as_bytes().to_vec();
+            write_dataset_stat(b"_qsv_hash", &hash_bytes)?;
 
             // update the stats args json metadata ===============
             current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
