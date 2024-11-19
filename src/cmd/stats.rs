@@ -20,7 +20,7 @@ The following additional "non-streaming" statistics require loading the entire f
 cardinality, mode/antimode, median, MAD, quartiles and its related measures (IQR,
 lower/upper fences & skewness).
 
-When computing “non-streaming” statistics, an Out-Of-Memory (OOM) heuristic check is done.
+When computing "non-streaming" statistics, an Out-Of-Memory (OOM) heuristic check is done.
 If the file is larger than the available memory minus a headroom buffer of 20% (which can be
 adjusted using the QSV_FREEMEMORY_HEADROOM_PCT environment variable), processing will be
 preemptively prevented.
@@ -242,7 +242,9 @@ with ~500 tests.
 
 use std::{
     default::Default,
-    fmt, fs, io,
+    fmt, fs,
+    hash::BuildHasher,
+    io,
     io::Write,
     iter::repeat,
     path::{Path, PathBuf},
@@ -769,6 +771,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }?;
 
             let stats_sr_vec = args.stats_to_records(stats);
+            let mut work_br;
+
+            // vec we use to compute dataset-level fingerprint hash
+            let mut stats_br_vec: Vec<csv::ByteRecord> = Vec::with_capacity(stats_sr_vec.len());
 
             let stats_headers_sr = args.stat_headers();
             wtr.write_record(&stats_headers_sr)?;
@@ -780,10 +786,85 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     header.to_vec()
                 };
                 let stat = stat.iter().map(str::as_bytes);
-                wtr.write_record(vec![&*header].into_iter().chain(stat))?;
+                work_br = vec![&*header]
+                    .into_iter()
+                    .chain(stat)
+                    .collect::<csv::ByteRecord>();
+                wtr.write_record(&work_br)?;
+                stats_br_vec.push(work_br);
             }
 
-            // update the stats args json metadata
+            // Add dataset-level stats as additional rows ====================
+            let num_stats_fields = stats_headers_sr.len();
+            let mut dataset_stats_br = csv::ByteRecord::with_capacity(128, num_stats_fields);
+
+            // Helper closure to write a dataset stat row
+            let mut write_dataset_stat = |name: &[u8], value: &[u8]| -> CliResult<()> {
+                dataset_stats_br.clear();
+                dataset_stats_br.push_field(name);
+                // Fill middle columns with empty strings
+                for _ in 2..num_stats_fields {
+                    dataset_stats_br.push_field(b"");
+                }
+                // write qsv__value as last column
+                dataset_stats_br.push_field(value);
+                wtr.write_byte_record(&dataset_stats_br)
+                    .map_err(std::convert::Into::into)
+            };
+
+            // Write qsv__rowcount
+            let ds_record_count = itoa::Buffer::new()
+                .format(*record_count)
+                .as_bytes()
+                .to_vec();
+            write_dataset_stat(b"qsv__rowcount", &ds_record_count)?;
+
+            // Write qsv__columncount
+            let ds_column_count = itoa::Buffer::new()
+                .format(headers.len())
+                .as_bytes()
+                .to_vec();
+            write_dataset_stat(b"qsv__columncount", &ds_column_count)?;
+
+            // Write qsv__filesize_bytes
+            let ds_filesize_bytes = itoa::Buffer::new()
+                .format(fs::metadata(&path)?.len())
+                .as_bytes()
+                .to_vec();
+            write_dataset_stat(b"qsv__filesize_bytes", &ds_filesize_bytes)?;
+
+            // Compute hash of stats for data fingerprinting
+            let stats_hash = {
+                #[allow(deprecated)]
+                // we use "deprecated" SipHasher explicitly instead of DefaultHasher,
+                // even though, it is the current DefaultHasher since Rust 1.7.0
+                // as we want the hash to be deterministic and stable across Rust versions
+                // DefaultHasher may change in future Rust versions
+                let mut hasher =
+                    std::hash::BuildHasherDefault::<std::hash::SipHasher>::default().build_hasher();
+
+                // Hash the first 20 columns of each stats record
+                // we only do the first 20 stats columns to compute the hash as those
+                // columns are always the same, even if other stats --options are used
+                for record in &stats_br_vec {
+                    for field in record.iter().take(20) {
+                        std::hash::Hash::hash(field, &mut hasher);
+                    }
+                }
+
+                // Include dataset-level stats in hash
+                for stat in [&ds_record_count, &ds_column_count, &ds_filesize_bytes] {
+                    std::hash::Hash::hash(stat, &mut hasher);
+                }
+
+                std::hash::Hasher::finish(&hasher)
+            };
+
+            // Write qsv__fingerprint_hash dataset
+            let hash_bytes = itoa::Buffer::new().format(stats_hash).as_bytes().to_vec();
+            write_dataset_stat(b"qsv__fingerprint_hash", &hash_bytes)?;
+
+            // update the stats args json metadata ===============
             current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
 
             if create_cache
@@ -891,7 +972,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // save the stats data to "<FILESTEM>.stats.csv.data.jsonl"
             if write_stats_jsonl {
                 stats_pathbuf.set_extension("data.jsonl");
-                util::csv_to_jsonl(&currstats_filename, &get_stats_data_types(), stats_pathbuf)?;
+                util::csv_to_jsonl(&currstats_filename, &get_stats_data_types(), &stats_pathbuf)?;
             }
         }
     }
@@ -1144,6 +1225,10 @@ impl Args {
                 "antimode_occurrences",
             ]);
         }
+
+        // we add the qsv__value field at the end for dataset-level stats
+        fields.push("qsv__value");
+
         csv::StringRecord::from(fields)
     }
 }
@@ -1790,6 +1875,9 @@ impl Stats {
         // mode/modes/antimodes & cardinality
         // append it here to preserve legacy ordering of columns
         pieces.extend_from_slice(&mc_pieces);
+
+        // add an empty field for qsv__value
+        pieces.push(empty());
 
         csv::StringRecord::from(pieces)
     }

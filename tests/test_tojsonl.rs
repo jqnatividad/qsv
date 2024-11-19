@@ -20,6 +20,8 @@ fn tojsonl_simple() {
     let mut cmd = wrk.command("tojsonl");
     cmd.arg("in.csv");
 
+    wrk.assert_success(&mut cmd);
+
     let got: String = wrk.stdout(&mut cmd);
     let expected = r#"{"id":1,"father":"Mark","mother":"Charlotte","oldest_child":"Tom","boy":true,"weight":150.2}
 {"id":2,"father":"John","mother":"Ann","oldest_child":"Jessika","boy":false,"weight":175.5}
