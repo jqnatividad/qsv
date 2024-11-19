@@ -1968,10 +1968,17 @@ pub fn get_stats_records(
         let statsdata_lines = statsdata_reader.lines();
 
         let mut line: String;
+        let mut s_slice: Vec<u8>;
         for curr_line in statsdata_lines {
             line = curr_line?;
-            let stats_record: StatsData = serde_json::from_str(&line)?;
-            csv_stats.push(stats_record);
+            // do not load dataset-level stats into csv_stats
+            if !line.starts_with(r#"{"field":"_qsv_"#) {
+                s_slice = line.as_bytes().to_vec();
+                match simd_json::serde::from_slice(&mut **&mut s_slice) {
+                    Ok(stats) => csv_stats.push(stats),
+                    Err(_) => continue,
+                }
+            }
         }
         stats_data_loaded = true;
     }
