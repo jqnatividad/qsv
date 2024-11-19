@@ -1921,6 +1921,8 @@ pub fn get_stats_records(
     args: &SchemaArgs,
     mode: StatsMode,
 ) -> CliResult<(ByteRecord, Vec<StatsData>)> {
+    const DATASET_STATS_PREFIX: &str = r#"{"field":"_qsv_"#;
+
     if mode == StatsMode::None
         || args.arg_input.is_none()
         || args.arg_input.as_ref() == Some(&"-".to_string())
@@ -1930,13 +1932,13 @@ pub fn get_stats_records(
         return Ok((ByteRecord::new(), Vec::new()));
     };
 
-    let canonical_input_path = Path::new(&args.arg_input.clone().unwrap()).canonicalize()?;
+    let canonical_input_path = Path::new(args.arg_input.as_ref().unwrap()).canonicalize()?;
     let statsdata_path = canonical_input_path.with_extension("stats.csv.data.jsonl");
 
     let stats_data_current = if statsdata_path.exists() {
         let statsdata_metadata = std::fs::metadata(&statsdata_path)?;
 
-        let input_metadata = std::fs::metadata(args.arg_input.clone().unwrap())?;
+        let input_metadata = std::fs::metadata(args.arg_input.as_ref().unwrap())?;
 
         let statsdata_mtime = FileTime::from_last_modification_time(&statsdata_metadata);
         let input_mtime = FileTime::from_last_modification_time(&input_metadata);
@@ -1958,35 +1960,39 @@ pub fn get_stats_records(
         return Ok((ByteRecord::new(), Vec::new()));
     }
 
+    // get the headers from the input file
+    let mut rdr = csv::Reader::from_path(args.arg_input.as_ref().ok_or("No input provided")?)?;
+    let csv_fields = rdr.byte_headers()?.clone();
+    drop(rdr);
+
     let mut stats_data_loaded = false;
-    let mut csv_stats: Vec<StatsData> = Vec::new();
+    let mut csv_stats: Vec<StatsData> = Vec::with_capacity(csv_fields.len());
 
     // if stats_data file exists and is current, use it
     if stats_data_current && !args.flag_force {
-        let statsdata_file = std::fs::File::open(&statsdata_path)?;
-        let statsdata_reader = std::io::BufReader::new(statsdata_file);
-        let statsdata_lines = statsdata_reader.lines();
+        let statsdatajson_rdr =
+            BufReader::with_capacity(DEFAULT_RDR_BUFFER_CAPACITY, File::open(statsdata_path)?);
 
-        let mut line: String;
+        let mut curr_line: String;
         let mut s_slice: Vec<u8>;
-        for curr_line in statsdata_lines {
-            line = curr_line?;
-            // do not load dataset-level stats into csv_stats
-            if !line.starts_with(r#"{"field":"_qsv_"#) {
-                s_slice = line.as_bytes().to_vec();
-                match simd_json::serde::from_slice(&mut **&mut s_slice) {
-                    Ok(stats) => csv_stats.push(stats),
-                    Err(_) => continue,
-                }
+        for line in statsdatajson_rdr.lines() {
+            curr_line = line?;
+            if curr_line.starts_with(DATASET_STATS_PREFIX) {
+                break;
+            }
+            s_slice = curr_line.as_bytes().to_vec();
+            match simd_json::serde::from_slice(&mut **&mut s_slice) {
+                Ok(stats) => csv_stats.push(stats),
+                Err(_) => continue,
             }
         }
-        stats_data_loaded = true;
+        stats_data_loaded = !csv_stats.is_empty();
     }
 
     // otherwise, run stats command to generate stats.csv.data.jsonl file
     if !stats_data_loaded {
         let stats_args = crate::cmd::stats::Args {
-            arg_input:            args.arg_input.clone(),
+            arg_input:            args.arg_input.as_ref().map(String::from),
             flag_select:          crate::select::SelectColumns::parse("").unwrap(),
             flag_everything:      false,
             flag_typesonly:       false,
@@ -2017,13 +2023,10 @@ pub fn get_stats_records(
             .unwrap();
         let tempfile_path = tempfile.path().to_str().unwrap().to_string();
 
-        let statsdatajson_path = canonical_input_path.with_extension("stats.csv.data.jsonl");
+        let statsdatajson_path = &canonical_input_path.with_extension("stats.csv.data.jsonl");
 
-        let input = if let Some(arg_input) = stats_args.arg_input {
-            arg_input
-        } else {
-            "-".to_string()
-        };
+        let input = stats_args.arg_input.unwrap_or_else(|| "-".to_string());
+
         // we do rustfmt::skip here as it was breaking the stats cmdline along strange
         // boundaries, causing CI errors.
         // This is because we're using tab characters (/t) to separate args to fix #2294,
@@ -2048,8 +2051,7 @@ pub fn get_stats_records(
                 // StatsMode::FrequencyForceStats
                 // we're doing frequency, so we need cardinality from a --forced stats run
                 format!(
-                    "stats\t{input}\t--cardinality\t--stats-jsonl\t--force\
-                    \t--output\t{tempfile_path}"
+                    "stats\t{input}\t--cardinality\t--stats-jsonl\t--force\t--output\t{tempfile_path}"
                 )
             },
             #[cfg(feature = "polars")]
@@ -2110,30 +2112,25 @@ pub fn get_stats_records(
         }
 
         // create a statsdatajon from the output of the stats command
-        csv_to_jsonl(
-            &tempfile_path,
-            &get_stats_data_types(),
-            statsdatajson_path.clone(),
-        )?;
+        csv_to_jsonl(&tempfile_path, &get_stats_data_types(), &statsdatajson_path)?;
 
-        let statsdatajson_rdr = BufReader::with_capacity(
-            DEFAULT_RDR_BUFFER_CAPACITY * 2,
-            File::open(statsdatajson_path)?,
-        );
+        let statsdatajson_rdr =
+            BufReader::with_capacity(DEFAULT_RDR_BUFFER_CAPACITY, File::open(statsdatajson_path)?);
 
-        let mut statsrecord: StatsData;
         let mut curr_line: String;
+        let mut s_slice: Vec<u8>;
         for line in statsdatajson_rdr.lines() {
             curr_line = line?;
-            statsrecord = serde_json::from_str(&curr_line)?;
-            csv_stats.push(statsrecord);
+            if curr_line.starts_with(DATASET_STATS_PREFIX) {
+                break;
+            }
+            s_slice = curr_line.as_bytes().to_vec();
+            match simd_json::serde::from_slice(&mut **&mut s_slice) {
+                Ok(stats) => csv_stats.push(stats),
+                Err(_) => continue,
+            }
         }
     };
-
-    // get the headers from the input file
-    let mut rdr = csv::Reader::from_path(args.arg_input.clone().unwrap()).unwrap();
-    let csv_fields = rdr.byte_headers()?.clone();
-    drop(rdr);
 
     Ok((csv_fields, csv_stats))
 }
@@ -2143,7 +2140,7 @@ pub fn get_stats_records(
 pub fn csv_to_jsonl(
     input_csv: &str,
     csv_types: &[JsonTypes],
-    output_jsonl: PathBuf,
+    output_jsonl: &PathBuf,
 ) -> CliResult<()> {
     let file = File::open(input_csv)?;
     let mut rdr = csv::ReaderBuilder::new()
