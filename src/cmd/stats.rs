@@ -972,7 +972,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // save the stats data to "<FILESTEM>.stats.csv.data.jsonl"
             if write_stats_jsonl {
                 stats_pathbuf.set_extension("data.jsonl");
-                util::csv_to_jsonl(&currstats_filename, &get_stats_data_types(), stats_pathbuf)?;
+                util::csv_to_jsonl(&currstats_filename, &get_stats_data_types(), &stats_pathbuf)?;
             }
         }
     }
