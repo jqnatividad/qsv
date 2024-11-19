@@ -806,32 +806,32 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 for _ in 2..num_stats_fields {
                     dataset_stats_br.push_field(b"");
                 }
-                // write _qsv_value as last column
+                // write qsv__value as last column
                 dataset_stats_br.push_field(value);
                 wtr.write_byte_record(&dataset_stats_br)
                     .map_err(std::convert::Into::into)
             };
 
-            // Write _qsv_rowcount
+            // Write qsv__rowcount
             let ds_record_count = itoa::Buffer::new()
                 .format(*record_count)
                 .as_bytes()
                 .to_vec();
-            write_dataset_stat(b"_qsv_rowcount", &ds_record_count)?;
+            write_dataset_stat(b"qsv__rowcount", &ds_record_count)?;
 
-            // Write _qsv_columncount
+            // Write qsv__columncount
             let ds_column_count = itoa::Buffer::new()
                 .format(headers.len())
                 .as_bytes()
                 .to_vec();
-            write_dataset_stat(b"_qsv_columncount", &ds_column_count)?;
+            write_dataset_stat(b"qsv__columncount", &ds_column_count)?;
 
-            // Write _qsv_filesize_bytes
+            // Write qsv__filesize_bytes
             let ds_filesize_bytes = itoa::Buffer::new()
                 .format(fs::metadata(&path)?.len())
                 .as_bytes()
                 .to_vec();
-            write_dataset_stat(b"_qsv_filesize_bytes", &ds_filesize_bytes)?;
+            write_dataset_stat(b"qsv__filesize_bytes", &ds_filesize_bytes)?;
 
             // Compute hash of stats for data fingerprinting
             let stats_hash = {
@@ -860,9 +860,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 std::hash::Hasher::finish(&hasher)
             };
 
-            // Write _qsv_hash dataset fingerprint
+            // Write qsv__fingerprint_hash dataset
             let hash_bytes = itoa::Buffer::new().format(stats_hash).as_bytes().to_vec();
-            write_dataset_stat(b"_qsv_hash", &hash_bytes)?;
+            write_dataset_stat(b"qsv__fingerprint_hash", &hash_bytes)?;
 
             // update the stats args json metadata ===============
             current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
@@ -1226,8 +1226,8 @@ impl Args {
             ]);
         }
 
-        // we add the _qsv_value field at the end for dataset-level stats
-        fields.push("_qsv_value");
+        // we add the qsv__value field at the end for dataset-level stats
+        fields.push("qsv__value");
 
         csv::StringRecord::from(fields)
     }
@@ -1876,7 +1876,7 @@ impl Stats {
         // append it here to preserve legacy ordering of columns
         pieces.extend_from_slice(&mc_pieces);
 
-        // add an empty field for _qsv_value
+        // add an empty field for qsv__value
         pieces.push(empty());
 
         csv::StringRecord::from(pieces)

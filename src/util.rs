@@ -1921,7 +1921,7 @@ pub fn get_stats_records(
     args: &SchemaArgs,
     mode: StatsMode,
 ) -> CliResult<(ByteRecord, Vec<StatsData>)> {
-    const DATASET_STATS_PREFIX: &str = r#"{"field":"_qsv_"#;
+    const DATASET_STATS_PREFIX: &str = r#"{"field":"qsv__"#;
 
     if mode == StatsMode::None
         || args.arg_input.is_none()
