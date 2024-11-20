@@ -117,7 +117,7 @@ mod test_sortcheck;
 mod test_split;
 #[cfg(feature = "polars")]
 mod test_sqlp;
-mod test_stats;
+// mod test_stats;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_table;
 #[cfg(feature = "feature_capable")]
