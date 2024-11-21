@@ -1992,7 +1992,7 @@ pub fn get_stats_records(
                 break;
             }
             s_slice = curr_line.as_bytes().to_vec();
-            match simd_json::serde::from_slice(&mut **&mut s_slice) {
+            match simd_json::serde::from_slice(&mut s_slice) {
                 Ok(stats) => csv_stats.push(stats),
                 Err(_) => continue,
             }
@@ -2123,7 +2123,7 @@ pub fn get_stats_records(
         }
 
         // create a statsdatajon from the output of the stats command
-        csv_to_jsonl(&tempfile_path, &get_stats_data_types(), &statsdatajson_path)?;
+        csv_to_jsonl(&tempfile_path, &get_stats_data_types(), statsdatajson_path)?;
 
         let statsdatajson_rdr =
             BufReader::with_capacity(DEFAULT_RDR_BUFFER_CAPACITY, File::open(statsdatajson_path)?);
@@ -2136,7 +2136,7 @@ pub fn get_stats_records(
                 break;
             }
             s_slice = curr_line.as_bytes().to_vec();
-            match simd_json::serde::from_slice(&mut **&mut s_slice) {
+            match simd_json::serde::from_slice(&mut s_slice) {
                 Ok(stats) => csv_stats.push(stats),
                 Err(_) => continue,
             }
