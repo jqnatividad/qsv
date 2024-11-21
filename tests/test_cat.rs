@@ -24,6 +24,7 @@ where
 
     let mut cmd = wrk.command("cat");
     modify_cmd(cmd.arg(which).arg("in1.csv").arg("in2.csv"));
+    wrk.assert_success(&mut cmd);
     wrk.read_stdout(&mut cmd)
 }
 
