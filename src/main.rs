@@ -87,6 +87,8 @@ struct Args {
 }
 
 fn main() -> QsvExitCode {
+    util::qsv_custom_panic();
+
     let mut enabled_commands = String::new();
     #[cfg(all(feature = "apply", feature = "feature_capable"))]
     enabled_commands.push_str("    apply       Apply series of transformations to a column\n");
