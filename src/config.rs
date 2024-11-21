@@ -76,26 +76,28 @@ impl<'de> Deserialize<'de> for Delimiter {
 
 #[derive(Clone, Debug)]
 pub struct Config {
-    pub path:           Option<PathBuf>, // None implies <stdin>
-    idx_path:           Option<PathBuf>,
-    select_columns:     Option<SelectColumns>,
-    delimiter:          u8,
-    pub no_headers:     bool,
-    pub flexible:       bool,
-    terminator:         csv::Terminator,
-    pub quote:          u8,
-    quote_style:        csv::QuoteStyle,
-    double_quote:       bool,
-    escape:             Option<u8>,
-    quoting:            bool,
-    pub preamble_rows:  u64,
-    trim:               csv::Trim,
-    pub autoindex_size: u64,
-    prefer_dmy:         bool,
-    pub comment:        Option<u8>,
-    snappy:             bool, // flag to enable snappy compression/decompression
-    pub read_buffer:    u32,
-    pub write_buffer:   u32,
+    pub path:              Option<PathBuf>, // None implies <stdin>
+    idx_path:              Option<PathBuf>,
+    select_columns:        Option<SelectColumns>,
+    delimiter:             u8,
+    pub no_headers:        bool,
+    pub flexible:          bool,
+    terminator:            csv::Terminator,
+    pub quote:             u8,
+    quote_style:           csv::QuoteStyle,
+    double_quote:          bool,
+    escape:                Option<u8>,
+    quoting:               bool,
+    pub preamble_rows:     u64,
+    trim:                  csv::Trim,
+    pub autoindex_size:    u64,
+    prefer_dmy:            bool,
+    pub comment:           Option<u8>,
+    snappy:                bool, // flag to enable snappy compression/decompression
+    pub read_buffer:       u32,
+    pub write_buffer:      u32,
+    pub skip_format_check: bool,
+    pub format_error:      Option<String>,
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors
@@ -137,11 +139,14 @@ impl Config {
     /// - `QSV_PREFER_DMY`: Sets date format preference.
     /// - `QSV_RDR_BUFFER_CAPACITY`: Sets read buffer capacity.
     /// - `QSV_WTR_BUFFER_CAPACITY`: Sets write buffer capacity.
+    /// - `QSV_SKIP_FORMAT_CHECK`: Set to skip mime-type checking.
     pub fn new(path: Option<&String>) -> Config {
         let default_delim = match env::var("QSV_DEFAULT_DELIMITER") {
             Ok(delim) => Delimiter::decode_delimiter(&delim).unwrap().as_byte(),
             _ => b',',
         };
+        let mut skip_format_check = true;
+        let mut format_error = None;
         let (path, mut delim, snappy) = match path {
             None => (None, default_delim, false),
             // WIP: support remote files; currently only http(s) is supported
@@ -163,6 +168,30 @@ impl Config {
             Some(s) if s == "-" => (None, default_delim, false),
             Some(ref s) => {
                 let path = PathBuf::from(s);
+                skip_format_check = util::get_envvar_flag("QSV_SKIP_FORMAT_CHECK");
+                if !skip_format_check {
+                    if let Ok(file_format) = file_format::FileFormat::from_file(&path) {
+                        let detected_mime = file_format.media_type();
+                        // determine the file type by scanning the file
+                        // we support the following mime-types:
+                        //  x-empty: empty file
+                        //  octet-stream: the file-format crate falls back to this when it cannot
+                        //   figure the mime-type, so its not actually binary data
+                        //  x-snappy-framed: for snappy compressed files
+                        //  text/*: its a text file type of some sort that is a possible CSV
+                        //   candidate that we will trap later on with the csv crate
+                        if !(detected_mime == "application/x-empty"
+                            || detected_mime == "application/octet-stream"
+                            || detected_mime == "application/x-snappy-framed"
+                            || detected_mime.starts_with("text/"))
+                        {
+                            format_error = Some(format!(
+                                "{} is using an unsupported file format: {detected_mime}",
+                                path.display()
+                            ));
+                        }
+                    }
+                }
                 let (file_extension, delim, snappy) = get_delim_by_extension(&path, default_delim);
                 (Some(path), delim, snappy || file_extension.ends_with("sz"))
             },
@@ -228,6 +257,8 @@ impl Config {
                 .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string())
                 .parse()
                 .unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY as u32),
+            format_error,
+            skip_format_check,
         }
     }
 
@@ -391,7 +422,14 @@ impl Config {
     }
 
     pub fn reader(&self) -> io::Result<csv::Reader<Box<dyn io::Read + Send + 'static>>> {
-        Ok(self.from_reader(self.io_reader()?))
+        if !self.skip_format_check && self.format_error.is_some() {
+            Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                self.format_error.clone().unwrap(),
+            ))
+        } else {
+            Ok(self.from_reader(self.io_reader()?))
+        }
     }
 
     pub fn reader_file(&self) -> io::Result<csv::Reader<fs::File>> {
@@ -400,7 +438,16 @@ impl Config {
                 io::ErrorKind::InvalidInput,
                 "Cannot use <stdin> here",
             )),
-            Some(ref p) => fs::File::open(p).map(|f| self.from_reader(f)),
+            Some(ref p) => {
+                if !self.skip_format_check && self.format_error.is_some() {
+                    Err(io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        self.format_error.clone().unwrap(),
+                    ))
+                } else {
+                    fs::File::open(p).map(|f| self.from_reader(f))
+                }
+            },
         }
     }
 
@@ -414,7 +461,15 @@ impl Config {
                 stdin.lock().read_to_end(&mut buffer)?;
                 self.from_reader(Box::new(io::Cursor::new(buffer)))
             },
-            Some(ref p) => self.from_reader(Box::new(fs::File::open(p).unwrap())),
+            Some(ref p) => {
+                if !self.skip_format_check && self.format_error.is_some() {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        self.format_error.clone().unwrap(),
+                    ));
+                }
+                self.from_reader(Box::new(fs::File::open(p)?))
+            },
         })
     }
 

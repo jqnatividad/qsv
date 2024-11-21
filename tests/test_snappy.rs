@@ -164,6 +164,8 @@ fn snappy_automatic_decompression() {
     let mut cmd = wrk.command("count");
     cmd.arg(test_file);
 
+    wrk.assert_success(&mut cmd);
+
     let got: String = wrk.stdout(&mut cmd);
     let expected = "100";
     assert_eq!(got, expected);

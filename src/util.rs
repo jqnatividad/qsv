@@ -16,6 +16,7 @@ use std::{
 use csv::ByteRecord;
 use docopt::Docopt;
 use filetime::FileTime;
+use human_panic::setup_panic;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{info, log_enabled};
@@ -103,6 +104,15 @@ const QSV_POLARS_REV: &str = match option_env!("QSV_POLARS_REV") {
     Some(rev) => rev,
     None => "",
 };
+
+pub fn qsv_custom_panic() {
+    setup_panic!(
+        human_panic::Metadata::new(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+            .authors("datHere qsv maintainers")
+            .homepage("https://qsv.dathere.com")
+            .support("- Open a GitHub issue at https://github.com/jqnatividad/qsv/issues")
+    );
+}
 
 fn default_user_agent() -> String {
     let unknown_command = "Unknown".to_string();
@@ -1380,6 +1390,7 @@ pub fn load_dotenv() -> CliResult<()> {
     Ok(())
 }
 
+#[inline]
 pub fn get_envvar_flag(key: &str) -> bool {
     if let Ok(tf_val) = std::env::var(key) {
         let tf_val = tf_val.to_lowercase();
@@ -1981,7 +1992,7 @@ pub fn get_stats_records(
                 break;
             }
             s_slice = curr_line.as_bytes().to_vec();
-            match simd_json::serde::from_slice(&mut **&mut s_slice) {
+            match simd_json::serde::from_slice(&mut s_slice) {
                 Ok(stats) => csv_stats.push(stats),
                 Err(_) => continue,
             }
@@ -2112,7 +2123,7 @@ pub fn get_stats_records(
         }
 
         // create a statsdatajon from the output of the stats command
-        csv_to_jsonl(&tempfile_path, &get_stats_data_types(), &statsdatajson_path)?;
+        csv_to_jsonl(&tempfile_path, &get_stats_data_types(), statsdatajson_path)?;
 
         let statsdatajson_rdr =
             BufReader::with_capacity(DEFAULT_RDR_BUFFER_CAPACITY, File::open(statsdatajson_path)?);
@@ -2125,7 +2136,7 @@ pub fn get_stats_records(
                 break;
             }
             s_slice = curr_line.as_bytes().to_vec();
-            match simd_json::serde::from_slice(&mut **&mut s_slice) {
+            match simd_json::serde::from_slice(&mut s_slice) {
                 Ok(stats) => csv_stats.push(stats),
                 Err(_) => continue,
             }
