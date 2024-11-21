@@ -16,6 +16,7 @@ use std::{
 use csv::ByteRecord;
 use docopt::Docopt;
 use filetime::FileTime;
+use human_panic::setup_panic;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{info, log_enabled};
@@ -103,6 +104,15 @@ const QSV_POLARS_REV: &str = match option_env!("QSV_POLARS_REV") {
     Some(rev) => rev,
     None => "",
 };
+
+pub fn qsv_custom_panic() {
+    setup_panic!(
+        human_panic::Metadata::new(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+            .authors("datHere qsv maintainers")
+            .homepage("https://qsv.dathere.com")
+            .support("- Open a GitHub issue at https://github.com/jqnatividad/qsv/issues")
+    );
+}
 
 fn default_user_agent() -> String {
     let unknown_command = "Unknown".to_string();
@@ -1380,6 +1390,7 @@ pub fn load_dotenv() -> CliResult<()> {
     Ok(())
 }
 
+#[inline]
 pub fn get_envvar_flag(key: &str) -> bool {
     if let Ok(tf_val) = std::env::var(key) {
         let tf_val = tf_val.to_lowercase();
