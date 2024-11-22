@@ -42,7 +42,7 @@ replace options:
     --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
                            expression engine's Discrete Finite Automata.
                            [default: 10]
-    --not-one              Use exit code 0 instead of 1 for no match found.
+    --not-one              Use exit code 0 instead of 1 for no replacement found.
 
 Common options:
     -h, --help             Display this message
