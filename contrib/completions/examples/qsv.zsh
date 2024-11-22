@@ -1368,6 +1368,7 @@ _arguments "${_arguments_options[@]}" : \
 '--unicode[]' \
 '--size-limit[]' \
 '--dfa-size-limit[]' \
+'--not-one[]' \
 '--output[]' \
 '--no-headers[]' \
 '--delimiter[]' \

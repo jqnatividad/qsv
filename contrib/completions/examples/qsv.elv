@@ -1143,6 +1143,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --unicode 'unicode'
             cand --size-limit 'size-limit'
             cand --dfa-size-limit 'dfa-size-limit'
+            cand --not-one 'not-one'
             cand --output 'output'
             cand --no-headers 'no-headers'
             cand --delimiter 'delimiter'
