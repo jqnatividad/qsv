@@ -95,6 +95,25 @@ fn replace_nomatch() {
 }
 
 #[test]
+fn replace_nomatch_notone() {
+    let wrk = Workdir::new("replace_nomatch_notone");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["identifier", "color"],
+            svec!["164.5", "yellow"],
+            svec!["165.6", "yellow"],
+            svec!["166.7", "yellow"],
+            svec!["167.8", "yellow.1"],
+        ],
+    );
+    let mut cmd = wrk.command("replace");
+    cmd.arg("\\.0$").arg("").arg("data.csv").arg("--not-one");
+
+    wrk.assert_success(&mut cmd);
+}
+
+#[test]
 fn replace_null() {
     let wrk = Workdir::new("replace_null");
     wrk.create(
