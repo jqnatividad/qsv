@@ -872,7 +872,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
         sfile_info.downloaded_records
     };
 
-    let rdr = conf.reader_file()?;
+    let rdr = conf.clone().skip_format_check(true).reader_file()?;
 
     let dt_preference = if args.flag_prefer_dmy || conf.get_dmy_preference() {
         DatePreference::DmyFormat

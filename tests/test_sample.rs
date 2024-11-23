@@ -148,6 +148,8 @@ fn sample_seed_url() {
         .arg("5")
         .arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/aliases.csv");
 
+    wrk.assert_success(&mut cmd);
+
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         ["position", "title"],

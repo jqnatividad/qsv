@@ -136,6 +136,8 @@ fn sniff_url_snappy() {
     let mut cmd = wrk.command("sniff");
     cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/boston311-100.csv.sz");
 
+    wrk.assert_success(&mut cmd);
+
     let got: String = wrk.stdout(&mut cmd);
 
     let expected_end = r#"Sampled Records: 100
