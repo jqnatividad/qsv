@@ -455,7 +455,12 @@ fn dyn_enum_validator_factory<'a>(
     // Read the first column into a HashSet
     let mut enum_set = HashSet::with_capacity(50);
     let rconfig = Config::new(Some(lookup_result.filepath).as_ref());
-    let mut rdr = match rconfig.flexible(true).comment(Some(b'#')).reader() {
+    let mut rdr = match rconfig
+        .flexible(true)
+        .comment(Some(b'#'))
+        .skip_format_check(true)
+        .reader()
+    {
         Ok(reader) => reader,
         Err(e) => return fail_validation_error!("Error opening dynamicEnum file: {e}"),
     };
@@ -531,7 +536,12 @@ fn dyn_enum_validator_factory<'a>(
         // read the first column into a HashSet
         let mut enum_set = HashSet::with_capacity(50);
         let rconfig = Config::new(Some(dynenum_path).as_ref());
-        let mut rdr = match rconfig.flexible(true).reader() {
+        let mut rdr = match rconfig
+            .flexible(true)
+            .comment(Some(b'#'))
+            .skip_format_check(true)
+            .reader()
+        {
             Ok(reader) => reader,
             Err(e) => return fail_validation_error!("Error opening dynamicEnum file: {e}"),
         };
