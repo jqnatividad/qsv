@@ -59,6 +59,7 @@ fn table_default() {
 
     let mut cmd = wrk.command("table");
     cmd.env("QSV_DEFAULT_DELIMITER", "\t");
+    cmd.env("QSV_SKIP_FORMAT_CHECK", "1");
     cmd.arg("in.file");
 
     let got: String = wrk.stdout(&mut cmd);
@@ -71,6 +72,7 @@ fn table_pipe_delimiter_env() {
     wrk.create_with_delim("in.file", data(), b'|');
 
     let mut cmd = wrk.command("table");
+    cmd.env("QSV_SKIP_FORMAT_CHECK", "1");
     cmd.env("QSV_DEFAULT_DELIMITER", "|");
     cmd.arg("in.file");
 
@@ -84,6 +86,7 @@ fn table_pipe_delimiter() {
     wrk.create_with_delim("in.file", data(), b'|');
 
     let mut cmd = wrk.command("table");
+    cmd.env("QSV_SKIP_FORMAT_CHECK", "1");
     cmd.arg("--delimiter").arg("|").arg("in.file");
 
     let got: String = wrk.stdout(&mut cmd);
@@ -96,6 +99,7 @@ fn invalid_delimiter_len() {
     wrk.create_with_delim("in.file", data(), b'|');
 
     let mut cmd = wrk.command("table");
+    cmd.env("QSV_SKIP_FORMAT_CHECK", "1");
     cmd.arg("--delimiter").arg("||").arg("in.file");
 
     let got: String = wrk.output_stderr(&mut cmd);
