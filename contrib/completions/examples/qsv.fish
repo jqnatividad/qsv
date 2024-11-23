@@ -887,6 +887,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand replace" -l select
 complete -c qsv -n "__fish_qsv_using_subcommand replace" -l unicode
 complete -c qsv -n "__fish_qsv_using_subcommand replace" -l size-limit
 complete -c qsv -n "__fish_qsv_using_subcommand replace" -l dfa-size-limit
+complete -c qsv -n "__fish_qsv_using_subcommand replace" -l not-one
 complete -c qsv -n "__fish_qsv_using_subcommand replace" -l output
 complete -c qsv -n "__fish_qsv_using_subcommand replace" -l no-headers
 complete -c qsv -n "__fish_qsv_using_subcommand replace" -l delimiter

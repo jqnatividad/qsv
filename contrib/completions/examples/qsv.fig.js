@@ -2733,6 +2733,9 @@ const completion: Fig.Spec = {
           name: "--dfa-size-limit",
         },
         {
+          name: "--not-one",
+        },
+        {
           name: "--output",
         },
         {

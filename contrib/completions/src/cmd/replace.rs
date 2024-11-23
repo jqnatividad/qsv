@@ -8,6 +8,7 @@ pub fn replace_cmd() -> Command {
         arg!(--unicode),
         arg!(--"size-limit"),
         arg!(--"dfa-size-limit"),
+        arg!(--"not-one"),
         arg!(--output),
         arg!(--"no-headers"),
         arg!(--delimiter),
