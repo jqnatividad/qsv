@@ -139,12 +139,14 @@ impl Config {
     /// - `QSV_PREFER_DMY`: Sets date format preference.
     /// - `QSV_RDR_BUFFER_CAPACITY`: Sets read buffer capacity.
     /// - `QSV_WTR_BUFFER_CAPACITY`: Sets write buffer capacity.
-    /// - `QSV_SKIP_FORMAT_CHECK`: Set to skip mime-type checking.
+    /// - `QSV_SKIP_FORMAT_CHECK`: Set to skip file extension checking.
     pub fn new(path: Option<&String>) -> Config {
         let default_delim = match env::var("QSV_DEFAULT_DELIMITER") {
             Ok(delim) => Delimiter::decode_delimiter(&delim).unwrap().as_byte(),
             _ => b',',
         };
+        let sniff = util::get_envvar_flag("QSV_SNIFF_DELIMITER")
+            || util::get_envvar_flag("QSV_SNIFF_PREAMBLE");
         let mut skip_format_check = true;
         let mut format_error = None;
         let (path, mut delim, snappy) = match path {
@@ -168,31 +170,18 @@ impl Config {
             Some(s) if s == "-" => (None, default_delim, false),
             Some(ref s) => {
                 let path = PathBuf::from(s);
-                skip_format_check = util::get_envvar_flag("QSV_SKIP_FORMAT_CHECK");
-                if !skip_format_check {
-                    if let Ok(file_format) = file_format::FileFormat::from_file(&path) {
-                        let detected_mime = file_format.media_type();
-                        // determine the file type by scanning the file
-                        // we support the following mime-types:
-                        //  x-empty: empty file
-                        //  octet-stream: the file-format crate falls back to this when it cannot
-                        //   figure the mime-type, so its not actually binary data
-                        //  x-snappy-framed: for snappy compressed files
-                        //  text/*: its a text file type of some sort that is a possible CSV
-                        //   candidate that we will trap later on with the csv crate
-                        if !(detected_mime == "application/x-empty"
-                            || detected_mime == "application/octet-stream"
-                            || detected_mime == "application/x-snappy-framed"
-                            || detected_mime.starts_with("text/"))
-                        {
-                            format_error = Some(format!(
-                                "{} is using an unsupported file format: {detected_mime}",
-                                path.display()
-                            ));
-                        }
-                    }
-                }
                 let (file_extension, delim, snappy) = get_delim_by_extension(&path, default_delim);
+                skip_format_check = sniff || util::get_envvar_flag("QSV_SKIP_FORMAT_CHECK");
+                if !skip_format_check {
+                    format_error = match file_extension.as_str() {
+                        "csv" | "tsv" | "tab" | "ssv" => None,
+                        ext => Some(format!(
+                            "{} is using an unsupported file format: {ext}. Set \
+                             QSV_SKIP_FORMAT_CHECK to skip input format checking.",
+                            path.display()
+                        )),
+                    };
+                }
                 (Some(path), delim, snappy || file_extension.ends_with("sz"))
             },
         };
@@ -292,6 +281,11 @@ impl Config {
 
     pub const fn flexible(mut self, yes: bool) -> Config {
         self.flexible = yes;
+        self
+    }
+
+    pub const fn skip_format_check(mut self, yes: bool) -> Config {
+        self.skip_format_check = yes;
         self
     }
 
