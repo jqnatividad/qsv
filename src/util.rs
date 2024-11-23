@@ -389,7 +389,7 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
 
         #[cfg(not(feature = "polars"))]
         let count_opt = ROW_COUNT.get_or_init(|| {
-            if let Ok(mut rdr) = conf.reader() {
+            if let Ok(mut rdr) = conf.clone().skip_format_check(true).reader() {
                 let mut count = 0_u64;
                 let mut _record = csv::ByteRecord::new();
                 #[allow(clippy::used_underscore_binding)]
@@ -419,7 +419,7 @@ pub fn count_rows_regular(conf: &Config) -> Result<u64, CliError> {
     } else {
         // index does not exist or is stale,
         let count_opt = ROW_COUNT.get_or_init(|| {
-            if let Ok(mut rdr) = conf.reader() {
+            if let Ok(mut rdr) = conf.clone().skip_format_check(true).reader() {
                 let mut count = 0_u64;
                 let mut _record = csv::ByteRecord::new();
                 #[allow(clippy::used_underscore_binding)]
