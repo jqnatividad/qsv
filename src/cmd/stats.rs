@@ -242,9 +242,7 @@ with ~500 tests.
 
 use std::{
     default::Default,
-    fmt, fs,
-    hash::BuildHasher,
-    io,
+    fmt, fs, io,
     io::Write,
     iter::repeat,
     path::{Path, PathBuf},
@@ -591,7 +589,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let wconfig = Config::new(Some(stats_csv_tempfile_fname.clone()).as_ref())
         .delimiter(Some(Delimiter(output_delim)));
     let mut wtr = wconfig.writer()?;
+
     let mut rconfig = args.rconfig();
+    if let Some(format_error) = rconfig.format_error {
+        return fail_incorrectusage_clierror!("{format_error}");
+    }
     let mut stdin_tempfile_path = None;
 
     if rconfig.is_stdin() {
@@ -618,7 +620,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut compute_stats = true;
-    let mut create_cache = args.flag_cache_threshold > 0 || args.flag_stats_jsonl;
+    let mut create_cache = args.flag_cache_threshold == 1
+        || args.flag_stats_jsonl
+        || args.flag_cache_threshold.is_negative();
+
     let mut autoindex_set = false;
 
     let write_stats_jsonl = args.flag_stats_jsonl;
@@ -799,7 +804,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             let mut dataset_stats_br = csv::ByteRecord::with_capacity(128, num_stats_fields);
 
             // Helper closure to write a dataset stat row
-            let mut write_dataset_stat = |name: &[u8], value: &[u8]| -> CliResult<()> {
+            let mut write_dataset_stat = |name: &[u8], value: u64| -> CliResult<()> {
                 dataset_stats_br.clear();
                 dataset_stats_br.push_field(name);
                 // Fill middle columns with empty strings
@@ -807,71 +812,69 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     dataset_stats_br.push_field(b"");
                 }
                 // write qsv__value as last column
-                dataset_stats_br.push_field(value);
+                dataset_stats_br.push_field(itoa::Buffer::new().format(value).as_bytes());
                 wtr.write_byte_record(&dataset_stats_br)
                     .map_err(std::convert::Into::into)
             };
 
             // Write qsv__rowcount
-            let ds_record_count = itoa::Buffer::new()
-                .format(*record_count)
-                .as_bytes()
-                .to_vec();
-            write_dataset_stat(b"qsv__rowcount", &ds_record_count)?;
+            write_dataset_stat(b"qsv__rowcount", *record_count)?;
 
             // Write qsv__columncount
-            let ds_column_count = itoa::Buffer::new()
-                .format(headers.len())
-                .as_bytes()
-                .to_vec();
-            write_dataset_stat(b"qsv__columncount", &ds_column_count)?;
+            let ds_column_count = headers.len() as u64;
+            write_dataset_stat(b"qsv__columncount", ds_column_count)?;
 
             // Write qsv__filesize_bytes
-            let ds_filesize_bytes = itoa::Buffer::new()
-                .format(fs::metadata(&path)?.len())
-                .as_bytes()
-                .to_vec();
-            write_dataset_stat(b"qsv__filesize_bytes", &ds_filesize_bytes)?;
+            let ds_filesize_bytes = fs::metadata(&path)?.len();
+            write_dataset_stat(b"qsv__filesize_bytes", ds_filesize_bytes)?;
 
             // Compute hash of stats for data fingerprinting
             let stats_hash = {
-                #[allow(deprecated)]
-                // we use "deprecated" SipHasher explicitly instead of DefaultHasher,
-                // even though, it is the current DefaultHasher since Rust 1.7.0
-                // as we want the hash to be deterministic and stable across Rust versions
-                // DefaultHasher may change in future Rust versions
-                let mut hasher =
-                    std::hash::BuildHasherDefault::<std::hash::SipHasher>::default().build_hasher();
+                let mut hash_input = Vec::with_capacity(16);
 
-                // Hash the first 20 columns of each stats record
-                // we only do the first 20 stats columns to compute the hash as those
-                // columns are always the same, even if other stats --options are used
+                // First, create a stable representation of the stats
                 for record in &stats_br_vec {
-                    for field in record.iter().take(20) {
-                        std::hash::Hash::hash(field, &mut hasher);
+                    // Take first 16 columns only
+                    for field in record.iter().take(16) {
+                        let s = String::from_utf8_lossy(field);
+                        // Standardize number format
+                        if let Ok(f) = s.parse::<f64>() {
+                            hash_input.extend_from_slice(format!("{f:.10}").as_bytes());
+                        } else {
+                            hash_input.extend_from_slice(field);
+                        }
+                        hash_input.push(0x1F); // field separator
                     }
+                    hash_input.push(b'\n');
                 }
 
-                // Include dataset-level stats in hash
-                for stat in [&ds_record_count, &ds_column_count, &ds_filesize_bytes] {
-                    std::hash::Hash::hash(stat, &mut hasher);
-                }
-
-                std::hash::Hasher::finish(&hasher)
+                // Add dataset stats
+                hash_input.extend_from_slice(
+                    format!("{record_count}\x1F{ds_column_count}\x1F{ds_filesize_bytes}\n")
+                        .as_bytes(),
+                );
+                sha256::digest(hash_input.as_slice())
             };
 
-            // Write qsv__fingerprint_hash dataset
-            let hash_bytes = itoa::Buffer::new().format(stats_hash).as_bytes().to_vec();
-            write_dataset_stat(b"qsv__fingerprint_hash", &hash_bytes)?;
+            dataset_stats_br.clear();
+            dataset_stats_br.push_field(b"qsv__fingerprint_hash");
+            // Fill middle columns with empty strings
+            for _ in 2..num_stats_fields {
+                dataset_stats_br.push_field(b"");
+            }
+            // write qsv__value as last column
+            dataset_stats_br.push_field(stats_hash.as_bytes());
+            wtr.write_byte_record(&dataset_stats_br)?;
 
             // update the stats args json metadata ===============
+            // if the stats run took longer than the cache threshold and the threshold > 0,
+            // cache the stats so we don't have to recompute it next time
             current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
+            create_cache = create_cache
+                || current_stats_args.compute_duration_ms > args.flag_cache_threshold as u64;
 
-            if create_cache
-                && current_stats_args.compute_duration_ms > args.flag_cache_threshold as u64
-            {
-                // if the stats run took longer than the cache threshold and the threshold > 0,
-                // cache the stats so we don't have to recompute it next time
+            // only init these info if we're creating a stats cache
+            if create_cache {
                 // safety: we know the path is a valid PathBuf, so we can use unwrap
                 current_stats_args.canonical_input_path =
                     path.canonicalize()?.to_str().unwrap().to_string();
@@ -881,9 +884,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    // ensure create_cache is also true if the user specified --cache-threshold 1
-    create_cache =
-        create_cache || args.flag_cache_threshold == 1 || args.flag_cache_threshold.is_negative();
+    // ensure create_cache is false if the user specified --cache-threshold 0
+    if args.flag_cache_threshold == 0 {
+        create_cache = false;
+    };
 
     wtr.flush()?;
 
