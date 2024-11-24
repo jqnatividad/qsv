@@ -508,7 +508,7 @@ END {
         .arg("file:testlookup.luau")
         .arg("data.csv");
 
-    wrk.assert_success(&mut *&mut cmd);
+    wrk.assert_success(&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -601,7 +601,7 @@ END {
         .arg("file:testlookup.luau")
         .arg("data.csv");
 
-    wrk.assert_success(&mut *&mut cmd);
+    wrk.assert_success(&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
