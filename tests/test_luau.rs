@@ -508,6 +508,8 @@ END {
         .arg("file:testlookup.luau")
         .arg("data.csv");
 
+    wrk.assert_success(&mut *&mut cmd);
+
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["letter", "Amount", "Running Total"],
@@ -598,6 +600,8 @@ END {
         .arg("Running Total")
         .arg("file:testlookup.luau")
         .arg("data.csv");
+
+    wrk.assert_success(&mut *&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
