@@ -145,19 +145,19 @@ fn setup(name: &str) -> Workdir {
     drop(cmd);
 
     let out_file2 = wrk.path("places.csv.sz").to_string_lossy().to_string();
-    let mut cmd_2 = wrk.command("snappy");
-    cmd_2
+    let mut cmd = wrk.command("snappy");
+    cmd
         .arg("compress")
         .arg("places.csv")
         .args(["--output", &out_file2]);
-    wrk.assert_success(&mut cmd_2);
+    wrk.assert_success(&mut cmd);
 
     let out_file3 = wrk.path("places.ssv.sz").to_string_lossy().to_string();
-    let mut cmd3 = wrk.command("snappy");
-    cmd3.arg("compress")
+    let mut cmd = wrk.command("snappy");
+    cmd.arg("compress")
         .arg("places.ssv")
         .args(["--output", &out_file3]);
-    wrk.assert_success(&mut cmd3);
+    wrk.assert_success(&mut cmd);
 
     wrk
 }
