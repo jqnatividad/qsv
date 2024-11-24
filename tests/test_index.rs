@@ -223,7 +223,7 @@ fn index_outdated_stats() {
             "",
             "",
             "",
-            "7405440055837468253"
+            "597e467c8f605d260295bc4e059ffb683ac06139c701eda3bf6d5df7d6b1bc8f"
         ],
     ];
 
