@@ -934,7 +934,7 @@ fn stats_cache() {
 }
 
 #[test]
-#[ignore = "temporarily ignore while tblshooting fingerprint hash and cache_treshold"]
+#[ignore = "temporarily ignore while tblshooting fingerprint hash and cache_threshold"]
 fn stats_cache_negative_threshold() {
     use std::path::Path;
 
@@ -1009,7 +1009,7 @@ fn stats_cache_negative_threshold_unmet() {
 }
 
 #[test]
-#[ignore = "temporarily ignore while tblshooting fingerprint hash and cache_treshold"]
+#[ignore = "temporarily ignore while tblshooting fingerprint hash and cache_threshold"]
 fn stats_cache_negative_threshold_five() {
     use std::path::Path;
 
