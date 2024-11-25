@@ -453,7 +453,7 @@ fn dyn_enum_validator_factory<'a>(
     };
 
     // Read the first column into a HashSet
-    let mut enum_set = HashSet::with_capacity(50);
+    let mut enum_set = HashSet::with_capacity(lookup_result.headers.len());
     let rconfig = Config::new(Some(lookup_result.filepath).as_ref());
     let mut rdr = match rconfig
         .flexible(true)
