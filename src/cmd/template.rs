@@ -702,6 +702,7 @@ fn register_lookup(
 /// * `lookup_name` - The name of the registered lookup table to search in
 /// * `lookup_key` - The column name in the lookup table to match against the input value
 /// * `field` - The column name in the lookup table whose value should be returned
+/// * `case_sensitive` - Optional boolean to control case-sensitive matching (defaults to true)
 ///
 /// # Returns
 ///
@@ -712,21 +713,41 @@ fn register_lookup(
 /// # Example
 ///
 /// ```text
-/// # Given a lookup table "products" with columns "id", "name":
+/// # Case-sensitive lookup (default)
 /// {{ product_id|lookup('products', 'id', 'name') }}
+/// # Case-insensitive lookup (supports Unicode)
+/// {{ product_id|lookup('products', 'id', 'name', false) }}
 /// ```
 fn lookup_filter(
     value: &str,
     lookup_name: &str,
     lookup_key: &str,
     field: &str,
+    case_sensitive: Option<bool>,
 ) -> Result<String, minijinja::Error> {
-    fn lookup_find(lookup_name: &str, key: &str, value: &str) -> Option<Vec<(String, String)>> {
+    fn lookup_find(
+        lookup_name: &str,
+        key: &str,
+        value: &str,
+        case_sensitive: bool,
+    ) -> Option<Vec<(String, String)>> {
+        let value_lowercase = value.to_lowercase();
+        let mut v_lowercase = String::new();
         LOOKUP_MAP.get().and_then(|lock| {
             lock.read().ok().and_then(|map| {
                 map.get(lookup_name).and_then(|set| {
                     set.iter()
-                        .find(|entry| entry.fields.iter().any(|(k, v)| k == key && v == value))
+                        .find(|entry| {
+                            entry.fields.iter().any(|(k, v)| {
+                                k == key
+                                    && if case_sensitive {
+                                        v == value
+                                    } else {
+                                        util::to_lowercase_into(v, &mut v_lowercase);
+                                        v_lowercase == value_lowercase
+                                    }
+                            })
+                        })
                         .map(|entry| entry.fields.clone())
                 })
             })
@@ -754,11 +775,27 @@ fn lookup_filter(
         ));
     }
 
-    Ok(match lookup_find(lookup_name, lookup_key, value) {
-        Some(fields) => fields
-            .iter()
-            .find(|(k, _)| k == field)
-            .map_or_else(|| FILTER_ERROR.get().unwrap().clone(), |(_, v)| v.clone()),
-        None => FILTER_ERROR.get().unwrap().clone(),
-    })
+    Ok(
+        match lookup_find(
+            lookup_name,
+            lookup_key,
+            value,
+            case_sensitive.unwrap_or(true),
+        ) {
+            Some(fields) => fields.iter().find(|(k, _)| k == field).map_or_else(
+                || {
+                    format!(
+                        "{}: lookup: {lookup_name} key: {lookup_key} not found for: {value}",
+                        FILTER_ERROR.get().unwrap()
+                    )
+                },
+                |(_, v)| v.clone(),
+            ),
+            None => format!(
+                "{}: lookup: {lookup_name} key: {lookup_key} not found for: {value}",
+                FILTER_ERROR.get().unwrap()
+            ),
+            // None => FILTER_ERROR.get().unwrap().clone(),
+        },
+    )
 }
