@@ -51,10 +51,11 @@ template arguments:
     <input>                     The CSV file to read. If not given, input is read from STDIN.
     <outdir>                    The directory where the output files will be written.
                                 If it does not exist, it will be created.
+                                If not set, output will be sent to stdout or the specified --output.
 template options:
-    --template <str>            Template string to use (alternative to --template-file)
-    -t, --template-file <file>  Template file to use
-    --outfilename <str>         Template string to use to create the filename of the output 
+    --template <str>            MiniJinja template string to use (alternative to --template-file)
+    -t, --template-file <file>  MiniJinja template file to use
+    --outfilename <str>         MiniJinja template string to use to create the filename of the output 
                                 files to write to <outdir>. If set to just QSV_ROWNO, the filestem
                                 is set to the current rowno of the record, padded with leading
                                 zeroes, with the ".txt" extension (e.g. 001.txt, 002.txt, etc.)
@@ -69,6 +70,17 @@ template options:
     -b, --batch <size>          The number of rows per batch to load into memory, before running in parallel.
                                 Set to 0 to load all rows in one batch.
                                 [default: 50000]
+    --timeout <seconds>        Timeout for downloading lookups on URLs. [default: 30]
+    --cache-dir <dir>          The directory to use for caching downloaded lookup resources.
+                               If the directory does not exist, qsv will attempt to create it.
+                               If the QSV_CACHE_DIR envvar is set, it will be used instead.
+                               [default: ~/.qsv-cache]
+    --ckan-api <url>           The URL of the CKAN API to use for downloading lookup resources
+                               with the "ckan://" scheme.
+                               If the QSV_CKAN_API envvar is set, it will be used instead.
+                               [default: https://data.dathere.com/api/3/action]
+    --ckan-token <token>       The CKAN API token to use. Only required if downloading private resources.
+                               If the QSV_CKAN_TOKEN envvar is set, it will be used instead.
 
 Common options:
     -h, --help                  Display this message
@@ -83,7 +95,10 @@ Common options:
 use std::{
     fs,
     io::{BufWriter, Write},
-    sync::OnceLock,
+    sync::{
+        atomic::{AtomicU16, Ordering},
+        OnceLock, RwLock,
+    },
 };
 
 use indicatif::{ProgressBar, ProgressDrawTarget};
@@ -98,6 +113,8 @@ use simd_json::BorrowedValue;
 
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
+    lookup,
+    lookup::LookupTableOptions,
     util, CliError, CliResult,
 };
 
@@ -117,6 +134,10 @@ struct Args {
     flag_delimiter:          Option<Delimiter>,
     flag_no_headers:         bool,
     flag_progressbar:        bool,
+    flag_timeout:            u16,
+    flag_cache_dir:          String,
+    flag_ckan_api:           String,
+    flag_ckan_token:         Option<String>,
 }
 
 static FILTER_ERROR: OnceLock<String> = OnceLock::new();
@@ -126,6 +147,41 @@ impl From<minijinja::Error> for CliError {
         CliError::Other(err.to_string())
     }
 }
+
+use std::hash::{Hash, Hasher};
+
+use ahash::{HashMap, HashMapExt, HashSet};
+
+#[derive(Clone, Eq)]
+struct LookupEntry {
+    fields: Vec<(String, String)>,
+}
+
+impl PartialEq for LookupEntry {
+    fn eq(&self, other: &Self) -> bool {
+        self.fields == other.fields
+    }
+}
+
+impl Hash for LookupEntry {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.fields.hash(state);
+    }
+}
+
+// type alias for LookupStruct first
+type LookupStruct = HashSet<LookupEntry>;
+
+type LookupMap = HashMap<String, LookupStruct>;
+
+// Change the static storage to use RwLock
+static LOOKUP_MAP: OnceLock<RwLock<LookupMap>> = OnceLock::new();
+
+static QSV_CACHE_DIR: OnceLock<String> = OnceLock::new();
+static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(30);
+static CKAN_API: OnceLock<String> = OnceLock::new();
+static CKAN_TOKEN: OnceLock<Option<String>> = OnceLock::new();
+static DELIMITER: OnceLock<Option<Delimiter>> = OnceLock::new();
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
     let args: Args = util::get_args(USAGE, argv)?;
@@ -153,6 +209,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         return fail!("Cannot initialize custom filter error message.");
     }
 
+    TIMEOUT_SECS.store(
+        util::timeout_secs(args.flag_timeout)? as u16,
+        Ordering::Relaxed,
+    );
+
     // Set up minijinja environment
     let mut env = Environment::new();
 
@@ -161,14 +222,17 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     minijinja_contrib::add_to_environment(&mut env);
     env.set_unknown_method_callback(unknown_method_callback);
 
-    // Add our own custom filters
+    // add custom function
+    env.add_function("register_lookup", register_lookup);
+
+    // add our own custom filters
     env.add_filter("substr", substr);
     env.add_filter("format_float", format_float);
     env.add_filter("human_count", human_count);
     env.add_filter("human_float_count", human_float_count);
     env.add_filter("round_banker", round_banker);
     env.add_filter("str_to_bool", str_to_bool);
-    // TODO: Add lookup filter
+    env.add_filter("lookup", lookup_filter);
 
     // Set up template
     env.add_template("template", &template_content)?;
@@ -230,6 +294,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         // we use a bigger BufWriter buffer here than the default 8k as ALL the output
         // is going to one destination and we want to minimize I/O syscalls
+        // we optimize the size of the BufWriter buffer here
+        // so that it's only one I/O syscall per row
         Some(match args.flag_output {
             Some(file) => Box::new(BufWriter::with_capacity(
                 DEFAULT_WTR_BUFFER_CAPACITY,
@@ -255,6 +321,31 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
+
+    DELIMITER.set(args.flag_delimiter).unwrap();
+
+    #[cfg(not(feature = "lite"))]
+    let qsv_cache_dir = lookup::set_qsv_cache_dir(&args.flag_cache_dir)?;
+    #[cfg(not(feature = "lite"))]
+    QSV_CACHE_DIR.set(qsv_cache_dir)?;
+
+    // check the QSV_CKAN_API environment variable
+    #[cfg(not(feature = "lite"))]
+    CKAN_API.set(if let Ok(api) = std::env::var("QSV_CKAN_API") {
+        api
+    } else {
+        args.flag_ckan_api.clone()
+    })?;
+
+    // check the QSV_CKAN_TOKEN environment variable
+    #[cfg(not(feature = "lite"))]
+    CKAN_TOKEN
+        .set(if let Ok(token) = std::env::var("QSV_CKAN_TOKEN") {
+            Some(token)
+        } else {
+            args.flag_ckan_token.clone()
+        })
+        .unwrap();
 
     // reuse batch buffers
     #[allow(unused_assignments)]
@@ -339,10 +430,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     }
                 }
 
-                // Render template with record data using context
-                let rendered = template
-                    .render(&context)
-                    .unwrap_or_else(|_| "RENDERING ERROR".to_owned());
+                let rendered = match template.render(&context) {
+                    Ok(s) => s,
+                    Err(e) => format!("RENDERING ERROR ({row_number}): {e}\n"),
+                };
 
                 if output_to_dir {
                     let outfilename = if use_rowno_filename {
@@ -470,4 +561,204 @@ fn str_to_bool(value: &str) -> bool {
         value.to_ascii_lowercase().as_str(),
         "true" | "1" | "yes" | "t" | "y"
     )
+}
+
+/// Registers a lookup table for use with the lookup filter.
+///
+/// This function loads a CSV file as a lookup table and registers it in memory for use with
+/// the lookup filter in templates. The lookup table is stored as a set of LookupEntry objects
+/// containing key-value pairs from the CSV.
+///
+/// # Arguments
+///
+/// * `lookup_name` - Name to register the lookup table under
+/// * `lookup_table_uri` - Path/URI to the CSV file (supports local files, HTTP(S), CKAN resources)
+/// * `cache_age_secs` - Optional cache duration in seconds for remote files. Defaults to 3600 (1
+///   hour)
+///
+/// # Returns
+///
+/// Returns `Ok(true)` if successful, or a `minijinja::Error` with details if registration fails.
+///
+/// # Example
+///
+/// ```text
+/// {% set result = register_lookup('products', 'lookup.csv') %}
+/// {% if result %}
+///   {{ product_id|lookup('products', 'id', 'name') }}
+/// {% else %}
+///   Error: {{ result.err }}
+/// {% endif %}
+/// ```
+fn register_lookup(
+    lookup_name: &str,
+    lookup_table_uri: &str,
+    cache_age_secs: Option<i64>,
+) -> Result<bool, minijinja::Error> {
+    // Validate inputs
+    if lookup_name.is_empty() {
+        return Err(minijinja::Error::new(
+            minijinja::ErrorKind::InvalidOperation,
+            "lookup name cannot be empty",
+        ));
+    }
+
+    if lookup_table_uri.is_empty() {
+        return Err(minijinja::Error::new(
+            minijinja::ErrorKind::InvalidOperation,
+            "lookup table URI cannot be empty",
+        ));
+    }
+
+    // Check if lookup_name already exists in LOOKUP_MAP
+    if let Some(lock) = LOOKUP_MAP.get() {
+        if let Ok(map) = lock.read() {
+            if map.contains_key(lookup_name) {
+                // Lookup table already registered
+                return Ok(true);
+            }
+        }
+    }
+
+    let lookup_opts = LookupTableOptions {
+        name:           lookup_name.to_string(),
+        uri:            lookup_table_uri.to_string(),
+        cache_dir:      QSV_CACHE_DIR
+            .get()
+            .ok_or_else(|| {
+                minijinja::Error::new(
+                    minijinja::ErrorKind::InvalidOperation,
+                    "cache directory not initialized",
+                )
+            })?
+            .to_string(),
+        cache_age_secs: cache_age_secs.unwrap_or(3600),
+        delimiter:      DELIMITER.get().copied().flatten(),
+        ckan_api_url:   CKAN_API.get().cloned(),
+        ckan_token:     CKAN_TOKEN.get().and_then(std::clone::Clone::clone),
+        timeout_secs:   TIMEOUT_SECS.load(Ordering::Relaxed),
+    };
+
+    let lookup_table = lookup::load_lookup_table(&lookup_opts).map_err(|e| {
+        minijinja::Error::new(
+            minijinja::ErrorKind::InvalidOperation,
+            format!("failed to load lookup table: {}", e),
+        )
+    })?;
+
+    let mut rdr = csv::Reader::from_path(&lookup_table.filepath).map_err(|e| {
+        minijinja::Error::new(
+            minijinja::ErrorKind::InvalidOperation,
+            format!("failed to read CSV file: {}", e),
+        )
+    })?;
+
+    // Convert CSV records to LookupEntry objects
+    let lookup_data: HashSet<LookupEntry> = rdr
+        .records()
+        .filter_map(|record| {
+            record.ok().map(|record| {
+                let fields: Vec<(String, String)> = lookup_table
+                    .headers
+                    .iter()
+                    .zip(record.iter())
+                    .map(|(header, value)| (header.to_string(), value.to_string()))
+                    .collect();
+                LookupEntry { fields }
+            })
+        })
+        .collect();
+
+    // Initialize the lookup map if it doesn't exist
+    if LOOKUP_MAP.get().is_none() && LOOKUP_MAP.set(RwLock::new(HashMap::new())).is_err() {
+        return Err(minijinja::Error::new(
+            minijinja::ErrorKind::InvalidOperation,
+            "failed to initialize lookup map",
+        ));
+    }
+
+    // Safely get write access to the map
+    match LOOKUP_MAP.get().unwrap().write() {
+        Ok(mut map) => {
+            map.insert(lookup_name.to_string(), lookup_data);
+            Ok(true)
+        },
+        Err(_) => Err(minijinja::Error::new(
+            minijinja::ErrorKind::InvalidOperation,
+            "failed to acquire write lock on lookup map",
+        )),
+    }
+}
+
+/// A filter function for looking up values in a registered lookup table.
+///
+/// This function is used as a template filter to look up values from a previously registered
+/// lookup table. It searches for a record in the lookup table where the `lookup_key` column
+/// matches the input `value`, and returns the corresponding value from the `field` column.
+///
+/// # Arguments
+///
+/// * `value` - The value to look up in the lookup table
+/// * `lookup_name` - The name of the registered lookup table to search in
+/// * `lookup_key` - The column name in the lookup table to match against the input value
+/// * `field` - The column name in the lookup table whose value should be returned
+///
+/// # Returns
+///
+/// Returns a `Result` containing either:
+/// - `Ok(String)` - The looked up value if found, or the configured error string if not found
+/// - `Err(minijinja::Error)` - If any of the required parameters are empty strings
+///
+/// # Example
+///
+/// ```text
+/// # Given a lookup table "products" with columns "id", "name":
+/// {{ product_id|lookup('products', 'id', 'name') }}
+/// ```
+fn lookup_filter(
+    value: &str,
+    lookup_name: &str,
+    lookup_key: &str,
+    field: &str,
+) -> Result<String, minijinja::Error> {
+    fn lookup_find(lookup_name: &str, key: &str, value: &str) -> Option<Vec<(String, String)>> {
+        LOOKUP_MAP.get().and_then(|lock| {
+            lock.read().ok().and_then(|map| {
+                map.get(lookup_name).and_then(|set| {
+                    set.iter()
+                        .find(|entry| entry.fields.iter().any(|(k, v)| k == key && v == value))
+                        .map(|entry| entry.fields.clone())
+                })
+            })
+        })
+    }
+
+    if lookup_name.is_empty() {
+        return Err(minijinja::Error::new(
+            minijinja::ErrorKind::InvalidOperation,
+            "lookup name not provided",
+        ));
+    }
+
+    if lookup_key.is_empty() {
+        return Err(minijinja::Error::new(
+            minijinja::ErrorKind::InvalidOperation,
+            "lookup key not provided",
+        ));
+    }
+
+    if field.is_empty() {
+        return Err(minijinja::Error::new(
+            minijinja::ErrorKind::InvalidOperation,
+            "lookup field not provided",
+        ));
+    }
+
+    Ok(match lookup_find(lookup_name, lookup_key, value) {
+        Some(fields) => fields
+            .iter()
+            .find(|(k, _)| k == field)
+            .map_or_else(|| FILTER_ERROR.get().unwrap().clone(), |(_, v)| v.clone()),
+        None => FILTER_ERROR.get().unwrap().clone(),
+    })
 }
