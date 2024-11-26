@@ -869,9 +869,8 @@ fn template_lookup_register_errors() {
         .arg("data.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    assert_eq!(
-        got,
+    assert!(got.starts_with(
         "RENDERING ERROR (1): invalid operation: failed to load lookup table: failed to open \
-         nonexistent.csv: No such file or directory (os error 2) (in template:1)"
-    );
+         nonexistent.csv:"
+    ));
 }
