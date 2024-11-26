@@ -658,3 +658,220 @@ fn template_pycompat_filters() {
     );
     assert_eq!(got, expected);
 }
+
+#[test]
+fn template_custom_filters_error_handling() {
+    let wrk = Workdir::new("template_custom_filters_error");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value", "number"],
+            svec!["abc", "123.456"],
+            svec!["def", "not_a_number"],
+        ],
+    );
+
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            "format_float: {{number|format_float(2)}}\n",
+            "human_count: {{number|human_count}}\n",
+            "human_float_count: {{number|human_float_count}}\n",
+            "round_banker: {{number|round_banker(3)}}\n",
+            "\n"
+        ))
+        .arg("--customfilter-error")
+        .arg("ERROR")
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = concat!(
+        "format_float: 123.46\n",
+        "human_count: ERROR\n",
+        "human_float_count: 123.456\n",
+        "round_banker: 123.456\n",
+        "format_float: ERROR\n",
+        "human_count: ERROR\n",
+        "human_float_count: ERROR\n",
+        "round_banker: ERROR"
+    );
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn template_str_to_bool_filter() {
+    let wrk = Workdir::new("template_str_to_bool");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value"],
+            svec!["true"],
+            svec!["1"],
+            svec!["yes"],
+            svec!["t"],
+            svec!["y"],
+            svec!["false"],
+            svec!["0"],
+            svec!["no"],
+        ],
+    );
+
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg("{{value|str_to_bool}}\n\n")
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected =
+        concat!("true\n", "true\n", "true\n", "true\n", "true\n", "false\n", "false\n", "false");
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn template_substr_filter() {
+    let wrk = Workdir::new("template_substr");
+    wrk.create(
+        "data.csv",
+        vec![svec!["text"], svec!["Hello World"], svec!["Testing 123"]],
+    );
+
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            "start_only: {{text|substr(0)}}\n",
+            "start_end: {{text|substr(0,5)}}\n",
+            "middle: {{text|substr(6,11)}}\n",
+            "invalid: {{text|substr(100)}}\n",
+            "\n"
+        ))
+        .arg("--customfilter-error")
+        .arg("ERROR")
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = concat!(
+        "start_only: Hello World\n",
+        "start_end: Hello\n",
+        "middle: World\n",
+        "invalid: ERROR\n",
+        "start_only: Testing 123\n",
+        "start_end: Testi\n",
+        "middle: g 123\n",
+        "invalid: ERROR"
+    );
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn template_lookup_filter_simple() {
+    let wrk = Workdir::new("template_lookup");
+
+    // Create a lookup table CSV
+    wrk.create(
+        "lookup.csv",
+        vec![
+            svec!["id", "name", "description"],
+            svec!["1", "apple", "A red fruit"],
+            svec!["2", "banana", "A yellow fruit"],
+            svec!["3", "orange", "A citrus fruit"],
+        ],
+    );
+
+    // Create main data CSV
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["product_id", "quantity"],
+            svec!["1", "5"],
+            svec!["2", "3"],
+            svec!["4", "1"], // Invalid ID to test error handling
+        ],
+    );
+
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            "{% set result = register_lookup('products', 'lookup.csv') %}",
+            "{% if result %}",
+            "{{product_id}}: {{product_id|lookup('products', 'id', 'name')}} - \
+             {{product_id|lookup('products', 'id', 'description')}}\n",
+            "{% else %}",
+            "Error: Failed to register lookup table 'products' {{ result.err }} \n",
+            "{% endif %}"
+        ))
+        .arg("--customfilter-error")
+        .arg("<not found>")
+        .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = concat!(
+        "1: apple - A red fruit\n",
+        "2: banana - A yellow fruit\n",
+        "4: <not found> - <not found>"
+    );
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn template_lookup_filter_errors() {
+    let wrk = Workdir::new("template_lookup_errors");
+
+    wrk.create("data.csv", vec![svec!["id"], svec!["1"]]);
+
+    // Test missing lookup key
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg("{{id|lookup('', 'name')}}")
+        .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert!(got.contains("RENDERING ERROR"));
+
+    // Test missing field name
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg("{{id|lookup('id', '')}}")
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert!(got.contains("RENDERING ERROR"));
+
+    // Test unregistered lookup table
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg("{{id|lookup('id', 'name')}}")
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert!(got.contains("RENDERING ERROR"));
+}
+
+#[test]
+fn template_lookup_register_errors() {
+    let wrk = Workdir::new("template_lookup_register");
+
+    wrk.create("data.csv", vec![svec!["id"], svec!["1"]]);
+
+    // Test non-existent lookup file
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            "{% if register_lookup('test', 'nonexistent.csv') %}\n",
+            "success\n",
+            "{% else %}\n",
+            "failed\n",
+            "{% endif %}"
+        ))
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(
+        got,
+        "RENDERING ERROR (1): invalid operation: failed to load lookup table: failed to open \
+         nonexistent.csv: No such file or directory (os error 2) (in template:1)"
+    );
+}
