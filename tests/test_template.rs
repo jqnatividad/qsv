@@ -874,3 +874,50 @@ fn template_lookup_register_errors() {
          nonexistent.csv:"
     ));
 }
+#[test]
+fn template_lookup_case_sensitivity() {
+    let wrk = Workdir::new("template_lookup_case");
+
+    // Create lookup table with mixed case values
+    wrk.create(
+        "lookup.csv",
+        vec![
+            svec!["code", "value"],
+            svec!["ABC", "first"],
+            svec!["def", "second"],
+            svec!["GHI", "third"],
+        ],
+    );
+
+    // Create input data with different cases
+    wrk.create(
+        "data.csv",
+        vec![svec!["code"], svec!["abc"], svec!["DEF"], svec!["ghi"]],
+    );
+
+    // Test case-sensitive lookup (default)
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            "{% if register_lookup('codes', 'lookup.csv') %}\n",
+            "{{code|lookup('codes', 'code', 'value')}}\n",
+            "{% endif %}"
+        ))
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(got, "NOT_FOUND\nNOT_FOUND\nNOT_FOUND\n");
+
+    // Test case-insensitive lookup
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            "{% if register_lookup('codes', 'lookup.csv') %}",
+            "{{code|lookup('codes', 'code', 'value', false)}}\n",
+            "{% endif %}"
+        ))
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    assert_eq!(got, "first\nsecond\nthird");
+}
