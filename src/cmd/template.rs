@@ -302,6 +302,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
+    // safety: flag_delimiter has a default docopt
     DELIMITER.set(args.flag_delimiter).unwrap();
 
     #[cfg(not(feature = "lite"))]
@@ -330,7 +331,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // Scan template for any lookup registrations and register them before batch processing
     if template_content.contains("register_lookup(") {
         // Create regex to extract register_lookup calls
-        let re = regex::Regex::new(r"register_lookup\([^)]+\)").unwrap();
+        let re = regex::Regex::new(r"register_lookup\([^)]+\)")?;
 
         // Extract all register_lookup statements into a temporary template
         let mut temp_template = String::new();
@@ -416,6 +417,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     for (i, field) in curr_record.iter().enumerate() {
                         if i == headers_len - 1 {
                             // set the last field to QSV_ROWNO
+                            // safety: we set row_no earlier in the batch loop
                             row_number = atoi_simd::parse::<u64>(field.as_bytes()).unwrap();
                             context.insert(
                                 std::borrow::Cow::Borrowed(QSV_ROWNO),
@@ -437,6 +439,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         );
                         // when headers are defined, the last one is QSV_ROWNO
                         if header == QSV_ROWNO {
+                            // safety: we set row_no earlier in the batch loop
                             row_number = atoi_simd::parse::<u64>(field.as_bytes()).unwrap();
                         }
                     }
@@ -771,6 +774,9 @@ fn lookup_filter(
         value.to_lowercase()
     };
 
+    // safety: FILTER_ERROR was initialized in run section
+    let filter_error = FILTER_ERROR.get().unwrap();
+
     let mut lowercase_buffer = String::new();
     Ok(LOOKUP_MAP
         .get()
@@ -791,9 +797,12 @@ fn lookup_filter(
             }
         })
         .unwrap_or_else(|| {
+            if filter_error.is_empty() {
+                String::new()
+            } else {
             format!(
-                r#"{}: lookup: "{lookup_name}" key: "{lookup_key}" not found for: "{value}""#,
-                FILTER_ERROR.get().unwrap()
+                r#"{filter_error} - lookup: "{lookup_name}" key: "{lookup_key}-{field}" not found for: "{value}""#
             )
+        }
         }))
 }
