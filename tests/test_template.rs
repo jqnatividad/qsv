@@ -809,8 +809,61 @@ fn template_lookup_filter_simple() {
     let expected = concat!(
         "1: apple - A red fruit\n",
         "2: banana - A yellow fruit\n",
-        "4: <not found>: lookup: \"products\" key: \"id\" not found for: \"4\" - <not found>: \
-         lookup: \"products\" key: \"id\" not found for: \"4\""
+        r#"4: <not found> - lookup: "products" key: "id-name" not found for: "4" - <not found> - lookup: "products" key: "id-description" not found for: "4""#
+    );
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn template_lookup_filter_invalid_field() {
+    let wrk = Workdir::new("template_lookup");
+
+    // Create a lookup table CSV
+    wrk.create(
+        "lookup.csv",
+        vec![
+            svec!["id", "name", "description"],
+            svec!["1", "apple", "A red fruit"],
+            svec!["2", "banana", "A yellow fruit"],
+            svec!["3", "orange", "A citrus fruit"],
+        ],
+    );
+
+    // Create main data CSV
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["product_id", "quantity"],
+            svec!["1", "5"],
+            svec!["2", "3"],
+            svec!["4", "1"], // Invalid ID to test error handling
+        ],
+    );
+
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            "{% set result = register_lookup('products', 'lookup.csv') %}",
+            "{% if result %}",
+            "{{product_id}}: {{product_id|lookup('products', 'id', 'name')}} - \
+             {{product_id|lookup('products', 'id', 'non_existent_column')}}\n",
+            "{% else %}",
+            "Error: Failed to register lookup table 'products' {{ result.err }} \n",
+            "{% endif %}"
+        ))
+        .arg("--customfilter-error")
+        .arg("<not found>")
+        .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = concat!(
+        r#"1: apple - <not found> - lookup: "products" key: "id-non_existent_column" not found for: "1"
+"#,
+        r#"2: banana - <not found> - lookup: "products" key: "id-non_existent_column" not found for: "2"
+"#,
+        r#"4: <not found> - lookup: "products" key: "id-name" not found for: "4" - <not found> - lookup: "products" key: "id-non_existent_column" not found for: "4""#
     );
     assert_eq!(got, expected);
 }
@@ -910,9 +963,9 @@ fn template_lookup_case_sensitivity() {
     let got: String = wrk.stdout(&mut cmd);
     assert_eq!(
         got,
-        r#"<FILTER_ERROR>: lookup: "codes" key: "code" not found for: "abc"
-<FILTER_ERROR>: lookup: "codes" key: "code" not found for: "DEF"
-<FILTER_ERROR>: lookup: "codes" key: "code" not found for: "ghi""#
+        r#"<FILTER_ERROR> - lookup: "codes" key: "code-value" not found for: "abc"
+<FILTER_ERROR> - lookup: "codes" key: "code-value" not found for: "DEF"
+<FILTER_ERROR> - lookup: "codes" key: "code-value" not found for: "ghi""#
     );
 
     // Test case-insensitive lookup
