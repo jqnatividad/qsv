@@ -10,7 +10,7 @@ use reqwest::blocking::Client;
 use serde_json::Value;
 use simple_expand_tilde::expand_tilde;
 
-use crate::CliError;
+use crate::{util, CliError};
 
 pub struct LookupTableOptions {
     pub name:           String,
@@ -26,6 +26,7 @@ pub struct LookupTableOptions {
 pub struct LookupTableResult {
     pub filepath: String,
     pub headers:  csv::StringRecord,
+    pub rowcount: usize,
 }
 
 pub fn set_qsv_cache_dir(cache_dir: &str) -> Result<String, CliError> {
@@ -188,10 +189,12 @@ pub fn load_lookup_table(
 
     let mut rdr = conf.reader()?;
     let headers = rdr.headers()?.clone();
+    let rowcount = util::count_rows(&conf).unwrap_or_default() as usize;
 
     let lur = LookupTableResult {
         filepath: lookup_table_uri,
         headers,
+        rowcount,
     };
 
     Ok(lur)
