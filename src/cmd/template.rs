@@ -768,16 +768,21 @@ fn lookup_filter(
     }
 
     let case_sensitive = case_sensitive.unwrap_or(true);
-    let value_lower = if case_sensitive {
-        value.to_string()
+
+    // Avoid allocating if case-sensitive
+    let value_compare = if case_sensitive {
+        value
     } else {
-        value.to_lowercase()
+        // Only allocate for lowercase when needed
+        &value.to_lowercase()
     };
 
     // safety: FILTER_ERROR was initialized in run section
     let filter_error = FILTER_ERROR.get().unwrap();
 
-    let mut lowercase_buffer = String::new();
+    // Reuse buffer for case-insensitive comparisons
+    let mut lowercase_buffer = String::with_capacity(32); // Pre-allocate reasonable size
+
     Ok(LOOKUP_MAP
         .get()
         .and_then(|lock| lock.read().ok())
@@ -791,7 +796,7 @@ fn lookup_filter(
                     .iter()
                     .find(|(k, _)| {
                         util::to_lowercase_into(k, &mut lowercase_buffer);
-                        lowercase_buffer == value_lower
+                        lowercase_buffer == value_compare
                     })
                     .and_then(|(_, row)| row.get(field).cloned())
             }
@@ -800,9 +805,9 @@ fn lookup_filter(
             if filter_error.is_empty() {
                 String::new()
             } else {
-            format!(
-                r#"{filter_error} - lookup: "{lookup_name}" key: "{lookup_key}-{field}" not found for: "{value}""#
-            )
-        }
+                format!(
+                    r#"{filter_error} - lookup: "{lookup_name}" key: "{lookup_key}-{field}" not found for: "{value}""#
+                )
+            }
         }))
 }
