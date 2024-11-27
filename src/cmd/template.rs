@@ -327,6 +327,38 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         })
         .unwrap();
 
+    // Scan template for any lookup registrations and register them before batch processing
+    if template_content.contains("register_lookup(") {
+        // Create regex to extract register_lookup calls
+        let re = regex::Regex::new(r"register_lookup\([^)]+\)").unwrap();
+
+        // Extract all register_lookup statements into a temporary template
+        let mut temp_template = String::new();
+        for cap in re.find_iter(&template_content) {
+            temp_template.push_str("{% if not ");
+            temp_template.push_str(cap.as_str());
+            temp_template.push_str(&format!(
+                r#" %}}LOOKUP REGISTRATION ERROR: "{}"\n{{% endif %}}"#,
+                cap.as_str()
+            ));
+        }
+
+        // Create a temporary environment just for parsing
+        let temp_env = env.clone();
+
+        // Try to render just the register_lookup statements with empty context
+        match temp_env.render_str(&temp_template, minijinja::context! {}) {
+            Ok(s) => {
+                // eprintln!("{:#?}", LOOKUP_MAP.get().unwrap());
+
+                if s.contains("LOOKUP REGISTRATION ERROR:") {
+                    return fail_incorrectusage_clierror!("{s}");
+                }
+            },
+            Err(e) => return fail_incorrectusage_clierror!("{e}"),
+        }
+    }
+
     // reuse batch buffers
     #[allow(unused_assignments)]
     let mut batch_record = csv::StringRecord::new();
@@ -622,14 +654,17 @@ fn register_lookup(
     let lookup_table = lookup::load_lookup_table(&lookup_opts).map_err(|e| {
         minijinja::Error::new(
             minijinja::ErrorKind::InvalidOperation,
-            format!("failed to load lookup table: {e}"),
+            format!(r#"failed to load lookup table "{}": {e}"#, lookup_opts.name),
         )
     })?;
 
     let mut rdr = csv::Reader::from_path(&lookup_table.filepath).map_err(|e| {
         minijinja::Error::new(
             minijinja::ErrorKind::InvalidOperation,
-            format!("failed to read CSV file: {e}"),
+            format!(
+                r#"failed to read CSV file "{}": {e}"#,
+                lookup_table.filepath
+            ),
         )
     })?;
 
@@ -652,7 +687,7 @@ fn register_lookup(
         }
     }
 
-    // Initialize the lookup map if it doesn't exist
+    // Initialize LOOKUP_MAP if it's not instantiated
     if LOOKUP_MAP.get().is_none() && LOOKUP_MAP.set(RwLock::new(HashMap::new())).is_err() {
         return Err(minijinja::Error::new(
             minijinja::ErrorKind::InvalidOperation,
