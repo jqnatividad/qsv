@@ -809,7 +809,8 @@ fn template_lookup_filter_simple() {
     let expected = concat!(
         "1: apple - A red fruit\n",
         "2: banana - A yellow fruit\n",
-        "4: <not found> - <not found>"
+        "4: <not found>: lookup: \"products\" key: \"id\" not found for: \"4\" - <not found>: \
+         lookup: \"products\" key: \"id\" not found for: \"4\""
     );
     assert_eq!(got, expected);
 }
@@ -899,14 +900,19 @@ fn template_lookup_case_sensitivity() {
     let mut cmd = wrk.command("template");
     cmd.arg("--template")
         .arg(concat!(
-            "{% if register_lookup('codes', 'lookup.csv') %}\n",
+            "{% if register_lookup('codes', 'lookup.csv') %}",
             "{{code|lookup('codes', 'code', 'value')}}\n",
             "{% endif %}"
         ))
         .arg("data.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    assert_eq!(got, "NOT_FOUND\nNOT_FOUND\nNOT_FOUND\n");
+    assert_eq!(
+        got,
+        r#"<FILTER_ERROR>: lookup: "codes" key: "code" not found for: "abc"
+<FILTER_ERROR>: lookup: "codes" key: "code" not found for: "DEF"
+<FILTER_ERROR>: lookup: "codes" key: "code" not found for: "ghi""#
+    );
 
     // Test case-insensitive lookup
     let mut cmd = wrk.command("template");
