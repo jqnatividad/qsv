@@ -10,7 +10,7 @@ use reqwest::blocking::Client;
 use serde_json::Value;
 use simple_expand_tilde::expand_tilde;
 
-use crate::CliError;
+use crate::{util, CliError};
 
 pub struct LookupTableOptions {
     pub name:           String,
@@ -26,6 +26,7 @@ pub struct LookupTableOptions {
 pub struct LookupTableResult {
     pub filepath: String,
     pub headers:  csv::StringRecord,
+    pub rowcount: usize,
 }
 
 pub fn set_qsv_cache_dir(cache_dir: &str) -> Result<String, CliError> {
@@ -51,6 +52,44 @@ pub fn set_qsv_cache_dir(cache_dir: &str) -> Result<String, CliError> {
     Ok(qsv_cache_dir)
 }
 
+/// Loads a lookup table from a local file, cache, or remote source.
+///
+/// # Arguments
+///
+/// * `opts` - Options for loading the lookup table, including:
+///   - `name`: Name of the lookup table
+///   - `uri`: URI/path to the lookup table file (http/https/ckan/dathere schemes supported)
+///   - `cache_age_secs`: How long to keep cached files (negative to delete cache)
+///   - `cache_dir`: Directory to store cached files
+///   - `delimiter`: Optional CSV delimiter
+///   - `ckan_api_url`: Optional CKAN API URL for CKAN resources
+///   - `ckan_token`: Optional CKAN API token
+///   - `timeout_secs`: Timeout in seconds for HTTP requests
+///
+/// # Returns
+///
+/// Returns a `LookupTableResult` containing:
+/// - `filepath`: Path to the loaded lookup table file
+/// - `headers`: CSV headers from the lookup table
+///
+/// # Functionality
+///
+/// 1. Checks if lookup table exists as local file
+/// 2. If not local, checks cache:
+///    - Uses cache if valid and not expired
+///    - Deletes cache if cache_age_secs is negative
+/// 3. For remote files:
+///    - Handles dathere:// prefix for GitHub lookup tables
+///    - Handles ckan:// prefix for CKAN resources
+///    - Downloads HTTP(S) URLs to cache
+/// 4. Reads and returns headers from the lookup table
+///
+/// # Errors
+///
+/// Returns error if:
+/// - File operations fail (create/delete/read)
+/// - Remote downloads fail
+/// - CSV parsing fails
 pub fn load_lookup_table(
     opts: &LookupTableOptions,
 ) -> Result<LookupTableResult, Box<dyn std::error::Error>> {
@@ -150,10 +189,12 @@ pub fn load_lookup_table(
 
     let mut rdr = conf.reader()?;
     let headers = rdr.headers()?.clone();
+    let rowcount = util::count_rows(&conf).unwrap_or_default() as usize;
 
     let lur = LookupTableResult {
         filepath: lookup_table_uri,
         headers,
+        rowcount,
     };
 
     Ok(lur)
