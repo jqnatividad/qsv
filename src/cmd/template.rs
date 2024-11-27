@@ -786,11 +786,11 @@ fn lookup_filter(
     Ok(LOOKUP_MAP
         .get()
         .and_then(|lock| lock.read().ok())
-        .and_then(|map| map.get(lookup_name).cloned())
-        .and_then(|table| {
+        .and_then(|map| {
+            let table = map.get(lookup_name)?;
             // Find the matching row
             if case_sensitive {
-                table.get(value).and_then(|row| row.get(field).cloned())
+                table.get(value).and_then(|row| row.get(field).map(String::from))
             } else {
                 table
                     .iter()
@@ -798,7 +798,7 @@ fn lookup_filter(
                         util::to_lowercase_into(k, &mut lowercase_buffer);
                         lowercase_buffer == value_compare
                     })
-                    .and_then(|(_, row)| row.get(field).cloned())
+                    .and_then(|(_, row)| row.get(field).map(String::from))
             }
         })
         .unwrap_or_else(|| {
