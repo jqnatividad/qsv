@@ -148,33 +148,13 @@ impl From<minijinja::Error> for CliError {
     }
 }
 
-use std::hash::{Hash, Hasher};
+use ahash::{HashMap, HashMapExt};
 
-use ahash::{HashMap, HashMapExt, HashSet};
+// An efficient structure for lookups:
+// First HashMap: Maps lookup table names to their indices
+// Second HashMap: Maps key column values to a HashMap of field name -> field value
+type LookupMap = HashMap<String, HashMap<String, HashMap<String, String>>>;
 
-#[derive(Clone, Eq)]
-struct LookupEntry {
-    fields: Vec<(String, String)>,
-}
-
-impl PartialEq for LookupEntry {
-    fn eq(&self, other: &Self) -> bool {
-        self.fields == other.fields
-    }
-}
-
-impl Hash for LookupEntry {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.fields.hash(state);
-    }
-}
-
-// type alias for LookupStruct first
-type LookupStruct = HashSet<LookupEntry>;
-
-type LookupMap = HashMap<String, LookupStruct>;
-
-// Change the static storage to use RwLock
 static LOOKUP_MAP: OnceLock<RwLock<LookupMap>> = OnceLock::new();
 
 static QSV_CACHE_DIR: OnceLock<String> = OnceLock::new();
@@ -642,32 +622,35 @@ fn register_lookup(
     let lookup_table = lookup::load_lookup_table(&lookup_opts).map_err(|e| {
         minijinja::Error::new(
             minijinja::ErrorKind::InvalidOperation,
-            format!("failed to load lookup table: {}", e),
+            format!("failed to load lookup table: {e}"),
         )
     })?;
 
     let mut rdr = csv::Reader::from_path(&lookup_table.filepath).map_err(|e| {
         minijinja::Error::new(
             minijinja::ErrorKind::InvalidOperation,
-            format!("failed to read CSV file: {}", e),
+            format!("failed to read CSV file: {e}"),
         )
     })?;
 
-    // Convert CSV records to LookupEntry objects
-    let lookup_data: HashSet<LookupEntry> = rdr
-        .records()
-        .filter_map(|record| {
-            record.ok().map(|record| {
-                let fields: Vec<(String, String)> = lookup_table
-                    .headers
-                    .iter()
-                    .zip(record.iter())
-                    .map(|(header, value)| (header.to_string(), value.to_string()))
-                    .collect();
-                LookupEntry { fields }
-            })
-        })
-        .collect();
+    // Create nested HashMaps for efficient lookups
+    let mut lookup_data: HashMap<String, HashMap<String, String>> =
+        HashMap::with_capacity(lookup_table.rowcount);
+
+    let row_len = lookup_table.headers.len();
+    for record in rdr.records().flatten() {
+        let mut row_data: HashMap<String, String> = HashMap::with_capacity(row_len);
+
+        // Store all fields for this row
+        for (header, value) in lookup_table.headers.iter().zip(record.iter()) {
+            row_data.insert(header.to_string(), value.to_string());
+        }
+
+        // Use the first column as the key by default
+        if let Some(key_value) = record.get(0) {
+            lookup_data.insert(key_value.to_string(), row_data);
+        }
+    }
 
     // Initialize the lookup map if it doesn't exist
     if LOOKUP_MAP.get().is_none() && LOOKUP_MAP.set(RwLock::new(HashMap::new())).is_err() {
@@ -725,35 +708,6 @@ fn lookup_filter(
     field: &str,
     case_sensitive: Option<bool>,
 ) -> Result<String, minijinja::Error> {
-    fn lookup_find(
-        lookup_name: &str,
-        key: &str,
-        value: &str,
-        case_sensitive: bool,
-    ) -> Option<Vec<(String, String)>> {
-        let value_lowercase = value.to_lowercase();
-        let mut v_lowercase = String::new();
-        LOOKUP_MAP.get().and_then(|lock| {
-            lock.read().ok().and_then(|map| {
-                map.get(lookup_name).and_then(|set| {
-                    set.iter()
-                        .find(|entry| {
-                            entry.fields.iter().any(|(k, v)| {
-                                k == key
-                                    && if case_sensitive {
-                                        v == value
-                                    } else {
-                                        util::to_lowercase_into(v, &mut v_lowercase);
-                                        v_lowercase == value_lowercase
-                                    }
-                            })
-                        })
-                        .map(|entry| entry.fields.clone())
-                })
-            })
-        })
-    }
-
     if lookup_name.is_empty() {
         return Err(minijinja::Error::new(
             minijinja::ErrorKind::InvalidOperation,
@@ -775,27 +729,36 @@ fn lookup_filter(
         ));
     }
 
-    Ok(
-        match lookup_find(
-            lookup_name,
-            lookup_key,
-            value,
-            case_sensitive.unwrap_or(true),
-        ) {
-            Some(fields) => fields.iter().find(|(k, _)| k == field).map_or_else(
-                || {
-                    format!(
-                        "{}: lookup: {lookup_name} key: {lookup_key} not found for: {value}",
-                        FILTER_ERROR.get().unwrap()
-                    )
-                },
-                |(_, v)| v.clone(),
-            ),
-            None => format!(
-                "{}: lookup: {lookup_name} key: {lookup_key} not found for: {value}",
+    let case_sensitive = case_sensitive.unwrap_or(true);
+    let value_lower = if case_sensitive {
+        value.to_string()
+    } else {
+        value.to_lowercase()
+    };
+
+    let mut lowercase_buffer = String::new();
+    Ok(LOOKUP_MAP
+        .get()
+        .and_then(|lock| lock.read().ok())
+        .and_then(|map| map.get(lookup_name).cloned())
+        .and_then(|table| {
+            // Find the matching row
+            if case_sensitive {
+                table.get(value).and_then(|row| row.get(field).cloned())
+            } else {
+                table
+                    .iter()
+                    .find(|(k, _)| {
+                        util::to_lowercase_into(k, &mut lowercase_buffer);
+                        lowercase_buffer == value_lower
+                    })
+                    .and_then(|(_, row)| row.get(field).cloned())
+            }
+        })
+        .unwrap_or_else(|| {
+            format!(
+                r#"{}: lookup: "{lookup_name}" key: "{lookup_key}" not found for: "{value}""#,
                 FILTER_ERROR.get().unwrap()
-            ),
-            // None => FILTER_ERROR.get().unwrap().clone(),
-        },
-    )
+            )
+        }))
 }
