@@ -17,10 +17,10 @@ Otherwise, ALL the rendered rows will be sent to STDOUT or the designated --outp
 
 Example:
 data.csv:
-  "first name","last name",balance,"loyalty points",active
-  alice,jones,100.50,1000,true
-  bob,smith,200.75,2000,false
-  john,doe,10,1,true
+  "first name","last name",balance,"loyalty points",active,us_state
+  alice,jones,100.50,1000,true,TX
+  bob,smith,200.75,2000,false,CA
+  john,doe,10,1,true,TX
 
 NOTE: All variables are of type String and will need to be cast with the `|float` or `|int`
   filters for math operations and when a MiniJinja filter/function requires it.
@@ -28,14 +28,25 @@ NOTE: All variables are of type String and will need to be cast with the `|float
   str_to_bool) do not require casting for convenience.
 
 template.tpl
+  {% set us_state_lookup_loaded = register_lookup("us_states", "dathere://us-states-example.csv") -%}
   Dear {{ first_name|title }} {{ last_name|title }}!
     Your account balance is {{ balance|format_float(2) }}
        with {{ loyalty_points|human_count }} point{{ loyalty_points|int|pluralize }}!
     {# This is a comment and will not be rendered. The closing minus sign in this
        block tells MiniJinja to trim whitespaces -#}
-    {% set loyalty_value = loyalty_points|int / 100 -%}
-    Value of Points: {{ loyalty_value }} 
-    Final Balance: {{ balance|int - loyalty_value }}
+    {% if us_state_lookup_loaded is true -%}
+       {% if us_state not in ["DE", "CA"] -%}
+         State: {{ us_state|lookup("us_states", "Name")|title }}
+            {% set loyalty_value = loyalty_points|int / 100 -%}
+            Value of Points: {{ loyalty_value }}
+            {% set tax_rate = us_state|lookup("us_states", "Sales Tax (2023)")|float -%}
+            {% set tax_amount = loyalty_value * tax_rate -%}
+            {% set loyalty_value = loyalty_value - tax_amount -%}
+        {% else %}
+            {% set loyalty_value = 0 -%}
+        {% endif %}
+       Final Balance: {{ balance|int - loyalty_value }}
+    {% endif %}
     Status: {% if active|str_to_bool is true %}Active{% else %}Inactive{% endif %}
 
 qsv template --template-file template.tpl data.csv
@@ -350,9 +361,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         // Try to render just the register_lookup statements with empty context
         match temp_env.render_str(&temp_template, minijinja::context! {}) {
             Ok(s) => {
-                // eprintln!("{:#?}", LOOKUP_MAP.get().unwrap());
-
-                if s.contains("LOOKUP REGISTRATION ERROR:") {
+                if !s.is_empty() {
                     return fail_incorrectusage_clierror!("{s}");
                 }
             },
@@ -589,7 +598,7 @@ fn str_to_bool(value: &str) -> bool {
 /// * `lookup_name` - Name to register the lookup table under
 /// * `lookup_table_uri` - Path/URI to the CSV file (supports local files, HTTP(S), CKAN resources)
 /// * `cache_age_secs` - Optional cache duration in seconds for remote files. Defaults to 3600 (1
-///   hour)
+///   hour). Set to 0 to disable caching.
 ///
 /// # Returns
 ///
@@ -625,10 +634,12 @@ fn register_lookup(
         ));
     }
 
+    let cache_age_secs = cache_age_secs.unwrap_or(3600);
+
     // Check if lookup_name already exists in LOOKUP_MAP
     if let Some(lock) = LOOKUP_MAP.get() {
         if let Ok(map) = lock.read() {
-            if map.contains_key(lookup_name) {
+            if map.contains_key(lookup_name) && cache_age_secs > 0 {
                 // Lookup table already registered
                 return Ok(true);
             }
@@ -636,9 +647,9 @@ fn register_lookup(
     }
 
     let lookup_opts = LookupTableOptions {
-        name:           lookup_name.to_string(),
-        uri:            lookup_table_uri.to_string(),
-        cache_dir:      QSV_CACHE_DIR
+        name: lookup_name.to_string(),
+        uri: lookup_table_uri.to_string(),
+        cache_dir: QSV_CACHE_DIR
             .get()
             .ok_or_else(|| {
                 minijinja::Error::new(
@@ -647,11 +658,11 @@ fn register_lookup(
                 )
             })?
             .to_string(),
-        cache_age_secs: cache_age_secs.unwrap_or(3600),
-        delimiter:      DELIMITER.get().copied().flatten(),
-        ckan_api_url:   CKAN_API.get().cloned(),
-        ckan_token:     CKAN_TOKEN.get().and_then(std::clone::Clone::clone),
-        timeout_secs:   TIMEOUT_SECS.load(Ordering::Relaxed),
+        cache_age_secs,
+        delimiter: DELIMITER.get().copied().flatten(),
+        ckan_api_url: CKAN_API.get().cloned(),
+        ckan_token: CKAN_TOKEN.get().and_then(std::clone::Clone::clone),
+        timeout_secs: TIMEOUT_SECS.load(Ordering::Relaxed),
     };
 
     let lookup_table = lookup::load_lookup_table(&lookup_opts).map_err(|e| {
@@ -661,7 +672,19 @@ fn register_lookup(
         )
     })?;
 
-    let mut rdr = csv::Reader::from_path(&lookup_table.filepath).map_err(|e| {
+    if lookup_table.rowcount == 0 {
+        return Err(minijinja::Error::new(
+            minijinja::ErrorKind::InvalidOperation,
+            "lookup table is empty",
+        ));
+    }
+
+    let lookup_config = Config::new(Some(lookup_table.filepath.clone()).as_ref())
+        .delimiter(lookup_opts.delimiter)
+        .comment(Some(b'#'))
+        .no_headers(false);
+
+    let mut rdr = lookup_config.reader().map_err(|e| {
         minijinja::Error::new(
             minijinja::ErrorKind::InvalidOperation,
             format!(
@@ -686,7 +709,7 @@ fn register_lookup(
 
         // Use the first column as the key by default
         if let Some(key_value) = record.get(0) {
-            lookup_data.insert(key_value.to_string(), row_data);
+            lookup_data.insert(key_value.trim().to_string(), row_data);
         }
     }
 
@@ -714,14 +737,13 @@ fn register_lookup(
 /// A filter function for looking up values in a registered lookup table.
 ///
 /// This function is used as a template filter to look up values from a previously registered
-/// lookup table. It searches for a record in the lookup table where the `lookup_key` column
+/// lookup table. It searches for a record in the lookup table where the first column
 /// matches the input `value`, and returns the corresponding value from the `field` column.
 ///
 /// # Arguments
 ///
 /// * `value` - The value to look up in the lookup table
 /// * `lookup_name` - The name of the registered lookup table to search in
-/// * `lookup_key` - The column name in the lookup table to match against the input value
 /// * `field` - The column name in the lookup table whose value should be returned
 /// * `case_sensitive` - Optional boolean to control case-sensitive matching (defaults to true)
 ///
@@ -735,14 +757,13 @@ fn register_lookup(
 ///
 /// ```text
 /// # Case-sensitive lookup (default)
-/// {{ product_id|lookup('products', 'id', 'name') }}
+/// {{ product_id|lookup('products', 'name') }}
 /// # Case-insensitive lookup (supports Unicode)
-/// {{ product_id|lookup('products', 'id', 'name', false) }}
+/// {{ product_id|lookup('products', 'name', false) }}
 /// ```
 fn lookup_filter(
     value: &str,
     lookup_name: &str,
-    lookup_key: &str,
     field: &str,
     case_sensitive: Option<bool>,
 ) -> Result<String, minijinja::Error> {
@@ -750,13 +771,6 @@ fn lookup_filter(
         return Err(minijinja::Error::new(
             minijinja::ErrorKind::InvalidOperation,
             "lookup name not provided",
-        ));
-    }
-
-    if lookup_key.is_empty() {
-        return Err(minijinja::Error::new(
-            minijinja::ErrorKind::InvalidOperation,
-            "lookup key not provided",
         ));
     }
 
@@ -790,7 +804,9 @@ fn lookup_filter(
             let table = map.get(lookup_name)?;
             // Find the matching row
             if case_sensitive {
-                table.get(value).and_then(|row| row.get(field).map(String::from))
+                table
+                    .get(value)
+                    .and_then(|row| row.get(field).map(String::from))
             } else {
                 table
                     .iter()
@@ -806,7 +822,7 @@ fn lookup_filter(
                 String::new()
             } else {
                 format!(
-                    r#"{filter_error} - lookup: "{lookup_name}" key: "{lookup_key}-{field}" not found for: "{value}""#
+                    r#"{filter_error} - lookup: "{lookup_name}-{field}" not found for: "{value}""#
                 )
             }
         }))

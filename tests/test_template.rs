@@ -793,8 +793,8 @@ fn template_lookup_filter_simple() {
         .arg(concat!(
             "{% set result = register_lookup('products', 'lookup.csv') %}",
             "{% if result %}",
-            "{{product_id}}: {{product_id|lookup('products', 'id', 'name')}} - \
-             {{product_id|lookup('products', 'id', 'description')}}\n",
+            "{{product_id}}: {{product_id|lookup('products', 'name')}} - \
+             {{product_id|lookup('products', 'description')}}\n",
             "{% else %}",
             "Error: Failed to register lookup table 'products' {{ result.err }} \n",
             "{% endif %}"
@@ -809,7 +809,7 @@ fn template_lookup_filter_simple() {
     let expected = concat!(
         "1: apple - A red fruit\n",
         "2: banana - A yellow fruit\n",
-        r#"4: <not found> - lookup: "products" key: "id-name" not found for: "4" - <not found> - lookup: "products" key: "id-description" not found for: "4""#
+        r#"4: <not found> - lookup: "products-name" not found for: "4" - <not found> - lookup: "products-description" not found for: "4""#
     );
     assert_eq!(got, expected);
 }
@@ -845,8 +845,8 @@ fn template_lookup_filter_invalid_field() {
         .arg(concat!(
             "{% set result = register_lookup('products', 'lookup.csv') %}",
             "{% if result %}",
-            "{{product_id}}: {{product_id|lookup('products', 'id', 'name')}} - \
-             {{product_id|lookup('products', 'id', 'non_existent_column')}}\n",
+            "{{product_id}}: {{product_id|lookup('products', 'name')}} - \
+             {{product_id|lookup('products', 'non_existent_column')}}\n",
             "{% else %}",
             "Error: Failed to register lookup table 'products' {{ result.err }} \n",
             "{% endif %}"
@@ -859,11 +859,11 @@ fn template_lookup_filter_invalid_field() {
 
     let got: String = wrk.stdout(&mut cmd);
     let expected = concat!(
-        r#"1: apple - <not found> - lookup: "products" key: "id-non_existent_column" not found for: "1"
+        r#"1: apple - <not found> - lookup: "products-non_existent_column" not found for: "1"
 "#,
-        r#"2: banana - <not found> - lookup: "products" key: "id-non_existent_column" not found for: "2"
+        r#"2: banana - <not found> - lookup: "products-non_existent_column" not found for: "2"
 "#,
-        r#"4: <not found> - lookup: "products" key: "id-name" not found for: "4" - <not found> - lookup: "products" key: "id-non_existent_column" not found for: "4""#
+        r#"4: <not found> - lookup: "products-name" not found for: "4" - <not found> - lookup: "products-non_existent_column" not found for: "4""#
     );
     assert_eq!(got, expected);
 }
@@ -897,11 +897,16 @@ fn template_lookup_filter_errors() {
     // Test unregistered lookup table
     let mut cmd = wrk.command("template");
     cmd.arg("--template")
-        .arg("{{id|lookup('id', 'name')}}")
+        .arg("{{id|lookup('non_existent lookup', 'name')}}")
         .arg("data.csv");
 
+    wrk.assert_success(&mut cmd);
+
     let got: String = wrk.stdout(&mut cmd);
-    assert!(got.contains("RENDERING ERROR"));
+    assert_eq!(
+        got,
+        "<FILTER_ERROR> - lookup: \"non_existent lookup-name\" not found for: \"1\""
+    );
 }
 
 #[test]
@@ -955,7 +960,7 @@ fn template_lookup_case_sensitivity() {
     cmd.arg("--template")
         .arg(concat!(
             "{% if register_lookup('codes', 'lookup.csv') %}",
-            "{{code|lookup('codes', 'code', 'value')}}\n",
+            "{{code|lookup('codes', 'value')}}\n",
             "{% endif %}"
         ))
         .arg("data.csv");
@@ -963,9 +968,9 @@ fn template_lookup_case_sensitivity() {
     let got: String = wrk.stdout(&mut cmd);
     assert_eq!(
         got,
-        r#"<FILTER_ERROR> - lookup: "codes" key: "code-value" not found for: "abc"
-<FILTER_ERROR> - lookup: "codes" key: "code-value" not found for: "DEF"
-<FILTER_ERROR> - lookup: "codes" key: "code-value" not found for: "ghi""#
+        r#"<FILTER_ERROR> - lookup: "codes-value" not found for: "abc"
+<FILTER_ERROR> - lookup: "codes-value" not found for: "DEF"
+<FILTER_ERROR> - lookup: "codes-value" not found for: "ghi""#
     );
 
     // Test case-insensitive lookup
@@ -973,7 +978,7 @@ fn template_lookup_case_sensitivity() {
     cmd.arg("--template")
         .arg(concat!(
             "{% if register_lookup('codes', 'lookup.csv') %}",
-            "{{code|lookup('codes', 'code', 'value', false)}}\n",
+            "{{code|lookup('codes', 'value', false)}}\n",
             "{% endif %}"
         ))
         .arg("data.csv");
