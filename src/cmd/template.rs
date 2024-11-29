@@ -605,12 +605,10 @@ fn human_float_count(value: Value) -> String {
                     r#"{}: "{value}" is not a float."#,
                     FILTER_ERROR.get().unwrap()
                 )
+            } else if let Ok(num) = value.try_into() {
+                indicatif::HumanFloatCount(num).to_string()
             } else {
-                if let Ok(num) = value.try_into() {
-                    indicatif::HumanFloatCount(num).to_string()
-                } else {
-                    FILTER_ERROR.get().unwrap().clone()
-                }
+                FILTER_ERROR.get().unwrap().clone()
             }
         },
         ValueKind::String => {
