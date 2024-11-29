@@ -161,9 +161,10 @@ impl From<minijinja::Error> for CliError {
 
 use ahash::{HashMap, HashMapExt};
 
-// An efficient structure for lookups:
+// An efficient structure for lookups using three levels of nested HashMaps:
 // First HashMap: Maps lookup table names to their indices
 // Second HashMap: Maps key column values to a HashMap of field name -> field value
+// Third HashMap: Maps field name to field value
 type LookupMap = HashMap<String, HashMap<String, HashMap<String, String>>>;
 
 static LOOKUP_MAP: OnceLock<RwLock<LookupMap>> = OnceLock::new();
@@ -316,13 +317,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // safety: flag_delimiter has a default docopt
     DELIMITER.set(args.flag_delimiter).unwrap();
 
-    #[cfg(not(feature = "lite"))]
     let qsv_cache_dir = lookup::set_qsv_cache_dir(&args.flag_cache_dir)?;
-    #[cfg(not(feature = "lite"))]
     QSV_CACHE_DIR.set(qsv_cache_dir)?;
 
     // check the QSV_CKAN_API environment variable
-    #[cfg(not(feature = "lite"))]
     CKAN_API.set(if let Ok(api) = std::env::var("QSV_CKAN_API") {
         api
     } else {
@@ -330,7 +328,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     })?;
 
     // check the QSV_CKAN_TOKEN environment variable
-    #[cfg(not(feature = "lite"))]
     CKAN_TOKEN
         .set(if let Ok(token) = std::env::var("QSV_CKAN_TOKEN") {
             Some(token)
@@ -541,25 +538,31 @@ fn substr(value: &str, start: u32, end: Option<u32>) -> String {
 /// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as float.
 fn format_float(value: Value, precision: u32) -> String {
     // Prevent excessive precision
-    let precision = precision.min(16);
+    let precision = precision.min(16) as usize;
     match value.kind() {
         ValueKind::Number => {
             let float_num: f64;
-            if let Ok(num) = value.try_into() {
+            if let Ok(num) = value.clone().try_into() {
                 float_num = num;
-                format!("{:.1$}", float_num, precision as usize)
+                format!("{:.1$}", float_num, precision)
             } else {
-                FILTER_ERROR.get().unwrap().clone()
+                format!(
+                    r#"{}: "{value}" is not a float."#,
+                    FILTER_ERROR.get().unwrap()
+                )
             }
         },
         ValueKind::String => {
             if let Some(s) = value.as_str() {
                 s.parse::<f64>().map_or_else(
                     |_| FILTER_ERROR.get().unwrap().clone(),
-                    |num| format!("{:.1$}", num, precision as usize),
+                    |num| format!("{:.1$}", num, precision),
                 )
             } else {
-                FILTER_ERROR.get().unwrap().clone()
+                format!(
+                    r#"{}: "{value}" is not a float."#,
+                    FILTER_ERROR.get().unwrap()
+                )
             }
         },
         _ => FILTER_ERROR.get().unwrap().clone(),
