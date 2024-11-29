@@ -600,17 +600,17 @@ fn human_count(value: Value) -> String {
 fn human_float_count(value: Value) -> String {
     match value.kind() {
         ValueKind::Number => {
-            if !value.is_integer() {
+            if value.is_integer() {
+                format!(
+                    r#"{}: "{value}" is not a float."#,
+                    FILTER_ERROR.get().unwrap()
+                )
+            } else {
                 if let Ok(num) = value.try_into() {
                     indicatif::HumanFloatCount(num).to_string()
                 } else {
                     FILTER_ERROR.get().unwrap().clone()
                 }
-            } else {
-                format!(
-                    r#"{}: "{value}" is not an float."#,
-                    FILTER_ERROR.get().unwrap()
-                )
             }
         },
         ValueKind::String => {
@@ -651,7 +651,7 @@ fn round_banker(value: Value, places: u32) -> String {
 /// Converts boolean-like string to boolean.
 /// Returns true for "true", "1", "yes", "t" or "y" (case insensitive).
 /// Returns false for all other values.
-fn to_bool(value: Value) -> bool {
+fn to_bool(value: &Value) -> bool {
     match value.kind() {
         ValueKind::String => {
             let s = value.as_str().unwrap();
