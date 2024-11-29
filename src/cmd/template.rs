@@ -113,7 +113,7 @@ use std::{
 };
 
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use minijinja::Environment;
+use minijinja::{value::ValueKind, Environment, Value};
 use minijinja_contrib::pycompat::unknown_method_callback;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
@@ -222,7 +222,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     env.add_filter("human_count", human_count);
     env.add_filter("human_float_count", human_float_count);
     env.add_filter("round_banker", round_banker);
-    env.add_filter("str_to_bool", str_to_bool);
+    env.add_filter("to_bool", to_bool);
     env.add_filter("lookup", lookup_filter);
 
     // Set up template
@@ -539,52 +539,130 @@ fn substr(value: &str, start: u32, end: Option<u32>) -> String {
 
 /// Formats a float number string with the specified decimal precision.
 /// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as float.
-fn format_float(value: &str, precision: u32) -> String {
+fn format_float(value: Value, precision: u32) -> String {
     // Prevent excessive precision
     let precision = precision.min(16);
-    value.parse::<f64>().map_or_else(
-        |_| FILTER_ERROR.get().unwrap().clone(),
-        |num| format!("{:.1$}", num, precision as usize),
-    )
+    match value.kind() {
+        ValueKind::Number => {
+            let float_num: f64;
+            if let Ok(num) = value.try_into() {
+                float_num = num;
+                format!("{:.1$}", float_num, precision as usize)
+            } else {
+                FILTER_ERROR.get().unwrap().clone()
+            }
+        },
+        ValueKind::String => {
+            if let Some(s) = value.as_str() {
+                s.parse::<f64>().map_or_else(
+                    |_| FILTER_ERROR.get().unwrap().clone(),
+                    |num| format!("{:.1$}", num, precision as usize),
+                )
+            } else {
+                FILTER_ERROR.get().unwrap().clone()
+            }
+        },
+        _ => FILTER_ERROR.get().unwrap().clone(),
+    }
 }
 
 /// Formats an integer with thousands separators (e.g. "1,234,567").
 /// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as integer.
-fn human_count(value: &str) -> String {
-    atoi_simd::parse::<u64>(value.as_bytes()).map_or_else(
-        |_| FILTER_ERROR.get().unwrap().clone(),
-        |num| indicatif::HumanCount(num).to_string(),
-    )
+fn human_count(value: Value) -> String {
+    match value.kind() {
+        ValueKind::Number => {
+            if value.is_integer() {
+                if let Ok(num) = value.try_into() {
+                    indicatif::HumanCount(num).to_string()
+                } else {
+                    FILTER_ERROR.get().unwrap().clone()
+                }
+            } else {
+                format!(
+                    r#"{}: "{value}" is not an integer."#,
+                    FILTER_ERROR.get().unwrap()
+                )
+            }
+        },
+        ValueKind::String => {
+            let s = value.as_str().unwrap().as_bytes();
+            atoi_simd::parse::<u64>(s).map_or_else(
+                |_| FILTER_ERROR.get().unwrap().clone(),
+                |num| indicatif::HumanCount(num).to_string(),
+            )
+        },
+        _ => FILTER_ERROR.get().unwrap().clone(),
+    }
 }
 
 /// Formats a float number with thousands separators (e.g. "1,234,567.89").
 /// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as float.
-fn human_float_count(value: &str) -> String {
-    value.parse::<f64>().map_or_else(
-        |_| FILTER_ERROR.get().unwrap().clone(),
-        |num| indicatif::HumanFloatCount(num).to_string(),
-    )
+fn human_float_count(value: Value) -> String {
+    match value.kind() {
+        ValueKind::Number => {
+            if !value.is_integer() {
+                if let Ok(num) = value.try_into() {
+                    indicatif::HumanFloatCount(num).to_string()
+                } else {
+                    FILTER_ERROR.get().unwrap().clone()
+                }
+            } else {
+                format!(
+                    r#"{}: "{value}" is not an float."#,
+                    FILTER_ERROR.get().unwrap()
+                )
+            }
+        },
+        ValueKind::String => {
+            let s = value.as_str().unwrap();
+            s.parse::<f64>().map_or_else(
+                |_| FILTER_ERROR.get().unwrap().clone(),
+                |num| indicatif::HumanFloatCount(num).to_string(),
+            )
+        },
+        _ => FILTER_ERROR.get().unwrap().clone(),
+    }
 }
 
 /// Rounds a float number to specified number of decimal places.
 /// Round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
 /// https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
 /// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as float.
-fn round_banker(value: &str, places: u32) -> String {
-    value.parse::<f64>().map_or_else(
-        |_| FILTER_ERROR.get().unwrap().clone(),
-        |num| util::round_num(num, places),
-    )
+fn round_banker(value: Value, places: u32) -> String {
+    match value.kind() {
+        ValueKind::Number => {
+            if let Ok(num) = value.try_into() {
+                util::round_num(num, places)
+            } else {
+                FILTER_ERROR.get().unwrap().clone()
+            }
+        },
+        ValueKind::String => {
+            let s = value.as_str().unwrap();
+            s.parse::<f64>().map_or_else(
+                |_| FILTER_ERROR.get().unwrap().clone(),
+                |num| util::round_num(num, places),
+            )
+        },
+        _ => FILTER_ERROR.get().unwrap().clone(),
+    }
 }
 
-/// Converts string to boolean.
+/// Converts boolean-like string to boolean.
 /// Returns true for "true", "1", "yes", "t" or "y" (case insensitive).
 /// Returns false for all other values.
-fn str_to_bool(value: &str) -> bool {
-    matches!(
-        value.to_ascii_lowercase().as_str(),
-        "true" | "1" | "yes" | "t" | "y"
-    )
+fn to_bool(value: Value) -> bool {
+    match value.kind() {
+        ValueKind::String => {
+            let s = value.as_str().unwrap();
+            matches!(
+                s.to_ascii_lowercase().as_str(),
+                "true" | "1" | "yes" | "t" | "y"
+            )
+        },
+        ValueKind::Number => value.is_integer() && value.as_i64().unwrap() != 0,
+        _ => false,
+    }
 }
 
 /// Registers a lookup table for use with the lookup filter.
