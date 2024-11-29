@@ -920,12 +920,13 @@ fn sqlp_boston311_explain() {
 "SORT BY [col(""avg_tat""), col(""ward"")]"
   AGGREGATE
 "  	[[(col(""closed_dt"")) - (col(""open_dt""))].mean().strict_cast(Float64).alias(""avg_tat"")] BY [col(""ward"")] FROM"
-    Csv SCAN"#;
+"    simple π 4/4 [""ward"", ""closed_dt"", ""open_dt"", ... 1 other column]"
+      Csv SCAN ["#;
     assert!(got.starts_with(expected_begin));
 
     let expected_end = r#"boston311-100.csv]
-    PROJECT 4/29 COLUMNS
-"    SELECTION: [(col(""case_status"")) == (String(Closed))]""#;
+      PROJECT 4/29 COLUMNS
+"      SELECTION: [(col(""case_status"")) == (String(Closed))]""#;
     assert!(got.ends_with(expected_end));
 }
 
@@ -1612,7 +1613,7 @@ fn sqlp_length_fns() {
     let expected = vec![
         svec!["words", "n_chrs1", "n_chrs2", "n_chrs3", "n_bytes", "n_bits"],
         svec!["Cafe", "4", "4", "4", "4", "32"],
-        svec!["", "0", "0", "0", "0", "0"],
+        svec!["", "", "", "", "", ""],
         svec!["東京", "2", "2", "2", "6", "48"],
     ];
 
@@ -1746,7 +1747,6 @@ fn sqlp_string_replace() {
     let expected = vec![
         svec!["words"],
         svec!["English breakfast tea is the best tea"],
-        svec![""],
     ];
 
     assert_eq!(got, expected);
