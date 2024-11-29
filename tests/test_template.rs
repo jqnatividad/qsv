@@ -356,7 +356,7 @@ fn template_custom_filters() {
         "Name: {{ name|substr(0,2) }}\nAmount: {{ amount|human_count }}\nBytes: {{ \
          bytes|float|filesizeformat }} {{bytes|float|filesizeformat(true) }}\nScore (2 decimals): \
          {{ score|format_float(2) }}\nScore (rounded): {{ score|round_banker(4) }} \
-         {{score|float|round(4) }}\nActive: {{ active|str_to_bool }}\nFloat with commas: {{ \
+         {{score|float|round(4) }}\nActive: {{ active|to_bool }}\nFloat with commas: {{ \
          amount|human_float_count }}\n\n",
     );
 
@@ -699,8 +699,8 @@ fn template_custom_filters_error_handling() {
 }
 
 #[test]
-fn template_str_to_bool_filter() {
-    let wrk = Workdir::new("template_str_to_bool");
+fn template_to_bool_filter() {
+    let wrk = Workdir::new("template_to_bool");
     wrk.create(
         "data.csv",
         vec![
@@ -718,7 +718,7 @@ fn template_str_to_bool_filter() {
 
     let mut cmd = wrk.command("template");
     cmd.arg("--template")
-        .arg("{{value|str_to_bool}}\n\n")
+        .arg("{{value|to_bool}}\n\n")
         .arg("data.csv");
 
     let got: String = wrk.stdout(&mut cmd);
