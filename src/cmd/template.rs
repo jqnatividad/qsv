@@ -536,7 +536,7 @@ fn substr(value: &str, start: u32, end: Option<u32>) -> String {
 
 /// Formats a float number string with the specified decimal precision.
 /// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as float.
-fn format_float(value: Value, precision: u32) -> String {
+fn format_float(value: &Value, precision: u32) -> String {
     // Prevent excessive precision
     let precision = precision.min(16) as usize;
     match value.kind() {
@@ -544,7 +544,7 @@ fn format_float(value: Value, precision: u32) -> String {
             let float_num: f64;
             if let Ok(num) = value.clone().try_into() {
                 float_num = num;
-                format!("{:.1$}", float_num, precision)
+                format!("{float_num:.precision$}")
             } else {
                 format!(
                     r#"{}: "{value}" is not a float."#,
@@ -556,7 +556,7 @@ fn format_float(value: Value, precision: u32) -> String {
             if let Some(s) = value.as_str() {
                 s.parse::<f64>().map_or_else(
                     |_| FILTER_ERROR.get().unwrap().clone(),
-                    |num| format!("{:.1$}", num, precision),
+                    |num| format!("{num:.precision$}"),
                 )
             } else {
                 format!(
