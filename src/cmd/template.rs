@@ -20,7 +20,7 @@ data.csv:
   "first name","last name",balance,"loyalty points",active,us_state
   alice,jones,100.50,1000,true,TX
   bob,smith,200.75,2000,false,CA
-  john,doe,10,1,true,TX
+  john,doe,10,1,true,NJ
 
 NOTE: All variables are of type String and will need to be cast with the `|float` or `|int`
   filters for math operations and when a MiniJinja filter/function requires it.
@@ -34,20 +34,20 @@ template.tpl
        with {{ loyalty_points|human_count }} point{{ loyalty_points|int|pluralize }}!
     {# This is a comment and will not be rendered. The closing minus sign in this
        block tells MiniJinja to trim whitespaces -#}
-    {% if us_state_lookup_loaded is true -%}
+    {% if us_state_lookup_loaded -%}
        {% if us_state not in ["DE", "CA"] -%}
-         State: {{ us_state|lookup("us_states", "Name")|title }}
-            {% set loyalty_value = loyalty_points|int / 100 -%}
-            Value of Points: {{ loyalty_value }}
-            {% set tax_rate = us_state|lookup("us_states", "Sales Tax (2023)")|float -%}
-            {% set tax_amount = loyalty_value * tax_rate -%}
-            {% set loyalty_value = loyalty_value - tax_amount -%}
+          {% set tax_rate = us_state|lookup("us_states", "Sales Tax (2023)")|float -%}
+            State: {{ us_state|lookup("us_states", "Name") }} {{us_state}} Tax Rate: {{ tax_rate }}%
+          {% set loyalty_value = loyalty_points|int / 100 -%}
+          {%- set tax_amount = loyalty_value * (tax_rate / 100) -%}
+          {%- set loyalty_value = loyalty_value - tax_amount -%}
+          Value of Points: {{ loyalty_value }}
         {% else %}
-            {% set loyalty_value = 0 -%}
+          {% set loyalty_value = 0 -%}
         {% endif %}
-       Final Balance: {{ balance|int - loyalty_value }}
+       Final Balance: {{ (balance|int - loyalty_value)|format_float(2) }}
     {% endif %}
-    Status: {% if active|str_to_bool is true %}Active{% else %}Inactive{% endif %}
+    Status: {% if active|to_bool %}Active{% else %}Inactive{% endif %}
 
 qsv template --template-file template.tpl data.csv
 
