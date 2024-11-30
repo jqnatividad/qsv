@@ -649,8 +649,9 @@ fn round_banker(value: Value, places: u32) -> String {
     }
 }
 
-/// Converts boolean-like string to boolean.
+/// Converts boolean-like values to boolean.
 /// Returns true for "true", "1", "yes", "t" or "y" (case insensitive).
+/// Returns true for any integer value not equal to 0.
 /// Returns false for all other values.
 fn to_bool(value: &Value) -> bool {
     match value.kind() {
@@ -788,7 +789,15 @@ fn register_lookup(
 
         // Use the first column as the key by default
         if let Some(key_value) = record.get(0) {
-            lookup_data.insert(key_value.trim().to_string(), row_data);
+            let key_trim = key_value.trim();
+            let key = if let Ok(num) = key_trim.parse::<i64>() {
+                itoa::Buffer::new().format(num).to_string()
+            } else if let Ok(num) = key_trim.parse::<f64>() {
+                ryu::Buffer::new().format(num).to_string()
+            } else {
+                key_trim.to_string()
+            };
+            lookup_data.insert(key, row_data);
         }
     }
 
@@ -841,7 +850,7 @@ fn register_lookup(
 /// {{ product_id|lookup('products', 'name', false) }}
 /// ```
 fn lookup_filter(
-    value: &str,
+    value: &Value,
     lookup_name: &str,
     field: &str,
     case_sensitive: Option<bool>,
@@ -861,6 +870,26 @@ fn lookup_filter(
     }
 
     let case_sensitive = case_sensitive.unwrap_or(true);
+
+    let mut itoa_buf = itoa::Buffer::new();
+    let mut ryu_buf = ryu::Buffer::new();
+    let value = match value.kind() {
+        ValueKind::String => value.as_str().unwrap(),
+        ValueKind::Number => {
+            if value.is_integer() {
+                itoa_buf.format(value.as_i64().unwrap())
+            } else {
+                let float_num: f64;
+                if let Ok(num) = value.clone().try_into() {
+                    float_num = num;
+                    ryu_buf.format(float_num)
+                } else {
+                    unreachable!("Kind::Number should be integer or float")
+                }
+            }
+        },
+        _ => value.as_str().unwrap_or_default(),
+    };
 
     // Avoid allocating if case-sensitive
     let value_compare = if case_sensitive {
