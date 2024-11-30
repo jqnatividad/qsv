@@ -1240,7 +1240,7 @@ impl ColumnNameParser {
     }
 
     fn is_end_of_field(&self) -> bool {
-        self.cur().map_or(true, |c| c == ',')
+        self.cur().is_none_or(|c| c == ',')
     }
 
     fn parse_quoted_name(&mut self) -> Result<String, String> {
