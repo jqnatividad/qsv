@@ -107,11 +107,12 @@ use std::{
     fs,
     io::{BufWriter, Write},
     sync::{
-        atomic::{AtomicU16, Ordering},
+        atomic::{AtomicBool, AtomicU16, Ordering},
         OnceLock, RwLock,
     },
 };
 
+use ahash::{HashMap, HashMapExt};
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use minijinja::{value::ValueKind, Environment, Value};
 use minijinja_contrib::pycompat::unknown_method_callback;
@@ -152,14 +153,13 @@ struct Args {
 }
 
 static FILTER_ERROR: OnceLock<String> = OnceLock::new();
+static EMPTY_FILTER_ERROR: AtomicBool = AtomicBool::new(false);
 
 impl From<minijinja::Error> for CliError {
     fn from(err: minijinja::Error) -> CliError {
         CliError::Other(err.to_string())
     }
 }
-
-use ahash::{HashMap, HashMapExt};
 
 // An efficient structure for lookups using three levels of nested HashMaps:
 // First HashMap: Maps lookup table names to their indices
@@ -192,6 +192,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // Initialize FILTER_ERROR from args.flag_customfilter_error
     if FILTER_ERROR
         .set(if args.flag_customfilter_error == "<empty string>" {
+            EMPTY_FILTER_ERROR.store(true, Ordering::Relaxed);
             String::new()
         } else {
             args.flag_customfilter_error
@@ -539,131 +540,126 @@ fn substr(value: &str, start: u32, end: Option<u32>) -> String {
 fn format_float(value: &Value, precision: u32) -> String {
     // Prevent excessive precision
     let precision = precision.min(16) as usize;
-    match value.kind() {
-        ValueKind::Number => {
-            let float_num: f64;
-            if let Ok(num) = value.clone().try_into() {
-                float_num = num;
-                format!("{float_num:.precision$}")
-            } else {
-                format!(
-                    r#"{}: "{value}" is not a float."#,
-                    FILTER_ERROR.get().unwrap()
-                )
-            }
-        },
-        ValueKind::String => {
-            if let Some(s) = value.as_str() {
-                s.parse::<f64>().map_or_else(
-                    |_| FILTER_ERROR.get().unwrap().clone(),
-                    |num| format!("{num:.precision$}"),
-                )
-            } else {
-                format!(
-                    r#"{}: "{value}" is not a float."#,
-                    FILTER_ERROR.get().unwrap()
-                )
-            }
-        },
-        _ => FILTER_ERROR.get().unwrap().clone(),
+    if value.kind() == ValueKind::String {
+        if let Some(s) = value.as_str() {
+            s.parse::<f64>().map_or_else(
+                |_| FILTER_ERROR.get().unwrap().clone(),
+                |num| format!("{num:.precision$}"),
+            )
+        } else if EMPTY_FILTER_ERROR.load(Ordering::Relaxed) {
+            FILTER_ERROR.get().unwrap().clone()
+        } else {
+            format!(
+                r#"{}: "{value}" is not a float."#,
+                FILTER_ERROR.get().unwrap()
+            )
+        }
+    } else {
+        FILTER_ERROR.get().unwrap().clone()
     }
 }
 
 /// Formats an integer with thousands separators (e.g. "1,234,567").
 /// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as integer.
-fn human_count(value: Value) -> String {
-    match value.kind() {
-        ValueKind::Number => {
-            if value.is_integer() {
-                if let Ok(num) = value.try_into() {
-                    indicatif::HumanCount(num).to_string()
-                } else {
+fn human_count(value: &Value) -> String {
+    if value.kind() == ValueKind::String {
+        let s = value.as_str().unwrap().as_bytes();
+        atoi_simd::parse::<u64>(s).map_or_else(
+            |_| {
+                if EMPTY_FILTER_ERROR.load(Ordering::Relaxed) {
                     FILTER_ERROR.get().unwrap().clone()
+                } else {
+                    format!(
+                        r#"{}: "{value}" is not an integer."#,
+                        FILTER_ERROR.get().unwrap()
+                    )
                 }
-            } else {
-                format!(
-                    r#"{}: "{value}" is not an integer."#,
-                    FILTER_ERROR.get().unwrap()
-                )
-            }
-        },
-        ValueKind::String => {
-            let s = value.as_str().unwrap().as_bytes();
-            atoi_simd::parse::<u64>(s).map_or_else(
-                |_| FILTER_ERROR.get().unwrap().clone(),
-                |num| indicatif::HumanCount(num).to_string(),
-            )
-        },
-        _ => FILTER_ERROR.get().unwrap().clone(),
+            },
+            |num| indicatif::HumanCount(num).to_string(),
+        )
+    } else {
+        FILTER_ERROR.get().unwrap().clone()
     }
 }
 
 /// Formats a float number with thousands separators (e.g. "1,234,567.89").
 /// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as float.
-fn human_float_count(value: Value) -> String {
-    match value.kind() {
-        ValueKind::Number => {
-            if value.is_integer() {
-                format!(
-                    r#"{}: "{value}" is not a float."#,
-                    FILTER_ERROR.get().unwrap()
-                )
-            } else if let Ok(num) = value.try_into() {
-                indicatif::HumanFloatCount(num).to_string()
-            } else {
-                FILTER_ERROR.get().unwrap().clone()
-            }
-        },
-        ValueKind::String => {
-            let s = value.as_str().unwrap();
-            s.parse::<f64>().map_or_else(
-                |_| FILTER_ERROR.get().unwrap().clone(),
-                |num| indicatif::HumanFloatCount(num).to_string(),
-            )
-        },
-        _ => FILTER_ERROR.get().unwrap().clone(),
+fn human_float_count(value: &Value) -> String {
+    if value.kind() == ValueKind::String {
+        let s = value.as_str().unwrap();
+        s.parse::<f64>().map_or_else(
+            |_| {
+                if EMPTY_FILTER_ERROR.load(Ordering::Relaxed) {
+                    FILTER_ERROR.get().unwrap().clone()
+                } else {
+                    format!(
+                        r#"{}: "{value}" is not a float."#,
+                        FILTER_ERROR.get().unwrap()
+                    )
+                }
+            },
+            |num| indicatif::HumanFloatCount(num).to_string(),
+        )
+    } else {
+        FILTER_ERROR.get().unwrap().clone()
     }
 }
 
 /// Rounds a float number to specified number of decimal places.
 /// Round using Midpoint Nearest Even Rounding Strategy AKA "Bankers Rounding."
+/// automatically trims trailing zeros
 /// https://docs.rs/rust_decimal/latest/rust_decimal/enum.RoundingStrategy.html#variant.MidpointNearestEven
 /// Returns --customfilter-error (default: <FILTER_ERROR>) if input cannot be parsed as float.
-fn round_banker(value: Value, places: u32) -> String {
-    match value.kind() {
-        ValueKind::Number => {
-            if let Ok(num) = value.try_into() {
-                util::round_num(num, places)
-            } else {
-                FILTER_ERROR.get().unwrap().clone()
-            }
-        },
-        ValueKind::String => {
-            let s = value.as_str().unwrap();
-            s.parse::<f64>().map_or_else(
-                |_| FILTER_ERROR.get().unwrap().clone(),
-                |num| util::round_num(num, places),
-            )
-        },
-        _ => FILTER_ERROR.get().unwrap().clone(),
+fn round_banker(value: &Value, places: u32) -> String {
+    if value.kind() == ValueKind::String {
+        let s = value.as_str().unwrap();
+        s.parse::<f64>().map_or_else(
+            |_| {
+                if EMPTY_FILTER_ERROR.load(Ordering::Relaxed) {
+                    FILTER_ERROR.get().unwrap().clone()
+                } else {
+                    format!(
+                        r#"{}: "{value}" is not a float."#,
+                        FILTER_ERROR.get().unwrap()
+                    )
+                }
+            },
+            |num| util::round_num(num, places),
+        )
+    } else {
+        FILTER_ERROR.get().unwrap().clone()
     }
 }
 
 /// Converts boolean-like values to boolean.
 /// Returns true for "true", "1", "yes", "t" or "y" (case insensitive).
 /// Returns true for any integer value not equal to 0.
-/// Returns false for all other values.
+/// Returns true for all float values not equal to 0.0.
+/// Returns the truthiness of all other values.
 fn to_bool(value: &Value) -> bool {
-    match value.kind() {
-        ValueKind::String => {
-            let s = value.as_str().unwrap();
-            matches!(
-                s.to_ascii_lowercase().as_str(),
-                "true" | "1" | "yes" | "t" | "y"
-            )
-        },
-        ValueKind::Number => value.is_integer() && value.as_i64().unwrap() != 0,
-        _ => false,
+    if value.kind() == ValueKind::String {
+        let s = value.as_str().unwrap();
+        let truthy = matches!(
+            s.to_ascii_lowercase().as_str(),
+            "true" | "1" | "yes" | "t" | "y"
+        );
+        if truthy {
+            true
+        } else {
+            let int_num: i64;
+            let float_num: f64;
+            if let Ok(num) = s.parse::<i64>() {
+                int_num = num;
+                int_num != 0
+            } else if let Ok(num) = s.parse::<f64>() {
+                float_num = num;
+                float_num.abs() > f64::EPSILON
+            } else {
+                false
+            }
+        }
+    } else {
+        value.is_true()
     }
 }
 
@@ -707,13 +703,6 @@ fn register_lookup(
         ));
     }
 
-    if lookup_table_uri.is_empty() {
-        return Err(minijinja::Error::new(
-            minijinja::ErrorKind::InvalidOperation,
-            "lookup table URI cannot be empty",
-        ));
-    }
-
     let cache_age_secs = cache_age_secs.unwrap_or(3600);
 
     // Check if lookup_name already exists in LOOKUP_MAP
@@ -724,6 +713,13 @@ fn register_lookup(
                 return Ok(true);
             }
         }
+    }
+
+    if lookup_table_uri.is_empty() {
+        return Err(minijinja::Error::new(
+            minijinja::ErrorKind::InvalidOperation,
+            "lookup table URI cannot be empty",
+        ));
     }
 
     let lookup_opts = LookupTableOptions {
@@ -780,22 +776,23 @@ fn register_lookup(
 
     let row_len = lookup_table.headers.len();
     for record in rdr.records().flatten() {
-        let mut row_data: HashMap<String, String> = HashMap::with_capacity(row_len);
+        let mut row_data: HashMap<String, String> =
+            HashMap::with_capacity_and_hasher(row_len, ahash::RandomState::new());
 
         // Store all fields for this row
         for (header, value) in lookup_table.headers.iter().zip(record.iter()) {
-            row_data.insert(header.to_string(), value.to_string());
+            row_data.insert(header.to_owned(), value.to_owned());
         }
 
         // Use the first column as the key by default
         if let Some(key_value) = record.get(0) {
             let key_trim = key_value.trim();
             let key = if let Ok(num) = key_trim.parse::<i64>() {
-                itoa::Buffer::new().format(num).to_string()
+                itoa::Buffer::new().format(num).to_owned()
             } else if let Ok(num) = key_trim.parse::<f64>() {
-                ryu::Buffer::new().format(num).to_string()
+                ryu::Buffer::new().format(num).to_owned()
             } else {
-                key_trim.to_string()
+                key_trim.to_owned()
             };
             lookup_data.insert(key, row_data);
         }
