@@ -374,7 +374,7 @@ Score (rounded): 3.1416 3.1416
 Active: true
 Float with commas: 1,234,567
 Name: Ja
-Amount: <FILTER_ERROR>
+Amount: <FILTER_ERROR>: "7654321.04" is not an integer.
 Bytes: 1.1 GB 1.0 GiB
 Score (2 decimals): 2.72
 Score (rounded): 2.7183 2.7183
@@ -666,18 +666,20 @@ fn template_custom_filters_error_handling() {
         "data.csv",
         vec![
             svec!["value", "number"],
-            svec!["abc", "123.456"],
+            svec!["abc", "1234567.890123"],
             svec!["def", "not_a_number"],
+            svec!["ghi", "7654321.04"],
         ],
     );
 
     let mut cmd = wrk.command("template");
     cmd.arg("--template")
         .arg(concat!(
-            "format_float: {{number|format_float(2)}}\n",
-            "human_count: {{number|human_count}}\n",
-            "human_float_count: {{number|human_float_count}}\n",
-            "round_banker: {{number|round_banker(3)}}\n",
+            "VALUE: {{value}}\n",
+            "  format_float: {{number|format_float(2)}}\n",
+            "  human_count: {{number|human_count}}\n",
+            "  human_float_count: {{number|human_float_count}}\n",
+            "  round_banker: {{number|round_banker(3)}}\n",
             "\n"
         ))
         .arg("--customfilter-error")
@@ -685,16 +687,53 @@ fn template_custom_filters_error_handling() {
         .arg("data.csv");
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected = concat!(
-        "format_float: 123.46\n",
-        "human_count: ERROR\n",
-        "human_float_count: 123.456\n",
-        "round_banker: 123.456\n",
-        "format_float: ERROR\n",
-        "human_count: ERROR\n",
-        "human_float_count: ERROR\n",
-        "round_banker: ERROR"
-    );
+    let expected = r#"VALUE: abc
+  format_float: 1234567.89
+  human_count: ERROR: "1234567.890123" is not an integer.
+  human_float_count: 1,234,567.8901
+  round_banker: 1234567.89
+VALUE: def
+  format_float: ERROR
+  human_count: ERROR: "not_a_number" is not an integer.
+  human_float_count: ERROR: "not_a_number" is not a float.
+  round_banker: ERROR: "not_a_number" is not a float.
+VALUE: ghi
+  format_float: 7654321.04
+  human_count: ERROR: "7654321.04" is not an integer.
+  human_float_count: 7,654,321.04
+  round_banker: 7654321.04"#;
+    assert_eq!(got, expected);
+
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            "VALUE: {{value}}\n",
+            "  format_float: {{number|format_float(2)}}\n",
+            "  human_count: {{number|human_count}}\n",
+            "  human_float_count: {{number|human_float_count}}\n",
+            "  round_banker: {{number|round_banker(3)}}\n",
+            "\n"
+        ))
+        .arg("--customfilter-error")
+        .arg("<empty string>")
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"VALUE: abc
+  format_float: 1234567.89
+  human_count: 
+  human_float_count: 1,234,567.8901
+  round_banker: 1234567.89
+VALUE: def
+  format_float: 
+  human_count: 
+  human_float_count: 
+  round_banker: 
+VALUE: ghi
+  format_float: 7654321.04
+  human_count: 
+  human_float_count: 7,654,321.04
+  round_banker: 7654321.04"#;
     assert_eq!(got, expected);
 }
 
@@ -706,24 +745,39 @@ fn template_to_bool_filter() {
         vec![
             svec!["value"],
             svec!["true"],
-            svec!["1"],
             svec!["yes"],
-            svec!["t"],
-            svec!["y"],
-            svec!["false"],
+            svec!["1"],
             svec!["0"],
+            svec!["false"],
             svec!["no"],
+            svec!["42.032"],
+            svec!["0.0"],
+            svec!["kinda true"],
+            svec!["kinda false"],
+            svec!["dunno"],
         ],
     );
 
     let mut cmd = wrk.command("template");
     cmd.arg("--template")
-        .arg("{{value|to_bool}}\n\n")
+        .arg("{% if value|to_bool %}true{% else %}false{% endif %}\n\n")
         .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
 
     let got: String = wrk.stdout(&mut cmd);
     let expected =
-        concat!("true\n", "true\n", "true\n", "true\n", "true\n", "false\n", "false\n", "false");
+        r#"true
+true
+true
+false
+false
+false
+true
+false
+false
+false
+false"#;
     assert_eq!(got, expected);
 }
 
@@ -985,4 +1039,75 @@ fn template_lookup_case_sensitivity() {
 
     let got: String = wrk.stdout(&mut cmd);
     assert_eq!(got, "first\nsecond\nthird");
+}
+
+#[test]
+fn template_humanfloat_filter() {
+    let wrk = Workdir::new("template_humanfloat");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["number"],
+            svec!["1234.5678"],
+            svec!["1000000"],
+            svec!["123456789.3145679"],
+            svec!["0.0001"],
+            svec!["not_a_number"],
+        ],
+    );
+
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg("{{number|human_float_count}}\n\n")
+        .arg("--customfilter-error")
+        .arg("ERROR")
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = concat!(
+        "1,234.5678\n",
+        "1,000,000\n",
+        "123,456,789.3146\n",
+        "0.0001\n",
+        "ERROR: \"not_a_number\" is not a float."
+    );
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn template_round_banker_filter() {
+    let wrk = Workdir::new("template_round_banker");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["number"],
+            svec!["1.234567"],
+            svec!["2.5467"],
+            svec!["3.5"],
+            svec!["not_a_number"],
+        ],
+    );
+
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            "2 places: {{number|round_banker(2)}}\n",
+            "0 places: {{number|round_banker(0)}}\n\n"
+        ))
+        .arg("--customfilter-error")
+        .arg("ERROR")
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = concat!(
+        "2 places: 1.23\n",
+        "0 places: 1\n",
+        "2 places: 2.55\n",
+        "0 places: 3\n",
+        "2 places: 3.5\n",
+        "0 places: 4\n",
+        "2 places: ERROR: \"not_a_number\" is not a float.\n",
+        "0 places: ERROR: \"not_a_number\" is not a float."
+    );
+    assert_eq!(got, expected);
 }
