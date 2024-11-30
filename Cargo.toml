@@ -78,6 +78,7 @@ bytemuck = { version = "1.20", features = [
 byteorder = "1.5"
 bytes = "1"
 cached = { version = "0.54", features = [
+    "ahash",
     "disk_store",
     "redis_ahash",
 ], optional = true }
