@@ -173,6 +173,7 @@ polars = { version = "0.44.2", features = [
     # "cloud",
     "coalesce",
     "cross_join",
+    "decompress-fast",
     # "dtype-full",
     "extract_jsonpath",
     "ipc",
