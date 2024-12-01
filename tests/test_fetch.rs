@@ -293,8 +293,8 @@ fn fetch_simple_redis() {
 }
 
 #[test]
-// #[ignore = "Temporarily skip this as diskcache behavior on macOS 14.4.1 generates more hits (the \
-//             desired behavior) than other platforms"]
+// #[ignore = "Temporarily skip this as diskcache behavior on macOS 14.4.1 generates more hits (the
+// \             desired behavior) than other platforms"]
 fn fetch_simple_diskcache() {
     let wrk = Workdir::new("fetch");
     wrk.create(
