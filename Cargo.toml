@@ -333,6 +333,7 @@ strum_macros = { git = "https://github.com/dathere/strum", branch = "bump-phf-to
 # QSV_POLARS_REV=c00df00
 # polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.16.0" }
 polars = { git = "https://github.com/pola-rs/polars", rev = "c00df00" }
+
 [features]
 default = ["mimalloc"]
 distrib_features = [
@@ -341,10 +342,8 @@ distrib_features = [
     "fetch",
     "foreach",
     "geocode",
-    "lens",
     "luau",
     "polars",
-    "prompt",
     "python",
     "to",
 ]
