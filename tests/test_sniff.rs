@@ -76,7 +76,7 @@ fn sniff_url_notcsv() {
     let wrk = Workdir::new("sniff_url_notcsv");
 
     let mut cmd = wrk.command("sniff");
-    cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/excel-xlsx.xlsx");
+    cmd.arg("https://github.com/dathere/qsv/raw/master/resources/test/excel-xlsx.xlsx");
 
     let got_error = wrk.output_stderr(&mut cmd);
 
@@ -121,7 +121,7 @@ fn sniff_justmime_remote() {
 
     let mut cmd = wrk.command("sniff");
     cmd.arg("--just-mime")
-        .arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/excel-xls.xls");
+        .arg("https://github.com/dathere/qsv/raw/master/resources/test/excel-xls.xls");
 
     let got: String = wrk.stdout(&mut cmd);
 
@@ -134,7 +134,7 @@ fn sniff_url_snappy() {
     let wrk = Workdir::new("sniff_url_snappy");
 
     let mut cmd = wrk.command("sniff");
-    cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/boston311-100.csv.sz");
+    cmd.arg("https://github.com/dathere/qsv/raw/master/resources/test/boston311-100.csv.sz");
 
     wrk.assert_success(&mut cmd);
 
@@ -185,7 +185,7 @@ fn sniff_url_snappy_noinfer() {
     let wrk = Workdir::new("sniff_url_snappy_noinfer");
 
     let mut cmd = wrk.command("sniff");
-    cmd.arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/boston311-100.csv.sz")
+    cmd.arg("https://github.com/dathere/qsv/raw/master/resources/test/boston311-100.csv.sz")
         .arg("--no-infer");
 
     let got: String = wrk.stdout(&mut cmd);

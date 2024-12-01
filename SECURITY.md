@@ -8,12 +8,12 @@ qsv allows `unwrap`,`expect` and `unsafe` in the codebase for performance reason
 
 ## Supported Versions
 
-qsv has a [very rapid release tempo](https://github.com/jqnatividad/qsv/releases), with several releases/month.   
+qsv has a [very rapid release tempo](https://github.com/dathere/qsv/releases), with several releases/month.   
 It has a built-in self-update engine that makes it very convenient to upgrade to the latest version.
 
 ## Reporting a Vulnerability
 
-If you've found a vulnerability, please [create an issue](https://github.com/jqnatividad/qsv/issues/new/choose) in GitHub.
+If you've found a vulnerability, please [create an issue](https://github.com/dathere/qsv/issues/new/choose) in GitHub.
 
 However, if a vulnerability is severe and could lead to zero-day exploits, please send an email to [qsv-severe@datHere.com](mailto:qsv-severe@datHere.com) instead.
 

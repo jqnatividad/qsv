@@ -6,7 +6,7 @@ These are some very basic and unscientific benchmarks of various commands
 provided by the latest release of `qsv`. Please see below for more information.
 
 These benchmarks were compiled against a 1M row, 512 mb, 41 column [sample of NYC's 311 data]
-(https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z)
+(https://raw.githubusercontent.com/wiki/dathere/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z)
 on a Virtualbox v6.1 Windows 11 v21H2 VM with an AMD Ryzen 7 4800H,
 32GB memory and a 1 TB SSD (VM configured with Ubuntu 20.04 LTS assigned 8 CPUs
 and 12 GB of memory).
@@ -135,7 +135,7 @@ transpose                  NA         NA          NA
 
 The primary purpose of these benchmarks is to provide a rough ballpark estimate of how
 fast each command is, to catch significant performance regressions, and to help you
-[fine-tune qsv's performance](https://github.com/jqnatividad/qsv#performance-tuning) in your environment.
+[fine-tune qsv's performance](https://github.com/dathere/qsv#performance-tuning) in your environment.
 
 The `count` command can be viewed as a sort of baseline of the fastest possible
 command that parses every record in CSV data.

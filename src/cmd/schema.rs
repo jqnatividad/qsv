@@ -26,7 +26,7 @@ exists and is current (i.e. stats generated with --cardinality and --infer-dates
 Otherwise, it will run the `stats` command to generate the `stats.csv.data.jsonl` file first,
 and then use that to generate the schema file.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_schema.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_schema.rs.
 
 Usage:
     qsv schema [options] [<input>]

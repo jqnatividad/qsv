@@ -108,7 +108,7 @@ RFC 4180 VALIDATION MODE:
 ========================
 
 If run without a JSON Schema file, the CSV is validated for RFC 4180 CSV standard compliance
-(see https://github.com/jqnatividad/qsv#rfc-4180-csv-standard).
+(see https://github.com/dathere/qsv#rfc-4180-csv-standard).
 
 It also confirms if the CSV is UTF-8 encoded.
 
@@ -116,7 +116,7 @@ For both modes, returns exit code 0 when the CSV file is valid, exitcode > 0 oth
 If all records are valid, no output files are produced.
 
 For examples, see the tests included in this file (denoted by '#[test]') or see
-https://github.com/jqnatividad/qsv/blob/master/tests/test_validate.rs.
+https://github.com/dathere/qsv/blob/master/tests/test_validate.rs.
 
 Usage:
     qsv validate [options] [<input>] [<json-schema>]
@@ -1581,7 +1581,7 @@ fn test_validate_currency_email_dynamicenum_validator() {
                 "agency": {
                     "description": "The person's agency.",
                     "type": "string",
-                    "dynamicEnum": "https://raw.githubusercontent.com/jqnatividad/qsv/refs/heads/master/scripts/NYC_agencies.csv",
+                    "dynamicEnum": "https://raw.githubusercontent.com/dathere/qsv/refs/heads/master/scripts/NYC_agencies.csv",
                 }
             }
         })
@@ -1762,7 +1762,7 @@ fn test_dyn_enum_validator() {
     #[cfg(not(feature = "lite"))]
     QSV_CACHE_DIR.get_or_init(|| qsv_cache_dir);
 
-    let schema = json!({"dynamicEnum": "https://raw.githubusercontent.com/jqnatividad/qsv/refs/heads/master/resources/test/fruits.csv", "type": "string"});
+    let schema = json!({"dynamicEnum": "https://raw.githubusercontent.com/dathere/qsv/refs/heads/master/resources/test/fruits.csv", "type": "string"});
     let validator = jsonschema::options()
         .with_keyword("dynamicEnum", dyn_enum_validator_factory)
         .build(&schema)

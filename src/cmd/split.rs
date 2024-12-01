@@ -48,7 +48,7 @@ Examples:
 
     qsv split splitoutdir -c 10 -j 4 input.csv
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_split.rs.
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_split.rs.
 
 Usage:
     qsv split [options] (--size <arg> | --chunks <arg> | --kb-size <arg>) <outdir> [<input>]

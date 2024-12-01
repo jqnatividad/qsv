@@ -110,14 +110,14 @@ pub fn qsv_custom_panic() {
         human_panic::Metadata::new(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
             .authors("datHere qsv maintainers")
             .homepage("https://qsv.dathere.com")
-            .support("- Open a GitHub issue at https://github.com/jqnatividad/qsv/issues")
+            .support("- Open a GitHub issue at https://github.com/dathere/qsv/issues")
     );
 }
 
 fn default_user_agent() -> String {
     let unknown_command = "Unknown".to_string();
     let current_command = CURRENT_COMMAND.get().unwrap_or(&unknown_command);
-    format!("{CARGO_BIN_NAME}/{CARGO_PKG_VERSION} ({TARGET}; {current_command}; {QSV_KIND}; https://github.com/jqnatividad/qsv)")
+    format!("{CARGO_BIN_NAME}/{CARGO_PKG_VERSION} ({TARGET}; {current_command}; {QSV_KIND}; https://github.com/dathere/qsv)")
 }
 
 pub fn max_jobs() -> usize {
@@ -860,7 +860,7 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
     let curr_version = cargo_crate_version!();
     let releases = if let Ok(releases_list) =
         self_update::backends::github::ReleaseList::configure()
-            .repo_owner("jqnatividad")
+            .repo_owner("dathere")
             .repo_name("qsv")
             .build()
     {
@@ -886,12 +886,10 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
 
     if latest_release_sv > curr_version_sv {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.");
-        eprintln!(
-            "Release notes: https://github.com/jqnatividad/qsv/releases/tag/{latest_release}\n"
-        );
+        eprintln!("Release notes: https://github.com/dathere/qsv/releases/tag/{latest_release}\n");
         if QSV_KIND.starts_with("prebuilt") && !check_only {
             match self_update::backends::github::Update::configure()
-                .repo_owner("jqnatividad")
+                .repo_owner("dathere")
                 .repo_name("qsv")
                 .bin_name(&bin_name)
                 .show_download_progress(true)
@@ -925,7 +923,7 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
             winfo!(
                 r#"This qsv was {QSV_KIND}. self-update does not work for manually {QSV_KIND} binaries.
 If you wish to update to the latest version of qsv, manually install/compile from source.
-Self-update only works with prebuilt binaries released on GitHub https://github.com/jqnatividad/qsv/releases/latest"#
+Self-update only works with prebuilt binaries released on GitHub https://github.com/dathere/qsv/releases/latest"#
             );
         }
     } else {

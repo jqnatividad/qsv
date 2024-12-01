@@ -47,7 +47,7 @@ as its an expensive operation to match a date candidate against 19 possible date
 with each format, having several variants.
 
 The date formats recognized and its sub-variants along with examples can be found at 
-https://github.com/jqnatividad/qsv-dateparser?tab=readme-ov-file#accepted-date-formats.
+https://github.com/dathere/qsv-dateparser?tab=readme-ov-file#accepted-date-formats.
 
 Computing statistics on a large file can be made MUCH faster if you create an index for it
 first with 'qsv index' to enable multithreading. With an index, the file is split into equal
@@ -66,7 +66,7 @@ These cached stats are also used by other qsv commands (currently `schema` & `to
 load the stats into memory faster. If the cached stats are not current (i.e., the input file
 is newer than the cached stats), the cached stats will be ignored and recomputed. For example,
 see the "boston311" test files in 
-https://github.com/jqnatividad/qsv/blob/4529d51273218347fef6aca15ac24e22b85b2ec4/tests/test_stats.rs#L608.
+https://github.com/dathere/qsv/blob/4529d51273218347fef6aca15ac24e22b85b2ec4/tests/test_stats.rs#L608.
 
 Examples:
 
@@ -117,8 +117,8 @@ Prompt for both INPUT and OUTPUT files in the ~/Documents dir with custom prompt
       qsv stats -E --infer-dates | \
       qsv prompt -m 'Save summary to...' -d ~/Documents --fd-output --save-fname summarystats.csv
 
-For more examples, see https://github.com/jqnatividad/qsv/tree/master/resources/test
-For more info, see https://github.com/jqnatividad/qsv/wiki/Supplemental#stats-command-output-explanation
+For more examples, see https://github.com/dathere/qsv/tree/master/resources/test
+For more info, see https://github.com/dathere/qsv/wiki/Supplemental#stats-command-output-explanation
 
 Usage:
     qsv stats [options] [<input>]

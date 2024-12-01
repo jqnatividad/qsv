@@ -30,7 +30,7 @@ Same as above but with an additional column containing the current value:
 
   $ qsv foreach query -u -c from_query 'search {}' queries.csv > results.csv
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_foreach.rs.
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_foreach.rs.
 
 Usage:
     qsv foreach [options] <column> <command> [<input>]

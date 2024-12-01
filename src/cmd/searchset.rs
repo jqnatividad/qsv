@@ -19,7 +19,7 @@ Returns exitcode 1 when no match is found, unless the '--not-one' flag is used.
 When --quick is enabled, no output is produced and exitcode 0 is returned on 
 the first match.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_searchset.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_searchset.rs.
 
 Usage:
     qsv searchset [options] (<regexset-file>) [<input>]

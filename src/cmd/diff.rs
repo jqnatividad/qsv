@@ -42,7 +42,7 @@ Find the difference between two CSVs. Both CSVs have no headers, but the result 
 headers, so generic headers will be used in the form of: _col_1, _col_2, etc.:
     qsv diff --no-headers-left --no-headers-right left.csv right.csv
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_diff.rs
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_diff.rs
 
 Usage:
     qsv diff [options] [<input-left>] [<input-right>]

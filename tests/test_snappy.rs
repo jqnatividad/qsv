@@ -68,7 +68,7 @@ fn snappy_decompress_url() {
 
     let mut cmd = wrk.command("snappy");
     cmd.arg("decompress")
-        .arg("https://github.com/jqnatividad/qsv/raw/master/resources/test/boston311-100.csv.sz");
+        .arg("https://github.com/dathere/qsv/raw/master/resources/test/boston311-100.csv.sz");
 
     let got: String = wrk.stdout(&mut cmd);
 

@@ -169,7 +169,7 @@
         <Icon Id='ProductICO' SourceFile='contrib\wix\dathere_icon.ico'/>
         <Property Id='ARPPRODUCTICON' Value='ProductICO' />
 
-        <Property Id='ARPHELPLINK' Value='https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit'/>
+        <Property Id='ARPHELPLINK' Value='https://github.com/dathere/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit'/>
         
         <UI>
             <UIRef Id='WixUI_FeatureTree'/>

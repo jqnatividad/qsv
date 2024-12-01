@@ -460,7 +460,7 @@ BEGIN {
     csv_indexed = qsv_autoindex();
 
     us_states_lookup_headers = qsv_register_lookup("us_states", 
-      "https://raw.githubusercontent.com/jqnatividad/qsv/master/resources/test/us-states-lookup.csv", 100)
+      "https://raw.githubusercontent.com/dathere/qsv/master/resources/test/us-states-lookup.csv", 100)
 
     -- note how we use the qsv_log function to log to the qsv log file
     qsv_log("debug", " _INDEX:", _INDEX, " _ROWCOUNT:", _ROWCOUNT, " csv_indexed:", csv_indexed)

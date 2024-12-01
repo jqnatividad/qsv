@@ -27,7 +27,7 @@ Examples:
     qsv exclude id records.csv id previously-processed.csv | qsv sort |
        qsv --sorted dedup > new-sorted-deduped-records.csv
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_exclude.rs.
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_exclude.rs.
 
 Usage:
     qsv exclude [options] <columns1> <input1> <columns2> <input2>

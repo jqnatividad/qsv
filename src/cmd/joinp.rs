@@ -12,7 +12,7 @@ However, joinp doesn't have an --ignore-case option.
 
 Returns the shape of the join result (number of rows, number of columns) to stderr.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_joinp.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_joinp.rs.
 
 Usage:
     qsv joinp [options] <columns1> <input1> <columns2> <input2>

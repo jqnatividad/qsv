@@ -224,7 +224,7 @@ $ qsv apply calcconv --formatstr '10% of abs(sin(pi)) horsepower to watts' -c wa
 And use very large numbers:
 $ qsv apply calcconv --formatstr '{col1} Billion Trillion * {col2} quadrillion vigintillion' -c num_atoms file.csv 
 
-For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_apply.rs.
+For more extensive examples, see https://github.com/dathere/qsv/blob/master/tests/test_apply.rs.
 
 Usage:
 qsv apply operations <operations> [options] <column> [<input>]

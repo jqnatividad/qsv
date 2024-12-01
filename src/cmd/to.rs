@@ -131,7 +131,7 @@ For all other conversions you can output the datapackage created by specifying `
 
   $ qsv to xlsx datapackage.xlsx --stats --print-package file1.csv file2.csv
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_to.rs.
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_to.rs.
 
 Usage:
     qsv to postgres [options] <postgres> [<input>...]

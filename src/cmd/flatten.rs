@@ -7,7 +7,7 @@ can be changed with the --separator flag.
 There is also a condensed view (-c or --condense) that will shorten the
 contents of each field to provide a summary view.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_flatten.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_flatten.rs.
 
 Usage:
     qsv flatten [options] [<input>]

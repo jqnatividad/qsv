@@ -22,7 +22,7 @@ Concatenating by rows can be done in two ways:
    empty field is written. If a column is missing in the header, an empty field
    is written for all rows.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_cat.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_cat.rs.
 
 Usage:
     qsv cat rows    [options] [<input>...]
@@ -189,7 +189,7 @@ impl Args {
     }
 
     // this algorithm is largely inspired by https://github.com/vi/csvcatrow by @vi
-    // https://github.com/jqnatividad/qsv/issues/527
+    // https://github.com/dathere/qsv/issues/527
     fn cat_rowskey(&self) -> CliResult<()> {
         // ahash is a faster hasher than the default one used by IndexSet and IndexMap
         type AhashIndexSet<T> = IndexSet<T, ahash::RandomState>;

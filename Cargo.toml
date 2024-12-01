@@ -3,9 +3,9 @@ name = "qsv"
 version = "0.138.0" #:version
 authors = ["Joel Natividad <joel@datHere.com>"]
 description = "A Blazing-Fast Data-wrangling toolkit."
-documentation = "https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
+documentation = "https://github.com/dathere/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
 homepage = "https://qsv.dathere.com"
-repository = "https://github.com/jqnatividad/qsv"
+repository = "https://github.com/dathere/qsv"
 readme = "README.md"
 keywords = ["csv", "geocode", "data-engineering", "etl", "opendata"]
 categories = ["command-line-utilities", "parser-implementations"]
@@ -290,9 +290,9 @@ serial_test = { version = "3.2", features = ["file_locks"] }
 # the csv crate underpins a lot of qsv's functionality, so every perf tweak helps
 # the main feature of this csv fork is accelerated UTF-8 validation using the simdutf8 crate
 # non-allocating ByteRecord trim and a non-allocating StringRecord trim_ascii
-csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized-non-allocating-byterecord-trim" }
-csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized-non-allocating-byterecord-trim" }
-csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized-non-allocating-byterecord-trim" }
+csv       = { git = "https://github.com/dathere/rust-csv", branch = "qsv-optimized-non-allocating-byterecord-trim" }
+csv-core  = { git = "https://github.com/dathere/rust-csv", branch = "qsv-optimized-non-allocating-byterecord-trim" }
+csv-index = { git = "https://github.com/dathere/rust-csv", branch = "qsv-optimized-non-allocating-byterecord-trim" }
 
 # use cached with bumped redis using 0.27
 cached = { git = "https://github.com/jaemk/cached", rev = "bbf457e" }
@@ -300,8 +300,8 @@ cached = { git = "https://github.com/jaemk/cached", rev = "bbf457e" }
 # use calamine with unreleased fixes
 calamine = { git = "https://github.com/tafia/calamine", rev = "cf86fa7" }
 
-# use our fork until PR is merged removing unneeded arboard features
-csvlens = { git = "https://github.com/jqnatividad/csvlens", branch = "arboard-remove-unneeded-image-data-feature" }
+# use upstream removing unneeded arboard features
+csvlens = { git = "https://github.com/YS-L/csvlens", rev = "f4e39cf" }
 
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
@@ -314,12 +314,12 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
 
 # use our patched fork of sled to get rid of unmaintained instant
-sled = { git = "https://github.com/jqnatividad/sled", branch = "v0.34.7-bumped-parking_lot_to_0.12" }
+sled = { git = "https://github.com/dathere/sled", branch = "v0.34.7-bumped-parking_lot_to_0.12" }
 
 # use our fork of strum with bumped phf dependency. They're holding back as they have a conservative
 # MSRV policy, while qsv has an aggressive MSRV policy to always require Rust stable
-strum        = { git = "https://github.com/jqnatividad/strum", branch = "bump-phf-to-0.11" }
-strum_macros = { git = "https://github.com/jqnatividad/strum", branch = "bump-phf-to-0.11" }
+strum        = { git = "https://github.com/dathere/strum", branch = "bump-phf-to-0.11" }
+strum_macros = { git = "https://github.com/dathere/strum", branch = "bump-phf-to-0.11" }
 
 # Polars has a much higher release tempo for its Python bindings compared
 # to its underlying Rust library. See https://github.com/pola-rs/polars/releases
