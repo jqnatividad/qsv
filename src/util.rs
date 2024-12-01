@@ -886,9 +886,7 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
 
     if latest_release_sv > curr_version_sv {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.");
-        eprintln!(
-            "Release notes: https://github.com/dathere/qsv/releases/tag/{latest_release}\n"
-        );
+        eprintln!("Release notes: https://github.com/dathere/qsv/releases/tag/{latest_release}\n");
         if QSV_KIND.starts_with("prebuilt") && !check_only {
             match self_update::backends::github::Update::configure()
                 .repo_owner("dathere")
