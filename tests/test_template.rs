@@ -766,8 +766,7 @@ fn template_to_bool_filter() {
     wrk.assert_success(&mut cmd);
 
     let got: String = wrk.stdout(&mut cmd);
-    let expected =
-        r#"true
+    let expected = r#"true
 true
 true
 false
