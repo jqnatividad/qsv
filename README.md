@@ -82,7 +82,7 @@
 | [sort](/src/cmd/sort.rs#L2)<br>🚀🤯👆 | Sorts CSV data in alphabetical (with case-insensitive option), numerical, reverse, unique or random (with optional seed) order (See also `extsort` & `sortcheck` commands).  |
 | [sortcheck](/src/cmd/sortcheck.rs#L2)<br>📇👆 | Check if a CSV is sorted. With the --json options, also retrieve record count, sort breaks & duplicate count. |
 | [split](/src/cmd/split.rs#L2)<br>📇🏎️ | Split one CSV file into many CSV files. It can split by number of rows, number of chunks or file size. Uses multithreading to go faster if an index is present when splitting by rows or chunks. |
-| [sqlp](/src/cmd/sqlp.rs#L2)<br>✨📇🚀🐻‍❄️🗄️🪄 | Run [Polars](https://pola.rs) SQL queries against several CSVs - converting queries to blazing-fast [LazyFrame](https://docs.pola.rs/user-guide/lazy/using/) expressions, processing larger than memory CSV files. Query results can be saved in CSV, JSON, JSONL, Parquet, Apache Arrow IPC and Apache Avro formats. |
+| [sqlp](/src/cmd/sqlp.rs#L2)<br>✨📇🚀🐻‍❄️🗄️🪄 | Run [Polars](https://pola.rs) SQL queries against several CSVs - converting queries to blazing-fast [LazyFrame](https://docs.pola.rs/user-guide/lazy/using/) expressions, processing larger than memory CSV files. Query results can be saved in CSV, JSON, JSONL, Parquet, Apache Arrow IPC and Apache Avro formats. Supports automatic decompression of gzip, zstd and zlib compressed input files using the `read_csv()` table function. |
 | [stats](/src/cmd/stats.rs#L2)<br>📇🤯🏎️👆🪄 | Compute [summary statistics](https://en.wikipedia.org/wiki/Summary_statistics) (sum, min/max/range, sort order, min/max/sum/avg length, mean, standard error of the mean (SEM), stddev, variance, Coefficient of Variation (CV), nullcount, max precision, sparsity, quartiles, Interquartile Range (IQR), lower/upper fences, skewness, median, mode/s, antimode/s & cardinality) & make GUARANTEED data type inferences (Null, String, Float, Integer, Date, DateTime, Boolean) for each column in a CSV ([more info](https://github.com/jqnatividad/qsv/wiki/Supplemental#stats-command-output-explanation)).<br>Uses multithreading to go faster if an index is present (with an index, can compile "streaming" stats on NYC's 311 data (15gb, 28m rows) in less than 7.3 seconds!). |
 | [table](/src/cmd/table.rs#L2)<br>🤯 | Show aligned output of a CSV using [elastic tabstops](https://github.com/BurntSushi/tabwriter). To interactively view a CSV, use the `lens` command. |
 | [template](/src/cmd/template.rs#L2)<br>📇🚀🔣 | Renders a template using CSV data with the [MiniJinja](https://docs.rs/minijinja/latest/minijinja/) template engine ([Example](https://github.com/jqnatividad/qsv/blob/4645ec07b5befe3b0c0e49bf0f547315d0d7514b/src/cmd/template.rs#L18-L44)). |
@@ -333,7 +333,7 @@ For both directory and `.infile-list` input, snappy compressed files with a `.sz
 
 Finally, if its just a regular file, it will be treated as a regular input file.
 
-### Snappy Compression/Decompression
+### Automatic Compression/Decompression
 
 qsv supports _automatic compression/decompression_ using the [Snappy frame format](https://github.com/google/snappy/blob/main/framing_format.txt). Snappy was chosen instead of more popular compression formats like gzip because it was designed for [high-performance streaming compression & decompression](https://github.com/google/snappy/tree/main/docs#readme) (up to 2.58 gb/sec compression, 0.89 gb/sec decompression).
 
@@ -351,6 +351,8 @@ The `snappy` command can be used to compress/decompress ANY file, not just CSV/T
 Using the `snappy` command, we can compress NYC's 311 data (15gb, 28m rows) to 4.95 gb in _5.77 seconds_ with the multithreaded `compress` subcommand - _2.58 gb/sec_ with a 0.33 (3.01:1) compression ratio.  With `snappy decompress`, we can roundtrip decompress the same file in _16.71 seconds_ - _0.89 gb/sec_.
 
 Compare that to [zip 3.0](https://infozip.sourceforge.net/Zip.html), which compressed the same file to 2.9 gb in _248.3 seconds on the same machine - 43x slower at 0.06 gb/sec_ with a 0.19 (5.17:1) compression ratio - for just an additional 14% (2.45 gb) of saved space. zip also took 4.3x longer to roundtrip decompress the same file in _72 seconds_ - _0.20 gb/sec_.
+
+> **_NOTE:_** The `sqlp` command also supports automatic decompression of gzip, zstd and zlib compressed input files using the `read_csv()` table function. It also supports automatic compression of output files when using the Arrow, Avro and Parquet output formats (using the `--format` and `--compression` options).
 
 ## RFC 4180 CSV Standard
 
