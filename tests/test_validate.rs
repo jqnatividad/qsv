@@ -362,7 +362,7 @@ fn validate_adur_public_toilets_dataset_with_json_schema_url() {
 
     // run validate command
     let mut cmd = wrk.command("validate");
-    cmd.arg("data.csv").arg("https://raw.githubusercontent.com/jqnatividad/qsv/master/resources/test/public-toilets-schema.json");
+    cmd.arg("data.csv").arg("https://raw.githubusercontent.com/dathere/qsv/master/resources/test/public-toilets-schema.json");
 
     wrk.output(&mut cmd);
 
