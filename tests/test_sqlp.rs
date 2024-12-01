@@ -1146,6 +1146,32 @@ fn sqlp_boston311_cte() {
 }
 
 #[test]
+fn sqlp_boston311_cte_gz() {
+    let wrk = Workdir::new("sqlp_boston311_cte_gz");
+    let test_file = wrk.load_test_file("boston311-100.csv.gz");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file).arg(
+        r#"with boston311_roxbury as (select * from read_csv('boston311-100.csv.gz') where neighborhood = 'Roxbury')
+    select ward,count(*) as cnt from boston311_roxbury group by ward order by cnt desc, ward asc;"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["ward", "cnt"],
+        svec!["Ward 11", "2"],
+        svec!["Ward 13", "2"],
+        svec!["Ward 8", "2"],
+        svec!["14", "1"],
+        svec!["Ward 12", "1"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sqlp_boston311_case_expression() {
     let wrk = Workdir::new("sqlp_boston311_case_expression");
     let test_file = wrk.load_test_file("boston311-100.csv");
@@ -1159,6 +1185,46 @@ fn sqlp_boston311_case_expression() {
               ELSE 'N/A'
            END as graffiti_related
            from _t_1
+           where case_status = 'Open'"#,
+    );
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["case_enquiry_id", "graffiti_related"],
+        svec!["101004143000", "No"],
+        svec!["101004155594", "No"],
+        svec!["101004154423", "No"],
+        svec!["101004141848", "No"],
+        svec!["101004113313", "No"],
+        svec!["101004113751", "Yes"],
+        svec!["101004113902", "Yes"],
+        svec!["101004113473", "No"],
+        svec!["101004113604", "No"],
+        svec!["101004114154", "Yes"],
+        svec!["101004114383", "No"],
+        svec!["101004114795", "Yes"],
+        svec!["101004118346", "Yes"],
+        svec!["101004115302", "No"],
+        svec!["101004115066", "No"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_boston311_case_expression_zlib() {
+    let wrk = Workdir::new("sqlp_boston311_case_expression_zlib");
+    let test_file = wrk.load_test_file("boston311-100.csv.zlib");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file).arg(
+        r#"SELECT case_enquiry_id, 
+           CASE closed_dt is null and case_title ~* 'graffiti' 
+              WHEN True THEN 'Yes' 
+              WHEN False THEN 'No' 
+              ELSE 'N/A'
+           END as graffiti_related
+           from read_csv('boston311-100.csv.zlib')
            where case_status = 'Open'"#,
     );
 
@@ -1242,6 +1308,47 @@ fn sqlp_boston311_case() {
               ELSE 'Something else'
            END as topic
            from _t_1
+           where case_status = 'Open'"#,
+    );
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["case_enquiry_id", "topic"],
+        svec!["101004143000", "Something else"],
+        svec!["101004155594", "Something else"],
+        svec!["101004154423", "Sidewalk"],
+        svec!["101004141848", "Something else"],
+        svec!["101004113313", "Something else"],
+        svec!["101004113751", "Graffitti"],
+        svec!["101004113902", "Graffitti"],
+        svec!["101004113473", "Sidewalk"],
+        svec!["101004113604", "Something else"],
+        svec!["101004114154", "Graffitti"],
+        svec!["101004114383", "Something else"],
+        svec!["101004114795", "Graffitti"],
+        svec!["101004118346", "Graffitti"],
+        svec!["101004115302", "Vehicle"],
+        svec!["101004115066", "Sidewalk"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_boston311_case_zstd() {
+    let wrk = Workdir::new("sqlp_boston311_case_zst");
+    let test_file = wrk.load_test_file("boston311-100.csv.zst");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file).arg(
+        r#"SELECT case_enquiry_id, 
+           CASE 
+              WHEN case_title ~* 'graffiti' THEN 'Graffitti' 
+              WHEN case_title ~* 'vehicle' THEN 'Vehicle'
+              WHEN case_title ~* 'sidewalk' THEN 'Sidewalk'
+              ELSE 'Something else'
+           END as topic
+           from read_csv('boston311-100.csv.zst')
            where case_status = 'Open'"#,
     );
 
