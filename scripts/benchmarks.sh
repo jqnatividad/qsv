@@ -22,7 +22,7 @@
 # so it be can run on hardware and workloads that reflect your requirements/environment.
 #
 # Make sure you're using a release-optimized `qsv`.
-# If you can't use the prebuilt binaries at https://github.com/jqnatividad/qsv/releases/latest,
+# If you can't use the prebuilt binaries at https://github.com/dathere/qsv/releases/latest,
 # build it to have at least the apply, geocode, luau, to and polars features enabled:
 # i.e. `cargo build --release --locked -F feature_capable,apply,geocode,luau,to,polars` or
 # `cargo install --locked qsv -F feature_capable,apply,geocode,luau,to,polars`
@@ -56,7 +56,7 @@ qsv_bin=qsv
 # we use several optional features when dogfooding qsv (apply, luau & to)
 # and the user may be benchmarking a qsv binary variant that doesn't have these features enabled
 qsv_benchmarker_bin=qsv
-benchmark_data_url=https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z
+benchmark_data_url=https://raw.githubusercontent.com/wiki/dathere/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z
 # where to download the benchmark data compressed file - this could be a zip or 7z file
 datazip=NYC_311_SR_2010-2020-sample-1M.7z
 # where to store the benchmark data
@@ -359,7 +359,7 @@ echo ""
 
 if [ ! -r communityboards.csv ]; then
   echo "> Downloading community board data..."
-  curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/communityboards.csv >communityboards.csv
+  curl -sS https://raw.githubusercontent.com/wiki/dathere/qsv/files/communityboards.csv >communityboards.csv
   echo ""
 fi
 
