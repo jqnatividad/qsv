@@ -11,7 +11,7 @@ city in the world. So grab the 124MB, 2.7M row CSV file and start examining it:
 
 ```
 # there are no headers in the original repo, so let's download a prepared CSV with headers
-$ curl -LO https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/wcp.zip
+$ curl -LO https://raw.githubusercontent.com/wiki/dathere/qsv/files/wcp.zip
 $ unzip wcp.zip
 $ qsv headers wcp.csv
 1   Country
