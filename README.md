@@ -352,7 +352,7 @@ Using the `snappy` command, we can compress NYC's 311 data (15gb, 28m rows) to 4
 
 Compare that to [zip 3.0](https://infozip.sourceforge.net/Zip.html), which compressed the same file to 2.9 gb in _248.3 seconds on the same machine - 43x slower at 0.06 gb/sec_ with a 0.19 (5.17:1) compression ratio - for just an additional 14% (2.45 gb) of saved space. zip also took 4.3x longer to roundtrip decompress the same file in _72 seconds_ - _0.20 gb/sec_.
 
-> **_NOTE:_** The `sqlp` command also supports automatic decompression of gzip, zstd and zlib compressed input files using the `read_csv()` table function. It also supports automatic compression of output files when using the Arrow, Avro and Parquet output formats (using the `--format` and `--compression` options).
+> **_NOTE:_** In addition to `snappy` support, the `sqlp` command also supports automatic decompression of gzip, zstd and zlib compressed input files using the [`read_csv()` table function](https://github.com/jqnatividad/qsv/blob/aa3b20f8ba3ae41b02a3c5d445092571f064b90d/src/cmd/sqlp.rs#L120-L130). It also supports automatic compression of output files when using the Arrow, Avro and Parquet output formats (using the [`--format`](https://github.com/jqnatividad/qsv/blob/aa3b20f8ba3ae41b02a3c5d445092571f064b90d/src/cmd/sqlp.rs#L178-L185) and [`--compression`](https://github.com/jqnatividad/qsv/blob/aa3b20f8ba3ae41b02a3c5d445092571f064b90d/src/cmd/sqlp.rs#L246-L261) options).
 
 ## RFC 4180 CSV Standard
 
