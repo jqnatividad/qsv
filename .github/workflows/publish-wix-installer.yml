@@ -56,7 +56,7 @@ jobs:
         run: |
           $LATEST_TAG=$(git describe --tags --abbrev=0)
           Write-Output "Latest tag: $LATEST_TAG"
-          $url="https://github.com/jqnatividad/qsv/releases/latest/download/qsv-${LATEST_TAG}-x86_64-pc-windows-msvc.zip"
+          $url="https://github.com/dathere/qsv/releases/latest/download/qsv-${LATEST_TAG}-x86_64-pc-windows-msvc.zip"
           Write-Output "URL: $url"
           Invoke-WebRequest -Uri $url -OutFile 'release.zip'
 
