@@ -16,7 +16,7 @@ This command is intended to provide a means to sample from a CSV data set that
 is too big to fit into memory (for example, for use with commands like
 'qsv stats' with the '--everything' option). 
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sample.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_sample.rs.
 
 Usage:
     qsv sample [options] <sample-size> [<input>]

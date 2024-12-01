@@ -139,7 +139,7 @@ CSVs on the filesystem, a URL, datHere's lookup repo or CKAN instances.
 Detailed descriptions of these helpers can be found in the "setup_helpers" section at
 the bottom of this file.
 
-For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
+For more detailed examples, see https://github.com/dathere/qsv/blob/master/tests/test_luau.rs.
 
 Usage:
     qsv luau map [options] -n <main-script> [<input>]

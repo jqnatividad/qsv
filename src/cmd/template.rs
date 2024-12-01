@@ -51,8 +51,8 @@ template.tpl
 
 qsv template --template-file template.tpl data.csv
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_template.rs.
-For a relatively complex MiniJinja template, see https://github.com/jqnatividad/qsv/blob/master/scripts/template.tpl
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_template.rs.
+For a relatively complex MiniJinja template, see https://github.com/dathere/qsv/blob/master/scripts/template.tpl
 
 Usage:
     qsv template [options] [--template <str> | --template-file <file>] [<input>] [<outdir> | --output <file>]

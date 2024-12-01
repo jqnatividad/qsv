@@ -8,7 +8,7 @@ Joins are always done by ignoring leading and trailing whitespace. By default,
 joins are done case sensitively, but this can be disabled with the --ignore-case
 flag.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_join.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_join.rs.
 
 Usage:
     qsv join [options] <columns1> <input1> <columns2> <input2>

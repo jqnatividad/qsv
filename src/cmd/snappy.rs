@@ -22,7 +22,7 @@ single-threaded compression.
 
 Also, this command is not specific to CSV data, it can compress/decompress ANY file.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_snappy.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_snappy.rs.
 
 Usage:
     qsv snappy compress [options] [<input>]

@@ -132,7 +132,7 @@ Note that you can pass as many key-value pairs by using --http-header option rep
 
 $ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" -H "X-Api-Secret:ABC123XYZ" -H "Accept-Language: fr-FR"
 
-For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_fetch.rs.
+For more extensive examples, see https://github.com/dathere/qsv/blob/master/tests/test_fetch.rs.
 
 Usage:
     qsv fetch [<url-column> | --url-template <template>] [--jaq <selector> | --jaqfile <file>] [--http-header <k:v>...] [options] [<input>]

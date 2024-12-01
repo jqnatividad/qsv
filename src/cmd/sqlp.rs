@@ -147,7 +147,7 @@ Example queries:
   # explain query plan
    qsv sqlp data.csv 'explain select * from data where col1 > 10 order by col2 desc limit 20'
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sqlp.rs.
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_sqlp.rs.
 
 Usage:
     qsv sqlp [options] <input>... <sql>

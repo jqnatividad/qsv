@@ -37,7 +37,7 @@ STATS_MODE "none" NOTES:
     This is useful when you want to apply limits only to columns with a large number
     of unique items and not to columns with a small number of unique items.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_frequency.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_frequency.rs.
 
 Usage:
     qsv frequency [options] [<input>]

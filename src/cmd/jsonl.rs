@@ -8,7 +8,7 @@ fields from the input.
 Also, it will fail if the JSON documents are not consistent with one another,
 as the first JSON line will be used to infer the headers of the CSV output.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_jsonl.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_jsonl.rs.
 
 Usage:
     qsv jsonl [options] [<input>]

@@ -11,7 +11,7 @@ backslash or by wrapping the replacement string into single quotes:
 Returns exitcode 0 when replacements are done, returning number of replacements to stderr.
 Returns exitcode 1 when no replacements are done, unless the '--not-one' flag is used.
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_replace.rs.
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_replace.rs.
 
 Usage:
     qsv replace [options] <pattern> <replacement> [<input>]

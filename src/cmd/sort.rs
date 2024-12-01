@@ -9,7 +9,7 @@ Note that this requires reading all of the CSV data into memory. If
 you need to sort a large file that may not fit into memory, use the
 extsort command instead.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sort.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_sort.rs.
 
 Usage:
     qsv sort [options] [<input>]

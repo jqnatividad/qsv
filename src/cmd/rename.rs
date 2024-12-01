@@ -17,7 +17,7 @@ CSV unless "_all_generic" is used.
   Use column names that contains commas and conflict with the separator:
     $ qsv rename '"Date - Opening","Date - Actual Closing"'
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_rename.rs.
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_rename.rs.
 
 Usage:
     qsv rename [options] [--] <headers> [<input>]

@@ -71,7 +71,7 @@ We may run the following to select the JSON file and convert the nested array to
 
 qsv prompt -F json | qsv json --jaq .data
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_json.rs.
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_json.rs.
 
 Usage:
     qsv json [options] [<input>]

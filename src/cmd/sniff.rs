@@ -24,7 +24,7 @@ instead as they scan the entire file. However, they only work on local files and
 CSVs, unlike `sniff` which can work with remote files, various CSV dialects and is very fast
 regardless of file size.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sniff.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_sniff.rs.
 
 Usage:
     qsv sniff [options] [<input>]
