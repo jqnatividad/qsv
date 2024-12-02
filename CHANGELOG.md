@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2024-12-01
+## [1.0.0] - 2024-12-02
 
 ## qsv v1.0.0 is here! 🎉
 After over 3 years of development, nearly 200 releases, and 11,000+ commits, qsv has finally reached v1.0.0!
@@ -31,12 +31,13 @@ To mark this major milestone, this larger than usual release includes major perf
 * added 📚 `lookup support` legend https://github.com/dathere/qsv/commit/b46de73f57ba35ee08581a4f20809a5f581d461b
 
 ### Changed
-* move qsv from personal Github repo to dathere GitHub org https://github.com/dathere/qsv/pull/2317
+* move qsv from personal Github repo to datHere GitHub org https://github.com/dathere/qsv/pull/2317
 * `template`: parallelized template rendering for significant speedups https://github.com/dathere/qsv/pull/2273
 * simplify input format check https://github.com/dathere/qsv/pull/2309
 * bump embedded `luau` from 0.650 to 0.653 https://github.com/dathere/qsv/commit/986a1d3b4e60f15c25ef8a157c7e9e205ae8e7a9
 * deps: Switch back to `simple-home-dir` from `simple-expand-tilde` https://github.com/dathere/qsv/pull/2319
 * deps: Add minijinja contrib https://github.com/dathere/qsv/pull/2276
+* deps: bump pyo3 down to 0.21.2 because polars-mem-engine is not compatible with pyo3 0.23.x yet https://github.com/dathere/qsv/commit/7f9fc8a6cfe94a104d33e895ecae11e2f40274ee
 * build(deps): bump base62 from 2.0.2 to 2.0.3 by @dependabot in https://github.com/dathere/qsv/pull/2281
 * build(deps): bump bytemuck from 1.19.0 to 1.20.0 by @dependabot in https://github.com/dathere/qsv/pull/2299
 * build(deps): bump bytes from 1.8.0 to 1.9.0 by @dependabot in https://github.com/dathere/qsv/pull/2314
@@ -47,8 +48,6 @@ To mark this major milestone, this larger than usual release includes major perf
 * build(deps): bump itoa from 1.0.13 to 1.0.14 by @dependabot in https://github.com/dathere/qsv/pull/2311
 * build(deps): bump mlua from 0.10.0 to 0.10.1 by @dependabot in https://github.com/dathere/qsv/pull/2280
 * build(deps): bump mlua from 0.10.1 to 0.10.2 by @dependabot in https://github.com/dathere/qsv/pull/2316
-* build(deps): bump pyo3 from 0.23.0 to 0.23.1 by @dependabot in https://github.com/dathere/qsv/pull/2293
-* build(deps): bump pyo3 from 0.23.1 to 0.23.2 by @dependabot in https://github.com/dathere/qsv/pull/2312
 * build(deps): bump serial_test from 3.1.1 to 3.2.0 by @dependabot in https://github.com/dathere/qsv/pull/2279
 * build(deps): bump minijinja from 2.4.0 to 2.5.0 by @dependabot in https://github.com/dathere/qsv/pull/2284
 * build(deps): bump minijinja-contrib from 2.3.1 to 2.5.0 by @dependabot in https://github.com/dathere/qsv/pull/2283
