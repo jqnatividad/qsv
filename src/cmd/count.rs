@@ -18,7 +18,7 @@ It has three modes of operation:
 Note that the count will not include the header row (unless --no-headers is
 given).
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_count.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_count.rs.
 
 Usage:
     qsv count [options] [<input>]

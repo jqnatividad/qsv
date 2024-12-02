@@ -92,6 +92,7 @@ mod clitypes;
 mod cmd;
 mod config;
 mod index;
+mod lookup;
 mod odhtcache;
 mod select;
 mod util;
@@ -120,6 +121,8 @@ struct Args {
 }
 
 fn main() -> QsvExitCode {
+    util::qsv_custom_panic();
+
     let now = Instant::now();
     let (qsv_args, _) = match util::init_logger() {
         Ok((qsv_args, logger_handle)) => (qsv_args, logger_handle),

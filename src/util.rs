@@ -5,7 +5,7 @@ use std::os::unix::process::ExitStatusExt;
 use std::{
     cmp::min,
     env, fs,
-    fs::File,
+    fs::{create_dir_all, File},
     io::{BufRead, BufReader, BufWriter, Read, Write},
     path::{Path, PathBuf},
     str,
@@ -16,6 +16,7 @@ use std::{
 use csv::ByteRecord;
 use docopt::Docopt;
 use filetime::FileTime;
+use human_panic::setup_panic;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 use indicatif::{HumanCount, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{info, log_enabled};
@@ -58,6 +59,8 @@ pub enum StatsMode {
     Schema,
     Frequency,
     FrequencyForceStats,
+    #[cfg(feature = "polars")]
+    PolarsSchema,
     None,
 }
 
@@ -102,10 +105,19 @@ const QSV_POLARS_REV: &str = match option_env!("QSV_POLARS_REV") {
     None => "",
 };
 
+pub fn qsv_custom_panic() {
+    setup_panic!(
+        human_panic::Metadata::new(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+            .authors("datHere qsv maintainers")
+            .homepage("https://qsv.dathere.com")
+            .support("- Open a GitHub issue at https://github.com/dathere/qsv/issues")
+    );
+}
+
 fn default_user_agent() -> String {
     let unknown_command = "Unknown".to_string();
     let current_command = CURRENT_COMMAND.get().unwrap_or(&unknown_command);
-    format!("{CARGO_BIN_NAME}/{CARGO_PKG_VERSION} ({TARGET}; {current_command}; {QSV_KIND}; https://github.com/jqnatividad/qsv)")
+    format!("{CARGO_BIN_NAME}/{CARGO_PKG_VERSION} ({TARGET}; {current_command}; {QSV_KIND}; https://github.com/dathere/qsv)")
 }
 
 pub fn max_jobs() -> usize {
@@ -122,7 +134,8 @@ pub fn max_jobs() -> usize {
 }
 
 /// Given a desired number of cores to use
-/// returns number of cores to actually use.
+/// returns number of cores to actually use and set
+/// rayon global thread pool size accordingly.
 /// If desired is None, zero, or greater than available cores,
 /// returns max_jobs, which is equal to number of available cores
 /// If desired is Some and less than available cores,
@@ -136,8 +149,14 @@ pub fn njobs(flag_jobs: Option<usize>) -> usize {
             jobs
         }
     });
-    env::set_var("RAYON_NUM_THREADS", itoa::Buffer::new().format(jobs_to_use));
-    // log::info!("Using {jobs_to_use} jobs...");
+    if let Err(e) = rayon::ThreadPoolBuilder::new()
+        .num_threads(jobs_to_use)
+        .build_global()
+    {
+        log::warn!("Failed to set global thread pool size to {jobs_to_use}: {e}");
+    } else {
+        log::info!("Using {jobs_to_use} jobs...");
+    }
     jobs_to_use
 }
 
@@ -206,7 +225,7 @@ pub fn version() -> String {
         match luau.load("return _VERSION").eval() {
             Ok(version_info) => {
                 if let mlua::Value::String(luaustring_val) = version_info {
-                    let string_val = luaustring_val.to_str().unwrap_or("Luau - invalid version");
+                    let string_val = luaustring_val.to_string_lossy();
                     if string_val == "Luau" {
                         enabled_features.push_str("Luau - version not specified;");
                     } else {
@@ -370,7 +389,7 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
 
         #[cfg(not(feature = "polars"))]
         let count_opt = ROW_COUNT.get_or_init(|| {
-            if let Ok(mut rdr) = conf.reader() {
+            if let Ok(mut rdr) = conf.clone().skip_format_check(true).reader() {
                 let mut count = 0_u64;
                 let mut _record = csv::ByteRecord::new();
                 #[allow(clippy::used_underscore_binding)]
@@ -400,7 +419,7 @@ pub fn count_rows_regular(conf: &Config) -> Result<u64, CliError> {
     } else {
         // index does not exist or is stale,
         let count_opt = ROW_COUNT.get_or_init(|| {
-            if let Ok(mut rdr) = conf.reader() {
+            if let Ok(mut rdr) = conf.clone().skip_format_check(true).reader() {
                 let mut count = 0_u64;
                 let mut _record = csv::ByteRecord::new();
                 #[allow(clippy::used_underscore_binding)]
@@ -715,30 +734,6 @@ pub fn range(start: Idx, end: Idx, len: Idx, index: Idx) -> Result<(usize, usize
     }
 }
 
-/// Create a directory recursively, avoiding the race conditions fixed by
-/// https://github.com/rust-lang/rust/pull/39799.
-#[cfg(any(feature = "feature_capable", feature = "lite"))]
-fn create_dir_all_threadsafe(path: &Path) -> std::io::Result<()> {
-    use std::thread;
-
-    // Try 20 times. This shouldn't theoretically need to be any larger
-    // than the number of nested directories we need to create.
-    for _ in 0..20 {
-        match fs::create_dir_all(path) {
-            // This happens if a directory in `path` doesn't exist when we
-            // test for it, and another thread creates it before we can.
-            Err(ref err) if err.kind() == std::io::ErrorKind::AlreadyExists => {},
-            other => return other,
-        }
-        // We probably don't need to sleep at all, because the intermediate
-        // directory is already created.  But let's attempt to back off a
-        // bit and let the other thread finish.
-        thread::sleep(std::time::Duration::from_millis(25));
-    }
-    // Try one last time, returning whatever happens.
-    fs::create_dir_all(path)
-}
-
 /// Represents a filename template of the form `"{}.csv"`, where `"{}"` is
 /// the place to insert the part of the filename generated by `qsv`.
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
@@ -771,10 +766,7 @@ impl FilenameTemplate {
         let filename = self.filename(unique_value);
         let full_path = path.as_ref().join(filename);
         if let Some(parent) = full_path.parent() {
-            // We may be called concurrently, especially by parallel `qsv
-            // split`, so be careful to avoid the `create_dir_all` race
-            // condition.
-            create_dir_all_threadsafe(parent)?;
+            create_dir_all(parent)?;
         }
         let spath = Some(full_path.display().to_string());
         Config::new(spath.as_ref()).writer()
@@ -868,7 +860,7 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
     let curr_version = cargo_crate_version!();
     let releases = if let Ok(releases_list) =
         self_update::backends::github::ReleaseList::configure()
-            .repo_owner("jqnatividad")
+            .repo_owner("dathere")
             .repo_name("qsv")
             .build()
     {
@@ -894,12 +886,10 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
 
     if latest_release_sv > curr_version_sv {
         eprintln!("Update {latest_release} available. Current version is {curr_version}.");
-        eprintln!(
-            "Release notes: https://github.com/jqnatividad/qsv/releases/tag/{latest_release}\n"
-        );
+        eprintln!("Release notes: https://github.com/dathere/qsv/releases/tag/{latest_release}\n");
         if QSV_KIND.starts_with("prebuilt") && !check_only {
             match self_update::backends::github::Update::configure()
-                .repo_owner("jqnatividad")
+                .repo_owner("dathere")
                 .repo_name("qsv")
                 .bin_name(&bin_name)
                 .show_download_progress(true)
@@ -933,7 +923,7 @@ pub fn qsv_check_for_update(check_only: bool, no_confirm: bool) -> Result<bool, 
             winfo!(
                 r#"This qsv was {QSV_KIND}. self-update does not work for manually {QSV_KIND} binaries.
 If you wish to update to the latest version of qsv, manually install/compile from source.
-Self-update only works with prebuilt binaries released on GitHub https://github.com/jqnatividad/qsv/releases/latest"#
+Self-update only works with prebuilt binaries released on GitHub https://github.com/dathere/qsv/releases/latest"#
             );
         }
     } else {
@@ -1248,7 +1238,7 @@ impl ColumnNameParser {
     }
 
     fn is_end_of_field(&self) -> bool {
-        self.cur().map_or(true, |c| c == ',')
+        self.cur().is_none_or(|c| c == ',')
     }
 
     fn parse_quoted_name(&mut self) -> Result<String, String> {
@@ -1296,8 +1286,7 @@ pub fn round_num(dec_f64: f64, places: u32) -> String {
 
     // if places is the sentinel value 9999, we don't round, just return the number as is
     if places == 9999 {
-        let mut buffer = ryu::Buffer::new();
-        return buffer.format(dec_f64).to_owned();
+        return ryu::Buffer::new().format(dec_f64).to_owned();
     }
 
     // use from_f64_retain, so we have all the excess bits before rounding with
@@ -1399,6 +1388,7 @@ pub fn load_dotenv() -> CliResult<()> {
     Ok(())
 }
 
+#[inline]
 pub fn get_envvar_flag(key: &str) -> bool {
     if let Ok(tf_val) = std::env::var(key) {
         let tf_val = tf_val.to_lowercase();
@@ -1940,6 +1930,8 @@ pub fn get_stats_records(
     args: &SchemaArgs,
     mode: StatsMode,
 ) -> CliResult<(ByteRecord, Vec<StatsData>)> {
+    const DATASET_STATS_PREFIX: &str = r#"{"field":"qsv__"#;
+
     if mode == StatsMode::None
         || args.arg_input.is_none()
         || args.arg_input.as_ref() == Some(&"-".to_string())
@@ -1949,13 +1941,13 @@ pub fn get_stats_records(
         return Ok((ByteRecord::new(), Vec::new()));
     };
 
-    let canonical_input_path = Path::new(&args.arg_input.clone().unwrap()).canonicalize()?;
+    let canonical_input_path = Path::new(args.arg_input.as_ref().unwrap()).canonicalize()?;
     let statsdata_path = canonical_input_path.with_extension("stats.csv.data.jsonl");
 
     let stats_data_current = if statsdata_path.exists() {
         let statsdata_metadata = std::fs::metadata(&statsdata_path)?;
 
-        let input_metadata = std::fs::metadata(args.arg_input.clone().unwrap())?;
+        let input_metadata = std::fs::metadata(args.arg_input.as_ref().unwrap())?;
 
         let statsdata_mtime = FileTime::from_last_modification_time(&statsdata_metadata);
         let input_mtime = FileTime::from_last_modification_time(&input_metadata);
@@ -1977,27 +1969,39 @@ pub fn get_stats_records(
         return Ok((ByteRecord::new(), Vec::new()));
     }
 
+    // get the headers from the input file
+    let mut rdr = csv::Reader::from_path(args.arg_input.as_ref().ok_or("No input provided")?)?;
+    let csv_fields = rdr.byte_headers()?.clone();
+    drop(rdr);
+
     let mut stats_data_loaded = false;
-    let mut csv_stats: Vec<StatsData> = Vec::new();
+    let mut csv_stats: Vec<StatsData> = Vec::with_capacity(csv_fields.len());
 
     // if stats_data file exists and is current, use it
     if stats_data_current && !args.flag_force {
-        let statsdata_file = std::fs::File::open(&statsdata_path)?;
-        let statsdata_reader = std::io::BufReader::new(statsdata_file);
-        let statsdata_lines = statsdata_reader.lines();
+        let statsdatajson_rdr =
+            BufReader::with_capacity(DEFAULT_RDR_BUFFER_CAPACITY, File::open(statsdata_path)?);
 
-        let mut line: String;
-        for curr_line in statsdata_lines {
-            line = curr_line?;
-            let stats_record: StatsData = serde_json::from_str(&line)?;
-            csv_stats.push(stats_record);
+        let mut curr_line: String;
+        let mut s_slice: Vec<u8>;
+        for line in statsdatajson_rdr.lines() {
+            curr_line = line?;
+            if curr_line.starts_with(DATASET_STATS_PREFIX) {
+                break;
+            }
+            s_slice = curr_line.as_bytes().to_vec();
+            match simd_json::serde::from_slice(&mut s_slice) {
+                Ok(stats) => csv_stats.push(stats),
+                Err(_) => continue,
+            }
         }
-        stats_data_loaded = true;
+        stats_data_loaded = !csv_stats.is_empty();
     }
 
+    // otherwise, run stats command to generate stats.csv.data.jsonl file
     if !stats_data_loaded {
         let stats_args = crate::cmd::stats::Args {
-            arg_input:            args.arg_input.clone(),
+            arg_input:            args.arg_input.as_ref().map(String::from),
             flag_select:          crate::select::SelectColumns::parse("").unwrap(),
             flag_everything:      false,
             flag_typesonly:       false,
@@ -2022,67 +2026,69 @@ pub fn get_stats_records(
             flag_memcheck:        args.flag_memcheck,
         };
 
-        // otherwise, run stats command to generate stats.csv.data.jsonl file
         let tempfile = tempfile::Builder::new()
             .suffix(".stats.csv")
             .tempfile()
             .unwrap();
         let tempfile_path = tempfile.path().to_str().unwrap().to_string();
 
-        let statsdatajson_path = canonical_input_path.with_extension("stats.csv.data.jsonl");
+        let statsdatajson_path = &canonical_input_path.with_extension("stats.csv.data.jsonl");
 
-        let mut stats_args_str = if mode == StatsMode::Schema {
-            // mode is GetStatsMode::Schema
-            // we're generating schema, so we need cardinality and to infer-dates
-            format!(
-                "stats {input} --infer-dates --dates-whitelist {dates_whitelist} --round 4 \
-                 --cardinality --stats-jsonl --force --output {output}",
-                input = {
-                    if let Some(arg_input) = stats_args.arg_input.clone() {
-                        arg_input
-                    } else {
-                        "-".to_string()
-                    }
-                },
-                dates_whitelist = stats_args.flag_dates_whitelist,
-                output = tempfile_path,
-            )
-        } else {
-            // mode is GetStatsMode::Frequency or GetStatsMode::FrequencyForceStats
-            // we're doing frequency, so we just need cardinality
-            format!(
-                "stats {input} --cardinality --stats-jsonl --output {output}",
-                input = {
-                    if let Some(arg_input) = stats_args.arg_input.clone() {
-                        arg_input
-                    } else {
-                        "-".to_string()
-                    }
-                },
-                output = tempfile_path,
-            )
+        let input = stats_args.arg_input.unwrap_or_else(|| "-".to_string());
+
+        // we do rustfmt::skip here as it was breaking the stats cmdline along strange
+        // boundaries, causing CI errors.
+        // This is because we're using tab characters (/t) to separate args to fix #2294,
+        #[rustfmt::skip]
+        let mut stats_args_str = match mode {
+            StatsMode::Schema => {
+                // mode is StatsMode::Schema
+                // we're generating schema, so we need cardinality and to infer-dates
+                format!(
+                    "stats\t{input}\t--round\t4\t--cardinality\
+                    \t--infer-dates\t--dates-whitelist\t{dates_whitelist}\
+                    \t--stats-jsonl\t--force\t--output\t{tempfile_path}",
+                    dates_whitelist = stats_args.flag_dates_whitelist
+                )
+            },
+            StatsMode::Frequency => {
+                // StatsMode::Frequency
+                // we're doing frequency, so we just need cardinality
+                format!("stats\t{input}\t--cardinality\t--stats-jsonl\t--output\t{tempfile_path}")
+            },
+            StatsMode::FrequencyForceStats => {
+                // StatsMode::FrequencyForceStats
+                // we're doing frequency, so we need cardinality from a --forced stats run
+                format!(
+                    "stats\t{input}\t--cardinality\t--stats-jsonl\t--force\t--output\t{tempfile_path}"
+                )
+            },
+            #[cfg(feature = "polars")]
+            StatsMode::PolarsSchema => {
+                // StatsMode::PolarsSchema
+                // we need data types and ranges
+                format!("stats\t{input}\t--infer-boolean\t--stats-jsonl\t--output\t{tempfile_path}")
+            },
+            StatsMode::None => unreachable!(), // we returned early on None earlier
         };
         if args.flag_prefer_dmy {
-            stats_args_str = format!("{stats_args_str} --prefer-dmy");
+            stats_args_str = format!("{stats_args_str}\t--prefer-dmy");
         }
         if args.flag_no_headers {
-            stats_args_str = format!("{stats_args_str} --no-headers");
+            stats_args_str = format!("{stats_args_str}\t--no-headers");
         }
         if let Some(delimiter) = args.flag_delimiter {
             let delim = delimiter.as_byte() as char;
-            stats_args_str = format!("{stats_args_str} --delimiter {delim}");
+            stats_args_str = format!("{stats_args_str}\t--delimiter\t{delim}");
         }
         if args.flag_memcheck {
-            stats_args_str = format!("{stats_args_str} --memcheck");
+            stats_args_str = format!("{stats_args_str}\t--memcheck");
         }
-        if let Some(mut jobs) = stats_args.flag_jobs {
-            if jobs > 2 {
-                jobs -= 1; // leave one core for the main thread
-            }
-            stats_args_str = format!("{stats_args_str} --jobs {jobs}");
+        if let Some(jobs) = stats_args.flag_jobs {
+            stats_args_str = format!("{stats_args_str}\t--jobs\t{jobs}");
         }
 
-        let stats_args_vec: Vec<&str> = stats_args_str.split_whitespace().collect();
+        let stats_args_vec: Vec<&str> = stats_args_str.split('\t').collect();
 
         let qsv_bin = std::env::current_exe().unwrap();
         let mut stats_cmd = std::process::Command::new(qsv_bin);
@@ -2115,30 +2121,25 @@ pub fn get_stats_records(
         }
 
         // create a statsdatajon from the output of the stats command
-        csv_to_jsonl(
-            &tempfile_path,
-            &get_stats_data_types(),
-            statsdatajson_path.clone(),
-        )?;
+        csv_to_jsonl(&tempfile_path, &get_stats_data_types(), statsdatajson_path)?;
 
-        let statsdatajson_rdr = BufReader::with_capacity(
-            DEFAULT_RDR_BUFFER_CAPACITY * 2,
-            File::open(statsdatajson_path)?,
-        );
+        let statsdatajson_rdr =
+            BufReader::with_capacity(DEFAULT_RDR_BUFFER_CAPACITY, File::open(statsdatajson_path)?);
 
-        let mut statsrecord: StatsData;
         let mut curr_line: String;
+        let mut s_slice: Vec<u8>;
         for line in statsdatajson_rdr.lines() {
             curr_line = line?;
-            statsrecord = serde_json::from_str(&curr_line)?;
-            csv_stats.push(statsrecord);
+            if curr_line.starts_with(DATASET_STATS_PREFIX) {
+                break;
+            }
+            s_slice = curr_line.as_bytes().to_vec();
+            match simd_json::serde::from_slice(&mut s_slice) {
+                Ok(stats) => csv_stats.push(stats),
+                Err(_) => continue,
+            }
         }
     };
-
-    // get the headers from the input file
-    let mut rdr = csv::Reader::from_path(args.arg_input.clone().unwrap()).unwrap();
-    let csv_fields = rdr.byte_headers()?.clone();
-    drop(rdr);
 
     Ok((csv_fields, csv_stats))
 }
@@ -2148,7 +2149,7 @@ pub fn get_stats_records(
 pub fn csv_to_jsonl(
     input_csv: &str,
     csv_types: &[JsonTypes],
-    output_jsonl: PathBuf,
+    output_jsonl: &PathBuf,
 ) -> CliResult<()> {
     let file = File::open(input_csv)?;
     let mut rdr = csv::ReaderBuilder::new()
@@ -2252,6 +2253,25 @@ pub fn optimal_batch_size(rconfig: &Config, batch_size: usize, num_jobs: usize) 
     } else {
         batch_size
     }
+}
+
+/// Expand the tilde (`~`) from within the provided path.
+/// copied from https://github.com/splurf/simple-expand-tilde
+/// as it was just a small wrapper around simple_home_dir
+pub fn expand_tilde(path: impl AsRef<Path>) -> Option<PathBuf> {
+    let p = path.as_ref();
+
+    let expanded = if p.starts_with("~") {
+        let mut base = simple_home_dir::home_dir()?;
+
+        if !p.ends_with("~") {
+            base.extend(p.components().skip(1));
+        }
+        base
+    } else {
+        p.to_path_buf()
+    };
+    Some(expanded)
 }
 
 // comment out for now as this is still WIP

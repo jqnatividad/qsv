@@ -147,7 +147,7 @@ Load an alternative Geonames cities index from a file, making it the default ind
 
   $ qsv geocode index-load my_geonames_index.bincode
 
-For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_geocode.rs.
+For more extensive examples, see https://github.com/dathere/qsv/blob/master/tests/test_geocode.rs.
 
 Usage:
 qsv geocode suggest [--formatstr=<string>] [options] <column> [<input>]
@@ -386,9 +386,9 @@ use rayon::{
 use regex::Regex;
 use serde::Deserialize;
 use serde_json::json;
-use simple_expand_tilde::expand_tilde;
 use tempfile::tempdir;
 use url::Url;
+use util::expand_tilde;
 use uuid::Uuid;
 
 use crate::{
@@ -1115,7 +1115,6 @@ async fn geocode_main(args: Args) -> CliResult<()> {
     let mut batch = Vec::with_capacity(batchsize);
     let mut batch_results = Vec::with_capacity(batchsize);
 
-    // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
 
     let invalid_result = args.flag_invalid_result.unwrap_or_default();
@@ -1310,7 +1309,7 @@ async fn load_engine(geocode_index_file: PathBuf, progressbar: &ProgressBar) -> 
         .to_string();
 
     let download_url = format!(
-        "https://github.com/jqnatividad/qsv/releases/download/{QSV_VERSION}/{DEFAULT_GEOCODE_INDEX_FILENAME}.cities"
+        "https://github.com/dathere/qsv/releases/download/{QSV_VERSION}/{DEFAULT_GEOCODE_INDEX_FILENAME}.cities"
     );
 
     if geocode_index_file_stem.parse::<u16>().is_ok() {

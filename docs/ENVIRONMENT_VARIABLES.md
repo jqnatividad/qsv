@@ -15,12 +15,12 @@
 | `QSV_MAX_JOBS` | number of jobs to use for multithreaded commands (currently `apply`, `applydp`, `dedup`, `diff`, `extsort`, `frequency`, `joinp`, `schema`, `snappy`, `sort`, `split`, `stats`, `to`, `tojsonl` & `validate`). If not set, max_jobs is set to the detected number of logical processors.  See [Multithreading](docs/PERFORMANCE.md#multithreading) for more info. |
 | `QSV_NO_UPDATE` | if set, prohibit self-update version check for the latest qsv release published on GitHub. |
 | `QSV_LLM_APIKEY` | The API key of the supported LLM service to use with the `describegpt` command. |
-| `QSV_OUTPUT_BOM` | if set, the output will have a Byte Order Mark (BOM) at the beginning. This is 
-used to generate Excel-friendly CSVs on Windows. |
+| `QSV_OUTPUT_BOM` | if set, the output will have a Byte Order Mark (BOM) at the beginning. This is used to generate Excel-friendly CSVs on Windows. |
 | `QSV_PREFER_DMY` | if set, date parsing will use DMY format. Otherwise, use MDY format (used with `datefmt`, `schema`, `sniff` & `stats` commands). |
 | `QSV_REGEX_UNICODE` | if set, makes `search`, `searchset` & `replace` commands unicode-aware. For increased performance, these commands are not unicode-aware by default & will ignore unicode values when matching & will abort when unicode characters are used in the regex. Note that the `apply operations regex_replace` operation is always unicode-aware. |
-| `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default (bytes): 16384) |
-| `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default (bytes): 65536) |
+| `QSV_RDR_BUFFER_CAPACITY` | reader buffer size (default - 128k (bytes): 131072) |
+| `QSV_SKIP_FORMAT_CHECK` | if set, skips mime-type checking of input files. Set this when optimizing for performance and when encountering false positives as a format check involves scanning the input file to infer the mime-type/format. |
+| `QSV_WTR_BUFFER_CAPACITY` | writer buffer size (default - 512k (bytes): 524288) |
 | `QSV_FREEMEMORY_HEADROOM_PCT` | the percentage of free available memory required when running qsv in "non-streaming" mode (i.e. the entire file needs to be loaded into memory). If the incoming file is greater than the available memory after the headroom is subtracted, qsv will not proceed. See [Memory Management](#memory-management) for more info. (default: (percent) 20 ) |
 | `QSV_MEMORY_CHECK` | if set, check if input file size < AVAILABLE memory - HEADROOM (CONSERVATIVE mode) when running in "non-streaming" mode. Otherwise, qsv will only check if the input file size < TOTAL memory - HEADROOM (NORMAL mode). This is done to prevent Out-of-Memory errors. See [Memory Management](#memory-management) for more info. |
 | `QSV_LOG_LEVEL` | desired level (default - off; `error`, `warn`, `info`, `trace`, `debug`). |
@@ -35,7 +35,7 @@ used to generate Excel-friendly CSVs on Windows. |
 | `QSV_REDIS_TTL_SECONDS` | set time-to-live of Redis cached values (default (seconds): 2419200 (28 days)). |
 | `QSV_REDIS_TTL_REFRESH`| if set, enables cache hits to refresh TTL of Redis cached values. |
 | `QSV_TIMEOUT`| for commands with a --timeout option (`fetch`, `fetchpost`, `luau`, `sniff` and `validate`), the number of seconds before a web request times out (default: 30). |
-| `QSV_USER_AGENT`| the user-agent to use for web requests. When specifying a custom user agent. It supports the following variables - $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME and $QSV_KIND. Try to conform to the [IETF RFC 72321 standard](https://tools.ietf.org/html/rfc7231#section-5.5.3). See [here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) for examples.<br>(default: $QSV_BIN_NAME/$QSV_VERSION ($QSV_TARGET; $QSV_KIND; https://github.com/jqnatividad/qsv) - e.g.<br>`qsv/0.105.0 (x86_64-unknown-linux; prebuilt; https://github.com/jqnatividad/qsv)`).|
+| `QSV_USER_AGENT`| the user-agent to use for web requests. When specifying a custom user agent. It supports the following variables - $QSV_VERSION, $QSV_TARGET, $QSV_BIN_NAME and $QSV_KIND. Try to conform to the [IETF RFC 72321 standard](https://tools.ietf.org/html/rfc7231#section-5.5.3). See [here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) for examples.<br>(default: $QSV_BIN_NAME/$QSV_VERSION ($QSV_TARGET; $QSV_KIND; https://github.com/dathere/qsv) - e.g.<br>`qsv/0.105.0 (x86_64-unknown-linux; prebuilt; https://github.com/dathere/qsv)`).|
 
 Several dependencies also have environment variables that influence qsv's performance & behavior:
 

@@ -358,6 +358,8 @@ module completions {
   ]
 
   export extern "qsv fetchpost" [
+    --payload-tpl
+    --content-type
     --new-column
     --jaq
     --jaqfile
@@ -1050,6 +1052,7 @@ module completions {
     --unicode
     --size-limit
     --dfa-size-limit
+    --not-one
     --output
     --no-headers
     --delimiter
@@ -1362,6 +1365,17 @@ module completions {
     --output
     --delimiter
     --memcheck
+    --help(-h)                # Print help
+  ]
+
+  export extern "qsv template" [
+    --template
+    --template-file
+    --outfilename
+    --customfilter-error
+    --output
+    --no-headers
+    --delimiter
     --help(-h)                # Print help
   ]
 
@@ -1756,6 +1770,9 @@ module completions {
   ]
 
   export extern "qsv help table" [
+  ]
+
+  export extern "qsv help template" [
   ]
 
   export extern "qsv help to" [

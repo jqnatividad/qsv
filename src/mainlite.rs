@@ -21,7 +21,6 @@ static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 static COMMAND_LIST: &str = r#"
     behead      Drop header from CSV file
     cat         Concatenate by row or column
-    clipboard   Provide input from clipboard or output to clipboard
     count       Count records
     datefmt     Format date/datetime columns
     dedup       Remove redundant rows
@@ -104,6 +103,8 @@ struct Args {
 }
 
 fn main() -> QsvExitCode {
+    util::qsv_custom_panic();
+
     let now = Instant::now();
     let (qsv_args, _) = match util::init_logger() {
         Ok((qsv_args, logger_handle)) => (qsv_args, logger_handle),
@@ -146,7 +147,7 @@ fn main() -> QsvExitCode {
         None => {
             werr!(
                 "qsvlite is a suite of CSV command line utilities.\n\nPlease choose one of the \
-                 following commands:\n{COMMAND_LIST}\n\n{SPONSOR_MESSAGE}",
+                 following 49 commands:\n{COMMAND_LIST}\n\n{SPONSOR_MESSAGE}",
             );
 
             // if no command is specified, auto-check for updates 10% of the time
@@ -225,7 +226,6 @@ fn main() -> QsvExitCode {
 enum Command {
     Behead,
     Cat,
-    Clipboard,
     Count,
     Datefmt,
     Dedup,
@@ -292,7 +292,6 @@ impl Command {
         match self {
             Command::Behead => cmd::behead::run(argv),
             Command::Cat => cmd::cat::run(argv),
-            Command::Clipboard => cmd::clipboard::run(argv),
             Command::Count => cmd::count::run(argv),
             Command::Datefmt => cmd::datefmt::run(argv),
             Command::Dedup => cmd::dedup::run(argv),

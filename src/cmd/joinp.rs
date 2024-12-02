@@ -12,7 +12,7 @@ However, joinp doesn't have an --ignore-case option.
 
 Returns the shape of the join result (number of rows, number of columns) to stderr.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_joinp.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_joinp.rs.
 
 Usage:
     qsv joinp [options] <columns1> <input1> <columns2> <input2>
@@ -29,6 +29,7 @@ joinp arguments:
     Note that <input1> is the left CSV data set and <input2> is the right CSV data set.
 
 joinp options:
+    -i, --ignore-case      When set, joins are done case insensitively.
     --left                 Do a 'left outer' join. This returns all rows in
                            first CSV data set, including rows with no
                            corresponding row in the second data set. When no
@@ -90,7 +91,18 @@ joinp options:
                            enabled when using asof joins.
     --infer-len <arg>      The number of rows to scan when inferring the schema of the CSV.
                            Set to 0 to do a full table scan (warning: very slow).
-                           [default: 1000]
+                           [default: 10000]
+    --cache-schema         Create and cache Polars schema JSON files.
+                           If specified and the schema file/s do not exist, it will check if a
+                           stats cache is available. If so, it will use it to derive a Polars schema
+                           and save it. If there's no stats cache, it will infer the schema 
+                           using --infer-len and save the inferred schemas. 
+                           Each schema file will have the same file stem as the corresponding
+                           input file, with the extension ".pschema.json"
+                           (data.csv's Polars schema file will be data.pschema.json)
+                           If the file/s exists, it will load the schema instead of inferring it
+                           (ignoring --infer-len) and attempt to use it for each corresponding
+                           Polars "table" with the same file stem.
     --low-memory           Use low memory mode when parsing CSVs. This will use less memory
                            but will be slower. It will also process the join in streaming mode.
                            Only use this when you get out of memory errors.
@@ -186,8 +198,8 @@ Common options:
 use std::{
     env,
     fs::File,
-    io::{self, Write},
-    path::Path,
+    io::{self, BufReader, BufWriter, Read, Write},
+    path::{Path, PathBuf},
     str,
 };
 
@@ -195,7 +207,10 @@ use polars::{datatypes::AnyValue, prelude::*, sql::SQLContext};
 use serde::Deserialize;
 use tempfile::tempdir;
 
-use crate::{cmd::sqlp::compress_output_if_needed, config::Delimiter, util, CliResult};
+use crate::{
+    cmd::sqlp::compress_output_if_needed, config::Delimiter, util, util::get_stats_records,
+    CliResult,
+};
 
 #[derive(Deserialize)]
 struct Args {
@@ -218,6 +233,7 @@ struct Args {
     flag_try_parsedates:   bool,
     flag_decimal_comma:    bool,
     flag_infer_len:        usize,
+    flag_cache_schema:     bool,
     flag_low_memory:       bool,
     flag_no_optimizations: bool,
     flag_ignore_errors:    bool,
@@ -235,6 +251,7 @@ struct Args {
     flag_output:           Option<String>,
     flag_delimiter:        Option<Delimiter>,
     flag_quiet:            bool,
+    flag_ignore_case:      bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -248,13 +265,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let tmpdir = tempdir()?;
-    let join = args.new_join(
-        args.flag_try_parsedates,
-        args.flag_infer_len,
-        args.flag_low_memory,
-        args.flag_ignore_errors,
-        &tmpdir,
-    )?;
+    let join = args.new_join(&tmpdir)?;
 
     let flag_validate = args
         .flag_validate
@@ -375,6 +386,7 @@ struct JoinStruct {
     time_format:      Option<String>,
     float_precision:  Option<usize>,
     null_value:       String,
+    ignore_case:      bool,
 }
 
 impl JoinStruct {
@@ -384,16 +396,69 @@ impl JoinStruct {
         validation: JoinValidation,
         asof_join: bool,
     ) -> CliResult<(usize, usize)> {
-        let left_selcols: Vec<_> = self
+        let mut left_selcols: Vec<_> = self
             .left_sel
             .split(',')
             .map(polars::lazy::dsl::col)
             .collect();
-        let right_selcols: Vec<_> = self
+        let mut right_selcols: Vec<_> = self
             .right_sel
             .split(',')
             .map(polars::lazy::dsl::col)
             .collect();
+
+        // If ignore_case is enabled, create lowercase versions of the join columns
+        if self.ignore_case {
+            // Create temporary lowercase versions of join columns in left dataframe
+            for col in &left_selcols {
+                self.left_lf = self
+                    .left_lf
+                    .with_column(col.clone().str().to_lowercase().alias(format!(
+                        "_qsv-{}-lower",
+                        col.to_string()
+                            .trim_start_matches(r#"col(""#)
+                            .trim_end_matches(r#"")"#)
+                    )));
+            }
+
+            // Create temporary lowercase versions of join columns in right dataframe
+            for col in &right_selcols {
+                self.right_lf = self
+                    .right_lf
+                    .with_column(col.clone().str().to_lowercase().alias(format!(
+                        "_qsv-{}-lower",
+                        col.to_string()
+                            .trim_start_matches(r#"col(""#)
+                            .trim_end_matches(r#"")"#)
+                    )));
+            }
+
+            // Create new vectors for the lowercase column names
+            let left_selcols_w: Vec<_> = left_selcols
+                .iter()
+                .map(|col| {
+                    polars::lazy::dsl::col(format!(
+                        "_qsv-{}-lower",
+                        col.to_string()
+                            .trim_start_matches(r#"col(""#)
+                            .trim_end_matches(r#"")"#)
+                    ))
+                })
+                .collect();
+            left_selcols = left_selcols_w;
+            let right_selcols_w: Vec<_> = right_selcols
+                .iter()
+                .map(|col| {
+                    polars::lazy::dsl::col(format!(
+                        "_qsv-{}-lower",
+                        col.to_string()
+                            .trim_start_matches(r#"col(""#)
+                            .trim_end_matches(r#"")"#)
+                    ))
+                })
+                .collect();
+            right_selcols = right_selcols_w;
+        }
 
         let left_selcols_len = left_selcols.len();
         let right_selcols_len = right_selcols.len();
@@ -488,6 +553,20 @@ impl JoinStruct {
             join_results
         };
 
+        // if self.ignore_case, remove the temporary lowercase columns from the dataframe
+        if self.ignore_case {
+            // Get all column names
+            let cols = results_df.get_column_names();
+            // Filter out the lowercase columns (those with "_qsv-*-lower" pattern)
+            let keep_cols: Vec<String> = cols
+                .iter()
+                .filter(|&col| !(col.starts_with("_qsv-") && col.ends_with("-lower")))
+                .map(|&s| s.to_string())
+                .collect();
+            // Select only the non-lowercase columns
+            results_df = results_df.select(keep_cols)?;
+        }
+
         let mut out_delim = self.delim;
         let mut out_writer = match self.output {
             Some(ref output_file) => {
@@ -521,14 +600,146 @@ impl JoinStruct {
 }
 
 impl Args {
-    fn new_join(
-        &mut self,
-        try_parsedates: bool,
-        infer_len: usize,
-        low_memory: bool,
-        ignore_errors: bool,
-        tmpdir: &tempfile::TempDir,
-    ) -> CliResult<JoinStruct> {
+    fn new_join(&mut self, tmpdir: &tempfile::TempDir) -> CliResult<JoinStruct> {
+        // =============== NEW_JOIN HELPER FUNCTIONS =================
+
+        // Helper function to create a LazyFrameReader with common settings
+        fn create_lazy_reader(
+            file_path: &str,
+            comment_char: Option<&PlSmallStr>,
+            args: &Args,
+            delim: u8,
+        ) -> LazyCsvReader {
+            LazyCsvReader::new(file_path)
+                .with_has_header(true)
+                .with_missing_is_null(args.flag_nulls)
+                .with_comment_prefix(comment_char.cloned())
+                .with_separator(tsvssv_delim(file_path, delim))
+                .with_try_parse_dates(args.flag_try_parsedates)
+                .with_decimal_comma(args.flag_decimal_comma)
+                .with_low_memory(args.flag_low_memory)
+                .with_ignore_errors(args.flag_ignore_errors)
+        }
+
+        // Helper function to handle schema creation from stats
+        fn create_schema_from_stats(input_path: &Path, args: &Args) -> CliResult<Schema> {
+            let schema_args = util::SchemaArgs {
+                flag_enum_threshold:  0,
+                flag_ignore_case:     false,
+                flag_strict_dates:    false,
+                flag_pattern_columns: crate::select::SelectColumns::parse("").unwrap(),
+                flag_dates_whitelist: String::new(),
+                flag_prefer_dmy:      false,
+                flag_force:           false,
+                flag_stdout:          false,
+                flag_jobs:            Some(util::njobs(None)),
+                flag_no_headers:      false,
+                flag_delimiter:       args.flag_delimiter,
+                arg_input:            Some(input_path.to_string_lossy().into_owned()),
+                flag_memcheck:        false,
+            };
+
+            let (csv_fields, csv_stats) =
+                get_stats_records(&schema_args, util::StatsMode::PolarsSchema)?;
+
+            let mut schema = Schema::with_capacity(csv_stats.len());
+            for (idx, stat) in csv_stats.iter().enumerate() {
+                schema.insert(
+                    PlSmallStr::from_str(
+                        simdutf8::basic::from_utf8(csv_fields.get(idx).unwrap()).unwrap(),
+                    ),
+                    {
+                        let datatype = &stat.r#type;
+                        #[allow(clippy::match_same_arms)]
+                        match datatype.as_str() {
+                            "String" => polars::datatypes::DataType::String,
+                            "Integer" => {
+                                let min = stat.min.as_ref().unwrap();
+                                let max = stat.max.as_ref().unwrap();
+                                if min.parse::<i32>().is_ok() && max.parse::<i32>().is_ok() {
+                                    polars::datatypes::DataType::Int32
+                                } else {
+                                    polars::datatypes::DataType::Int64
+                                }
+                            },
+                            "Float" => {
+                                let min = stat.min.as_ref().unwrap();
+                                let max = stat.max.as_ref().unwrap();
+                                if min.parse::<f32>().is_ok() && max.parse::<f32>().is_ok() {
+                                    polars::datatypes::DataType::Float32
+                                } else {
+                                    polars::datatypes::DataType::Float64
+                                }
+                            },
+                            "Boolean" => polars::datatypes::DataType::Boolean,
+                            "Date" => polars::datatypes::DataType::Date,
+                            _ => polars::datatypes::DataType::String,
+                        }
+                    },
+                );
+            }
+            Ok(schema)
+        }
+
+        // Helper function to setup a LazyFrame with schema handling
+        #[inline]
+        fn setup_lazy_frame(
+            input_path: &Path,
+            comment_char: Option<&PlSmallStr>,
+            args: &Args,
+            delim: u8,
+            debuglog_flag: bool,
+        ) -> CliResult<(LazyFrame, bool)> {
+            let schema_file = input_path.canonicalize()?.with_extension("pschema.json");
+            let mut create_schema = args.flag_cache_schema;
+
+            let mut reader =
+                create_lazy_reader(input_path.to_str().unwrap(), comment_char, args, delim);
+
+            if create_schema {
+                let mut valid_schema_exists = schema_file.exists()
+                    && schema_file.metadata()?.modified()? > input_path.metadata()?.modified()?;
+
+                if !valid_schema_exists {
+                    let schema = create_schema_from_stats(input_path, args)?;
+                    let stats_schema = Arc::new(schema);
+                    let stats_schema_json = serde_json::to_string_pretty(&stats_schema)?;
+
+                    let mut file = BufWriter::new(File::create(&schema_file)?);
+                    file.write_all(stats_schema_json.as_bytes())?;
+                    file.flush()?;
+                    if debuglog_flag {
+                        log::debug!("Saved schema to file: {}", schema_file.display());
+                    }
+                    valid_schema_exists = true;
+                }
+
+                if valid_schema_exists {
+                    let file = File::open(&schema_file)?;
+                    let mut buf_reader = BufReader::new(file);
+                    let mut schema_json = String::with_capacity(100);
+                    buf_reader.read_to_string(&mut schema_json)?;
+                    let schema: Schema = serde_json::from_str(&schema_json)?;
+                    reader = reader.with_schema(Some(Arc::new(schema)));
+                    create_schema = false;
+                } else {
+                    reader = reader.with_infer_schema_length(Some(args.flag_infer_len));
+                    create_schema = true;
+                }
+            } else {
+                reader = reader.with_infer_schema_length(if args.flag_infer_len == 0 {
+                    None
+                } else {
+                    Some(args.flag_infer_len)
+                });
+            }
+
+            Ok((reader.finish()?, create_schema))
+        }
+
+        // ============ START OF NEW_JOIN MAIN CODE ==============
+        let debuglog_flag = log::log_enabled!(log::Level::Debug);
+
         let delim = if let Some(delimiter) = self.flag_delimiter {
             delimiter.as_byte()
         } else {
@@ -541,73 +752,82 @@ impl Args {
             None
         };
 
-        let num_rows = if infer_len == 0 {
-            None
-        } else {
-            Some(infer_len)
-        };
-
-        // check if the input files exist
-        let input1_path = Path::new(&self.arg_input1);
+        // Check if input files exist
+        let mut input1_path = PathBuf::from(&self.arg_input1);
         if !input1_path.exists() {
             return fail_clierror!("Input file {} does not exist.", self.arg_input1);
         }
-        let input2_path = Path::new(&self.arg_input2);
+        let mut input2_path = PathBuf::from(&self.arg_input2);
         if !input2_path.exists() {
             return fail_clierror!("Input file {} does not exist.", self.arg_input2);
         }
 
-        let mut left_lf = {
-            // check if the left input file is snappy compressed
-            // if so, we need to decompress it first
-            if input1_path.extension().and_then(std::ffi::OsStr::to_str) == Some("sz") {
-                let decompressed_path =
-                    util::decompress_snappy_file(&input1_path.to_path_buf(), tmpdir)?;
-                self.arg_input1 = decompressed_path;
+        // Handle snappy compression for left input
+        if input1_path.extension().and_then(std::ffi::OsStr::to_str) == Some("sz") {
+            let decompressed_path = util::decompress_snappy_file(&input1_path, tmpdir)?;
+            self.arg_input1.clone_from(&decompressed_path);
+            input1_path = PathBuf::from(decompressed_path);
+        }
+
+        // Setup left LazyFrame
+        let (mut left_lf, create_left_schema) = setup_lazy_frame(
+            &input1_path,
+            comment_char.as_ref(),
+            self,
+            delim,
+            debuglog_flag,
+        )?;
+
+        if create_left_schema {
+            let schema = left_lf.collect_schema()?;
+            let schema_json = serde_json::to_string_pretty(&schema)?;
+            let schema_file = input1_path.canonicalize()?.with_extension("pschema.json");
+            let mut file = BufWriter::new(File::create(&schema_file)?);
+            file.write_all(schema_json.as_bytes())?;
+            file.flush()?;
+            if debuglog_flag {
+                log::debug!("Saved left schema to file: {}", schema_file.display());
             }
+        }
 
-            LazyCsvReader::new(&self.arg_input1)
-                .with_has_header(true)
-                .with_missing_is_null(self.flag_nulls)
-                .with_comment_prefix(comment_char.clone())
-                .with_separator(tsvssv_delim(&self.arg_input1, delim))
-                .with_infer_schema_length(num_rows)
-                .with_try_parse_dates(try_parsedates)
-                .with_decimal_comma(self.flag_decimal_comma)
-                .with_low_memory(low_memory)
-                .with_ignore_errors(ignore_errors)
-                .finish()?
-        };
-
+        // Apply left filter if needed
         if let Some(filter_left) = &self.flag_filter_left {
             let filter_left_expr = polars::sql::sql_expr(filter_left)?;
             left_lf = left_lf.filter(filter_left_expr);
         }
 
-        let mut right_lf = {
-            // check if the right input file is snappy compressed
-            if input2_path.extension().and_then(std::ffi::OsStr::to_str) == Some("sz") {
-                let decompressed_path =
-                    util::decompress_snappy_file(&input2_path.to_path_buf(), tmpdir)?;
-                self.arg_input2 = decompressed_path;
+        // Handle snappy compression for right input
+        if input2_path.extension().and_then(std::ffi::OsStr::to_str) == Some("sz") {
+            let decompressed_path = util::decompress_snappy_file(&input2_path, tmpdir)?;
+            self.arg_input2.clone_from(&decompressed_path);
+            input2_path = PathBuf::from(decompressed_path);
+        }
+
+        // Setup right LazyFrame
+        let (mut right_lf, create_right_schema) = setup_lazy_frame(
+            &input2_path,
+            comment_char.as_ref(),
+            self,
+            delim,
+            debuglog_flag,
+        )?;
+
+        if create_right_schema {
+            let schema = right_lf.collect_schema()?;
+            let schema_json = serde_json::to_string_pretty(&schema)?;
+            let schema_file = input2_path.canonicalize()?.with_extension("pschema.json");
+            let mut file = BufWriter::new(File::create(&schema_file)?);
+            file.write_all(schema_json.as_bytes())?;
+            file.flush()?;
+            if debuglog_flag {
+                log::debug!("Saved right schema to file: {}", schema_file.display());
             }
+        }
 
-            LazyCsvReader::new(&self.arg_input2)
-                .with_has_header(true)
-                .with_missing_is_null(self.flag_nulls)
-                .with_comment_prefix(comment_char)
-                .with_separator(tsvssv_delim(&self.arg_input2, delim))
-                .with_infer_schema_length(num_rows)
-                .with_try_parse_dates(try_parsedates)
-                .with_decimal_comma(self.flag_decimal_comma)
-                .with_low_memory(low_memory)
-                .with_ignore_errors(ignore_errors)
-                .finish()?
-        };
-
+        // Apply right filter if needed
         if let Some(filter_right) = &self.flag_filter_right {
-            let filter_right_exprt = polars::sql::sql_expr(filter_right)?;
-            right_lf = right_lf.filter(filter_right_exprt);
+            let filter_right_expr = polars::sql::sql_expr(filter_right)?;
+            right_lf = right_lf.filter(filter_right_expr);
         }
 
         Ok(JoinStruct {
@@ -630,6 +850,7 @@ impl Args {
             } else {
                 self.flag_null_value.clone()
             },
+            ignore_case: self.flag_ignore_case,
         })
     }
 }

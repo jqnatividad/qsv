@@ -2,7 +2,9 @@ static USAGE: &str = r#"
 Validates CSV data using two modes:
 
 JSON SCHEMA VALIDATION MODE:
-This mode is invoked if a JSON Schema file is provided.
+===========================
+
+This mode is invoked if a JSON Schema file (draft 2020-12) is provided.
 
 The CSV data is validated against the JSON Schema. If the CSV data is valid, no output
 files are created and the command returns an exit code of 0.
@@ -17,8 +19,8 @@ A "validation-errors.tsv" report is also created with the following columns:
   * error: a validation error message detailing why the field is invalid
 
 It uses the JSON Schema Validation Specification (draft 2020-12) to validate the CSV.
-It validates not only the structure of the file, but the data types and domain/range of the
-fields as well. See https://json-schema.org/draft/2020-12/json-schema-validation.html
+It validates the structure of the file, as well as the data types and domain/range of the fields.
+See https://json-schema.org/draft/2020-12/json-schema-validation.html
 
 qsv supports a custom format - `currency`. This format will only accept a valid currency, defined as: 
 
@@ -33,7 +35,42 @@ qsv supports a custom format - `currency`. This format will only accept a valid 
 qsv also supports a custom keyword - `dynamicEnum`. It allows for dynamic validation against a CSV.
 This is useful for validating against a set of values unknown at the time of schema creation or
 when the set of valid values is dynamic or too large to hardcode into the schema.
-`dynamicEnum` can be used to validate against a CSV file on the local filesystem or on a URL (http/https).
+`dynamicEnum` can be used to validate against a CSV file on the local filesystem or a URL
+(http/https, dathere and ckan schemes supported). The "dynamicEnum" value has the form:
+
+   // qsvlite binary variant only supports URIs which can be files on the local filesystem
+   // or remote files (http and https schemes supported)
+   dynamicEnum = "URI"
+
+   // on other qsv binary variants, dynamicEnum has expanded functionality
+   dynamicEnum = "[cache_name;cache_age]|URI" where cache_name and cache_age are optional
+
+  // get data.csv; cache it as data.csv with a default cache age of 3600 seconds
+  // i.e. the cached data.csv expires after 1 hour
+  dynamicEnum = "https://example.com/data.csv"
+
+  // get data.csv; cache it as custom_name.csv, cache age 600 seconds
+  dynamicEnum = "custom_name;600|https://example.com/data.csv"
+
+  // get data.csv; cache it as data.csv, cache age 800 seconds
+  dynamicEnum = ";800|https://example.com/data.csv"
+
+  // get the top matching result for nyc_neighborhoods (signaled by trailing ?),
+  // cache it as nyc_neighborhood_data.csv (NOTE: cache name is required when using CKAN scheme)
+  // with a default cache age of 3600 seconds
+  // be sure to set --ckan-api, otherwise it will default to datHere's CKAN (data.dathere.com)
+  dynamicEnum = "nyc_neighborhood_data|ckan:://nyc_neighborhoods?"
+
+  // get CKAN resource with id 1234567, cache it as resname, 3600 secs cache age
+  // note that if the resource is a private resource, you'll need to set --ckan-token
+  dynamicEnum = "resname|ckan:://1234567"
+
+  // same as above but with a cache age of 100 seconds
+  dynamicEnum = "resname;100|ckan:://1234567
+
+  // get us_states.csv from datHere lookup tables
+  dynamicEnum = "dathere://us_states.csv"
+
 Only the first column of the CSV file is read and used for validation.
 
 You can create a JSON Schema file from a reference CSV file using the `qsv schema` command.
@@ -68,8 +105,10 @@ If piped from stdin, the filenames will use `stdin.csv` as the base filename. Fo
    * stdin.csv.validation-errors.tsv
 
 RFC 4180 VALIDATION MODE:
-If run without a JSON Schema file, the CSV is validated if it complies with qsv's interpretation of
-the RFC 4180 CSV standard (see https://github.com/jqnatividad/qsv#rfc-4180-csv-standard).
+========================
+
+If run without a JSON Schema file, the CSV is validated for RFC 4180 CSV standard compliance
+(see https://github.com/dathere/qsv#rfc-4180-csv-standard).
 
 It also confirms if the CSV is UTF-8 encoded.
 
@@ -77,7 +116,7 @@ For both modes, returns exit code 0 when the CSV file is valid, exitcode > 0 oth
 If all records are valid, no output files are produced.
 
 For examples, see the tests included in this file (denoted by '#[test]') or see
-https://github.com/jqnatividad/qsv/blob/master/tests/test_validate.rs.
+https://github.com/dathere/qsv/blob/master/tests/test_validate.rs.
 
 Usage:
     qsv validate [options] [<input>] [<json-schema>]
@@ -113,6 +152,20 @@ Validate options:
                                less than 50000 rows. [default: 50000]
     --timeout <seconds>        Timeout for downloading json-schemas on URLs and for
                                'dynamicEnum' lookups on URLs. [default: 30]
+    --cache-dir <dir>          The directory to use for caching downloaded dynamicEnum resources.
+                               If the directory does not exist, qsv will attempt to create it.
+                               If the QSV_CACHE_DIR envvar is set, it will be used instead.
+                               Not available on qsvlite.
+                               [default: ~/.qsv-cache]
+    --ckan-api <url>           The URL of the CKAN API to use for downloading dynamicEnum
+                               resources with the "ckan://" scheme.
+                               If the QSV_CKAN_API envvar is set, it will be used instead.
+                               Not available on qsvlite.
+                               [default: https://data.dathere.com/api/3/action]
+    --ckan-token <token>       The CKAN API token to use. Only required if downloading
+                               private resources.
+                               If the QSV_CKAN_TOKEN envvar is set, it will be used instead.
+                               Not available on qsvlite.
 
 Common options:
     -h, --help                 Display this message
@@ -133,7 +186,6 @@ use std::{
     env,
     fs::File,
     io::{BufReader, BufWriter, Read, Write},
-    iter::once,
     str,
     sync::{
         atomic::{AtomicU16, Ordering},
@@ -149,7 +201,7 @@ use indicatif::{ProgressBar, ProgressDrawTarget};
 use jsonschema::{
     output::BasicOutput,
     paths::{LazyLocation, Location},
-    ErrorIterator, Keyword, ValidationError, Validator,
+    Keyword, ValidationError, Validator,
 };
 use log::{debug, info, log_enabled};
 use qsv_currency::Currency;
@@ -159,8 +211,13 @@ use rayon::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, value::Number, Map, Value};
+#[cfg(feature = "lite")]
 use tempfile::NamedTempFile;
 
+#[cfg(not(feature = "lite"))]
+use crate::lookup;
+#[cfg(not(feature = "lite"))]
+use crate::lookup::{load_lookup_table, LookupTableOptions};
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     util, CliError, CliResult,
@@ -170,6 +227,16 @@ use crate::{
 static NULL_TYPE: OnceLock<Value> = OnceLock::new();
 
 static TIMEOUT_SECS: AtomicU16 = AtomicU16::new(30);
+
+#[cfg(not(feature = "lite"))]
+static QSV_CACHE_DIR: OnceLock<String> = OnceLock::new();
+
+#[cfg(not(feature = "lite"))]
+static CKAN_API: OnceLock<String> = OnceLock::new();
+
+#[cfg(not(feature = "lite"))]
+static CKAN_TOKEN: OnceLock<Option<String>> = OnceLock::new();
+static DELIMITER: OnceLock<Option<Delimiter>> = OnceLock::new();
 
 /// write to stderr and log::error, using ValidationError
 macro_rules! fail_validation_error {
@@ -205,6 +272,9 @@ struct Args {
     arg_input:         Option<String>,
     arg_json_schema:   Option<String>,
     flag_timeout:      u16,
+    flag_cache_dir:    String,
+    flag_ckan_api:     String,
+    flag_ckan_token:   Option<String>,
 }
 
 enum JSONtypes {
@@ -234,7 +304,7 @@ impl From<ValidationError<'_>> for CliError {
 #[inline]
 /// Checks if a given string represents a valid currency format.
 fn currency_format_checker(s: &str) -> bool {
-    Currency::from_str(s).map_or(false, |c| {
+    Currency::from_str(s).is_ok_and(|c| {
         if c.symbol().is_empty() {
             true // allow empty currency symbol
         } else {
@@ -260,9 +330,9 @@ impl Keyword for DynEnumValidator {
         &self,
         instance: &'instance Value,
         instance_path: &LazyLocation,
-    ) -> ErrorIterator<'instance> {
+    ) -> Result<(), ValidationError<'instance>> {
         if self.dynenum_set.contains(instance.as_str().unwrap()) {
-            Box::new(std::iter::empty())
+            Ok(())
         } else {
             let error = ValidationError::custom(
                 Location::default(),
@@ -270,7 +340,7 @@ impl Keyword for DynEnumValidator {
                 instance,
                 format!("{instance} is not a valid dynamicEnum value"),
             );
-            Box::new(once(error))
+            Err(error)
         }
     }
 
@@ -284,17 +354,152 @@ impl Keyword for DynEnumValidator {
     }
 }
 
-#[allow(dead_code)]
+/// Parse the dynamicEnum URI string to extract cache name and age
+/// Format: "[cache_name;cache_age]|URL" where cache_name and cache_age are optional
+#[cfg(not(feature = "lite"))]
+fn parse_dynenum_uri(uri: &str) -> (String, i64) {
+    const DEFAULT_CACHE_AGE_SECS: i64 = 3600; // 1 hour
+    const DEFAULT_LOOKUP_NAME: &str = "dynenum";
+
+    if !uri.contains('|') {
+        return (
+            uri.split('/')
+                .last()
+                .unwrap_or(DEFAULT_LOOKUP_NAME)
+                .trim_end_matches(".csv")
+                .to_string(),
+            DEFAULT_CACHE_AGE_SECS,
+        );
+    }
+
+    let cache_config = uri.split('|').next().unwrap();
+
+    if !cache_config.contains(';') {
+        return (cache_config.to_owned(), DEFAULT_CACHE_AGE_SECS);
+    }
+
+    let parts: Vec<&str> = cache_config.split(';').collect();
+    let cache_age = parts[1].parse::<i64>().unwrap_or(DEFAULT_CACHE_AGE_SECS);
+    let cache_name = parts[0].to_string();
+
+    (
+        if cache_name.is_empty() {
+            cache_config.to_string()
+        } else {
+            cache_name
+        },
+        cache_age,
+    )
+}
+
+/// Factory function that creates a DynEnumValidator for validating against dynamic enums loaded
+/// from CSV files.
+///
+/// This function takes a CSV file path or URL and loads its first column into a HashSet to validate
+/// against. The CSV can be loaded from:
+/// - Local filesystem
+/// - HTTP/HTTPS URLs
+/// - CKAN resources (requires --ckan-api and optionally --ckan-token)
+/// - datHere lookup tables
+///
+/// The dynamicEnum value format is: "[cache_name;cache_age]|URL" where cache_name and cache_age are
+/// optional. Examples:
+/// - "https://example.com/data.csv" - Cache as data.csv with 1 hour default cache
+/// - "custom_name;600|https://example.com/data.csv" - Cache as custom_name.csv for 600 seconds
+/// - "resname|ckan://1234567" - Get CKAN resource ID 1234567, cache as resname.csv
+///
+/// # Arguments
+/// * `_parent` - Parent JSON Schema object (unused)
+/// * `value` - The dynamicEnum value string specifying the CSV source
+/// * `location` - Location in the schema for error reporting
+///
+/// # Returns
+/// * `Ok(Box<DynEnumValidator>)` - Validator initialized with values from first CSV column
+/// * `Err(ValidationError)` - If loading/parsing CSV fails or value is not a string
+#[cfg(not(feature = "lite"))]
+fn dyn_enum_validator_factory<'a>(
+    _parent: &'a Map<String, Value>,
+    value: &'a Value,
+    location: Location,
+) -> Result<Box<dyn Keyword>, ValidationError<'a>> {
+    let uri = value.as_str().ok_or_else(|| {
+        ValidationError::custom(
+            Location::default(),
+            location,
+            value,
+            "'dynamicEnum' must be set to a CSV file on the local filesystem or on a URL.",
+        )
+    })?;
+
+    let (lookup_name, cache_age_secs) = parse_dynenum_uri(uri);
+
+    // Create lookup table options
+    let opts = LookupTableOptions {
+        name: lookup_name,
+        uri: uri.to_string(),
+        cache_age_secs,
+        cache_dir: QSV_CACHE_DIR.get().unwrap().to_string(),
+        delimiter: DELIMITER.get().copied().flatten(),
+        ckan_api_url: CKAN_API.get().cloned(),
+        #[allow(clippy::redundant_closure_for_method_calls)]
+        ckan_token: CKAN_TOKEN.get().and_then(|t| t.clone()),
+        timeout_secs: TIMEOUT_SECS.load(Ordering::Relaxed),
+    };
+
+    // Load the lookup table
+    let lookup_result = match load_lookup_table(&opts) {
+        Ok(result) => result,
+        Err(e) => return fail_validation_error!("Error loading dynamicEnum lookup table: {}", e),
+    };
+
+    // Read the first column into a HashSet
+    let mut enum_set = HashSet::with_capacity(lookup_result.headers.len());
+    let rconfig = Config::new(Some(lookup_result.filepath).as_ref());
+    let mut rdr = match rconfig
+        .flexible(true)
+        .comment(Some(b'#'))
+        .skip_format_check(true)
+        .reader()
+    {
+        Ok(reader) => reader,
+        Err(e) => return fail_validation_error!("Error opening dynamicEnum file: {e}"),
+    };
+
+    for result in rdr.records() {
+        match result {
+            Ok(record) => {
+                if let Some(value) = record.get(0) {
+                    enum_set.insert(value.to_owned());
+                }
+            },
+            Err(e) => return fail_validation_error!("Error reading dynamicEnum file - {e}"),
+        };
+    }
+
+    Ok(Box::new(DynEnumValidator::new(enum_set)))
+}
+
+#[cfg(feature = "lite")]
 fn dyn_enum_validator_factory<'a>(
     _parent: &'a Map<String, Value>,
     value: &'a Value,
     location: Location,
 ) -> Result<Box<dyn Keyword>, ValidationError<'a>> {
     if let Value::String(uri) = value {
-        let temp_download = NamedTempFile::new()?;
+        let temp_download = match NamedTempFile::new() {
+            Ok(file) => file,
+            Err(e) => return fail_validation_error!("Failed to create temporary file: {}", e),
+        };
 
         let dynenum_path = if uri.starts_with("http") {
-            let valid_url = reqwest::Url::parse(uri)?;
+            let valid_url = reqwest::Url::parse(uri).map_err(|e| {
+                ValidationError::custom(
+                    Location::default(),
+                    location,
+                    value,
+                    format!("Error parsing dynamicEnum URL: {e}"),
+                )
+            })?;
 
             // download the CSV file from the URL
             let download_timeout = TIMEOUT_SECS.load(Ordering::Relaxed);
@@ -306,8 +511,15 @@ fn dyn_enum_validator_factory<'a>(
                 Some(download_timeout),
                 None,
             );
-            if let Err(e) = tokio::runtime::Runtime::new()?.block_on(future) {
-                return fail_validation_error!("Error downloading dynamicEnum file - {e}");
+            match tokio::runtime::Runtime::new() {
+                Ok(runtime) => {
+                    if let Err(e) = runtime.block_on(future) {
+                        return fail_validation_error!("Error downloading dynamicEnum file - {e}");
+                    }
+                },
+                Err(e) => {
+                    return fail_validation_error!("Error creating Tokio runtime - {e}");
+                },
             }
 
             temp_download.path().to_str().unwrap().to_string()
@@ -324,7 +536,15 @@ fn dyn_enum_validator_factory<'a>(
         // read the first column into a HashSet
         let mut enum_set = HashSet::with_capacity(50);
         let rconfig = Config::new(Some(dynenum_path).as_ref());
-        let mut rdr = rconfig.flexible(true).reader()?;
+        let mut rdr = match rconfig
+            .flexible(true)
+            .comment(Some(b'#'))
+            .skip_format_check(true)
+            .reader()
+        {
+            Ok(reader) => reader,
+            Err(e) => return fail_validation_error!("Error opening dynamicEnum file: {e}"),
+        };
         for result in rdr.records() {
             match result {
                 Ok(record) => {
@@ -360,6 +580,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if args.flag_delimiter.is_some() {
         rconfig = rconfig.delimiter(args.flag_delimiter);
     }
+    DELIMITER.set(args.flag_delimiter).unwrap();
 
     let mut rdr = rconfig.reader()?;
 
@@ -598,6 +819,29 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let headers = rdr.byte_headers()?.clone();
     let header_len = headers.len();
 
+    #[cfg(not(feature = "lite"))]
+    let qsv_cache_dir = lookup::set_qsv_cache_dir(&args.flag_cache_dir)?;
+    #[cfg(not(feature = "lite"))]
+    QSV_CACHE_DIR.set(qsv_cache_dir)?;
+
+    // check the QSV_CKAN_API environment variable
+    #[cfg(not(feature = "lite"))]
+    CKAN_API.set(if let Ok(api) = std::env::var("QSV_CKAN_API") {
+        api
+    } else {
+        args.flag_ckan_api.clone()
+    })?;
+
+    // check the QSV_CKAN_TOKEN environment variable
+    #[cfg(not(feature = "lite"))]
+    CKAN_TOKEN
+        .set(if let Ok(token) = std::env::var("QSV_CKAN_TOKEN") {
+            Some(token)
+        } else {
+            args.flag_ckan_token.clone()
+        })
+        .unwrap();
+
     // parse and compile supplied JSON Schema
     let (schema_json, schema_compiled): (Value, Validator) =
         // safety: we know the schema is_some() because we checked above
@@ -650,7 +894,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // amortize memory allocation by reusing record
     let mut record = csv::ByteRecord::with_capacity(500, header_len);
 
-    // set RAYON_NUM_THREADS
     let num_jobs = util::njobs(args.flag_jobs);
 
     // reuse batch buffer
@@ -661,9 +904,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut validation_error_messages: Vec<String> = Vec::with_capacity(50);
     let flag_trim = args.flag_trim;
 
-    // amortize buffer allocation
-    let mut buffer = itoa::Buffer::new();
-
     // main loop to read CSV and construct batches for parallel processing.
     // each batch is processed via Rayon parallel iterator.
     // loop exits when batch is empty.
@@ -672,7 +912,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             match rdr.read_byte_record(&mut record) {
                 Ok(true) => {
                     row_number += 1;
-                    record.push_field(buffer.format(row_number).as_bytes());
+                    record.push_field(itoa::Buffer::new().format(row_number).as_bytes());
                     if flag_trim {
                         record.trim();
                     }
@@ -921,50 +1161,48 @@ fn to_json_instance(
     header_len: usize,
     record: &ByteRecord,
 ) -> CliResult<Value> {
-    let mut json_object_map: Map<String, Value> = Map::with_capacity(header_len);
+    let mut json_object_map = Map::with_capacity(header_len);
 
-    let mut lossy_string;
     for ((key, json_type), value) in header_types.iter().zip(record.iter()) {
         if value.is_empty() {
             json_object_map.insert(key.clone(), Value::Null);
             continue;
         }
 
-        let value_str = if let Ok(v) = simdutf8::basic::from_utf8(value) {
-            v
-        } else {
-            lossy_string = String::from_utf8_lossy(value).to_string();
-            &lossy_string
-        };
-
         let json_value = match json_type {
-            JSONtypes::String => Value::String(value_str.to_owned()),
-            JSONtypes::Number => {
-                if let Ok(float) = value_str.parse::<f64>() {
-                    Value::Number(Number::from_f64(float).unwrap())
-                } else {
-                    return fail_clierror!(
-                        "Can't cast into Number. key: {key}, value: {value_str}"
-                    );
-                }
+            JSONtypes::String => match simdutf8::basic::from_utf8(value) {
+                Ok(v) => Value::String(v.to_owned()),
+                Err(_) => Value::String(String::from_utf8_lossy(value).into_owned()),
             },
-            JSONtypes::Integer => {
-                if let Ok(int) = atoi_simd::parse::<i64>(value_str.as_bytes()) {
-                    Value::Number(Number::from(int))
-                } else {
+            JSONtypes::Number => match fast_float2::parse(value) {
+                Ok(float) => {
+                    Value::Number(Number::from_f64(float).unwrap_or_else(|| Number::from(0)))
+                },
+                Err(_) => {
                     return fail_clierror!(
-                        "Can't cast into Integer. key: {key}, value: {value_str}"
-                    );
-                }
+                        "Can't cast into Number. key: {key}, value: {}",
+                        String::from_utf8_lossy(value)
+                    )
+                },
             },
-            JSONtypes::Boolean => {
-                if let Ok(boolean) = value_str.parse::<bool>() {
-                    Value::Bool(boolean)
-                } else {
+            JSONtypes::Integer => match atoi_simd::parse::<i64>(value) {
+                Ok(int) => Value::Number(Number::from(int)),
+                Err(_) => {
                     return fail_clierror!(
-                        "Can't cast into Boolean. key: {key}, value: {value_str}"
-                    );
-                }
+                        "Can't cast into Integer. key: {key}, value: {}",
+                        String::from_utf8_lossy(value)
+                    )
+                },
+            },
+            JSONtypes::Boolean => match value {
+                b"true" | b"1" => Value::Bool(true),
+                b"false" | b"0" => Value::Bool(false),
+                _ => {
+                    return fail_clierror!(
+                        "Can't cast into Boolean. key: {key}, value: {}",
+                        String::from_utf8_lossy(value)
+                    )
+                },
             },
             JSONtypes::Unsupported => unreachable!("we should never get an unsupported JSON type"),
         };
@@ -987,7 +1225,6 @@ fn get_json_types(headers: &ByteRecord, schema: &Value) -> CliResult<Vec<(String
     // safety: we set NULL_TYPE in main() and it's never changed
     let null_type = NULL_TYPE.get().unwrap();
 
-    let mut key_string: String;
     let mut field_def: &Value;
     let mut field_type_def: &Value;
     let mut json_type: JSONtypes;
@@ -995,17 +1232,12 @@ fn get_json_types(headers: &ByteRecord, schema: &Value) -> CliResult<Vec<(String
 
     // iterate over each CSV field and convert to JSON type
     for header in headers {
-        // convert csv header to string. It's the key in the JSON object
-        key_string = if let Ok(s) = simdutf8::basic::from_utf8(header) {
-            s.to_owned()
-        } else {
+        let Ok(key) = simdutf8::basic::from_utf8(header) else {
             let s = String::from_utf8_lossy(header);
             return fail_encoding_clierror!("CSV header is not valid UTF-8: {s}");
         };
 
-        field_def = schema_properties
-            .get(key_string.clone())
-            .unwrap_or(&Value::Null);
+        field_def = schema_properties.get(key).unwrap_or(&Value::Null);
         field_type_def = field_def.get("type").unwrap_or(&Value::Null);
 
         json_type = match field_type_def {
@@ -1039,7 +1271,7 @@ fn get_json_types(headers: &ByteRecord, schema: &Value) -> CliResult<Vec<(String
             _ => JSONtypes::String,
         };
 
-        header_types.push((key_string, json_type));
+        header_types.push((key.to_owned(), json_type));
     }
     Ok(header_types)
 }
@@ -1314,6 +1546,11 @@ mod tests_for_schema_validation {
 
 #[test]
 fn test_validate_currency_email_dynamicenum_validator() {
+    #[cfg(not(feature = "lite"))]
+    let qsv_cache_dir = lookup::set_qsv_cache_dir("~/.qsv-cache").unwrap();
+    #[cfg(not(feature = "lite"))]
+    QSV_CACHE_DIR.get_or_init(|| qsv_cache_dir);
+
     fn schema_currency_json() -> Value {
         serde_json::json!({
             "$id": "https://example.com/person.schema.json",
@@ -1344,7 +1581,7 @@ fn test_validate_currency_email_dynamicenum_validator() {
                 "agency": {
                     "description": "The person's agency.",
                     "type": "string",
-                    "dynamicEnum": "https://raw.githubusercontent.com/jqnatividad/qsv/refs/heads/master/scripts/NYC_agencies.csv",
+                    "dynamicEnum": "https://raw.githubusercontent.com/dathere/qsv/refs/heads/master/scripts/NYC_agencies.csv",
                 }
             }
         })
@@ -1505,6 +1742,11 @@ fn test_validate_currency_email_dynamicenum_validator() {
 
 #[test]
 fn test_load_json_via_url() {
+    #[cfg(not(feature = "lite"))]
+    let qsv_cache_dir = lookup::set_qsv_cache_dir("~/.qsv-cache").unwrap();
+    #[cfg(not(feature = "lite"))]
+    QSV_CACHE_DIR.get_or_init(|| qsv_cache_dir);
+
     let json_string_result = load_json("https://geojson.org/schema/FeatureCollection.json");
     assert!(&json_string_result.is_ok());
 
@@ -1515,7 +1757,12 @@ fn test_load_json_via_url() {
 
 #[test]
 fn test_dyn_enum_validator() {
-    let schema = json!({"dynamicEnum": "https://raw.githubusercontent.com/jqnatividad/qsv/refs/heads/master/resources/test/fruits.csv", "type": "string"});
+    #[cfg(not(feature = "lite"))]
+    let qsv_cache_dir = lookup::set_qsv_cache_dir("~/.qsv-cache").unwrap();
+    #[cfg(not(feature = "lite"))]
+    QSV_CACHE_DIR.get_or_init(|| qsv_cache_dir);
+
+    let schema = json!({"dynamicEnum": "https://raw.githubusercontent.com/dathere/qsv/refs/heads/master/resources/test/fruits.csv", "type": "string"});
     let validator = jsonschema::options()
         .with_keyword("dynamicEnum", dyn_enum_validator_factory)
         .build(&schema)
@@ -1530,9 +1777,8 @@ fn test_dyn_enum_validator() {
     assert!(!validator.is_valid(&json!("")));
     assert!(!validator.is_valid(&json!(5)));
     if let Err(e) = validator.validate(&json!("lanzones")) {
-        let err_info = e.into_iter().next().unwrap();
         assert_eq!(
-            format!("{err_info:?}"),
+            format!("{e:?}"),
             r#"ValidationError { instance: String("lanzones"), kind: Custom { message: "\"lanzones\" is not a valid dynamicEnum value" }, instance_path: Location(""), schema_path: Location("") }"#
         );
     } else {

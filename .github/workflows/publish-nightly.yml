@@ -27,7 +27,7 @@ jobs:
     runs-on: ${{ matrix.job.os }}
     strategy:
       matrix:
-        rust: [nightly-2024-09-29]
+        rust: [nightly-2024-11-28]
         job:
           - os: ubuntu-24.04
             os-name: linux
@@ -97,6 +97,9 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install libwayland-dev
+    - uses: actions/setup-python@v5.3.0
+      with:
+        python-version: '3.12'
     - name: Build qsv-nightly
       # env:
       #   RUSTFLAGS: --emit=asm
@@ -157,7 +160,7 @@ jobs:
     - name: Download latest release zip
       uses: robinraju/release-downloader@v1.11
       with:
-        repository: "jqnatividad/qsv"
+        repository: "dathere/qsv"
         latest: true
         token: ${{ secrets.GITHUB_TOKEN }}
         fileName: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip

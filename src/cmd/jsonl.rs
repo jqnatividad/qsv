@@ -8,7 +8,7 @@ fields from the input.
 Also, it will fail if the JSON documents are not consistent with one another,
 as the first JSON line will be used to infer the headers of the CSV output.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_jsonl.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_jsonl.rs.
 
 Usage:
     qsv jsonl [options] [<input>]
@@ -187,7 +187,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut batch = Vec::with_capacity(batchsize);
     let mut batch_results = Vec::with_capacity(batchsize);
 
-    // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
 
     let mut result_idx = 0_u64;

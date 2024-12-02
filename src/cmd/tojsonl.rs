@@ -13,7 +13,7 @@ The `tojsonl` command will reuse a `stats.csv.data.jsonl` file if it exists and 
 current (i.e. stats generated with --cardinality and --infer-dates options) and will
 skip recomputing stats.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_tojsonl.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_tojsonl.rs.
 
 Usage:
     qsv tojsonl [options] [<input>]
@@ -259,7 +259,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     #[allow(unused_assignments)]
     let mut batch_record = csv::StringRecord::new();
 
-    // set RAYON_NUM_THREADS
     let num_jobs = util::njobs(args.flag_jobs);
 
     // reuse batch buffers

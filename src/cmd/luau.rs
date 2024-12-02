@@ -1,6 +1,6 @@
 static USAGE: &str = r#"
 Create multiple new computed columns, filter rows or compute aggregations by 
-executing a Luau 0.640 script for every row (SEQUENTIAL MODE) or for
+executing a Luau 0.653 script for every row (SEQUENTIAL MODE) or for
 specified rows (RANDOM ACCESS MODE) of a CSV file.
 
 Luau is not just another qsv command. It is qsv's Domain-Specific Language (DSL)
@@ -139,7 +139,7 @@ CSVs on the filesystem, a URL, datHere's lookup repo or CKAN instances.
 Detailed descriptions of these helpers can be found in the "setup_helpers" section at
 the bottom of this file.
 
-For more detailed examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_luau.rs.
+For more detailed examples, see https://github.com/dathere/qsv/blob/master/tests/test_luau.rs.
 
 Usage:
     qsv luau map [options] -n <main-script> [<input>]
@@ -242,7 +242,6 @@ use std::{
     io::Write,
     path::Path,
     sync::atomic::{AtomicBool, AtomicI8, AtomicU16, Ordering},
-    time::Instant,
 };
 
 use csv_index::RandomAccessSimple;
@@ -251,12 +250,10 @@ use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{debug, info, log_enabled};
 use mlua::{Lua, LuaSerdeExt, Value};
 use serde::Deserialize;
-use simple_expand_tilde::expand_tilde;
-use strum_macros::IntoStaticStr;
 
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
-    util, CliError, CliResult,
+    lookup, util, CliError, CliResult,
 };
 
 #[allow(dead_code)]
@@ -305,23 +302,40 @@ static QSV_V_LASTROW: &str = "_LASTROW";
 static QSV_V_INDEX: &str = "_INDEX";
 
 // there are 3 stages: 1-BEGIN, 2-MAIN, 3-END
-#[repr(i8)]
-#[derive(IntoStaticStr)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum Stage {
-    Begin = 1,
-    Main  = 2,
-    End   = 3,
+    Begin = 0,
+    Main  = 1,
+    End   = 2,
 }
 
 impl TryFrom<i8> for Stage {
-    type Error = ();
+    type Error = &'static str;
 
-    fn try_from(v: i8) -> Result<Self, Self::Error> {
-        match v {
-            x if x == Stage::Begin as i8 => Ok(Stage::Begin),
-            x if x == Stage::Main as i8 => Ok(Stage::Main),
-            x if x == Stage::End as i8 => Ok(Stage::End),
-            _ => Err(()),
+    fn try_from(value: i8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Stage::Begin),
+            1 => Ok(Stage::Main),
+            2 => Ok(Stage::End),
+            _ => Err("Invalid stage value"),
+        }
+    }
+}
+
+impl Stage {
+    fn set_current(self) {
+        LUAU_STAGE.store(self as i8, Ordering::Relaxed);
+    }
+
+    fn current() -> Option<Self> {
+        Stage::try_from(LUAU_STAGE.load(Ordering::Relaxed)).ok()
+    }
+
+    const fn as_str(self) -> &'static str {
+        match self {
+            Stage::Begin => "BEGIN",
+            Stage::Main => "MAIN",
+            Stage::End => "END",
         }
     }
 }
@@ -351,10 +365,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     } else if std::path::Path::new(&args.arg_main_script)
         .extension()
-        .map_or(false, |ext| ext.eq_ignore_ascii_case("luau"))
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("luau"))
         || std::path::Path::new(&args.arg_main_script)
             .extension()
-            .map_or(false, |ext| ext.eq_ignore_ascii_case("lua"))
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("lua"))
     {
         match fs::read_to_string(args.arg_main_script.clone()) {
             Ok(file_contents) => file_contents,
@@ -413,10 +427,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         } else if std::path::Path::new(begin)
             .extension()
-            .map_or(false, |ext| ext.eq_ignore_ascii_case("luau"))
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("luau"))
             || std::path::Path::new(begin)
                 .extension()
-                .map_or(false, |ext| ext.eq_ignore_ascii_case("lua"))
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("lua"))
         {
             match fs::read_to_string(begin.clone()) {
                 Ok(file_contents) => file_contents,
@@ -449,10 +463,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }
         } else if std::path::Path::new(end)
             .extension()
-            .map_or(false, |ext| ext.eq_ignore_ascii_case("luau"))
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("luau"))
             || std::path::Path::new(end)
                 .extension()
-                .map_or(false, |ext| ext.eq_ignore_ascii_case("lua"))
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("lua"))
         {
             match fs::read_to_string(end.clone()) {
                 Ok(file_contents) => file_contents,
@@ -555,25 +569,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // check if qsv_registerlookup_used is set, if it is, setup the qsv_cache directory
     if qsv_register_lookup_used {
-        let qsv_cache_dir = if let Ok(cache_path) = std::env::var("QSV_CACHE_DIR") {
-            // if QSV_CACHE_DIR env var is set, check if it exists. If it doesn't, create it.
-            if cache_path.starts_with('~') {
-                // expand the tilde
-                let expanded_dir = expand_tilde(&cache_path).unwrap();
-                expanded_dir.to_string_lossy().to_string()
-            } else {
-                cache_path
-            }
-        } else if args.flag_cache_dir.starts_with('~') {
-            // expand the tilde
-            let expanded_dir = expand_tilde(&args.flag_cache_dir).unwrap();
-            expanded_dir.to_string_lossy().to_string()
-        } else {
-            args.flag_cache_dir.clone()
-        };
-        if !Path::new(&qsv_cache_dir).exists() {
-            fs::create_dir_all(&qsv_cache_dir)?;
-        }
+        let qsv_cache_dir = lookup::set_qsv_cache_dir(&args.flag_cache_dir)?;
 
         info!("Using cache directory: {qsv_cache_dir}");
         globals.raw_set(QSV_CACHE_DIR, qsv_cache_dir)?;
@@ -670,7 +666,7 @@ fn sequential_mode(
     globals.raw_set(QSV_V_ROWCOUNT, 0)?;
     if !begin_script.is_empty() {
         info!("Compiling and executing BEGIN script. _IDX: 0 _ROWCOUNT: 0");
-        LUAU_STAGE.store(Stage::Begin as i8, Ordering::Relaxed);
+        Stage::Begin.set_current();
 
         if let Err(e) = luau.load(begin_script).exec() {
             return fail_clierror!("BEGIN error: Failed to execute \"{begin_script}\".\n{e}");
@@ -714,14 +710,14 @@ fn sequential_mode(
     let main_bytecode = if debug_enabled {
         Vec::new()
     } else {
-        luau_compiler.compile(main_script)
+        luau_compiler.compile(main_script)?
     };
 
     let mut record = csv::StringRecord::new();
     let mut idx = 0_u64;
     let mut error_count = 0_usize;
 
-    LUAU_STAGE.store(Stage::Main as i8, Ordering::Relaxed);
+    Stage::Main.set_current();
     info!("Executing MAIN script.");
 
     let mut computed_value;
@@ -803,12 +799,7 @@ fn sequential_mode(
         }
 
         if cmd_map {
-            map_computedvalue(
-                computed_value.as_ref(),
-                &mut record,
-                flag_remap,
-                new_column_count,
-            )?;
+            map_computedvalue(&computed_value, &mut record, flag_remap, new_column_count)?;
 
             // check if the script is trying to insert a record with
             // qsv_insertrecord(). We do this by checking if the global
@@ -869,7 +860,7 @@ fn sequential_mode(
         // should make for more readable END scripts.
         // Also, _ROWCOUNT is zero during the main script, and only set
         // to _IDX during the END script.
-        LUAU_STAGE.store(Stage::End as i8, Ordering::Relaxed);
+        Stage::End.set_current();
         globals.raw_set(QSV_V_ROWCOUNT, idx)?;
         if !idx_used {
             // for perf reasons, we only updated _IDX in the main
@@ -895,10 +886,10 @@ fn sequential_mode(
         beginend_insertrecord(luau, &mut insertrecord, headers_count, &mut wtr)?;
 
         let end_string = match end_value {
-            Value::String(string) => string.to_string_lossy().to_string(),
-            Value::Number(number) => number.to_string(),
-            Value::Integer(number) => number.to_string(),
-            Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_string(),
+            Value::String(string) => string.to_string_lossy(),
+            Value::Number(number) => ryu::Buffer::new().format_finite(number).to_owned(),
+            Value::Integer(number) => itoa::Buffer::new().format(number).to_owned(),
+            Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_owned(),
             Value::Nil => String::new(),
             _ => {
                 return fail_clierror!(
@@ -1005,7 +996,7 @@ fn random_access_mode(
             "Compiling and executing BEGIN script. _ROWCOUNT: {row_count} _LASTROW: {}",
             row_count - 1
         );
-        LUAU_STAGE.store(Stage::Begin as i8, Ordering::Relaxed);
+        Stage::Begin.set_current();
 
         if let Err(e) = luau.load(begin_script).exec() {
             return fail_clierror!("BEGIN error: Failed to execute \"{begin_script}\".\n{e}");
@@ -1029,7 +1020,7 @@ fn random_access_mode(
 
     // in random access mode, setting "_INDEX" allows us to change the current record
     // for the NEXT read
-    let mut pos = globals.get::<_, isize>(QSV_V_INDEX).unwrap_or_default();
+    let mut pos = globals.get::<isize>(QSV_V_INDEX).unwrap_or_default();
     let mut curr_record = if pos > 0 && pos <= row_count as isize {
         pos as u64
     } else {
@@ -1041,7 +1032,7 @@ fn random_access_mode(
     let main_bytecode = if debug_enabled {
         Vec::new()
     } else {
-        luau_compiler.compile(main_script)
+        luau_compiler.compile(main_script)?
     };
     let mut record = csv::StringRecord::new();
     let mut error_count = 0_usize;
@@ -1072,7 +1063,7 @@ fn random_access_mode(
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    LUAU_STAGE.store(Stage::Main as i8, Ordering::Relaxed);
+    Stage::Main.set_current();
     info!(
         "Executing MAIN script. _INDEX: {curr_record} _ROWCOUNT: {row_count} _LASTROW: {}",
         row_count - 1
@@ -1153,12 +1144,7 @@ fn random_access_mode(
         }
 
         if cmd_map {
-            map_computedvalue(
-                computed_value.as_ref(),
-                &mut record,
-                flag_remap,
-                new_column_count,
-            )?;
+            map_computedvalue(&computed_value, &mut record, flag_remap, new_column_count)?;
 
             // check if the MAIN script is trying to insert a record
             match luau.globals().raw_get(QSV_INSERTRECORD_TBL) {
@@ -1209,7 +1195,7 @@ fn random_access_mode(
             }
         }
 
-        pos = globals.get::<_, isize>(QSV_V_INDEX).unwrap_or_default();
+        pos = globals.get::<isize>(QSV_V_INDEX).unwrap_or_default();
         if pos < 0 || pos as u64 > row_count {
             break 'main;
         }
@@ -1226,7 +1212,7 @@ fn random_access_mode(
 
     if !end_script.is_empty() {
         info!("Compiling and executing END script. _ROWCOUNT: {row_count}");
-        LUAU_STAGE.store(Stage::End as i8, Ordering::Relaxed);
+        Stage::End.set_current();
 
         let end_value: Value = match luau.load(end_script).eval() {
             Ok(computed) => computed,
@@ -1244,10 +1230,10 @@ fn random_access_mode(
         beginend_insertrecord(luau, &mut insertrecord, headers_count, &mut wtr)?;
 
         let end_string = match end_value {
-            Value::String(string) => string.to_string_lossy().to_string(),
-            Value::Number(number) => number.to_string(),
-            Value::Integer(number) => number.to_string(),
-            Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_string(),
+            Value::String(string) => string.to_string_lossy(),
+            Value::Number(number) => ryu::Buffer::new().format_finite(number).to_owned(),
+            Value::Integer(number) => itoa::Buffer::new().format(number).to_owned(),
+            Value::Boolean(boolean) => (if boolean { "true" } else { "false" }).to_owned(),
             Value::Nil => String::new(),
             _ => {
                 return fail_clierror!(
@@ -1287,19 +1273,17 @@ fn map_computedvalue(
 ) -> Result<(), CliError> {
     match computed_value {
         Value::String(string) => {
-            if let Ok(utf8) = simdutf8::basic::from_utf8(string.as_bytes()) {
+            if let Ok(utf8) = simdutf8::basic::from_utf8(&string.as_bytes()) {
                 record.push_field(utf8);
             } else {
                 record.push_field(&string.to_string_lossy());
             }
         },
         Value::Number(number) => {
-            let mut buffer = ryu::Buffer::new();
-            record.push_field(buffer.format(*number));
+            record.push_field(ryu::Buffer::new().format_finite(*number));
         },
         Value::Integer(number) => {
-            let mut buffer = itoa::Buffer::new();
-            record.push_field(buffer.format(*number));
+            record.push_field(itoa::Buffer::new().format(*number));
         },
         Value::Boolean(boolean) => {
             record.push_field(if *boolean { "true" } else { "false" });
@@ -1314,8 +1298,6 @@ fn map_computedvalue(
                 record.clear();
             }
             let mut columns_inserted = 0_u8;
-            let mut ibuffer = itoa::Buffer::new();
-            let mut nbuffer = ryu::Buffer::new();
             table.for_each::<String, Value>(|_k, v| {
                 if new_column_count > 0 && columns_inserted >= new_column_count {
                     // we ignore table values more than the number of
@@ -1323,9 +1305,11 @@ fn map_computedvalue(
                     return Ok(());
                 }
                 match v {
-                    Value::Integer(intval) => record.push_field(ibuffer.format(intval)),
+                    Value::Integer(intval) => record.push_field(itoa::Buffer::new().format(intval)),
                     Value::String(strval) => record.push_field(&strval.to_string_lossy()),
-                    Value::Number(number) => record.push_field(nbuffer.format(number)),
+                    Value::Number(number) => {
+                        record.push_field(ryu::Buffer::new().format_finite(number));
+                    },
                     Value::Boolean(boolean) => {
                         record.push_field(if boolean { "true" } else { "false" });
                     },
@@ -1473,9 +1457,9 @@ fn setup_helpers(
         let mut log_msg = {
             // at which stage are we logging?
             // safety: this is safe to unwrap because we only set LUAU_STAGE using the Stage enum
-            let stage: Stage = LUAU_STAGE.load(Ordering::Relaxed).try_into().unwrap();
-            let stage_str: &'static str = stage.into();
-            format!("{}: ", stage_str.to_ascii_uppercase())
+            let stage = Stage::current().unwrap_or(Stage::Main);
+            let stage_str = stage.as_str();
+            format!("{stage_str}: ")
         };
         let mut idx = 0_u8;
         let mut log_level = String::new();
@@ -1537,7 +1521,7 @@ fn setup_helpers(
     //                  Luau runtime error if called from END script
     //
     let qsv_break = luau.create_function(|luau, mut args: mlua::MultiValue| {
-        if LUAU_STAGE.load(Ordering::Relaxed) == Stage::End as i8 {
+        if Stage::current() == Some(Stage::End) {
             return helper_err!(
                 "qsv_break",
                 "qsv_break() can only be called from the BEGIN and MAIN scripts."
@@ -1588,7 +1572,7 @@ fn setup_helpers(
     //               or Luau runtime error if called from BEGIN or END scripts
     //
     let qsv_skip = luau.create_function(|_, ()| {
-        if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Main as i8 {
+        if Stage::current() != Some(Stage::Main) {
             return helper_err!(
                 "qsv_skip",
                 "qsv_skip() can only be called from the MAIN script."
@@ -1615,7 +1599,7 @@ fn setup_helpers(
     //               A Luau runtime error is also returned if called from MAIN or END.
     //
     let qsv_autoindex = luau.create_function(|_, ()| {
-        if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Begin as i8 {
+        if Stage::current() != Some(Stage::Begin) {
             return helper_err!(
                 "qsv_autoindex",
                 "qsv_autoindex() can only be called from the BEGIN script."
@@ -1750,8 +1734,7 @@ fn setup_helpers(
                 record = result.unwrap_or_default();
 
                 let key = if key_idx == usize::MAX {
-                    let mut buffer = itoa::Buffer::new();
-                    buffer.format(row_idx).to_owned()
+                    itoa::Buffer::new().format(row_idx).to_owned()
                 } else {
                     record.get(key_idx).unwrap_or_default().trim().to_string()
                 };
@@ -1897,7 +1880,7 @@ fn setup_helpers(
         let qsv_binary = env::current_exe().unwrap();
 
         let mut cmd = std::process::Command::new(qsv_binary);
-        let qsv_args = args.to_str().unwrap_or_default().to_string();
+        let qsv_args = args.to_string_lossy();
         let args_vec: Vec<&str> = qsv_args.split_whitespace().collect();
         log::info!("Invoking qsv_cmd: {qsv_args}");
         let result = cmd.args(args_vec).output();
@@ -2084,314 +2067,73 @@ fn setup_helpers(
     //                         if called from the MAIN or END scripts, or
     //                         if the lookup table is empty.
     //
-    let qsv_register_lookup = luau.create_function(move |luau, (lookup_name, mut lookup_table_uri, cache_age_secs): (String, String, i64)| {
-        const MSG_PREFIX: &str = "qsv_register_lookup() - ";
-
-        if LUAU_STAGE.load(Ordering::Relaxed) != Stage::Begin as i8 {
-            return helper_err!("qsv_register_lookup", "can only be called from the BEGIN script.");
-        }
-
-        let call_parameters = format!("qsv_lookup_register({lookup_name}, {lookup_table_uri}, {cache_age_secs})");
-
-        let mut cached_csv_exists = false;
-        let mut cached_csv_age_secs = 0_i64;
-        let mut cached_csv_size = 0;
-        let mut cache_csv_last_modified: Option<std::time::SystemTime> = None;
-        let qsv_cache_dir: String = luau.globals().raw_get(QSV_CACHE_DIR)?;
-        let cached_csv_path = Path::new(&qsv_cache_dir).join(format!("{lookup_name}.csv"));
-
-        // check if lookup_table_uri is a file in the local filesystem
-        let lookup_table_path = Path::new(&lookup_table_uri);
-        let lookup_table_is_file = lookup_table_path.exists();
-        if lookup_table_is_file {
-            debug!("{MSG_PREFIX}{lookup_table_uri} is a file in the local filesystem");
-        } else if cached_csv_path.exists() {
-
-            if cache_age_secs < 0 {
-                // delete the cached CSV file
-                debug!("{MSG_PREFIX}deleting cached CSV file {}", cached_csv_path.display());
-                std::fs::remove_file(&cached_csv_path)?;
-            } else {
-                // get metadata for the cached CSV file
-                cached_csv_exists = true;
-                let metadata = cached_csv_path.metadata()?;
-                cache_csv_last_modified = Some(metadata.modified()?);
-                let modified_secs = cache_csv_last_modified.unwrap().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-                let now_secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-                cached_csv_size = metadata.len();
-
-                // if cache_age_secs is 0, the cached file never expires
-                cached_csv_age_secs = if cache_age_secs > 0 {
-                        (now_secs - modified_secs).try_into().unwrap_or(0_i64)
-                } else {
-                    0_i64
-                };
-            }
-        }
-
-        // if the lookup is not a file in the local filesystem, check if we can use the cached CSV
-        // i.e. if the cached CSV exists and is not older than cache_age_secs or set not to expire, and not empty
-        // otherwise, we will re-download it
-        if !lookup_table_is_file && cached_csv_exists && cached_csv_age_secs <= cache_age_secs && cached_csv_size > 0 {
-            lookup_table_uri = cached_csv_path.display().to_string();
-            log::info!("{MSG_PREFIX}Using cached lookup table {lookup_table_uri}");
-        } else {
-            // if the lookup_table_uri starts with "dathere://", prepend the repo URL to the lookup table
-            if let Some(lookup_url) = lookup_table_uri.strip_prefix("dathere://") {
-                lookup_table_uri = format!("https://raw.githubusercontent.com/dathere/qsv-lookup-tables/main/lookup-tables/{lookup_url}");
+    let qsv_register_lookup = luau.create_function(
+        move |luau, (lookup_name, lookup_table_uri, cache_age_secs): (String, String, i64)| {
+            if Stage::current() != Some(Stage::Begin) {
+                return helper_err!(
+                    "qsv_register_lookup",
+                    "can only be called from the BEGIN script."
+                );
             }
 
-            let mut lookup_ckan = false;
-            let mut resource_search = false;
-            if let Some(mut lookup_url) = lookup_table_uri.strip_prefix("ckan://") {
-                lookup_ckan = true;
-                // it's a CKAN resource. If it ends with a '?', we'll do a resource_search
-                lookup_url = lookup_url.trim();
-                if lookup_url.ends_with('?') {
-                    lookup_table_uri = format!("{ckan_api_url}/resource_search?query=name:{lookup_url}");
-                    lookup_table_uri.pop(); // remove the trailing '?'
-                    resource_search = true;
-                } else {
-                    // otherwise, we do a resource_show
-                    lookup_table_uri = format!("{ckan_api_url}/resource_show?id={lookup_url}");
+            let qsv_cache_dir: String = luau.globals().raw_get(QSV_CACHE_DIR)?;
+
+            let lookup_table_opts = crate::lookup::LookupTableOptions {
+                name: lookup_name.clone(),
+                uri: lookup_table_uri.clone(),
+                cache_age_secs,
+                cache_dir: qsv_cache_dir,
+                delimiter,
+                ckan_api_url: Some(ckan_api_url.clone()),
+                ckan_token: ckan_token.clone(),
+                timeout_secs: TIMEOUT_SECS.load(Ordering::Relaxed),
+            };
+
+            let result = match crate::lookup::load_lookup_table(&lookup_table_opts) {
+                Ok(result) => result,
+                Err(e) => return helper_err!("qsv_register_lookup", "{}", e),
+            };
+
+            // Create Lua table from the lookup data
+            let lookup_table = luau.create_table()?;
+            let mut rdr = Config::new(Some(result.filepath).as_ref())
+                .delimiter(delimiter)
+                .comment(Some(b'#'))
+                .no_headers(false)
+                .reader()?;
+
+            let headers = result.headers;
+            let mut record;
+            for result in rdr.records() {
+                record = result.unwrap_or_default();
+                let key = record.get(0).unwrap_or_default().trim();
+                let inside_table = luau.create_table()?;
+                for (i, header) in headers.iter().skip(1).enumerate() {
+                    inside_table.raw_set(header, record.get(i + 1).unwrap_or_default().trim())?;
                 }
+                lookup_table.raw_set(key, inside_table)?;
             }
 
-            let lookup_on_url = lookup_table_uri.to_lowercase().starts_with("http");
+            luau.globals().raw_set(lookup_name.clone(), lookup_table)?;
 
-            let cache_file_path = Path::new(&qsv_cache_dir).join(format!("{lookup_name}.csv"));
-
-            if lookup_on_url {
-                use reqwest::{blocking::Client, Url};
-
-                let client_timeout = std::time::Duration::from_secs(TIMEOUT_SECS.load(Ordering::Relaxed) as u64);
-
-                let client = match Client::builder()
-                    // safety: we're using a validated QSV_USER_AGENT or if it's not set,
-                    // the default user agent                    
-                    .user_agent(util::set_user_agent(None).unwrap())
-                    .brotli(true)
-                    .gzip(true)
-                    .deflate(true)
-                    .zstd(true)
-                    .use_rustls_tls()
-                    .http2_adaptive_window(true)
-                    .connection_verbose(log_enabled!(log::Level::Trace))
-                    .timeout(client_timeout)
-                    .build()
-                {
-                    Ok(c) => c,
-                    Err(e) => {
-                        return helper_err!("qsv_register_lookup", "Cannot build reqwest client to download lookup CSV: {e}.");
-                    }
-                };
-
-                let now = std::time::SystemTime::now();
-                let now_dt_utc: chrono::DateTime<chrono::Utc> = now.into();
-                let download_start = Instant::now();
-                let mut last_modified_rfc8222 = now_dt_utc.to_rfc2822();
-                let mut write_csv_contents = true;
-                let lookup_csv_response = if lookup_ckan {
-                    // we're using the ckan scheme, so we need to get the resource
-
-                    let mut headers = reqwest::header::HeaderMap::new();
-
-                    if let Some(ckan_token) = &ckan_token {
-                        // there's a ckan token, so use it
-                        headers.insert(
-                            reqwest::header::AUTHORIZATION,
-                            reqwest::header::HeaderValue::from_str(ckan_token).unwrap(),
-                        );
-                    }
-
-                    debug!("{MSG_PREFIX}Downloading lookup CSV from {}...", lookup_table_uri.clone());
-
-                    // first, check if this is a resource query (i.e. ends with a question mark)
-                    if resource_search {
-                        // it is a resource query, so let's do a resource_search
-                        // and get the first resource with a matching name
-
-                        let validated_url = match Url::parse(&lookup_table_uri) {
-                            Ok(url) => url,
-                            Err(e) => {
-                                return helper_err!("qsv_register_lookup", "Invalid resource_search url {e}.");
-                            }
-                        };
-
-                        let resource_search_result = match client.get(validated_url).headers(headers.clone()).send() {
-                            Ok(response) => response.text().unwrap_or_default(),
-                            Err(e) => {
-                                return helper_err!("qsv_register_lookup", "Cannot find resource name with resource_search: {e}.");
-                            }
-                        };
-
-                        let resource_search_json: serde_json::Value = match serde_json::from_str(&resource_search_result) {
-                            Ok(json) => json,
-                            Err(e) => {
-                                return helper_err!("qsv_register_lookup", "Invalid resource_search json {e}.");
-                            }
-                        };
-
-                        let Some(resource_id) = resource_search_json["result"]["results"][0]["id"].as_str() else {
-                            return helper_err!("qsv_register_lookup", "Cannot find a resource name.");
-                        };
-
-                        lookup_table_uri = format!("{ckan_api_url}/resource_show?id={resource_id}");
-                    }
-
-                    // get resource_show json and get the resource URL
-                    let resource_show_result = match client.get(lookup_table_uri).headers(headers.clone()).send() {
-                        Ok(response) => response.text().unwrap_or_default(),
-                        Err(e) => {
-                            return helper_err!("qsv_register_lookup", "CKAN scheme used. Cannot get lookup CSV resource: {e}.");
-                        }
-                    };
-
-                    let resource_show_json: serde_json::Value = match serde_json::from_str(&resource_show_result) {
-                        Ok(json) => json,
-                        Err(e) => {
-                            return helper_err!("qsv_register_lookup", "Invalid resource_show json: {e}.");
-                        }
-                    };
-
-                    let Some(url) = resource_show_json["result"]["url"].as_str() else {
-                        return helper_err!("qsv_register_lookup", "Cannot get resource URL from resource_show JSON response.: {resource_show_json}");
-                    };
-
-                    match client.get(url).headers(headers).send() {
-                        Ok(response) => response,
-                        Err(e) => {
-                            return helper_err!("qsv_register_lookup", r#"Cannot read lookup CSV at "{url}": {e}."#);
-                        }
-                    }
-                } else {
-                    // we're not using the ckan scheme, so just get the CSV
-
-                    let validated_url = match Url::parse(&lookup_table_uri) {
-                        Ok(url) => url,
-                        Err(e) => {
-                            return helper_err!("qsv_register_lookup", "Invalid lookup CSV url {e}.");
-                        }
-                    };
-
-                    let mut headers = reqwest::header::HeaderMap::new();
-
-                    if let Some(modified) = cache_csv_last_modified {
-                        // a cached CSV exists, we need to use the If-Modified-Since header
-                        // to avoid downloading the CSV again if it hasn't changed
-                        let last_modified: chrono::DateTime<chrono::Utc> = modified.into();
-                        last_modified_rfc8222 = last_modified.to_rfc2822();
-
-                        (headers).insert(
-                            reqwest::header::IF_MODIFIED_SINCE,
-                            reqwest::header::HeaderValue::from_str(&last_modified_rfc8222).unwrap(),
-                        );
-                    }
-
-                    match client.get(validated_url.clone()).headers(headers).send() {
-                        Ok(response) => response,
-                        Err(e) => {
-                            return helper_err!("qsv_register_lookup", r#"Cannot read lookup CSV at "{validated_url}": {e}."#);
-                        }
-                    }
-                };
-
-                let lookup_csv_contents = {
-                    let response_status = lookup_csv_response.status();
-                    if response_status == reqwest::StatusCode::NOT_MODIFIED {
-                        // the CSV hasn't changed, so we can just use the cached CSV
-                        debug!("Lookup CSV hasn't changed, so using cached CSV.");
-                        write_csv_contents = false;
-                    } else if response_status.is_success() {
-                        // the CSV has changed, so we need to download it
-                        write_csv_contents = true;
-                    } else {
-                        match lookup_csv_response.error_for_status_ref() {
-                            Ok(_) => (),
-                            Err(e) => {
-                                return helper_err!("qsv_register_lookup", "Cannot read lookup CSV at url: {e}.");
-                            }
-                        }
-                    }
-                    lookup_csv_response.text().unwrap_or_default()
-                };
-
-                if write_csv_contents && !lookup_csv_contents.is_empty() {
-                    // write the CSV contents to the cache file
-                    info!("Writing lookup CSV to cache file: {}", cache_file_path.display());
-                    let mut cache_file = match std::fs::File::create(&cache_file_path) {
-                        Ok(f) => f,
-                        Err(e) => {
-                            return helper_err!("qsv_register_lookup", 
-                                "Cannot create cache file {}: {e}.", cache_file_path.display());
-                        }
-                    };
-
-                    // add a comment to the top of the file with the parameters used to download the CSV,
-                    // the last-modified date of the CSV, and how long it took to download it in ms
-                    writeln!(cache_file, "# {call_parameters}")?;
-                    writeln!(cache_file, "# Last-Modified: {last_modified_rfc8222}")?;
-                    let download_elapsed = download_start.elapsed().as_millis();
-                    writeln!(cache_file, "# Download-duration-ms: {download_elapsed}")?;
-                    cache_file.write_all(lookup_csv_contents.as_bytes())?;
-
-                    // explicitly flush and close the file
-                    cache_file.flush()?;
-                    drop(cache_file);
-                }
-
-                lookup_table_uri = cache_file_path.to_string_lossy().to_string();
-            }
-        }
-
-        let lookup_table = luau.create_table()?;
-        let mut record: csv::StringRecord;
-
-        let conf = Config::new(Some(lookup_table_uri.clone()).as_ref())
-            .delimiter(delimiter)
-            .comment(Some(b'#'))
-            .no_headers(false);
-
-        let mut rdr = conf.reader()?;
-
-        let headers = match rdr.headers() {
-            Ok(headers) => headers.clone(),
-            Err(e) => {
-                return helper_err!("qsv_register_lookup", "Cannot read headers of lookup table: {e}");
-            }
-        };
-        let mut key;
-        for result in rdr.records() {
-            record = result.unwrap_or_default();
-            key = record.get(0).unwrap_or_default().trim();
-            let inside_table = luau.create_table()?;
-            // we skip the first column, as its the lookup key
+            // Return headers table
+            let headers_table = luau.create_table()?;
             for (i, header) in headers.iter().skip(1).enumerate() {
-                inside_table.raw_set(header, record.get(i + 1).unwrap_or_default().trim())?;
+                headers_table.raw_set(i + 1, header)?;
             }
-            lookup_table.raw_set(key, inside_table)?;
-        }
 
-        luau.globals()
-            .raw_set(lookup_name, lookup_table)?;
+            if headers_table.raw_len() == 0 {
+                return helper_err!("qsv_register_lookup", "Lookup table is empty.");
+            }
 
-        // now that we've successfully loaded the lookup table, we return the headers
-        // as a table so the user can use them to access the values
-        let headers_table = luau.create_table()?;
+            info!(
+                "qsv_register_lookup({}, {}, {}) successfully registered.",
+                lookup_name, lookup_table_uri, cache_age_secs
+            );
 
-        // we skip the first column, which is the key
-        for (i, header) in headers.iter().skip(1).enumerate() {
-            headers_table.raw_set(i + 1, header)?;
-        }
-
-        if headers_table.raw_len() == 0 {
-            return helper_err!("qsv_register_lookup", "Lookup table is empty.");
-        }
-
-        info!("{call_parameters} successfully registered.");
-
-        Ok(headers_table)
-    })?;
+            Ok(headers_table)
+        },
+    )?;
     luau.globals()
         .set("qsv_register_lookup", qsv_register_lookup)?;
 

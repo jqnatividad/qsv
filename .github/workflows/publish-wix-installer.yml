@@ -56,7 +56,7 @@ jobs:
         run: |
           $LATEST_TAG=$(git describe --tags --abbrev=0)
           Write-Output "Latest tag: $LATEST_TAG"
-          $url="https://github.com/jqnatividad/qsv/releases/latest/download/qsv-${LATEST_TAG}-x86_64-pc-windows-msvc.zip"
+          $url="https://github.com/dathere/qsv/releases/latest/download/qsv-${LATEST_TAG}-x86_64-pc-windows-msvc.zip"
           Write-Output "URL: $url"
           Invoke-WebRequest -Uri $url -OutFile 'release.zip'
 
@@ -73,7 +73,7 @@ jobs:
           cp target\wix\*.msi qsv-${{ needs.analyze-tags.outputs.previous-tag }}.msi
 
       - name: Sign qsv MSI installer file with Azure Trusted Signing
-        uses: azure/trusted-signing-action@v0.4.0
+        uses: azure/trusted-signing-action@v0.5.0
         with:
             azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
             azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}

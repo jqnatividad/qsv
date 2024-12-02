@@ -21,19 +21,19 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5.2.0
+    - uses: actions/setup-python@v5.3.0
       with:
         python-version: '3.12'
     - name: Update Rust
       run: rustup update
-    - name: Setup Rust-cache
-      uses: Swatinem/rust-cache@v2
-      with:
-        key: qsv-wincache
+    # - name: Setup Rust-cache
+    #   uses: Swatinem/rust-cache@v2
+    #   with:
+    #     key: qsv-wincache
     - name: make empty DLLs directory to prevent spurious python warning
       run: |
         mkdir DLLs   
     - name: Run tests
       env:
         RUSTFLAGS: -C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+avx2,+fma,+bmi1,+bmi2,+lzcnt,+pclmulqdq
-      run: cargo test --verbose --locked --features=apply,fetch,foreach,geocode,luau,python,polars,feature_capable,lens
+      run: cargo test --verbose --locked --features=apply,fetch,foreach,geocode,luau,python,polars,feature_capable,ui

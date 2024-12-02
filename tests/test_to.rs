@@ -37,13 +37,13 @@ fn to_xlsx_roundtrip() {
 
     wrk.assert_success(&mut cmd);
 
-    let mut cmd2 = wrk.command("excel");
-    cmd2.arg(xlsx_file);
+    let mut cmd = wrk.command("excel");
+    cmd.arg(xlsx_file);
 
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     assert_eq!(got, thedata);
 
-    wrk.assert_success(&mut cmd2);
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]
@@ -82,21 +82,21 @@ fn to_xlsx_dir() {
 
     wrk.assert_success(&mut cmd);
 
-    let mut cmd2 = wrk.command("excel");
-    cmd2.arg(xlsx_file.clone()).args(&["--sheet", "cities"]);
+    let mut cmd = wrk.command("excel");
+    cmd.arg(xlsx_file.clone()).args(&["--sheet", "cities"]);
 
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     assert_eq!(got, cities);
 
-    wrk.assert_success(&mut cmd2);
+    wrk.assert_success(&mut cmd);
 
-    let mut cmd2 = wrk.command("excel");
-    cmd2.arg(xlsx_file).args(&["--sheet", "places"]);
+    let mut cmd = wrk.command("excel");
+    cmd.arg(xlsx_file).args(&["--sheet", "places"]);
 
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     assert_eq!(got, places);
 
-    wrk.assert_success(&mut cmd2);
+    wrk.assert_success(&mut cmd);
 }
 
 #[test]

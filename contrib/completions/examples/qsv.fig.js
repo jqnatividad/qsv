@@ -912,6 +912,12 @@ const completion: Fig.Spec = {
       name: "fetchpost",
       options: [
         {
+          name: "--payload-tpl",
+        },
+        {
+          name: "--content-type",
+        },
+        {
           name: "--new-column",
         },
         {
@@ -2727,6 +2733,9 @@ const completion: Fig.Spec = {
           name: "--dfa-size-limit",
         },
         {
+          name: "--not-one",
+        },
+        {
           name: "--output",
         },
         {
@@ -3573,6 +3582,36 @@ const completion: Fig.Spec = {
       ],
     },
     {
+      name: "template",
+      options: [
+        {
+          name: "--template",
+        },
+        {
+          name: "--template-file",
+        },
+        {
+          name: "--outfilename",
+        },
+        {
+          name: "--customfilter-error",
+        },
+        {
+          name: "--output",
+        },
+        {
+          name: "--no-headers",
+        },
+        {
+          name: "--delimiter",
+        },
+        {
+          name: ["-h", "--help"],
+          description: "Print help",
+        },
+      ],
+    },
+    {
       name: "to",
       subcommands: [
         {
@@ -4192,6 +4231,9 @@ const completion: Fig.Spec = {
         },
         {
           name: "table",
+        },
+        {
+          name: "template",
         },
         {
           name: "to",

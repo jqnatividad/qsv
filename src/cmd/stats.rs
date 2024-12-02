@@ -20,7 +20,7 @@ The following additional "non-streaming" statistics require loading the entire f
 cardinality, mode/antimode, median, MAD, quartiles and its related measures (IQR,
 lower/upper fences & skewness).
 
-When computing “non-streaming” statistics, an Out-Of-Memory (OOM) heuristic check is done.
+When computing "non-streaming" statistics, an Out-Of-Memory (OOM) heuristic check is done.
 If the file is larger than the available memory minus a headroom buffer of 20% (which can be
 adjusted using the QSV_FREEMEMORY_HEADROOM_PCT environment variable), processing will be
 preemptively prevented.
@@ -47,7 +47,7 @@ as its an expensive operation to match a date candidate against 19 possible date
 with each format, having several variants.
 
 The date formats recognized and its sub-variants along with examples can be found at 
-https://github.com/jqnatividad/qsv-dateparser?tab=readme-ov-file#accepted-date-formats.
+https://github.com/dathere/qsv-dateparser?tab=readme-ov-file#accepted-date-formats.
 
 Computing statistics on a large file can be made MUCH faster if you create an index for it
 first with 'qsv index' to enable multithreading. With an index, the file is split into equal
@@ -66,7 +66,7 @@ These cached stats are also used by other qsv commands (currently `schema` & `to
 load the stats into memory faster. If the cached stats are not current (i.e., the input file
 is newer than the cached stats), the cached stats will be ignored and recomputed. For example,
 see the "boston311" test files in 
-https://github.com/jqnatividad/qsv/blob/4529d51273218347fef6aca15ac24e22b85b2ec4/tests/test_stats.rs#L608.
+https://github.com/dathere/qsv/blob/4529d51273218347fef6aca15ac24e22b85b2ec4/tests/test_stats.rs#L608.
 
 Examples:
 
@@ -117,8 +117,8 @@ Prompt for both INPUT and OUTPUT files in the ~/Documents dir with custom prompt
       qsv stats -E --infer-dates | \
       qsv prompt -m 'Save summary to...' -d ~/Documents --fd-output --save-fname summarystats.csv
 
-For more examples, see https://github.com/jqnatividad/qsv/tree/master/resources/test
-For more info, see https://github.com/jqnatividad/qsv/wiki/Supplemental#stats-command-output-explanation
+For more examples, see https://github.com/dathere/qsv/tree/master/resources/test
+For more info, see https://github.com/dathere/qsv/wiki/Supplemental#stats-command-output-explanation
 
 Usage:
     qsv stats [options] [<input>]
@@ -190,7 +190,7 @@ stats options:
     --stats-jsonl             Also write the stats in JSONL format. 
                               If set, the stats will be written to <FILESTEM>.stats.csv.data.jsonl.
                               Note that this option used internally by other qsv commands
-                              (currently `frequency`, `schema` & `tojsonl`) to load cached stats. 
+                              (currently `frequency`, `schema`. `tojsonl` & `sqlp`) to load cached stats. 
                               You can preemptively create the stats-jsonl file by using
                               this option BEFORE running the `frequency`, `schema` & `tojsonl`
                               commands and they will automatically use it.
@@ -255,8 +255,7 @@ use itertools::Itertools;
 use qsv_dateparser::parse_with_preference;
 use serde::{Deserialize, Serialize};
 use simd_json::{prelude::ValueAsScalar, OwnedValue};
-use simdutf8::basic::from_utf8;
-use smallvec::{smallvec, SmallVec};
+use smallvec::SmallVec;
 use stats::{merge_all, Commute, MinMax, OnlineStats, Unsorted};
 use tempfile::NamedTempFile;
 use threadpool::ThreadPool;
@@ -590,7 +589,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let wconfig = Config::new(Some(stats_csv_tempfile_fname.clone()).as_ref())
         .delimiter(Some(Delimiter(output_delim)));
     let mut wtr = wconfig.writer()?;
+
     let mut rconfig = args.rconfig();
+    if let Some(format_error) = rconfig.format_error {
+        return fail_incorrectusage_clierror!("{format_error}");
+    }
     let mut stdin_tempfile_path = None;
 
     if rconfig.is_stdin() {
@@ -617,7 +620,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
 
     let mut compute_stats = true;
-    let mut create_cache = args.flag_cache_threshold > 0 || args.flag_stats_jsonl;
+    let mut create_cache = args.flag_cache_threshold == 1
+        || args.flag_stats_jsonl
+        || args.flag_cache_threshold.is_negative();
+
     let mut autoindex_set = false;
 
     let write_stats_jsonl = args.flag_stats_jsonl;
@@ -770,6 +776,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             }?;
 
             let stats_sr_vec = args.stats_to_records(stats);
+            let mut work_br;
+
+            // vec we use to compute dataset-level fingerprint hash
+            let mut stats_br_vec: Vec<csv::ByteRecord> = Vec::with_capacity(stats_sr_vec.len());
 
             let stats_headers_sr = args.stat_headers();
             wtr.write_record(&stats_headers_sr)?;
@@ -781,17 +791,90 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     header.to_vec()
                 };
                 let stat = stat.iter().map(str::as_bytes);
-                wtr.write_record(vec![&*header].into_iter().chain(stat))?;
+                work_br = vec![&*header]
+                    .into_iter()
+                    .chain(stat)
+                    .collect::<csv::ByteRecord>();
+                wtr.write_record(&work_br)?;
+                stats_br_vec.push(work_br);
             }
 
-            // update the stats args json metadata
-            current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
+            // Add dataset-level stats as additional rows ====================
+            let num_stats_fields = stats_headers_sr.len();
+            let mut dataset_stats_br = csv::ByteRecord::with_capacity(128, num_stats_fields);
 
-            if create_cache
-                && current_stats_args.compute_duration_ms > args.flag_cache_threshold as u64
-            {
-                // if the stats run took longer than the cache threshold and the threshold > 0,
-                // cache the stats so we don't have to recompute it next time
+            // Helper closure to write a dataset stat row
+            let mut write_dataset_stat = |name: &[u8], value: u64| -> CliResult<()> {
+                dataset_stats_br.clear();
+                dataset_stats_br.push_field(name);
+                // Fill middle columns with empty strings
+                for _ in 2..num_stats_fields {
+                    dataset_stats_br.push_field(b"");
+                }
+                // write qsv__value as last column
+                dataset_stats_br.push_field(itoa::Buffer::new().format(value).as_bytes());
+                wtr.write_byte_record(&dataset_stats_br)
+                    .map_err(std::convert::Into::into)
+            };
+
+            // Write qsv__rowcount
+            write_dataset_stat(b"qsv__rowcount", *record_count)?;
+
+            // Write qsv__columncount
+            let ds_column_count = headers.len() as u64;
+            write_dataset_stat(b"qsv__columncount", ds_column_count)?;
+
+            // Write qsv__filesize_bytes
+            let ds_filesize_bytes = fs::metadata(&path)?.len();
+            write_dataset_stat(b"qsv__filesize_bytes", ds_filesize_bytes)?;
+
+            // Compute hash of stats for data fingerprinting
+            let stats_hash = {
+                let mut hash_input = Vec::with_capacity(16);
+
+                // First, create a stable representation of the stats
+                for record in &stats_br_vec {
+                    // Take first 16 columns only
+                    for field in record.iter().take(16) {
+                        let s = String::from_utf8_lossy(field);
+                        // Standardize number format
+                        if let Ok(f) = s.parse::<f64>() {
+                            hash_input.extend_from_slice(format!("{f:.10}").as_bytes());
+                        } else {
+                            hash_input.extend_from_slice(field);
+                        }
+                        hash_input.push(0x1F); // field separator
+                    }
+                    hash_input.push(b'\n');
+                }
+
+                // Add dataset stats
+                hash_input.extend_from_slice(
+                    format!("{record_count}\x1F{ds_column_count}\x1F{ds_filesize_bytes}\n")
+                        .as_bytes(),
+                );
+                sha256::digest(hash_input.as_slice())
+            };
+
+            dataset_stats_br.clear();
+            dataset_stats_br.push_field(b"qsv__fingerprint_hash");
+            // Fill middle columns with empty strings
+            for _ in 2..num_stats_fields {
+                dataset_stats_br.push_field(b"");
+            }
+            // write qsv__value as last column
+            dataset_stats_br.push_field(stats_hash.as_bytes());
+            wtr.write_byte_record(&dataset_stats_br)?;
+
+            // update the stats args json metadata ===============
+            // if the stats run took longer than the cache threshold and the threshold > 0,
+            // cache the stats so we don't have to recompute it next time
+            current_stats_args.compute_duration_ms = start_time.elapsed().as_millis() as u64;
+            create_cache = create_cache
+                || current_stats_args.compute_duration_ms > args.flag_cache_threshold as u64;
+
+            // only init these info if we're creating a stats cache
+            if create_cache {
                 // safety: we know the path is a valid PathBuf, so we can use unwrap
                 current_stats_args.canonical_input_path =
                     path.canonicalize()?.to_str().unwrap().to_string();
@@ -801,9 +884,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
     }
 
-    // ensure create_cache is also true if the user specified --cache-threshold 1
-    create_cache =
-        create_cache || args.flag_cache_threshold == 1 || args.flag_cache_threshold.is_negative();
+    // ensure create_cache is false if the user specified --cache-threshold 0
+    if args.flag_cache_threshold == 0 {
+        create_cache = false;
+    };
 
     wtr.flush()?;
 
@@ -892,7 +976,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // save the stats data to "<FILESTEM>.stats.csv.data.jsonl"
             if write_stats_jsonl {
                 stats_pathbuf.set_extension("data.jsonl");
-                util::csv_to_jsonl(&currstats_filename, &get_stats_data_types(), stats_pathbuf)?;
+                util::csv_to_jsonl(&currstats_filename, &get_stats_data_types(), &stats_pathbuf)?;
             }
         }
     }
@@ -1145,6 +1229,10 @@ impl Args {
                 "antimode_occurrences",
             ]);
         }
+
+        // we add the qsv__value field at the end for dataset-level stats
+        fields.push("qsv__value");
+
         csv::StringRecord::from(fields)
     }
 }
@@ -1175,28 +1263,27 @@ fn init_date_inference(
     if !infer_dates {
         // we're not inferring dates, set INFER_DATE_FLAGS to all false
         INFER_DATE_FLAGS
-            .set(smallvec![false; headers.len()])
-            .map_err(|e| format!("Cannot init empty date inference flags: {e:?}"))?;
+            .set(SmallVec::from_elem(false, headers.len()))
+            .map_err(|_| "Cannot init empty date inference flags".to_string())?;
         return Ok(());
     }
 
     let infer_date_flags = if flag_whitelist.eq_ignore_ascii_case("all") {
         log::info!("inferring dates for ALL fields");
-        smallvec![true; headers.len()]
+        SmallVec::from_elem(true, headers.len())
     } else {
         let mut header_str = String::new();
         let whitelist_lower = flag_whitelist.to_lowercase();
-        // log::info!("inferring dates with date-whitelist: {whitelist_lower}");
+        log::info!("inferring dates with date-whitelist: {whitelist_lower}");
 
-        let whitelist = whitelist_lower
-            .split(',')
-            .map(str::trim)
-            .collect::<Vec<_>>();
+        let whitelist: SmallVec<[&str; 8]> = whitelist_lower.split(',').map(str::trim).collect();
         headers
             .iter()
             .map(|header| {
-                // safety: we know the header is a valid String, so we can use unwrap
-                util::to_lowercase_into(&from_bytes::<String>(header).unwrap(), &mut header_str);
+                util::to_lowercase_into(
+                    simdutf8::basic::from_utf8(header).unwrap_or_default(),
+                    &mut header_str,
+                );
                 whitelist
                     .iter()
                     .any(|whitelist_item| header_str.contains(whitelist_item))
@@ -1346,7 +1433,7 @@ impl Stats {
                     }
                 } else {
                     // safety: we know the sample is a valid f64, so we can use unwrap
-                    let n = from_bytes::<f64>(sample).unwrap();
+                    let n = fast_float2::parse(sample).unwrap();
                     if let Some(v) = self.median.as_mut() {
                         v.add(n);
                     }
@@ -1360,10 +1447,10 @@ impl Stats {
                         v.add(&n);
                     }
                     if t == TFloat {
-                        let mut buffer = ryu::Buffer::new();
+                        let mut ryu_buffer = ryu::Buffer::new();
                         // safety: we know that n is a valid f64
                         // so there will always be a fraction part, even if it's 0
-                        let fractpart = buffer.format_finite(n).split('.').next_back().unwrap();
+                        let fractpart = ryu_buffer.format_finite(n).split('.').next_back().unwrap();
                         self.max_precision = std::cmp::max(
                             self.max_precision,
                             (if *fractpart == *"0" {
@@ -1562,7 +1649,7 @@ impl Stats {
         let stotlen =
             if let Some((stotlen_work, sum)) = self.sum.as_ref().and_then(|sum| sum.show(typ)) {
                 if typ == FieldType::TFloat {
-                    if let Ok(f64_val) = sum.parse::<f64>() {
+                    if let Ok(f64_val) = fast_float2::parse::<f64, &[u8]>(sum.as_bytes()) {
                         pieces.push(util::round_num(f64_val, round_places));
                     } else {
                         pieces.push(format!("ERROR: Cannot convert {sum} to a float."));
@@ -1793,6 +1880,9 @@ impl Stats {
         // append it here to preserve legacy ordering of columns
         pieces.extend_from_slice(&mc_pieces);
 
+        // add an empty field for qsv__value
+        pieces.push(empty());
+
         csv::StringRecord::from(pieces)
     }
 }
@@ -1865,7 +1955,7 @@ impl FieldType {
             }
 
             // Check for float
-            if s.parse::<f64>().is_ok() {
+            if fast_float2::parse::<f64, &[u8]>(s.as_bytes()).is_ok() {
                 return (FieldType::TFloat, None);
             }
 
@@ -1965,7 +2055,7 @@ impl TypedSum {
         match typ {
             TFloat => {
                 self.stotlen = self.stotlen.saturating_add(sample.len() as u64);
-                if let Some(float_sample) = from_bytes::<f64>(sample) {
+                if let Ok(float_sample) = fast_float2::parse::<f64, &[u8]>(sample) {
                     if let Some(ref mut f) = self.float {
                         *f += float_sample;
                     } else {
@@ -1977,7 +2067,7 @@ impl TypedSum {
                 self.stotlen = self.stotlen.saturating_add(sample.len() as u64);
                 if let Some(ref mut float) = self.float {
                     // safety: we know that the sample is a valid f64
-                    *float += from_bytes::<f64>(sample).unwrap();
+                    *float += fast_float2::parse::<f64, &[u8]>(sample).unwrap();
                 } else {
                     // so we don't panic on overflow/underflow, use saturating_add
                     self.integer = self
@@ -2010,13 +2100,12 @@ impl TypedSum {
                     )),
                 }
             },
-            TFloat => {
-                let mut fbuffer = ryu::Buffer::new();
-                Some((
-                    self.stotlen,
-                    fbuffer.format(self.float.unwrap_or(0.0)).to_owned(),
-                ))
-            },
+            TFloat => Some((
+                self.stotlen,
+                ryu::Buffer::new()
+                    .format(self.float.unwrap_or(0.0))
+                    .to_owned(),
+            )),
             TString => Some((self.stotlen, String::new())),
         }
     }
@@ -2060,7 +2149,7 @@ impl TypedMinMax {
         match typ {
             TString | TNull => {},
             TFloat => {
-                let n = from_utf8(sample).unwrap().parse::<f64>().unwrap();
+                let n = fast_float2::parse::<f64, &[u8]>(sample).unwrap();
 
                 self.floats.add(n);
                 self.integers.add(n as i64);
@@ -2173,15 +2262,5 @@ impl Commute for TypedMinMax {
         self.integers.merge(other.integers);
         self.floats.merge(other.floats);
         self.dates.merge(other.dates);
-    }
-}
-
-#[allow(clippy::inline_always)]
-#[inline(always)]
-fn from_bytes<T: std::str::FromStr>(bytes: &[u8]) -> Option<T> {
-    if let Ok(x) = simdutf8::basic::from_utf8(bytes) {
-        x.parse().ok()
-    } else {
-        None
     }
 }

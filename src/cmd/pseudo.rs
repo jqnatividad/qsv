@@ -36,7 +36,7 @@ If run on the following CSV data:
     ID-1005,magenta
     ID-1000,cyan
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_pseudo.rs.
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_pseudo.rs.
 
 Usage:
     qsv pseudo [options] <column> [<input>]

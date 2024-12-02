@@ -117,7 +117,7 @@ jobs:
     - name: Download latest release zip
       uses: robinraju/release-downloader@v1.11
       with:
-        repository: "jqnatividad/qsv"
+        repository: "dathere/qsv"
         latest: false
         tag: "publish-testing"
         token: ${{ secrets.GITHUB_TOKEN }}

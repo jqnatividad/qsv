@@ -31,13 +31,15 @@ Export the last sheet (negative index)):
 Export the second to last sheet:
     qsv excel -s -2 input.xls
 
-Export a table in an XLSX file:
+Export a table named "Table1" in an XLSX file. Note that --sheet is not required
+as the table definition includes the sheet.
     qsv excel --table "Table1" input.xlsx
 
 Export a range of cells in the first sheet:
     qsv excel --range C3:T25 input.xlsx
 
-Export a named range in the workbook:
+Export a named range in the workbook. Note that --sheet is not required
+as named ranges include the sheet.
     qsv excel --range MyRange input.xlsx
 
 Export a range of cells in the second sheet:
@@ -50,18 +52,26 @@ as it may contain special characters like ! and $:
     qsv excel --range 'Sheet2!$C$3:$T$25' input.xlsx
 
 Export metadata for all sheets in CSV format:
+    qsv excel --metadata csv input.xlsx
     qsv excel --metadata c input.xlsx
+    # short CSV mode is much faster, but doesn't contain as much metadata
+    qsv excel --metadata short input.xlsx
+    qsv excel --metadata s input.xlsx
 
 Export metadata for all sheets in JSON format:
+    qsv excel --metadata json input.xlsx
     qsv excel --metadata j input.xlsx
-    # pretty-printed JSON
+    # pretty-printed JSON - first letter is capital J
     qsv excel --metadata J input.xlsx
+    # short, minified JSON mode - first letter is capital S
+    qsv excel --metadata Short input.xlsx
+    qsv excel --metadata S input.xlsx
 
 Prompt for spreadsheets to export and then prompt where to save the CSV:
     qsv prompt -d ~/Documents -m 'Select a spreadsheet to export to CSV' -F xlsx,xls,ods | \
      qsv excel - | qsv prompt -m 'Save exported CSV to...' --fd-output
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_excel.rs.
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_excel.rs.
 
 Usage:
     qsv excel [options] [<input>]
@@ -114,7 +124,10 @@ Excel options:
                                Only valid for XLSX files. The --sheet option is ignored as a table could
                                be in any sheet. Overrides --range option.
     --range <range>            An Excel format range - like RangeName, C:T, C3:T25 or 'Sheet1!C3:T25' to
-                               extract to the CSV. If the range is not found, qsv will exit with an error.
+                               extract to the CSV. If the specified range contains the required sheet,
+                               the --sheet option is ignored.
+                               If the range is not found, qsv will exit with an error.
+
     --error-format <format>    The format to use when formatting error cells.
                                There are 3 formats:
                                  - "code": return the error code.
@@ -305,7 +318,7 @@ impl RequestedRange {
             .map(|r| r - 1)
     }
 
-    /// worksheet_size is from range.getsize, height,width.  1 indexed.
+    /// worksheet_size is from range.getsize, height,width. 1 indexed.
     fn from_string(range: &str, worksheet_size: (usize, usize)) -> CliResult<RequestedRange> {
         let Some((start, end)) = range.split_once(':') else {
             return fail_clierror!("Unable to parse range string");
@@ -364,7 +377,7 @@ fn get_requested_range(
 
     let sheet_name = split_range[0].to_lowercase();
     sheet.clone_from(&sheet_name);
-    let range_str = split_range[1].to_string();
+    let range_string = split_range[1].to_string();
 
     // Find the sheet index
     let sheet_index = sheet_names
@@ -385,7 +398,7 @@ fn get_requested_range(
         );
     };
 
-    Ok(range_str)
+    Ok(range_string)
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -974,7 +987,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         row_idx += 1;
     }
 
-    // set RAYON_NUM_THREADS
     let ncpus = util::njobs(args.flag_jobs);
 
     // set chunk_size to number of rows per core/thread
@@ -996,8 +1008,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             };
             let mut float_val;
             let mut work_date;
-            let mut ryu_buffer = ryu::Buffer::new();
-            let mut itoa_buffer = itoa::Buffer::new();
             let mut format_buffer = String::new();
             let mut formatted_date = String::new();
 
@@ -1011,7 +1021,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     match *cell {
                         Data::Empty => record.push_field(""),
                         Data::String(ref s) => record.push_field(s),
-                        Data::Int(ref i) => record.push_field(itoa_buffer.format(*i)),
+                        Data::Int(ref i) => record.push_field(itoa::Buffer::new().format(*i)),
                         Data::Float(ref f) => {
                             float_val = *f;
                             // push the ryu-formatted float value if its
@@ -1022,12 +1032,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                                 || float_val > i64::MAX as f64
                                 || float_val < i64::MIN as f64
                             {
-                                record.push_field(ryu_buffer.format_finite(float_val));
+                                record.push_field(ryu::Buffer::new().format_finite(float_val));
                             } else {
                                 // its an i64 integer. We can't use ryu to format it, because it
                                 // will be formatted as a
                                 // float (have a ".0"). So we use itoa.
-                                record.push_field(itoa_buffer.format(float_val as i64));
+                                record.push_field(itoa::Buffer::new().format(float_val as i64));
                             }
                         },
                         Data::DateTime(ref edt) => {

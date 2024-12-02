@@ -1,18 +1,18 @@
 [package]
 name = "qsv"
-version = "0.137.0" #:version
+version = "1.0.0" #:version
 authors = ["Joel Natividad <joel@datHere.com>"]
 description = "A Blazing-Fast Data-wrangling toolkit."
-documentation = "https://github.com/jqnatividad/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
+documentation = "https://github.com/dathere/qsv#qsv-ultra-fast-csv-data-wrangling-toolkit"
 homepage = "https://qsv.dathere.com"
-repository = "https://github.com/jqnatividad/qsv"
+repository = "https://github.com/dathere/qsv"
 readme = "README.md"
 keywords = ["csv", "geocode", "data-engineering", "etl", "opendata"]
 categories = ["command-line-utilities", "parser-implementations"]
 license = "MIT OR Unlicense"
 autotests = false
 edition = "2021"
-rust-version = "1.82"
+rust-version = "1.83"
 autobins = false
 include = [
     "src/**/*",
@@ -69,15 +69,16 @@ panic    = "abort"
 
 [dependencies]
 ahash = "0.8"
-arboard = { version = "3.4.1", default-features = false }
+arboard = { version = "3.4.1", default-features = false, optional = true }
 atoi_simd = "0.16"
 base62 = { version = "2.0", optional = true }
-bytemuck = { version = "1.19", features = [
+bytemuck = { version = "1.20", features = [
     "latest_stable_rust",
 ], optional = true }
 byteorder = "1.5"
 bytes = "1"
-cached = { version = "0.53", features = [
+cached = { version = "0.54", features = [
+    "ahash",
     "disk_store",
     "redis_ahash",
 ], optional = true }
@@ -104,8 +105,9 @@ eudex = { version = "0.1", optional = true }
 ext-sort = { version = "0.1", features = [
     "memory-limit",
 ], default-features = false }
+fast-float2 = "0.2"
 flate2 = { version = "1", optional = true }
-file-format = { version = "0.25", features = ["reader"] }
+file-format = { version = "0.26", features = ["reader"] }
 filetime = "0.2"
 flexi_logger = { version = "0.29", features = [
     "async",
@@ -117,12 +119,13 @@ futures-util = "0.3"
 gender_guesser = { version = "0.2", optional = true }
 geosuggest-core = { version = "0.6", optional = true }
 geosuggest-utils = { version = "0.6", optional = true }
-governor = { version = "0.6", optional = true }
+governor = { version = "0.7", optional = true }
 grex = { version = "1.4", default-features = false }
 gzp = { version = "0.11", default-features = false, features = [
     "snappy_default",
 ] }
 hashbrown = { version = "0.15", optional = true }
+human-panic = "2"
 indexmap = "2.5"
 indicatif = "0.17"
 itertools = "0.13"
@@ -131,7 +134,7 @@ jaq-interpret = "1.5.0"
 jaq-parse = "1.0.3"
 jemallocator = { version = "0.5", optional = true }
 json-objects-to-csv = "0.1.3"
-jsonschema = { version = "0.24", features = [
+jsonschema = { version = "0.26", features = [
     "resolve-file",
     "resolve-http",
 ], default-features = false }
@@ -139,7 +142,20 @@ local-encoding = { version = "0.2", optional = true }
 localzone = { version = "0.3", features = ["auto_validation"] }
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false, optional = true }
-mlua = { version = "0.9", features = [
+minijinja = { version = "2", features = [
+    "json",
+    "loop_controls",
+    "speedups",
+    "stacker",
+    "urlencode",
+] }
+minijinja-contrib = { version = "2", features = [
+    "datetime",
+    "pycompat",
+    "rand",
+    "timezone",
+] }
+mlua = { version = "0.10", features = [
     "luau",
     "luau-jit",
     "serialize",
@@ -147,16 +163,17 @@ mlua = { version = "0.9", features = [
 num_cpus = "1"
 odht = "0.3"
 phf = { version = "0.11", features = ["macros"], optional = true }
-polars = { version = "0.43", features = [
+polars = { version = "0.44.2", features = [
     "asof_join",
     "avro",
     "avx512",
     "aws",
     "binary_encoding",
-    "cloud",
+    # "cloud",
     "coalesce",
     "cross_join",
-    "dtype-full",
+    "decompress-fast",
+    # "dtype-full",
     "extract_jsonpath",
     "ipc",
     "json",
@@ -164,7 +181,7 @@ polars = { version = "0.43", features = [
     "object",
     "parquet",
     "performant",
-    "pivot",
+    # "pivot",
     "semi_anti_join",
     "serde-lazy",
     "sql",
@@ -172,10 +189,7 @@ polars = { version = "0.43", features = [
     "timezones",
 ], optional = true }
 publicsuffix = { version = "2.2", optional = true }
-pyo3 = { version = "0.22", features = [
-    "auto-initialize",
-    "gil-refs",
-], optional = true }
+pyo3 = { version = "0.21.2", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.12"
 qsv_docopt = "1.8"
 qsv-stats = "0.22"
@@ -208,7 +222,8 @@ reqwest = { version = "0.12", features = [
 rfd = { version = "0.15", optional = true }
 rust_decimal = { version = "1.36", default-features = false }
 ryu = "1"
-sanitize-filename = { version = "0.5", optional = true }
+sanitize-filename = { version = "0.6", optional = true }
+sha256 = "1.5"
 simd-json = "0.14"
 self_update = { version = "0.41", features = [
     "archive-zip",
@@ -220,7 +235,8 @@ semver = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_urlencoded = { version = "0.7", optional = true }
-simple-expand-tilde = { version = "0.4.3", optional = true }
+simple-home-dir = "0.4"
+sled = { version = "0.34", optional = true }
 smallvec = "1"
 snap = "1"
 strsim = { version = "0.11", optional = true }
@@ -252,7 +268,7 @@ simdutf8 = "0.1"
 simdutf8 = { version = "0.1", features = ["aarch64_neon"] }
 
 [dev-dependencies]
-actix-governor = "0.6"
+actix-governor = "0.7"
 actix-web = { version = "4.9", default-features = false, features = [
     "compress-brotli",
     "compress-gzip",
@@ -266,28 +282,29 @@ newline-converter = "0.3"
 # rusqlite = { version = "0.32", features = ["bundled"] }
 
 quickcheck  = { version = "1", default-features = false }
-serial_test = { version = "3.1", features = ["file_locks"] }
+serial_test = { version = "3.2", features = ["file_locks"] }
 
 [patch.crates-io]
 # use our tweaked fork of csv crate
 # the csv crate underpins a lot of qsv's functionality, so every perf tweak helps
 # the main feature of this csv fork is accelerated UTF-8 validation using the simdutf8 crate
-csv       = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
-csv-core  = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
-csv-index = { git = "https://github.com/jqnatividad/rust-csv", branch = "qsv-optimized" }
+# non-allocating ByteRecord trim and a non-allocating StringRecord trim_ascii
+csv       = { git = "https://github.com/dathere/rust-csv", branch = "qsv-optimized-non-allocating-byterecord-trim" }
+csv-core  = { git = "https://github.com/dathere/rust-csv", branch = "qsv-optimized-non-allocating-byterecord-trim" }
+csv-index = { git = "https://github.com/dathere/rust-csv", branch = "qsv-optimized-non-allocating-byterecord-trim" }
 
-# use latest csvlens upstream with latest dependencies and fixes
-csvlens = { git = "https://github.com/YS-L/csvlens", rev = "29e46af" }
+# use cached with bumped redis using 0.27
+cached = { git = "https://github.com/jaemk/cached", rev = "bbf457e" }
 
-# modernized fork of crc32fast, 2021 edition, MSRV 1.81, select clippy lint suggestions applied
-# crc32fast = { git = "https://github.com/jqnatividad/rust-crc32fast", branch = "modernize" }
+# use calamine with unreleased fixes
+calamine = { git = "https://github.com/tafia/calamine", rev = "cf86fa7" }
+
+# use upstream removing unneeded arboard features
+csvlens = { git = "https://github.com/YS-L/csvlens", rev = "f4e39cf" }
 
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
-
-# use latest upstream of governor with bumped dashmap dependency
-governor = { git = "https://github.com/boinkor-net/governor", rev = "ae92838" }
 
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
@@ -295,13 +312,13 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
 
-# use upstream publicsuffix with unreleased dependency bumps
-publicsuffix = { git = "https://github.com/rushmorem/publicsuffix", rev = "b300356" }
+# use our patched fork of sled to get rid of unmaintained instant
+sled = { git = "https://github.com/dathere/sled", branch = "v0.34.7-bumped-parking_lot_to_0.12" }
 
 # use our fork of strum with bumped phf dependency. They're holding back as they have a conservative
 # MSRV policy, while qsv has an aggressive MSRV policy to always require Rust stable
-strum        = { git = "https://github.com/jqnatividad/strum", branch = "bump-phf-to-0.11" }
-strum_macros = { git = "https://github.com/jqnatividad/strum", branch = "bump-phf-to-0.11" }
+strum        = { git = "https://github.com/dathere/strum", branch = "bump-phf-to-0.11" }
+strum_macros = { git = "https://github.com/dathere/strum", branch = "bump-phf-to-0.11" }
 
 # Polars has a much higher release tempo for its Python bindings compared
 # to its underlying Rust library. See https://github.com/pola-rs/polars/releases
@@ -312,9 +329,9 @@ strum_macros = { git = "https://github.com/jqnatividad/strum", branch = "bump-ph
 # BUILD NOTE: Be sure to set QSV_POLARS_REV below to the latest commit short hash or tag 
 # of polars/py-polars before building qsv. This allows us to show the polars rev/tag in --version.
 # if we are using a release version of Rust Polars, leave QSV_POLARS_REV empty
-# QSV_POLARS_REV=py-1.10.0
-polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.10.0" }
-# polars = { git = "https://github.com/pola-rs/polars", rev = "bfdd496" }
+# QSV_POLARS_REV=31b7bb9
+# polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.16.0" }
+polars = { git = "https://github.com/pola-rs/polars", rev = "31b7bb9" }
 
 [features]
 default = ["mimalloc"]
@@ -324,14 +341,12 @@ distrib_features = [
     "fetch",
     "foreach",
     "geocode",
-    "lens",
     "luau",
     "polars",
-    "prompt",
     "python",
     "to",
 ]
-all_features = ["distrib_features", "self_update"]
+all_features = ["distrib_features", "self_update", "ui"]
 apply = [
     "base62",
     "censor",
@@ -347,6 +362,7 @@ apply = [
     "titlecase",
     "whatlang",
 ]
+clipboard = ["arboard"]
 fetch = [
     "cached",
     "console",
@@ -356,7 +372,7 @@ fetch = [
     "publicsuffix",
     "redis",
     "serde_urlencoded",
-    "simple-expand-tilde",
+    "sled",
 ]
 foreach = ["local-encoding"]
 geocode = [
@@ -365,9 +381,9 @@ geocode = [
     "geosuggest-core",
     "geosuggest-utils",
     "phf",
-    "simple-expand-tilde",
+    "sled",
 ]
-luau = ["mlua", "sanitize-filename", "simple-expand-tilde"]
+luau = ["mlua", "sanitize-filename"]
 polars = ["dep:polars", "bytemuck"]
 prompt = ["rfd"]
 python = ["pyo3"]
@@ -375,6 +391,7 @@ to = ["csvs_convert"]
 lens = ["csvlens"]
 lite = []
 datapusher_plus = ["self_update"]
+ui = ["clipboard", "prompt", "lens"]
 feature_capable = []
 nightly = [
     "crc32fast/nightly",

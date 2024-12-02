@@ -293,8 +293,8 @@ fn fetch_simple_redis() {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as diskcache behavior on macOS 14.4.1 generates more hits (the \
-            desired behavior) than other platforms"]
+// #[ignore = "Temporarily skip this as diskcache behavior on macOS 14.4.1 generates more hits (the
+// \             desired behavior) than other platforms"]
 fn fetch_simple_diskcache() {
     let wrk = Workdir::new("fetch");
     wrk.create(
@@ -1512,4 +1512,273 @@ fn fetchpost_simple_report() {
     ];
 
     assert_eq!(got, expected);
+}
+
+#[test]
+fn fetchpost_payload_template() {
+    let wrk = Workdir::new("fetchpost_tpl");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["first_name", "last_name", "age", "city"],
+            svec!["John", "Smith", "35", "New York"],
+            svec!["Jane", "Doe", "28", "Los Angeles"],
+            svec!["Bob", "Jones", "42", "Chicago"],
+        ],
+    );
+
+    // Create template file
+    wrk.create_from_string(
+        "payload.tpl",
+        r#"{
+    "firstName": "{{ first_name }}",
+    "lastName": "{{ last_name }}",
+    "age": {{ age }},
+    "city": "{{ city }}"
+}"#,
+    );
+
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("https://httpbin.org/post")
+        .arg("--payload-tpl")
+        .arg("payload.tpl")
+        .arg("--new-column")
+        .arg("response")
+        .arg("--jaq")
+        .arg(r#"."data""#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let expected = vec![
+        svec!["first_name", "last_name", "age", "city", "response"],
+        svec![
+            "John",
+            "Smith",
+            "35",
+            "New York",
+            r#""{"firstName":"John","lastName":"Smith","age":35,"city":"New York"}""#
+        ],
+        svec![
+            "Jane",
+            "Doe",
+            "28",
+            "Los Angeles",
+            r#""{"firstName":"Jane","lastName":"Doe","age":28,"city":"Los Angeles"}""#
+        ],
+        svec![
+            "Bob",
+            "Jones",
+            "42",
+            "Chicago",
+            r#""{"firstName":"Bob","lastName":"Jones","age":42,"city":"Chicago"}""#
+        ],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn fetchpost_payload_template_with_report() {
+    let wrk = Workdir::new("fetchpost_tpl_report");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["first_name", "last_name", "age", "city"],
+            svec!["John", "Smith", "35", "New York"],
+            svec!["Jane", "Doe", "28", "Los Angeles"],
+            svec!["Bob", "Jones", "42", "Chicago"],
+        ],
+    );
+
+    // Create template file
+    wrk.create_from_string(
+        "payload.tpl",
+        r#"{
+    "firstName": "{{ first_name }}",
+    "lastName": "{{ last_name }}",
+    "age": {{ age }},
+    "city": "{{ city }}"
+}"#,
+    );
+
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("https://httpbin.org/post")
+        .arg("--payload-tpl")
+        .arg("payload.tpl")
+        .arg("--new-column")
+        .arg("response")
+        .arg("--jaq")
+        .arg(r#"."data""#)
+        .arg("--report")
+        .arg("short")
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let expected = vec![
+        svec!["first_name", "last_name", "age", "city", "response"],
+        svec![
+            "John",
+            "Smith",
+            "35",
+            "New York",
+            r#""{"firstName":"John","lastName":"Smith","age":35,"city":"New York"}""#
+        ],
+        svec![
+            "Jane",
+            "Doe",
+            "28",
+            "Los Angeles",
+            r#""{"firstName":"Jane","lastName":"Doe","age":28,"city":"Los Angeles"}""#
+        ],
+        svec![
+            "Bob",
+            "Jones",
+            "42",
+            "Chicago",
+            r#""{"firstName":"Bob","lastName":"Jones","age":42,"city":"Chicago"}""#
+        ],
+    ];
+
+    assert_eq!(got, expected);
+
+    let report = wrk.read_to_string("data.csv.fetchpost-report.tsv");
+    assert!(!report.is_empty());
+}
+
+#[test]
+fn fetchpost_with_headers() {
+    let wrk = Workdir::new("fetchpost_headers");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1"],
+            svec!["https://httpbin.org/post", "test"],
+        ],
+    );
+
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("col1")
+        .arg("--http-header")
+        .arg("X-Test-Header:test123")
+        .arg("--http-header")
+        .arg("X-Another-Header:abc")
+        .arg("--jaq")
+        .arg(r#"."headers""#)
+        .arg("data.csv");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+    assert!(got.contains("X-Test-Header"));
+    assert!(got.contains("test123"));
+    assert!(got.contains("X-Another-Header"));
+    assert!(got.contains("abc"));
+}
+
+#[test]
+fn fetchpost_disk_cache() {
+    let wrk = Workdir::new("fetchpost_disk");
+
+    // Create temp dir for cache
+    use std::{env, fs};
+    let temp_dir = env::temp_dir().join("fp_dcache_test");
+    fs::create_dir_all(&temp_dir).unwrap();
+    let dc_dir = temp_dir.as_os_str().to_str().unwrap();
+
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "col1"],
+            svec!["https://httpbin.org/post", "test"],
+        ],
+    );
+
+    let mut cmd = wrk.command("fetchpost");
+    (&mut *cmd
+        .arg("URL")
+        .arg("col1")
+        .arg("--disk-cache")
+        .arg("--disk-cache-dir")
+        .arg(dc_dir))
+        .arg("--jaq")
+        .arg(r#"."form""#)
+        .arg("data.csv");
+
+    // First request should not be cached
+    let got1 = wrk.stdout::<String>(&mut cmd);
+
+    // Second request should be cached
+    let got2 = wrk.stdout::<String>(&mut cmd);
+
+    assert_eq!(&got1, &got2);
+
+    // Clean up
+    fs::remove_dir_all(temp_dir).unwrap();
+}
+
+#[test]
+fn fetchpost_content_type() {
+    let wrk = Workdir::new("fetchpost_content_type");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["URL", "message"],
+            svec!["https://httpbin.org/post", "Hello World"],
+        ],
+    );
+
+    // Create template file
+    wrk.create_from_string("payload.tpl", "Greeting: {{ message }}");
+
+    // Test plain text content type
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("--payload-tpl")
+        .arg("payload.tpl")
+        .arg("--content-type")
+        .arg("text/plain")
+        .arg("data.csv");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+    assert!(got.starts_with(
+        r#"{"args":{},"data":"\"Greeting: Hello World\"","files":{},"form":{},"headers":{"#
+    ));
+
+    // Create JSON template file
+    wrk.create_from_string(
+        "jsonpayload.tpl",
+        r#"{
+    "URL": "{{ URL }}",
+    "Message": "{{ message }}"
+}"#,
+    );
+
+    // Test custom JSON content type
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("--payload-tpl")
+        .arg("jsonpayload.tpl")
+        .arg("--content-type")
+        .arg("application/json")
+        .arg("--jaq")
+        .arg(r#"."json""#)
+        .arg("data.csv");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+    assert_eq!(
+        got,
+        r#"{"Message":"Hello World","URL":"https://httpbin.org/post"}"#
+    );
+
+    // Test form data content type
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("message")
+        .arg("--jaq")
+        .arg(r#"."form""#)
+        .arg("data.csv");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+    assert_eq!(got, r#"{"message":"Hello World"}"#);
 }

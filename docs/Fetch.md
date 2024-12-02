@@ -139,7 +139,7 @@ $ qsv fetch URL test5.csv --store-error --http-header "X-Api-Key:mykey" --http-h
   ""headers"": {
     ""Accept"": ""*/*"", 
     ""Host"": ""httpbin.org"", 
-    ""User-Agent"": ""qsv/0.28.0 (https://github.com/jqnatividad/qsv)"", 
+    ""User-Agent"": ""qsv/0.28.0 (https://github.com/dathere/qsv)"", 
     ""X-Amzn-Trace-Id"": ""Root=1-61d8d957-054da2374e304c7c7395cacc"", 
     ""X-Api-Key"": ""mykey"", 
     ""X-Api-Secret"": ""nottelling""

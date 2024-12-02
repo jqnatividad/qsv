@@ -76,26 +76,28 @@ impl<'de> Deserialize<'de> for Delimiter {
 
 #[derive(Clone, Debug)]
 pub struct Config {
-    pub path:           Option<PathBuf>, // None implies <stdin>
-    idx_path:           Option<PathBuf>,
-    select_columns:     Option<SelectColumns>,
-    delimiter:          u8,
-    pub no_headers:     bool,
-    pub flexible:       bool,
-    terminator:         csv::Terminator,
-    pub quote:          u8,
-    quote_style:        csv::QuoteStyle,
-    double_quote:       bool,
-    escape:             Option<u8>,
-    quoting:            bool,
-    pub preamble_rows:  u64,
-    trim:               csv::Trim,
-    pub autoindex_size: u64,
-    prefer_dmy:         bool,
-    pub comment:        Option<u8>,
-    snappy:             bool, // flag to enable snappy compression/decompression
-    pub read_buffer:    u32,
-    pub write_buffer:   u32,
+    pub path:              Option<PathBuf>, // None implies <stdin>
+    idx_path:              Option<PathBuf>,
+    select_columns:        Option<SelectColumns>,
+    delimiter:             u8,
+    pub no_headers:        bool,
+    pub flexible:          bool,
+    terminator:            csv::Terminator,
+    pub quote:             u8,
+    quote_style:           csv::QuoteStyle,
+    double_quote:          bool,
+    escape:                Option<u8>,
+    quoting:               bool,
+    pub preamble_rows:     u64,
+    trim:                  csv::Trim,
+    pub autoindex_size:    u64,
+    prefer_dmy:            bool,
+    pub comment:           Option<u8>,
+    snappy:                bool, // flag to enable snappy compression/decompression
+    pub read_buffer:       u32,
+    pub write_buffer:      u32,
+    pub skip_format_check: bool,
+    pub format_error:      Option<String>,
 }
 
 // Empty trait as an alias for Seek and Read that avoids auto trait errors
@@ -137,11 +139,16 @@ impl Config {
     /// - `QSV_PREFER_DMY`: Sets date format preference.
     /// - `QSV_RDR_BUFFER_CAPACITY`: Sets read buffer capacity.
     /// - `QSV_WTR_BUFFER_CAPACITY`: Sets write buffer capacity.
+    /// - `QSV_SKIP_FORMAT_CHECK`: Set to skip file extension checking.
     pub fn new(path: Option<&String>) -> Config {
         let default_delim = match env::var("QSV_DEFAULT_DELIMITER") {
             Ok(delim) => Delimiter::decode_delimiter(&delim).unwrap().as_byte(),
             _ => b',',
         };
+        let sniff = util::get_envvar_flag("QSV_SNIFF_DELIMITER")
+            || util::get_envvar_flag("QSV_SNIFF_PREAMBLE");
+        let mut skip_format_check = true;
+        let mut format_error = None;
         let (path, mut delim, snappy) = match path {
             None => (None, default_delim, false),
             // WIP: support remote files; currently only http(s) is supported
@@ -164,6 +171,17 @@ impl Config {
             Some(ref s) => {
                 let path = PathBuf::from(s);
                 let (file_extension, delim, snappy) = get_delim_by_extension(&path, default_delim);
+                skip_format_check = sniff || util::get_envvar_flag("QSV_SKIP_FORMAT_CHECK");
+                if !skip_format_check {
+                    format_error = match file_extension.as_str() {
+                        "csv" | "tsv" | "tab" | "ssv" => None,
+                        ext => Some(format!(
+                            "{} is using an unsupported file format: {ext}. Set \
+                             QSV_SKIP_FORMAT_CHECK to skip input format checking.",
+                            path.display()
+                        )),
+                    };
+                }
                 (Some(path), delim, snappy || file_extension.ends_with("sz"))
             },
         };
@@ -228,6 +246,8 @@ impl Config {
                 .unwrap_or_else(|_| DEFAULT_WTR_BUFFER_CAPACITY.to_string())
                 .parse()
                 .unwrap_or(DEFAULT_WTR_BUFFER_CAPACITY as u32),
+            format_error,
+            skip_format_check,
         }
     }
 
@@ -261,6 +281,11 @@ impl Config {
 
     pub const fn flexible(mut self, yes: bool) -> Config {
         self.flexible = yes;
+        self
+    }
+
+    pub const fn skip_format_check(mut self, yes: bool) -> Config {
+        self.skip_format_check = yes;
         self
     }
 
@@ -391,7 +416,14 @@ impl Config {
     }
 
     pub fn reader(&self) -> io::Result<csv::Reader<Box<dyn io::Read + Send + 'static>>> {
-        Ok(self.from_reader(self.io_reader()?))
+        if !self.skip_format_check && self.format_error.is_some() {
+            Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                self.format_error.clone().unwrap(),
+            ))
+        } else {
+            Ok(self.from_reader(self.io_reader()?))
+        }
     }
 
     pub fn reader_file(&self) -> io::Result<csv::Reader<fs::File>> {
@@ -400,7 +432,16 @@ impl Config {
                 io::ErrorKind::InvalidInput,
                 "Cannot use <stdin> here",
             )),
-            Some(ref p) => fs::File::open(p).map(|f| self.from_reader(f)),
+            Some(ref p) => {
+                if !self.skip_format_check && self.format_error.is_some() {
+                    Err(io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        self.format_error.clone().unwrap(),
+                    ))
+                } else {
+                    fs::File::open(p).map(|f| self.from_reader(f))
+                }
+            },
         }
     }
 
@@ -414,7 +455,15 @@ impl Config {
                 stdin.lock().read_to_end(&mut buffer)?;
                 self.from_reader(Box::new(io::Cursor::new(buffer)))
             },
-            Some(ref p) => self.from_reader(Box::new(fs::File::open(p).unwrap())),
+            Some(ref p) => {
+                if !self.skip_format_check && self.format_error.is_some() {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        self.format_error.clone().unwrap(),
+                    ));
+                }
+                self.from_reader(Box::new(fs::File::open(p)?))
+            },
         })
     }
 
@@ -655,28 +704,105 @@ impl Config {
 ///
 /// If the file extension doesn't match known types, it returns the default delimiter.
 pub fn get_delim_by_extension(path: &Path, default_delim: u8) -> (String, u8, bool) {
-    let mut snappy = false;
-    let file_extension = path
-        .extension()
-        .unwrap_or_default()
-        .to_str()
-        .unwrap()
-        .to_ascii_lowercase();
+    let path_str = path.to_str().unwrap_or_default().to_ascii_lowercase();
+
+    // we already lowercased the path_str, so allow this false positive lint
     #[allow(clippy::case_sensitive_file_extension_comparisons)]
+    let snappy = path_str.ends_with(".sz");
+
+    // Get the extension before .sz if it's a snappy file, otherwise get the normal extension
+    let file_extension = if snappy {
+        path_str
+            .strip_suffix(".sz")
+            .and_then(|s| s.split('.').last())
+            .unwrap_or("")
+            .to_string()
+    } else {
+        path.extension()
+            .unwrap_or_default()
+            .to_str()
+            .unwrap()
+            .to_ascii_lowercase()
+    };
+
     let delim = match file_extension.as_str() {
         "tsv" | "tab" => b'\t',
         "ssv" => b';',
         "csv" => b',',
-        _ => {
-            let snappied_ext = path.extension().and_then(|ext| ext.to_str()).unwrap_or("_");
-            snappy = snappied_ext.ends_with(".sz");
-            match snappied_ext {
-                "csv.sz" => b',',
-                "tsv.sz" | "tab.sz" => b'\t',
-                "ssv.sz" => b';',
-                _ => default_delim,
-            }
-        },
+        _ => default_delim,
     };
+
     (file_extension, delim, snappy)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use super::*;
+
+    #[test]
+    fn test_csv_extension() {
+        let path = PathBuf::from("test.csv");
+        let (ext, delim, snappy) = get_delim_by_extension(&path, b',');
+        assert_eq!(ext, "csv");
+        assert_eq!(delim, b',');
+        assert!(!snappy);
+    }
+
+    #[test]
+    fn test_tsv_extension() {
+        let path = PathBuf::from("test.tsv");
+        let (ext, delim, snappy) = get_delim_by_extension(&path, b',');
+        assert_eq!(ext, "tsv");
+        assert_eq!(delim, b'\t');
+        assert!(!snappy);
+    }
+
+    #[test]
+    fn test_ssv_extension() {
+        let path = PathBuf::from("test.ssv");
+        let (ext, delim, snappy) = get_delim_by_extension(&path, b',');
+        assert_eq!(ext, "ssv");
+        assert_eq!(delim, b';');
+        assert!(!snappy);
+    }
+
+    #[test]
+    fn test_snappy_csv_extension() {
+        let path = PathBuf::from("test.csv.sz");
+        let (ext, delim, snappy) = get_delim_by_extension(&path, b',');
+        assert_eq!(ext, "csv");
+        assert_eq!(delim, b',');
+        assert!(snappy);
+    }
+
+    #[test]
+    fn test_snappy_tsv_extension() {
+        let path = PathBuf::from("test.tsv.sz");
+        let (ext, delim, snappy) = get_delim_by_extension(&path, b',');
+        assert_eq!(ext, "tsv");
+        assert_eq!(delim, b'\t');
+        assert!(snappy);
+    }
+
+    #[test]
+    fn test_unknown_extension() {
+        let path = PathBuf::from("test.unknown");
+        let default_delim = b'|';
+        let (ext, delim, snappy) = get_delim_by_extension(&path, default_delim);
+        assert_eq!(ext, "unknown");
+        assert_eq!(delim, default_delim);
+        assert!(!snappy);
+    }
+
+    #[test]
+    fn test_no_extension() {
+        let path = PathBuf::from("test");
+        let default_delim = b',';
+        let (ext, delim, snappy) = get_delim_by_extension(&path, default_delim);
+        assert_eq!(ext, "");
+        assert_eq!(delim, default_delim);
+        assert!(!snappy);
+    }
 }

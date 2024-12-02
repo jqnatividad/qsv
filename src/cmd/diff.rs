@@ -42,7 +42,7 @@ Find the difference between two CSVs. Both CSVs have no headers, but the result 
 headers, so generic headers will be used in the form of: _col_1, _col_2, etc.:
     qsv diff --no-headers-left --no-headers-right left.csv right.csv
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_diff.rs
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_diff.rs
 
 Usage:
     qsv diff [options] [<input-left>] [<input-right>]
@@ -58,7 +58,7 @@ diff options:
                                 first row is the header row and will be skipped during
                                 the diff. It will always appear in the output.)
     --no-headers-output         When set, the diff result won't have a header row in
-                                it's output. If not set and both CSVs have no headers,
+                                its output. If not set and both CSVs have no headers,
                                 headers in the result will be: _col_1,_col_2, etc.
     --delimiter-left <arg>      The field delimiter for reading CSV data on the left.
                                 Must be a single character. (default: ,)
@@ -248,7 +248,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .delimiter(args.flag_delimiter_output)
         .writer()?;
 
-    // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
 
     let Ok(csv_diff) = CsvByteDiffBuilder::new()

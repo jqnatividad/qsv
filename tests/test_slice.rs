@@ -308,3 +308,156 @@ fn slice_neg_index_withindex() {
 fn slice_neg_index_no_headers_withindex() {
     test_index("slice_neg_index_no_headers_withindex", -2, "d", false, true);
 }
+
+fn test_slice_invert(
+    name: &str,
+    start: Option<isize>,
+    end: Option<usize>,
+    expected: &[&str],
+    headers: bool,
+    use_index: bool,
+    as_len: bool,
+    json_output: bool,
+) {
+    let (wrk, mut cmd) = setup(name, headers, use_index);
+    if let Some(start) = start {
+        cmd.arg("--start").arg(&start.to_string());
+    }
+    if let Some(end) = end {
+        if as_len {
+            let start = start.unwrap_or(0);
+            if start < 0 {
+                cmd.arg("--len").arg(&end.to_string());
+            } else {
+                cmd.arg("--len")
+                    .arg(&(end - start.unsigned_abs()).to_string());
+            }
+        } else {
+            cmd.arg("--end").arg(&end.to_string());
+        }
+    }
+    if !headers {
+        cmd.arg("--no-headers");
+    }
+    cmd.arg("--invert");
+
+    if json_output {
+        let output_file = wrk.path("output.json").to_string_lossy().to_string();
+
+        cmd.arg("--json").args(&["--output", &output_file]);
+
+        wrk.assert_success(&mut cmd);
+
+        let gots = wrk.read_to_string(&output_file);
+        let gotj: serde_json::Value = serde_json::from_str(&gots).unwrap();
+        let got = gotj.to_string();
+
+        let expected_vec = expected
+            .iter()
+            .map(|&s| {
+                if headers {
+                    format!("{{\"header\":\"{}\"}}", s)
+                } else {
+                    format!("{{\"0\":\"{}\"}}", s)
+                }
+            })
+            .collect::<Vec<String>>();
+        let expected = format!("[{}]", expected_vec.join(","));
+
+        assert_eq!(got, expected);
+    } else {
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let mut expected = expected
+            .iter()
+            .map(|&s| vec![s.to_owned()])
+            .collect::<Vec<Vec<String>>>();
+        if headers {
+            expected.insert(0, svec!["header"]);
+        }
+        assert_eq!(got, expected);
+    }
+}
+
+#[test]
+fn slice_invert_simple() {
+    test_slice_invert(
+        "slice_invert_simple",
+        Some(0),
+        Some(1),
+        &["b", "c", "d", "e"],
+        true,
+        false,
+        false,
+        false,
+    );
+}
+
+#[test]
+fn slice_invert_middle() {
+    test_slice_invert(
+        "slice_invert_middle",
+        Some(1),
+        Some(3),
+        &["a", "d", "e"],
+        true,
+        false,
+        false,
+        false,
+    );
+}
+
+#[test]
+fn slice_invert_with_index() {
+    test_slice_invert(
+        "slice_invert_with_index",
+        Some(1),
+        Some(3),
+        &["a", "d", "e"],
+        true,
+        true,
+        false,
+        false,
+    );
+}
+
+#[test]
+fn slice_invert_json() {
+    test_slice_invert(
+        "slice_invert_json",
+        Some(1),
+        Some(3),
+        &["a", "d", "e"],
+        true,
+        false,
+        false,
+        true,
+    );
+}
+
+#[test]
+fn slice_invert_negative() {
+    test_slice_invert(
+        "slice_invert_negative",
+        Some(-2),
+        None,
+        &["a", "b", "c"],
+        true,
+        false,
+        false,
+        false,
+    );
+}
+
+#[test]
+fn slice_invert_with_len() {
+    test_slice_invert(
+        "slice_invert_with_len",
+        Some(1),
+        Some(2),
+        &["a", "c", "d", "e"],
+        true,
+        false,
+        true,
+        false,
+    );
+}

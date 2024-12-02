@@ -2,9 +2,11 @@ use clap::{arg, Command};
 
 pub fn fetchpost_cmd() -> Command {
     Command::new("fetchpost").args([
+        arg!(--"payload-tpl"),
+        arg!(--"content-type"),
         arg!(--"new-column"),
-        arg!(--jql),
-        arg!(--jqlfile),
+        arg!(--jaq),
+        arg!(--jaqfile),
         arg!(--pretty),
         arg!(--"rate-limit"),
         arg!(--timeout),

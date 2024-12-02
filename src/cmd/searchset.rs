@@ -19,7 +19,7 @@ Returns exitcode 1 when no match is found, unless the '--not-one' flag is used.
 When --quick is enabled, no output is produced and exitcode 0 is returned on 
 the first match.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_searchset.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_searchset.rs.
 
 Usage:
     qsv searchset [options] (<regexset-file>) [<input>]
@@ -196,7 +196,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
 
-    let do_match_list = args.flag_flag.map_or(false, |column_name| {
+    let do_match_list = args.flag_flag.is_some_and(|column_name| {
         headers.push_field(column_name.as_bytes());
         true
     });
@@ -237,7 +237,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut m;
     let mut matched = false;
     let mut matches: Vec<usize> = Vec::with_capacity(20);
-    let mut buffer = itoa::Buffer::new();
 
     while rdr.read_byte_record(&mut record)? {
         row_ctr += 1;
@@ -270,7 +269,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         if do_match_list {
             flag_rowi += 1;
             flag_column = if m {
-                buffer.format(flag_rowi).clone_into(&mut matched_rows);
+                itoa::Buffer::new()
+                    .format(flag_rowi)
+                    .clone_into(&mut matched_rows);
                 if args.flag_invert_match {
                     matched_rows.as_bytes().to_vec()
                 } else {

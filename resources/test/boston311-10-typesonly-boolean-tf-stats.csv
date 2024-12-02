@@ -29,3 +29,7 @@ location_zipcode,String
 latitude,Float
 longitude,Float
 source,String
+qsv__rowcount,10
+qsv__columncount,30
+qsv__filesize_bytes,3922
+qsv__fingerprint_hash,8b18d34c65766292fe2ff8a22ed38ad808d047aac0882af77229795330159a1c

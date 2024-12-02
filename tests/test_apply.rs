@@ -762,15 +762,16 @@ fn enum_apply_calconv_issue1458() {
 
     wrk.create("enum.csv", got);
 
-    let mut cmd2 = wrk.command("apply");
-    cmd2.arg("calcconv")
+    let mut cmd_2 = wrk.command("apply");
+    cmd_2
+        .arg("calcconv")
         .arg("--formatstr")
         .arg("{index} * {index}")
         .arg("-c")
         .arg("result")
         .arg("enum.csv");
 
-    let got2: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2);
+    let got2: Vec<Vec<String>> = wrk.read_stdout(&mut cmd_2);
     let expected2 = vec![
         svec!["FirstName", "MI", "LastName", "index", "result"],
         svec!["Adam", "B", "Case", "0", "0"],

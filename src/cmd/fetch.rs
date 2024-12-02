@@ -1,8 +1,9 @@
 #![allow(unused_assignments)]
 static USAGE: &str = r#"
-Fetches data from web services for every row using HTTP Get.
+Send/Fetch data to/from web services for every row using HTTP Get.
 
 Fetch is integrated with `jaq` (a jq clone) to directly parse out values from an API JSON response.
+(See https://github.com/01mf02/jaq for more info on how to use the jaq JSON Query Language)
 
 CACHE OPTIONS:
 Fetch caches responses to minimize traffic and maximize performance. It has four
@@ -42,8 +43,8 @@ If you don't want responses to be cached at all, use the --no-cache flag.
 NETWORK OPTIONS:
 Fetch recognizes RateLimit and Retry-After headers and dynamically throttles requests
 to be as fast as allowed. The --rate-limit option sets the maximum number of queries per second
-(QPS) to be made. The default is 0, which means to go as fast as possible,
-automatically throttling as required.
+(QPS) to be made. The default is 0, which means to go as fast as possible, automatically
+throttling as required, based on rate-limit and retry-after response headers.
 
 To use a proxy, set the environment variables HTTP_PROXY, HTTPS_PROXY or ALL_PROXY
 (e.g. export HTTPS_PROXY=socks5://127.0.0.1:1086).
@@ -75,8 +76,7 @@ Given the data.csv above, fetch the JSON response.
 Note the output will be a JSONL file - with a minified JSON response per line, not a CSV file.
 
 Now, if we want to generate a CSV file with the parsed City and State, we use the 
-new-column and jaq options. (See https://github.com/01mf02/jaq?tab=readme-ov-file#examples 
-for more info on how to use the jaq JSON Query Language)
+new-column and jaq options.
 
 $ qsv fetch URL --new-column CityState --jaq '[ ."places"[0]."place name",."places"[0]."state abbreviation" ]' 
   data.csv > data_with_CityState.csv
@@ -132,7 +132,7 @@ Note that you can pass as many key-value pairs by using --http-header option rep
 
 $ qsv fetch URL data.csv --http-header "X-Api-Key:TEST_KEY" -H "X-Api-Secret:ABC123XYZ" -H "Accept-Language: fr-FR"
 
-For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_fetch.rs.
+For more extensive examples, see https://github.com/dathere/qsv/blob/master/tests/test_fetch.rs.
 
 Usage:
     qsv fetch [<url-column> | --url-template <template>] [--jaq <selector> | --jaqfile <file>] [--http-header <k:v>...] [options] [<input>]
@@ -260,9 +260,8 @@ use reqwest::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use simdutf8::basic::from_utf8;
-use simple_expand_tilde::expand_tilde;
 use url::Url;
+use util::expand_tilde;
 
 use crate::{
     config::{Config, Delimiter},
@@ -774,14 +773,18 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             // let's dynamically construct the URL with it
             record_vec.clear();
             for field in &record {
-                record_vec.push(from_utf8(field).unwrap_or_default().to_owned());
+                record_vec.push(
+                    simdutf8::basic::from_utf8(field)
+                        .unwrap_or_default()
+                        .to_owned(),
+                );
             }
             if let Ok(formatted) =
                 dynfmt::SimpleCurlyFormat.format(&dynfmt_url_template, &*record_vec)
             {
                 url = formatted.into_owned();
             }
-        } else if let Ok(s) = from_utf8(&record[column_index]) {
+        } else if let Ok(s) = simdutf8::basic::from_utf8(&record[column_index]) {
             // we're not using a URL template,
             // just use the field as-is as the URL
             s.clone_into(&mut url);
@@ -1507,21 +1510,23 @@ pub fn process_jaq(json: &str, query: &str) -> CliResult<String> {
 fn format_value(value: Value) -> String {
     match value {
         Value::Number(num) => {
-            if num.is_f64() {
-                ryu::Buffer::new()
-                    .format_finite(num.as_f64().unwrap())
-                    .to_string()
-            } else if num.is_i64() {
-                itoa::Buffer::new()
-                    .format(num.as_i64().unwrap())
-                    .to_string()
+            if let Some(f) = num.as_f64() {
+                ryu::Buffer::new().format_finite(f).to_string()
+            } else if let Some(i) = num.as_i64() {
+                itoa::Buffer::new().format(i).to_string()
             } else {
                 itoa::Buffer::new()
                     .format(num.as_u64().unwrap())
                     .to_string()
             }
         },
-        Value::Bool(b) => b.to_string(),
+        Value::Bool(b) => {
+            if b {
+                "true".to_string()
+            } else {
+                "false".to_string()
+            }
+        },
         Value::String(s) => format!("\"{s}\""),
         Value::Null => "null".to_string(),
         Value::Array(arr) => serde_json::to_string(&arr).unwrap_or_else(|_| "[]".to_string()),

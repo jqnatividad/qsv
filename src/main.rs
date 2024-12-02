@@ -57,6 +57,7 @@ mod clitypes;
 mod cmd;
 mod config;
 mod index;
+mod lookup;
 mod odhtcache;
 mod select;
 mod util;
@@ -86,15 +87,23 @@ struct Args {
 }
 
 fn main() -> QsvExitCode {
+    util::qsv_custom_panic();
+
     let mut enabled_commands = String::new();
     #[cfg(all(feature = "apply", feature = "feature_capable"))]
     enabled_commands.push_str("    apply       Apply series of transformations to a column\n");
 
     enabled_commands.push_str(
         "    behead      Drop header from CSV file
-    cat         Concatenate by row or column
-    clipboard   Provide input from clipboard or output to clipboard
-    count       Count records
+    cat         Concatenate by row or column\n",
+    );
+
+    #[cfg(all(feature = "clipboard", feature = "feature_capable"))]
+    enabled_commands
+        .push_str("    clipboard   Provide input from clipboard or output to clipboard\n");
+
+    enabled_commands.push_str(
+        "    count       Count records
     datefmt     Format date/datetime strings
     dedup       Remove redundant rows
     describegpt Infer extended metadata using a LLM
@@ -191,6 +200,7 @@ fn main() -> QsvExitCode {
     enabled_commands.push_str(
         "    stats       Infer data types and compute summary statistics
     table       Align CSV data into columns
+    template    Render templates using CSV data
     tojsonl     Convert CSV to newline-delimited JSON\n",
     );
 
@@ -327,6 +337,7 @@ enum Command {
     Apply,
     Behead,
     Cat,
+    #[cfg(all(feature = "clipboard", feature = "feature_capable"))]
     Clipboard,
     Count,
     Datefmt,
@@ -392,6 +403,7 @@ enum Command {
     SqlP,
     Stats,
     Table,
+    Template,
     Transpose,
     #[cfg(all(feature = "to", feature = "feature_capable"))]
     To,
@@ -419,6 +431,7 @@ impl Command {
             #[cfg(all(feature = "apply", feature = "feature_capable"))]
             Command::Apply => cmd::apply::run(argv),
             Command::Cat => cmd::cat::run(argv),
+            #[cfg(all(feature = "clipboard", feature = "feature_capable"))]
             Command::Clipboard => cmd::clipboard::run(argv),
             Command::Count => cmd::count::run(argv),
             Command::Datefmt => cmd::datefmt::run(argv),
@@ -488,6 +501,7 @@ impl Command {
             Command::SqlP => cmd::sqlp::run(argv),
             Command::Stats => cmd::stats::run(argv),
             Command::Table => cmd::table::run(argv),
+            Command::Template => cmd::template::run(argv),
             Command::Transpose => cmd::transpose::run(argv),
             #[cfg(all(feature = "to", feature = "feature_capable"))]
             Command::To => cmd::to::run(argv),

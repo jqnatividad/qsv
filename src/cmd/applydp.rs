@@ -126,7 +126,7 @@ Create a new column 'FullName' from 'FirstName', 'MI', and 'LastName' columns:
 
   $ qsv applydp dynfmt --formatstr 'Sir/Madam {FirstName} {MI}. {LastName}' -c FullName file.csv
 
-For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_applydp.rs.
+For more extensive examples, see https://github.com/dathere/qsv/blob/master/tests/test_applydp.rs.
 
 Usage:
 qsv applydp operations <operations> [options] <column> [<input>]
@@ -387,7 +387,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut batch = Vec::with_capacity(batchsize);
     let mut batch_results = Vec::with_capacity(batchsize);
 
-    // set RAYON_NUM_THREADS
     util::njobs(args.flag_jobs);
 
     // main loop to read CSV and construct batches for parallel processing.

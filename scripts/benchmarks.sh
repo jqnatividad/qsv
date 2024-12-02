@@ -22,7 +22,7 @@
 # so it be can run on hardware and workloads that reflect your requirements/environment.
 #
 # Make sure you're using a release-optimized `qsv`.
-# If you can't use the prebuilt binaries at https://github.com/jqnatividad/qsv/releases/latest,
+# If you can't use the prebuilt binaries at https://github.com/dathere/qsv/releases/latest,
 # build it to have at least the apply, geocode, luau, to and polars features enabled:
 # i.e. `cargo build --release --locked -F feature_capable,apply,geocode,luau,to,polars` or
 # `cargo install --locked qsv -F feature_capable,apply,geocode,luau,to,polars`
@@ -42,7 +42,7 @@
 arg_pat="$1"
 
 # the version of this script
-bm_version=5.3.0
+bm_version=5.5.0
 
 # CONFIGURABLE VARIABLES ---------------------------------------
 # change as needed to reflect your environment/workloads
@@ -56,7 +56,7 @@ qsv_bin=qsv
 # we use several optional features when dogfooding qsv (apply, luau & to)
 # and the user may be benchmarking a qsv binary variant that doesn't have these features enabled
 qsv_benchmarker_bin=qsv
-benchmark_data_url=https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z
+benchmark_data_url=https://raw.githubusercontent.com/wiki/dathere/qsv/files/NYC_311_SR_2010-2020-sample-1M.7z
 # where to download the benchmark data compressed file - this could be a zip or 7z file
 datazip=NYC_311_SR_2010-2020-sample-1M.7z
 # where to store the benchmark data
@@ -299,6 +299,9 @@ function cleanup_files {
   rm -r -f split_tempdir_idx_j1
   rm -r -f split_tempdir_chunks_idx
   rm -r -f split_tempdir_chunks_idx_j1
+  rm -r -f template_tempdir
+  rm -r -f template_tempdir_lookup
+  rm -f template_temp.txt
   rm -f benchmark_work.*
   rm -r -f benchmark_work
   rm -f extsort_sorted.csv
@@ -356,7 +359,7 @@ echo ""
 
 if [ ! -r communityboards.csv ]; then
   echo "> Downloading community board data..."
-  curl -sS https://raw.githubusercontent.com/wiki/jqnatividad/qsv/files/communityboards.csv >communityboards.csv
+  curl -sS https://raw.githubusercontent.com/wiki/dathere/qsv/files/communityboards.csv >communityboards.csv
   echo ""
 fi
 
@@ -498,7 +501,7 @@ run explode "$qsv_bin" explode City "-" "$data"
 run extdedup "$qsv_bin" extdedup "$data"
 run extdedup_csv "$qsv_bin" extdedup "$data" --select 1-5
 run extsort "$qsv_bin" extsort data_unsorted.csv extsort_sorted.csv
-run --index extsort_csv "$qsv_bin" extsort data_unsorted.csv --select 1-5 extsort_sorted.csv
+run extsort_csv env QSV_AUTOINDEX_SIZE=1 bash -c \'"$qsv_bin" extsort data_unsorted.csv --select 1-5 extsort_sorted.csv\'
 run fill "$qsv_bin" fill -v Unspecified \'Address Type\' "$data"
 run fixlengths "$qsv_bin" fixlengths "$data"
 run flatten "$qsv_bin" flatten "$data"
@@ -619,7 +622,6 @@ run --index split_chunks_index "$qsv_bin" split --chunks 20 split_tempdir_chunks
 run --index split_chunks_index_j1 "$qsv_bin" split --chunks 20 -j 1 split_tempdir_chunks_idx_j1
 run sqlp "$qsv_bin" sqlp "$data" -Q --infer-len 100000 '"select * from _t_1 where \"Complaint Type\"='\''Noise'\'' and Borough='\''BROOKLYN'\''"'
 run sqlp_aggregations "$qsv_bin" sqlp "$data" -Q --infer-len 100000 '"select Borough, count(*) from _t_1 where \"Complaint Type\"='\''Noise'\'' group by Borough"'
-run sqlp_aggregations_seed_schema_cache "$qsv_bin" sqlp "$data" -Q --infer-len 100000 --cache-schema '"select Borough, count(*) from _t_1 where \"Complaint Type\"='\''Noise'\'' group by Borough"'
 run sqlp_aggregations_use_schema_cache "$qsv_bin" sqlp "$data" -Q --infer-len 100000 --cache-schema '"select Borough, count(*) from _t_1 where \"Complaint Type\"='\''Noise'\'' group by Borough"'
 run sqlp_aggregations_vs_duckdb duckdb :memory: '"select Borough, count(*) from read_csv_auto('\'''$data''\'') where \"Complaint Type\"='\''Noise'\'' group by Borough"'
 run sqlp_aggregations_expensive "$qsv_bin" sqlp SKIP_INPUT -Q --infer-len 100000 expensive.sql
@@ -654,6 +656,9 @@ run --index stats_everything_index_j1 "$qsv_bin" stats "$data" --force --everyth
 run --index stats_everything_index_j1_with_cache "$qsv_bin" stats "$data" --everything -j 1
 run --index stats_everything_sorted_index "$qsv_bin" stats data_sorted.csv --force --everything
 run table "$qsv_bin" table "$data"
+run template "$qsv_bin" template --template-file template.tpl "$data" --output template_temp.txt
+run template_outdir "$qsv_bin" template --template-file template.tpl "$data" template_tempdir
+run template_lookup_outdir "$qsv_bin" template --template-file template-with-cb-lookup.tpl "$data" template_tempdir_lookup
 run to_xlsx "$qsv_bin" to xlsx benchmark_work.xlsx "$data"
 run to_sqlite "$qsv_bin" to sqlite benchmark_work.db "$data"
 run to_datapackage "$qsv_bin" to datapackage benchmark_work.json "$data"

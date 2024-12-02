@@ -460,7 +460,7 @@ BEGIN {
     csv_indexed = qsv_autoindex();
 
     us_states_lookup_headers = qsv_register_lookup("us_states", 
-      "https://raw.githubusercontent.com/jqnatividad/qsv/master/resources/test/us-states-lookup.csv", 100)
+      "https://raw.githubusercontent.com/dathere/qsv/master/resources/test/us-states-lookup.csv", 100)
 
     -- note how we use the qsv_log function to log to the qsv log file
     qsv_log("debug", " _INDEX:", _INDEX, " _ROWCOUNT:", _ROWCOUNT, " csv_indexed:", csv_indexed)
@@ -507,6 +507,8 @@ END {
         .arg("Running Total")
         .arg("file:testlookup.luau")
         .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
@@ -599,6 +601,8 @@ END {
         .arg("file:testlookup.luau")
         .arg("data.csv");
 
+    wrk.assert_success(&mut cmd);
+
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["letter", "Amount", "Running Total"],
@@ -617,7 +621,7 @@ END {
 }
 
 #[test]
-#[ignore = "Temporarily skip this as Boston CityScore Summary is currently unavailable"]
+// #[ignore = "Temporarily skip this as Boston CityScore Summary is currently unavailable"]
 fn luau_register_lookup_table_ckan() {
     let wrk = Workdir::new("luau_register_lookup_ckan");
     wrk.create(

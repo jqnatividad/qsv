@@ -53,7 +53,7 @@ jobs:
         submodules: recursive
         ref: ${{ needs.analyze-tags.outputs.previous-tag }}
 
-    - uses: actions/setup-python@v5.2.0
+    - uses: actions/setup-python@v5.3.0
       with:
         python-version: '3.10'
     - name: Build qsvpy310
@@ -75,7 +75,7 @@ jobs:
         mv qsv qsvpy310
         cd ..
 
-    - uses: actions/setup-python@v5.2.0
+    - uses: actions/setup-python@v5.3.0
       with:
             python-version: '3.11'
     - name: Build qsvpy311
@@ -96,7 +96,7 @@ jobs:
             mv qsv qsvpy311
             cd ..
 
-    - uses: actions/setup-python@v5.2.0
+    - uses: actions/setup-python@v5.3.0
       with:
             python-version: '3.12'
     - name: Build qsvpy312
@@ -130,7 +130,7 @@ jobs:
     - name: Download latest release zip
       uses: robinraju/release-downloader@v1.11
       with:
-          repository: "jqnatividad/qsv"
+          repository: "dathere/qsv"
           latest: true
           token: ${{ secrets.GITHUB_TOKEN }}
           fileName: qsv-${{ needs.analyze-tags.outputs.previous-tag }}-${{ matrix.job.target }}.zip

@@ -12,7 +12,7 @@ Either way, the output will not only be deduplicated, it will also be sorted.
 
 A duplicate count will also be sent to <stderr>.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_dedup.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_dedup.rs.
 
 Usage:
     qsv dedup [options] [<input>]
@@ -159,7 +159,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             util::mem_file_check(&path, false, args.flag_memcheck)?;
         }
 
-        // set RAYON_NUM_THREADS for parallel sort
         util::njobs(args.flag_jobs);
 
         let mut all = rdr.byte_records().collect::<Result<Vec<_>, _>>()?;

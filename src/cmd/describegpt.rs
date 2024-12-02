@@ -9,10 +9,10 @@ To attempt generating a data dictionary of a spreadsheet file you may run (repla
 
 qsv describegpt <filepath> --base-url http://localhost:11434/v1 --api-key ollama --model <model> --max-tokens <number> --dictionary
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_describegpt.rs.
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_describegpt.rs.
 
 For more detailed info on how describegpt works and how to prepare a prompt file, 
-see https://github.com/jqnatividad/qsv/blob/master/docs/Describegpt.md
+see https://github.com/dathere/qsv/blob/master/docs/Describegpt.md
 
 Usage:
     qsv describegpt [options] [<input>]

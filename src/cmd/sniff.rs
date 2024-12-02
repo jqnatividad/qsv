@@ -24,7 +24,7 @@ instead as they scan the entire file. However, they only work on local files and
 CSVs, unlike `sniff` which can work with remote files, various CSV dialects and is very fast
 regardless of file size.
 
-For examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_sniff.rs.
+For examples, see https://github.com/dathere/qsv/blob/master/tests/test_sniff.rs.
 
 Usage:
     qsv sniff [options] [<input>]
@@ -872,7 +872,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
         sfile_info.downloaded_records
     };
 
-    let rdr = conf.reader_file()?;
+    let rdr = conf.clone().skip_format_check(true).reader_file()?;
 
     let dt_preference = if args.flag_prefer_dmy || conf.get_dmy_preference() {
         DatePreference::DmyFormat

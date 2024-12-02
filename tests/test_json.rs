@@ -192,7 +192,7 @@ fn json_fruits_stats_slice_json() {
 
     // qsv stats fruits.csv
     let mut stats_cmd = wrk.command("stats");
-    stats_cmd.arg(test_file);
+    stats_cmd.arg(test_file).arg("--force");
 
     wrk.assert_success(&mut stats_cmd);
 

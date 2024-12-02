@@ -9,9 +9,9 @@ backslash or by wrapping the replacement string into single quotes:
   $ qsv replace "hel(lo)" "hal\$1" file.csv
 
 Returns exitcode 0 when replacements are done, returning number of replacements to stderr.
-Returns exitcode 1 when no replacements are done.
+Returns exitcode 1 when no replacements are done, unless the '--not-one' flag is used.
 
-For more examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_replace.rs.
+For more examples, see https://github.com/dathere/qsv/blob/master/tests/test_replace.rs.
 
 Usage:
     qsv replace [options] <pattern> <replacement> [<input>]
@@ -36,12 +36,13 @@ replace options:
                            will match all unicode word characters instead of only
                            ASCII word characters. Decreases performance.
     --size-limit <mb>      Set the approximate size limit (MB) of the compiled
-                           regular expression. If the compiled expression exceeds this 
+                           regular expression. If the compiled expression exceeds this
                            number, then a compilation error is returned.
                            [default: 50]
     --dfa-size-limit <mb>  Set the approximate size of the cache (MB) used by the regular
                            expression engine's Discrete Finite Automata.
                            [default: 10]
+    --not-one              Use exit code 0 instead of 1 for no replacement found.
 
 Common options:
     -h, --help             Display this message
@@ -84,6 +85,7 @@ struct Args {
     flag_literal:        bool,
     flag_size_limit:     usize,
     flag_dfa_size_limit: usize,
+    flag_not_one:        bool,
     flag_progressbar:    bool,
     flag_quiet:          bool,
 }
@@ -211,7 +213,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if !args.flag_quiet {
         eprintln!("{total_match_ctr}");
     }
-    if total_match_ctr == 0 {
+    if total_match_ctr == 0 && !args.flag_not_one {
         return Err(CliError::NoMatch());
     }
 

@@ -241,11 +241,11 @@ impl SelectorParser {
     }
 
     fn is_end_of_field(&self) -> bool {
-        self.cur().map_or(true, |c| c == ',' || c == '-')
+        self.cur().is_none_or(|c| c == ',' || c == '-')
     }
 
     fn is_end_of_selector(&self) -> bool {
-        self.cur().map_or(true, |c| c == ',')
+        self.cur().is_none_or(|c| c == ',')
     }
 
     fn bump(&mut self) {

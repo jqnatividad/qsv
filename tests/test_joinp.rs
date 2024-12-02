@@ -20,6 +20,26 @@ macro_rules! joinp_test {
     };
 }
 
+macro_rules! joinp_test_cache_schema {
+    ($name:ident, $fun:expr) => {
+        mod $name {
+            use std::process;
+
+            #[allow(unused_imports)]
+            use super::{make_rows, setup};
+            use crate::workdir::Workdir;
+
+            #[test]
+            fn headers() {
+                let wrk = setup(stringify!($name));
+                let mut cmd = wrk.command("joinp");
+                cmd.args(&["city", "cities.csv", "city", "places.csv", "--cache-schema"]);
+                $fun(wrk, cmd);
+            }
+        }
+    };
+}
+
 macro_rules! joinp_test_tab {
     ($name0:ident, $fun:expr) => {
         mod $name0 {
@@ -125,18 +145,18 @@ fn setup(name: &str) -> Workdir {
     drop(cmd);
 
     let out_file2 = wrk.path("places.csv.sz").to_string_lossy().to_string();
-    let mut cmd2 = wrk.command("snappy");
-    cmd2.arg("compress")
+    let mut cmd = wrk.command("snappy");
+    cmd.arg("compress")
         .arg("places.csv")
         .args(["--output", &out_file2]);
-    wrk.assert_success(&mut cmd2);
+    wrk.assert_success(&mut cmd);
 
     let out_file3 = wrk.path("places.ssv.sz").to_string_lossy().to_string();
-    let mut cmd3 = wrk.command("snappy");
-    cmd3.arg("compress")
+    let mut cmd = wrk.command("snappy");
+    cmd.arg("compress")
         .arg("places.ssv")
         .args(["--output", &out_file3]);
-    wrk.assert_success(&mut cmd3);
+    wrk.assert_success(&mut cmd);
 
     wrk
 }
@@ -164,6 +184,44 @@ joinp_test!(joinp_inner, |wrk: Workdir, mut cmd: process::Command| {
     );
     assert_eq!(got, expected);
 });
+
+joinp_test_cache_schema!(
+    joinp_inner_cache_schema,
+    |wrk: Workdir, mut cmd: process::Command| {
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Logan Airport"],
+                svec!["Boston", "MA", "Boston Garden"],
+                svec!["Buffalo", "NY", "Ralph Wilson Stadium"],
+            ],
+        );
+        assert_eq!(got, expected);
+        assert!(wrk.path("cities.pschema.json").exists());
+        let cities_schema = std::fs::read_to_string(wrk.path("cities.pschema.json")).unwrap();
+        assert_eq!(
+            cities_schema,
+            r#"{
+  "fields": {
+    "city": "String",
+    "state": "String"
+  }
+}"#
+        );
+        assert!(wrk.path("places.pschema.json").exists());
+        let places_schema = std::fs::read_to_string(wrk.path("places.pschema.json")).unwrap();
+        assert_eq!(
+            places_schema,
+            r#"{
+  "fields": {
+    "city": "String",
+    "place": "String"
+  }
+}"#
+        );
+    }
+);
 
 joinp_test_tab!(
     joinp_inner_tab,
@@ -1182,6 +1240,47 @@ fn joinp_asof_date_diffcolnames_sqlfilter() {
         svec!["pop_date", "gdp"],
         svec!["2018-05-12", "4566"],
         svec!["2019-05-12", "4696"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn joinp_ignore_case() {
+    let wrk = Workdir::new("joinp_ignore_case");
+
+    // Create test data with mixed case cities
+    wrk.create(
+        "cities_mixed.csv",
+        vec![
+            svec!["city", "state"],
+            svec!["BOSTON", "MA"],
+            svec!["new york", "NY"],
+            svec!["San Francisco", "CA"],
+            svec!["BUFFALO", "NY"],
+        ],
+    );
+
+    wrk.create(
+        "places_mixed.csv",
+        vec![
+            svec!["city", "place"],
+            svec!["Boston", "Logan Airport"],
+            svec!["boston", "Boston Garden"],
+            svec!["BUFFALO", "Ralph Wilson Stadium"],
+            svec!["orlando", "Disney World"],
+        ],
+    );
+
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["city", "cities_mixed.csv", "city", "places_mixed.csv"])
+        .arg("--ignore-case");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["city", "state", "city_right", "place"],
+        svec!["BOSTON", "MA", "Boston", "Logan Airport"],
+        svec!["BOSTON", "MA", "boston", "Boston Garden"],
+        svec!["BUFFALO", "NY", "BUFFALO", "Ralph Wilson Stadium"],
     ];
     assert_eq!(got, expected);
 }

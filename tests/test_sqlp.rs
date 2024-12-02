@@ -920,12 +920,13 @@ fn sqlp_boston311_explain() {
 "SORT BY [col(""avg_tat""), col(""ward"")]"
   AGGREGATE
 "  	[[(col(""closed_dt"")) - (col(""open_dt""))].mean().strict_cast(Float64).alias(""avg_tat"")] BY [col(""ward"")] FROM"
-    Csv SCAN"#;
+"    simple π 4/4 [""ward"", ""closed_dt"", ""open_dt"", ... 1 other column]"
+      Csv SCAN ["#;
     assert!(got.starts_with(expected_begin));
 
     let expected_end = r#"boston311-100.csv]
-    PROJECT 4/29 COLUMNS
-"    SELECTION: [(col(""case_status"")) == (String(Closed))]""#;
+      PROJECT 4/29 COLUMNS
+"      SELECTION: [(col(""case_status"")) == (String(Closed))]""#;
     assert!(got.ends_with(expected_end));
 }
 
@@ -1023,6 +1024,75 @@ select ward,count(*) as cnt from temp_table2 group by ward order by cnt desc, wa
 }
 
 #[test]
+fn sqlp_boston311_sql_script_jsonl_cache_schema() {
+    let wrk = Workdir::new("sqlp_boston311_sql_script_jsonl_cache_schema");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    wrk.create_from_string(
+        "test.sql",
+        r#"create table temp_table as select * from "boston311-100" where ontime = 'OVERDUE';
+create table temp_table2 as select * from temp_table limit 10;
+select ward,count(*) as cnt from temp_table2 group by ward order by cnt desc, ward asc;"#,
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file)
+        .arg("test.sql")
+        .args(["--format", "jsonl", "--cache-schema"]);
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = r#"{"ward":"Ward 3","cnt":2}
+{"ward":" ","cnt":1}
+{"ward":"04","cnt":1}
+{"ward":"3","cnt":1}
+{"ward":"Ward 13","cnt":1}
+{"ward":"Ward 17","cnt":1}
+{"ward":"Ward 19","cnt":1}
+{"ward":"Ward 21","cnt":1}
+{"ward":"Ward 6","cnt":1}"#;
+
+    assert_eq!(got, expected);
+    assert!(wrk.path("boston311-100.pschema.json").exists());
+    let boston311_schema = std::fs::read_to_string(wrk.path("boston311-100.pschema.json")).unwrap();
+    assert_eq!(
+        boston311_schema,
+        r#"{
+  "fields": {
+    "case_enquiry_id": "Int64",
+    "open_dt": "String",
+    "target_dt": "String",
+    "closed_dt": "String",
+    "ontime": "String",
+    "case_status": "String",
+    "closure_reason": "String",
+    "case_title": "String",
+    "subject": "String",
+    "reason": "String",
+    "type": "String",
+    "queue": "String",
+    "department": "String",
+    "submittedphoto": "String",
+    "closedphoto": "String",
+    "location": "String",
+    "fire_district": "String",
+    "pwd_district": "String",
+    "city_council_district": "String",
+    "police_district": "String",
+    "neighborhood": "String",
+    "neighborhood_services_district": "String",
+    "ward": "String",
+    "precinct": "String",
+    "location_street_name": "String",
+    "location_zipcode": "String",
+    "latitude": "Float32",
+    "longitude": "Float32",
+    "source": "String"
+  }
+}"#
+    );
+}
+
+#[test]
 // #[ignore = "temporarily disable due to a bug in polars aliasing"]
 fn sqlp_boston311_cte_script() {
     let wrk = Workdir::new("sqlp_boston311_cte");
@@ -1076,6 +1146,32 @@ fn sqlp_boston311_cte() {
 }
 
 #[test]
+fn sqlp_boston311_cte_gz() {
+    let wrk = Workdir::new("sqlp_boston311_cte_gz");
+    let test_file = wrk.load_test_file("boston311-100.csv.gz");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file).arg(
+        r#"with boston311_roxbury as (select * from read_csv('boston311-100.csv.gz') where neighborhood = 'Roxbury')
+    select ward,count(*) as cnt from boston311_roxbury group by ward order by cnt desc, ward asc;"#,
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["ward", "cnt"],
+        svec!["Ward 11", "2"],
+        svec!["Ward 13", "2"],
+        svec!["Ward 8", "2"],
+        svec!["14", "1"],
+        svec!["Ward 12", "1"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn sqlp_boston311_case_expression() {
     let wrk = Workdir::new("sqlp_boston311_case_expression");
     let test_file = wrk.load_test_file("boston311-100.csv");
@@ -1089,6 +1185,46 @@ fn sqlp_boston311_case_expression() {
               ELSE 'N/A'
            END as graffiti_related
            from _t_1
+           where case_status = 'Open'"#,
+    );
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["case_enquiry_id", "graffiti_related"],
+        svec!["101004143000", "No"],
+        svec!["101004155594", "No"],
+        svec!["101004154423", "No"],
+        svec!["101004141848", "No"],
+        svec!["101004113313", "No"],
+        svec!["101004113751", "Yes"],
+        svec!["101004113902", "Yes"],
+        svec!["101004113473", "No"],
+        svec!["101004113604", "No"],
+        svec!["101004114154", "Yes"],
+        svec!["101004114383", "No"],
+        svec!["101004114795", "Yes"],
+        svec!["101004118346", "Yes"],
+        svec!["101004115302", "No"],
+        svec!["101004115066", "No"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_boston311_case_expression_zlib() {
+    let wrk = Workdir::new("sqlp_boston311_case_expression_zlib");
+    let test_file = wrk.load_test_file("boston311-100.csv.zlib");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file).arg(
+        r#"SELECT case_enquiry_id, 
+           CASE closed_dt is null and case_title ~* 'graffiti' 
+              WHEN True THEN 'Yes' 
+              WHEN False THEN 'No' 
+              ELSE 'N/A'
+           END as graffiti_related
+           from read_csv('boston311-100.csv.zlib')
            where case_status = 'Open'"#,
     );
 
@@ -1172,6 +1308,47 @@ fn sqlp_boston311_case() {
               ELSE 'Something else'
            END as topic
            from _t_1
+           where case_status = 'Open'"#,
+    );
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["case_enquiry_id", "topic"],
+        svec!["101004143000", "Something else"],
+        svec!["101004155594", "Something else"],
+        svec!["101004154423", "Sidewalk"],
+        svec!["101004141848", "Something else"],
+        svec!["101004113313", "Something else"],
+        svec!["101004113751", "Graffitti"],
+        svec!["101004113902", "Graffitti"],
+        svec!["101004113473", "Sidewalk"],
+        svec!["101004113604", "Something else"],
+        svec!["101004114154", "Graffitti"],
+        svec!["101004114383", "Something else"],
+        svec!["101004114795", "Graffitti"],
+        svec!["101004118346", "Graffitti"],
+        svec!["101004115302", "Vehicle"],
+        svec!["101004115066", "Sidewalk"],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn sqlp_boston311_case_zstd() {
+    let wrk = Workdir::new("sqlp_boston311_case_zst");
+    let test_file = wrk.load_test_file("boston311-100.csv.zst");
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg(&test_file).arg(
+        r#"SELECT case_enquiry_id, 
+           CASE 
+              WHEN case_title ~* 'graffiti' THEN 'Graffitti' 
+              WHEN case_title ~* 'vehicle' THEN 'Vehicle'
+              WHEN case_title ~* 'sidewalk' THEN 'Sidewalk'
+              ELSE 'Something else'
+           END as topic
+           from read_csv('boston311-100.csv.zst')
            where case_status = 'Open'"#,
     );
 
@@ -1454,23 +1631,34 @@ fn sqlp_issue2014() {
 
     wrk.assert_success(&mut cmd);
 
-    let mut cmd2 = wrk.command("slice"); // DevSkim: ignore DS126858
-    cmd2.arg(output_file.clone()); // DevSkim: ignore DS126858
-
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2); // DevSkim: ignore DS126858
+    let mut cmd = wrk.command("snappy");
+    cmd.arg("decompress").arg(output_file.clone());
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         ["id;item;price"],
         ["0;wallet;9.99"],
         ["1;comb;1.39"],
         ["2;pencil;0.49"],
     ];
+    assert_eq!(got, expected);
+
+    let mut cmd = wrk.command("slice");
+    cmd.arg(output_file.clone());
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["id", "item", "price"],
+        svec!["0", "wallet", "9.99"],
+        svec!["1", "comb", "1.39"],
+        svec!["2", "pencil", "0.49"],
+    ];
 
     assert_eq!(got, expected);
 
-    let mut cmd2 = wrk.command("headers"); // DevSkim: ignore DS126858
-    cmd2.arg(output_file); // DevSkim: ignore DS126858
+    let mut cmd = wrk.command("headers");
+    cmd.arg(output_file);
 
-    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd2); // DevSkim: ignore DS126858
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![["1   id"], ["2   item"], ["3   price"]];
 
     assert_eq!(got, expected);

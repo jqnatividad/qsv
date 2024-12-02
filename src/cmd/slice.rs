@@ -30,6 +30,7 @@ slice options:
                            The value is the field value. The output is a
                            JSON array. If --no-headers is set, then
                            the keys are the column indices (zero-based).
+    --invert               slice all records EXCEPT those in the specified range.
 
 Examples:
     # Slice from the 3rd record to the end
@@ -46,6 +47,9 @@ Examples:
     # Slice the last 10 records
     qsv slice -s -10 data.csv
 
+    # Get everything except the last 10 records
+    qsv slice -s -10 --invert data.csv
+
     # Slice the first three records of the last 10 records
     qsv slice -s -10 -l 3 data.csv
 
@@ -59,6 +63,9 @@ Examples:
     # Slice records 10 to 20 as JSON   
     qsv slice -s 9 -e 19 --json data.csv
     qsv slice -s 9 -l 10 --json data.csv
+
+    # Slice records 1 to 9 and 21 to the end as JSON
+    qsv slice -s 9 -l 10 --invert --json data.csv
 
 Common options:
     -h, --help             Display this message
@@ -92,6 +99,7 @@ struct Args {
     flag_output:     Option<String>,
     flag_no_headers: bool,
     flag_delimiter:  Option<Delimiter>,
+    flag_invert:     bool,
 }
 
 pub fn run(argv: &[&str]) -> CliResult<()> {
@@ -111,11 +119,18 @@ impl Args {
         let (start, end) = self.range()?;
         if self.flag_json {
             let headers = rdr.byte_headers()?.clone();
-            let records = rdr
-                .byte_records()
-                .skip(start)
-                .take(end - start)
-                .map(|r| r.unwrap());
+            let records = rdr.byte_records().enumerate().filter_map(move |(i, r)| {
+                let should_include = if self.flag_invert {
+                    i < start || i >= end
+                } else {
+                    i >= start && i < end
+                };
+                if should_include {
+                    Some(r.unwrap())
+                } else {
+                    None
+                }
+            });
             util::write_json(
                 self.flag_output.as_ref(),
                 self.flag_no_headers,
@@ -125,8 +140,11 @@ impl Args {
         } else {
             let mut wtr = self.wconfig().writer()?;
             self.rconfig().write_headers(&mut rdr, &mut wtr)?;
-            for r in rdr.byte_records().skip(start).take(end - start) {
-                wtr.write_byte_record(&r?)?;
+
+            for (i, r) in rdr.byte_records().enumerate() {
+                if self.flag_invert == (i < start || i >= end) {
+                    wtr.write_byte_record(&r?)?;
+                }
             }
             Ok(wtr.flush()?)
         }
@@ -134,27 +152,64 @@ impl Args {
 
     fn with_index(&self, mut indexed_file: Indexed<fs::File, fs::File>) -> CliResult<()> {
         let (start, end) = self.range()?;
-        if end - start == 0 {
+        if end - start == 0 && !self.flag_invert {
             return Ok(());
         }
-        indexed_file.seek(start as u64)?;
+
         if self.flag_json {
             let headers = indexed_file.byte_headers()?.clone();
-            let records = indexed_file
-                .byte_records()
-                .take(end - start)
-                .map(|r| r.unwrap());
+            let total_rows = util::count_rows(&self.rconfig())?;
+            let records = if self.flag_invert {
+                let mut records: Vec<csv::ByteRecord> =
+                    Vec::with_capacity(start + (total_rows as usize - end));
+                // Get records before start
+                indexed_file.seek(0)?;
+                for r in indexed_file.byte_records().take(start) {
+                    records.push(r.unwrap());
+                }
+
+                // Get records after end
+                indexed_file.seek(end as u64)?;
+                for r in indexed_file.byte_records().take(total_rows as usize - end) {
+                    records.push(r.unwrap());
+                }
+                records
+            } else {
+                indexed_file.seek(start as u64)?;
+                indexed_file
+                    .byte_records()
+                    .take(end - start)
+                    .map(|r| r.unwrap())
+                    .collect::<Vec<_>>()
+            };
             util::write_json(
                 self.flag_output.as_ref(),
                 self.flag_no_headers,
                 &headers,
-                records,
+                records.into_iter(),
             )
         } else {
             let mut wtr = self.wconfig().writer()?;
             self.rconfig().write_headers(&mut *indexed_file, &mut wtr)?;
-            for r in indexed_file.byte_records().take(end - start) {
-                wtr.write_byte_record(&r?)?;
+
+            let total_rows = util::count_rows(&self.rconfig())? as usize;
+            if self.flag_invert {
+                // Get records before start
+                indexed_file.seek(0)?;
+                for r in indexed_file.byte_records().take(start) {
+                    wtr.write_byte_record(&r?)?;
+                }
+
+                // Get records after end
+                indexed_file.seek(end as u64)?;
+                for r in indexed_file.byte_records().take(total_rows - end) {
+                    wtr.write_byte_record(&r?)?;
+                }
+            } else {
+                indexed_file.seek(start as u64)?;
+                for r in indexed_file.byte_records().take(end - start) {
+                    wtr.write_byte_record(&r?)?;
+                }
             }
             Ok(wtr.flush()?)
         }

@@ -80,16 +80,24 @@ Some usage examples:
 
   If any record has an invalid result, an exitcode of 1 is returned and an error count is logged.
 
-For more extensive examples, see https://github.com/jqnatividad/qsv/blob/master/tests/test_py.rs.
+For more extensive examples, see https://github.com/dathere/qsv/blob/master/tests/test_py.rs.
 
 Usage:
-    qsv py map [options] -n <script> [<input>]
-    qsv py map [options] <new-column> <script> [<input>]
-    qsv py map --helper <file> [options] <new-column> <script> [<input>]
-    qsv py filter [options] <script> [<input>]
+    qsv py map [options] -n <expression> [<input>]
+    qsv py map [options] <new-column> <expression> [<input>]
+    qsv py map --helper <file> [options] <new-column> <expression> [<input>]
+    qsv py filter [options] <expression> [<input>]
     qsv py map --help
     qsv py filter --help
     qsv py --help
+
+py argument:
+    <expression>           Can either be a python expression, or if it starts with
+                           "file:" or ends with ".py" - the filepath from which to
+                           load the python expression.
+                           Note that argument expects a SINGLE expression, and not
+                           a full-blown python script. Use the --helper option
+                           to load helper code that you can call from the expression.
 
 py options:
     -f, --helper <file>    File containing Python code that's loaded into the 
@@ -100,8 +108,8 @@ py options:
     -b, --batch <size>     The number of rows per batch to process before
                            releasing memory and acquiring a new GILpool.
                            Set to 0 to process the entire file in one batch.
-                           See https://pyo3.rs/v0.22.0/memory.html#gil-bound-memory
-                           for more info. [default: 30000]
+                           See https://pyo3.rs/v0.21.0/memory.html#gil-bound-memory
+                           for more info. [default: 50000]
 
 Common options:
     -h, --help             Display this message
@@ -118,7 +126,6 @@ Common options:
 use std::fs;
 
 use indicatif::{ProgressBar, ProgressDrawTarget};
-use log::{error, log_enabled, Level::Debug};
 use pyo3::{
     intern,
     prelude::*,
@@ -165,7 +172,7 @@ struct Args {
     cmd_map:          bool,
     cmd_filter:       bool,
     arg_new_column:   Option<String>,
-    arg_script:       String,
+    arg_expression:   String,
     flag_batch:       usize,
     flag_helper:      Option<String>,
     arg_input:        Option<String>,
@@ -190,12 +197,32 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut rdr = rconfig.reader()?;
     let mut wtr = Config::new(args.flag_output.as_ref()).writer()?;
 
-    if log_enabled!(Debug) {
+    let debug_flag = log::log_enabled!(log::Level::Debug);
+
+    if debug_flag {
         Python::with_gil(|py| {
             let msg = format!("Detected python={}", py.version());
             winfo!("{msg}");
         });
     }
+
+    let arg_expression =
+        if let Some(expression_filepath) = args.arg_expression.strip_prefix("file:") {
+            match fs::read_to_string(expression_filepath) {
+                Ok(file_contents) => file_contents,
+                Err(e) => return fail_clierror!("Cannot load Python expression from file: {e}"),
+            }
+        } else if std::path::Path::new(&args.arg_expression)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("py"))
+        {
+            match fs::read_to_string(args.arg_expression.clone()) {
+                Ok(file_contents) => file_contents,
+                Err(e) => return fail_clierror!("Cannot load .py file: {e}"),
+            }
+        } else {
+            args.arg_expression.clone()
+        };
 
     let mut helper_text = String::new();
     if let Some(helper_file) = args.flag_helper {
@@ -211,9 +238,8 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if rconfig.no_headers {
         headers = csv::StringRecord::new();
 
-        let mut buffer = itoa::Buffer::new();
         for i in 0..headers_len {
-            headers.push_field(buffer.format(i));
+            headers.push_field(itoa::Buffer::new().format(i));
         }
     } else {
         if !args.cmd_filter {
@@ -254,6 +280,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // reuse batch buffers
     let mut batch = Vec::with_capacity(batch_size);
 
+    let mut row_number = 0_u64;
+    let debug_flag = log::log_enabled!(log::Level::Debug);
+
     // main loop to read CSV and construct batches.
     // we batch python operations so that the GILPool does not get very large
     // as we release the pool after each batch
@@ -282,7 +311,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         }
 
         Python::with_gil(|py| -> PyResult<()> {
-            let curr_batch = batch.clone();
+            let batch_ref = &mut batch;
             let helpers = PyModule::from_code_bound(py, HELPERS, "qsv_helpers.py", "qsv_helpers")?;
             let batch_globals = PyDict::new_bound(py);
             let batch_locals = PyDict::new_bound(py);
@@ -310,7 +339,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             let error_result = intern!(py, "<ERROR>");
 
-            for mut record in curr_batch {
+            for record in batch_ref.iter_mut() {
+                row_number += 1;
+
                 // Initializing locals
                 let mut row_data: Vec<&str> = Vec::with_capacity(headers_len);
 
@@ -322,25 +353,32 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     .take(headers_len)
                     .for_each(|(i, key)| {
                         let cell_value = record.get(i).unwrap_or_default();
-                        batch_locals
-                            .set_item(key, cell_value)
-                            .expect("cannot set_item");
+                        let _ = batch_locals.set_item(key, cell_value).map_err(|e| {
+                            error_count += 1;
+                            if debug_flag {
+                                log::error!(
+                                    "Failed to set item in batch_locals: {row_number}-{e:?}"
+                                );
+                            }
+                        });
                         row_data.push(cell_value);
                     });
 
                 py_row.call_method1(intern!(py, "_update_underlying_data"), (row_data,))?;
 
-                let result = py
-                    .eval_bound(&args.arg_script, Some(&batch_globals), Some(&batch_locals))
-                    .map_err(|e| {
-                        e.print_and_set_sys_last_vars(py);
-                        error_count += 1;
-                        if log_enabled!(Debug) {
-                            error!("{e:?}");
-                        }
-                        "Evaluation of given expression failed with the above error!"
-                    })
-                    .unwrap_or_else(|_| error_result.clone().into_any());
+                let result =
+                    match py.eval_bound(&arg_expression, Some(&batch_globals), Some(&batch_locals))
+                    {
+                        Ok(result) => result,
+                        Err(e) => {
+                            error_count += 1;
+                            if debug_flag {
+                                log::error!("Expression error:{row_number}-{e:?}");
+                            }
+                            e.print_and_set_sys_last_vars(py);
+                            error_result.clone().into_any()
+                        },
+                    };
 
                 if args.cmd_map {
                     let result = helpers
@@ -349,12 +387,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let value: String = result.extract()?;
 
                     record.push_field(&value);
-                    if let Err(e) = wtr.write_record(&record) {
+                    if let Err(e) = wtr.write_record(&*record) {
                         // we do this since we cannot use the ? operator here
                         // since this closure returns a PyResult
                         // this is converted to a CliError::Other anyway
                         return Err(pyo3::PyErr::new::<pyo3::exceptions::PyIOError, _>(format!(
-                            "cannot write record ({e})"
+                            "cannot write record ({row_number}-{e})"
                         )));
                     }
                 } else if args.cmd_filter {
@@ -364,9 +402,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     let include_record: bool = result.extract().unwrap_or(false);
 
                     if include_record {
-                        if let Err(e) = wtr.write_record(&record) {
+                        if let Err(e) = wtr.write_record(&*record) {
                             return Err(pyo3::PyErr::new::<pyo3::exceptions::PyIOError, _>(
-                                format!("cannot write record ({e})"),
+                                format!("cannot write record ({row_number}-{e})"),
                             ));
                         }
                     }

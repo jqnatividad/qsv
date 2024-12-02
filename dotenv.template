@@ -173,8 +173,8 @@ QSV_TIMEOUT = 30
 # When specifying a custom user agent, try to conform to the IETF RFC 7231 standard 
 # (https://tools.ietf.org/html/rfc7231#section-5.5.3). For examples, see 
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
-# (default: <qsv_variant>/<version> (<target>; https://github.com/jqnatividad/qsv)).
-# QSV_USER_AGENT = qsv/0.99.1 (x86_64-apple-darwin; https://github.com/jqnatividad/qsv)
+# (default: <qsv_variant>/<version> (<target>; https://github.com/dathere/qsv)).
+# QSV_USER_AGENT = qsv/0.99.1 (x86_64-apple-darwin; https://github.com/dathere/qsv)
 
 # the filename of the Geonames index file you wish to use for geocoding.
 # If not set, the `geocode` command will download the default index file for

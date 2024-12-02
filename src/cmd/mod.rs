@@ -6,7 +6,7 @@ pub mod applydp;
 pub mod behead;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod cat;
-#[cfg(any(feature = "feature_capable", feature = "lite"))]
+#[cfg(feature = "clipboard")]
 pub mod clipboard;
 pub mod count;
 pub mod datefmt;
@@ -93,6 +93,8 @@ pub mod sqlp;
 pub mod stats;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod table;
+#[cfg(feature = "feature_capable")]
+pub mod template;
 #[cfg(all(feature = "to", feature = "feature_capable"))]
 pub mod to;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]

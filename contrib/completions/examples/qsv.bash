@@ -186,6 +186,9 @@ _qsv() {
             qsv,table)
                 cmd="qsv__table"
                 ;;
+            qsv,template)
+                cmd="qsv__template"
+                ;;
             qsv,to)
                 cmd="qsv__to"
                 ;;
@@ -492,6 +495,9 @@ _qsv() {
             qsv__help,table)
                 cmd="qsv__help__table"
                 ;;
+            qsv__help,template)
+                cmd="qsv__help__template"
+                ;;
             qsv__help,to)
                 cmd="qsv__help__to"
                 ;;
@@ -718,7 +724,7 @@ _qsv() {
 
     case "${cmd}" in
         qsv)
-            opts="-h --list --envlist --update --updatenow --version --help apply behead cat clipboard count datefmt dedup describegpt diff edit enum excel exclude extdedup extsort explode fetch fetchpost fill fixlengths flatten fmt foreach frequency geocode headers index input join joinp json jsonl lens luau partition pro prompt pseudo py rename replace reverse safenames sample schema search searchset select slice snappy sniff sort sortcheck split sqlp stats table to tojsonl transpose validate help"
+            opts="-h --list --envlist --update --updatenow --version --help apply behead cat clipboard count datefmt dedup describegpt diff edit enum excel exclude extdedup extsort explode fetch fetchpost fill fixlengths flatten fmt foreach frequency geocode headers index input join joinp json jsonl lens luau partition pro prompt pseudo py rename replace reverse safenames sample schema search searchset select slice snappy sniff sort sortcheck split sqlp stats table template to tojsonl transpose validate help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1222,7 +1228,7 @@ _qsv() {
             return 0
             ;;
         qsv__fetchpost)
-            opts="-h --new-column --jaq --jaqfile --pretty --rate-limit --timeout --http-header --compress --max-retries --max-errors --store-error --cookies --user-agent --report --no-cache --mem-cache-size --disk-cache --disk-cache-dir --redis-cache --cache-error --flush-cache --output --no-headers --delimiter --progressbar --help"
+            opts="-h --payload-tpl --content-type --new-column --jaq --jaqfile --pretty --rate-limit --timeout --http-header --compress --max-retries --max-errors --store-error --cookies --user-agent --report --no-cache --mem-cache-size --disk-cache --disk-cache-dir --redis-cache --cache-error --flush-cache --output --no-headers --delimiter --progressbar --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1656,7 +1662,7 @@ _qsv() {
             return 0
             ;;
         qsv__help)
-            opts="apply behead cat clipboard count datefmt dedup describegpt diff edit enum excel exclude extdedup extsort explode fetch fetchpost fill fixlengths flatten fmt foreach frequency geocode headers index input join joinp json jsonl lens luau partition pro prompt pseudo py rename replace reverse safenames sample schema search searchset select slice snappy sniff sort sortcheck split sqlp stats table to tojsonl transpose validate help"
+            opts="apply behead cat clipboard count datefmt dedup describegpt diff edit enum excel exclude extdedup extsort explode fetch fetchpost fill fixlengths flatten fmt foreach frequency geocode headers index input join joinp json jsonl lens luau partition pro prompt pseudo py rename replace reverse safenames sample schema search searchset select slice snappy sniff sort sortcheck split sqlp stats table template to tojsonl transpose validate help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -2859,6 +2865,20 @@ _qsv() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
+        qsv__help__template)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
         qsv__help__to)
             opts="postgres sqlite xlsx datapackage"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
@@ -3420,7 +3440,7 @@ _qsv() {
             return 0
             ;;
         qsv__replace)
-            opts="-h --ignore-case --literal --select --unicode --size-limit --dfa-size-limit --output --no-headers --delimiter --progressbar --quiet --help"
+            opts="-h --ignore-case --literal --select --unicode --size-limit --dfa-size-limit --not-one --output --no-headers --delimiter --progressbar --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -3785,6 +3805,20 @@ _qsv() {
             ;;
         qsv__table)
             opts="-h --width --pad --align --condense --output --delimiter --memcheck --help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        qsv__template)
+            opts="-h --template --template-file --outfilename --customfilter-error --output --no-headers --delimiter --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

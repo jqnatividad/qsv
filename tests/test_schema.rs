@@ -52,7 +52,7 @@ fn generate_schema_with_defaults_and_validate_trim_with_no_errors() {
 
     // not expecting any invalid rows, so confirm there are NO output files generated
     let validation_error_path = &wrk.path("adur-public-toilets.csv.validation-errors.tsv");
-    println!("not expecting validation error file at: {validation_error_path:?}");
+    // println!("not expecting validation error file at: {validation_error_path:?}");
     assert!(!Path::new(validation_error_path).exists());
     assert!(!Path::new(&wrk.path("adur-public-toilets.csv.valid")).exists());
     assert!(!Path::new(&wrk.path("adur-public-toilets.csv.invalid")).exists());
@@ -125,7 +125,7 @@ fn generate_schema_with_optional_flags_notrim_and_validate_with_errors() {
 
     // expecting invalid rows, so confirm there ARE output files generated
     let validation_error_path = &wrk.path("adur-public-toilets.csv.validation-errors.tsv");
-    println!("expecting validation error file at: {validation_error_path:?}");
+    // println!("expecting validation error file at: {validation_error_path:?}");
 
     assert!(Path::new(validation_error_path).exists());
     assert!(Path::new(&wrk.path("adur-public-toilets.csv.valid")).exists());
@@ -210,7 +210,7 @@ fn generate_schema_with_optional_flags_trim_and_validate_with_errors() {
 
     // expecting invalid rows, so confirm there ARE output files generated
     let validation_error_path = &wrk.path("adur-public-toilets.csv.validation-errors.tsv");
-    println!("expecting validation error file at: {validation_error_path:?}");
+    // println!("expecting validation error file at: {validation_error_path:?}");
 
     assert!(Path::new(validation_error_path).exists());
     assert!(Path::new(&wrk.path("adur-public-toilets.csv.valid")).exists());

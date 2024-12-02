@@ -535,6 +535,8 @@ fn frequency_all_unique_force_stats_cache() {
         .args(["--stats-mode", "force"])
         .arg(testdata);
 
+    wrk.assert_success(&mut cmd);
+
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
     let expected = vec![
         svec!["field", "value", "count", "percentage"],

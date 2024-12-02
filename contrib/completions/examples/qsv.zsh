@@ -422,7 +422,7 @@ _arguments "${_arguments_options[@]}" : \
 '--human-readable[]' \
 '--memory-limit[]' \
 '--no-headers[]' \
-'--no-delimiter[]' \
+'--delimiter[]' \
 '--quiet[]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -484,6 +484,8 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (fetchpost)
 _arguments "${_arguments_options[@]}" : \
+'--payload-tpl[]' \
+'--content-type[]' \
 '--new-column[]' \
 '--jaq[]' \
 '--jaqfile[]' \
@@ -1366,6 +1368,7 @@ _arguments "${_arguments_options[@]}" : \
 '--unicode[]' \
 '--size-limit[]' \
 '--dfa-size-limit[]' \
+'--not-one[]' \
 '--output[]' \
 '--no-headers[]' \
 '--delimiter[]' \
@@ -1746,6 +1749,19 @@ _arguments "${_arguments_options[@]}" : \
 '--output[]' \
 '--delimiter[]' \
 '--memcheck[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(template)
+_arguments "${_arguments_options[@]}" : \
+'--template[]' \
+'--template-file[]' \
+'--outfilename[]' \
+'--customfilter-error[]' \
+'--output[]' \
+'--no-headers[]' \
+'--delimiter[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -2363,6 +2379,10 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
+(template)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
 (to)
 _arguments "${_arguments_options[@]}" : \
 ":: :_qsv__help__to_commands" \
@@ -2480,6 +2500,7 @@ _qsv_commands() {
 'sqlp:' \
 'stats:' \
 'table:' \
+'template:' \
 'to:' \
 'tojsonl:' \
 'transpose:' \
@@ -2924,6 +2945,7 @@ _qsv__help_commands() {
 'sqlp:' \
 'stats:' \
 'table:' \
+'template:' \
 'to:' \
 'tojsonl:' \
 'transpose:' \
@@ -3391,6 +3413,11 @@ _qsv__help__table_commands() {
     local commands; commands=()
     _describe -t commands 'qsv help table commands' commands "$@"
 }
+(( $+functions[_qsv__help__template_commands] )) ||
+_qsv__help__template_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv help template commands' commands "$@"
+}
 (( $+functions[_qsv__help__to_commands] )) ||
 _qsv__help__to_commands() {
     local commands; commands=(
@@ -3766,6 +3793,11 @@ _qsv__stats_commands() {
 _qsv__table_commands() {
     local commands; commands=()
     _describe -t commands 'qsv table commands' commands "$@"
+}
+(( $+functions[_qsv__template_commands] )) ||
+_qsv__template_commands() {
+    local commands; commands=()
+    _describe -t commands 'qsv template commands' commands "$@"
 }
 (( $+functions[_qsv__to_commands] )) ||
 _qsv__to_commands() {
