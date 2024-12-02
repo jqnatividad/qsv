@@ -1006,6 +1006,7 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (joinp)
 _arguments "${_arguments_options[@]}" : \
+'--ignore-case[]' \
 '--left[]' \
 '--left-anti[]' \
 '--left-semi[]' \
@@ -1499,6 +1500,7 @@ _arguments "${_arguments_options[@]}" : \
 '--len[]' \
 '--index[]' \
 '--json[]' \
+'--invert[]' \
 '--output[]' \
 '--no-headers[]' \
 '--delimiter[]' \

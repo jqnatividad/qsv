@@ -3034,7 +3034,7 @@ _qsv() {
             return 0
             ;;
         qsv__joinp)
-            opts="-h --left --left-anti --left-semi --right --full --cross --coalesce --filter-left --filter-right --validate --nulls --streaming --try-parsedates --infer-len --low-memory --no-optimizations --ignore-errors --decimal-comma --asof --left_by --right_by --strategy --tolerance --sql-filter --datetime-format --date-format --time-format --float-precision --null-value --output --delimiter --quiet --help"
+            opts="-h --ignore-case --left --left-anti --left-semi --right --full --cross --coalesce --filter-left --filter-right --validate --nulls --streaming --try-parsedates --infer-len --low-memory --no-optimizations --ignore-errors --decimal-comma --asof --left_by --right_by --strategy --tolerance --sql-filter --datetime-format --date-format --time-format --float-precision --null-value --output --delimiter --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -3552,7 +3552,7 @@ _qsv() {
             return 0
             ;;
         qsv__slice)
-            opts="-h --start --end --len --index --json --output --no-headers --delimiter --help"
+            opts="-h --start --end --len --index --json --invert --output --no-headers --delimiter --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

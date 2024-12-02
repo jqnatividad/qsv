@@ -712,6 +712,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand join" -l output
 complete -c qsv -n "__fish_qsv_using_subcommand join" -l no-headers
 complete -c qsv -n "__fish_qsv_using_subcommand join" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand join" -s h -l help -d 'Print help'
+complete -c qsv -n "__fish_qsv_using_subcommand joinp" -l ignore-case
 complete -c qsv -n "__fish_qsv_using_subcommand joinp" -l left
 complete -c qsv -n "__fish_qsv_using_subcommand joinp" -l left-anti
 complete -c qsv -n "__fish_qsv_using_subcommand joinp" -l left-semi
@@ -978,6 +979,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand slice" -l end
 complete -c qsv -n "__fish_qsv_using_subcommand slice" -l len
 complete -c qsv -n "__fish_qsv_using_subcommand slice" -l index
 complete -c qsv -n "__fish_qsv_using_subcommand slice" -l json
+complete -c qsv -n "__fish_qsv_using_subcommand slice" -l invert
 complete -c qsv -n "__fish_qsv_using_subcommand slice" -l output
 complete -c qsv -n "__fish_qsv_using_subcommand slice" -l no-headers
 complete -c qsv -n "__fish_qsv_using_subcommand slice" -l delimiter
