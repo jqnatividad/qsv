@@ -407,7 +407,7 @@ assets   = [
 ]
 
 [package.metadata.deb.variants.datapusher_plus]
-features = ["datapusher_plus"]
+features = ["datapusher_plus", "luau"]
 assets   = [
     ["target/release/qsvdp", "/usr/local/bin/", "755"]
 ]
