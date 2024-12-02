@@ -237,7 +237,7 @@ semver = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_urlencoded = { version = "0.7", optional = true }
-simple-expand-tilde = "0.4"
+simple-home-dir = "0.4"
 sled = { version = "0.34", optional = true }
 smallvec = "1"
 snap = "1"
