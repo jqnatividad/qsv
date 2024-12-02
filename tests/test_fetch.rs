@@ -588,6 +588,8 @@ fn fetch_custom_header() {
         .arg(r#"[ ."headers"."X-Api-Key", ."headers"."X-Api-Secret" ]"#)
         .arg("data.csv");
 
+    wrk.assert_success(&mut cmd);
+
     let got = wrk.stdout::<String>(&mut cmd);
     let expected = "[\"DEMO_KEY\",\"ABC123XYZ\"]";
     assert_eq!(got, expected);
@@ -646,6 +648,8 @@ fn fetch_custom_user_agent() {
         .arg("--user-agent")
         .arg("Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion")
         .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
 
     let got = wrk.stdout::<String>(&mut cmd);
     assert!(got.contains(
@@ -786,6 +790,8 @@ fn fetchpost_custom_user_agent() {
         .arg("--user-agent")
         .arg("Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion")
         .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
 
     let got = wrk.stdout::<String>(&mut cmd);
     assert!(got.contains(
@@ -1071,6 +1077,8 @@ fn fetchpost_simple_test() {
         .arg("--new-column")
         .arg("response")
         .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
 
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
 
@@ -1405,6 +1413,8 @@ fn fetchpost_literalurl_test() {
         .arg("response")
         .arg("data.csv");
 
+    wrk.assert_success(&mut cmd);
+
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
 
     let mut got_parsed: Vec<Vec<String>> = Vec::new();
@@ -1548,6 +1558,8 @@ fn fetchpost_payload_template() {
         .arg(r#"."data""#)
         .arg("data.csv");
 
+    wrk.assert_success(&mut cmd);
+
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
 
     let expected = vec![
@@ -1614,6 +1626,8 @@ fn fetchpost_payload_template_with_report() {
         .arg("short")
         .arg("data.csv");
 
+    wrk.assert_success(&mut cmd);
+
     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
 
     let expected = vec![
@@ -1668,6 +1682,8 @@ fn fetchpost_with_headers() {
         .arg("--jaq")
         .arg(r#"."headers""#)
         .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
 
     let got = wrk.stdout::<String>(&mut cmd);
     assert!(got.contains("X-Test-Header"));
@@ -1739,6 +1755,8 @@ fn fetchpost_content_type() {
         .arg("--content-type")
         .arg("text/plain")
         .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
 
     let got = wrk.stdout::<String>(&mut cmd);
     assert!(got.starts_with(
