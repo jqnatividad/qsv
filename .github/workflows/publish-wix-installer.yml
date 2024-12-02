@@ -81,7 +81,8 @@ jobs:
             endpoint: ${{ secrets.AZURE_ENDPOINT }}
             trusted-signing-account-name: ${{ secrets.AZURE_TRUSTED_SIGNING_NAME }}
             certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE_NAME }}
-            files: qsv-${{ needs.analyze-tags.outputs.previous-tag }}.msi
+            files-folder: ${{ github.workspace }}
+            files-folder-filter: msi
             file-digest: SHA256
             timestamp-rfc3161: http://timestamp.acs.microsoft.com
             timestamp-digest: SHA256
