@@ -8,7 +8,7 @@ use std::{
 use log::{debug, info};
 use reqwest::blocking::Client;
 use serde_json::Value;
-use simple_expand_tilde::expand_tilde;
+use util::expand_tilde;
 
 use crate::{util, CliError};
 

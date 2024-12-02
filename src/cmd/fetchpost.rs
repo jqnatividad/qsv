@@ -273,8 +273,8 @@ use reqwest::{
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
-use simple_expand_tilde::expand_tilde;
 use url::Url;
+use util::expand_tilde;
 
 use crate::{
     cmd::fetch::{
