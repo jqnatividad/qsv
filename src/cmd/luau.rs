@@ -251,7 +251,6 @@ use log::{debug, info, log_enabled};
 use mlua::{Lua, LuaSerdeExt, Value};
 use serde::Deserialize;
 
-// use simple_expand_tilde::expand_tilde;
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
     lookup, util, CliError, CliResult,

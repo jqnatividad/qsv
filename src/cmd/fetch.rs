@@ -260,8 +260,8 @@ use reqwest::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use simple_expand_tilde::expand_tilde;
 use url::Url;
+use util::expand_tilde;
 
 use crate::{
     config::{Config, Delimiter},
