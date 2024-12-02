@@ -198,7 +198,7 @@
 
          <WixVariable Id='WixUILicenseRtf' Value='contrib\wix\QSV-PRO-EULA.rtf'/> 
         -->
-
+        <WixVariable Id='WixUILicenseRtf' Value='contrib\wix\License-MIT.rtf'/> 
         
         <!--
           Uncomment the next `WixVariable` tag to customize the installer's
