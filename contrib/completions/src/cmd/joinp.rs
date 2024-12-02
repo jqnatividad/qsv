@@ -2,6 +2,7 @@ use clap::{arg, Command};
 
 pub fn joinp_cmd() -> Command {
     Command::new("joinp").args([
+        arg!(--"ignore-case"),
         arg!(--left),
         arg!(--"left-anti"),
         arg!(--"left-semi"),

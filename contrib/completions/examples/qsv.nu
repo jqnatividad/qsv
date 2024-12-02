@@ -802,6 +802,7 @@ module completions {
   ]
 
   export extern "qsv joinp" [
+    --ignore-case
     --left
     --left-anti
     --left-semi
@@ -1167,6 +1168,7 @@ module completions {
     --len
     --index
     --json
+    --invert
     --output
     --no-headers
     --delimiter

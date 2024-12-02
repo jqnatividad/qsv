@@ -7,6 +7,7 @@ pub fn slice_cmd() -> Command {
         arg!(--len),
         arg!(--index),
         arg!(--json),
+        arg!(--invert),
         arg!(--output),
         arg!(--"no-headers"),
         arg!(--delimiter),

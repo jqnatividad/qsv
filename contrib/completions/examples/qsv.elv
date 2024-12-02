@@ -893,6 +893,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --help 'Print help'
         }
         &'qsv;joinp'= {
+            cand --ignore-case 'ignore-case'
             cand --left 'left'
             cand --left-anti 'left-anti'
             cand --left-semi 'left-semi'
@@ -1258,6 +1259,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --len 'len'
             cand --index 'index'
             cand --json 'json'
+            cand --invert 'invert'
             cand --output 'output'
             cand --no-headers 'no-headers'
             cand --delimiter 'delimiter'

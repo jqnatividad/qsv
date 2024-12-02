@@ -2106,6 +2106,9 @@ const completion: Fig.Spec = {
       name: "joinp",
       options: [
         {
+          name: "--ignore-case",
+        },
+        {
           name: "--left",
         },
         {
@@ -3052,6 +3055,9 @@ const completion: Fig.Spec = {
         },
         {
           name: "--json",
+        },
+        {
+          name: "--invert",
         },
         {
           name: "--output",

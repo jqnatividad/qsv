@@ -966,6 +966,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             break
         }
         'qsv;joinp' {
+            [CompletionResult]::new('--ignore-case', '--ignore-case', [CompletionResultType]::ParameterName, 'ignore-case')
             [CompletionResult]::new('--left', '--left', [CompletionResultType]::ParameterName, 'left')
             [CompletionResult]::new('--left-anti', '--left-anti', [CompletionResultType]::ParameterName, 'left-anti')
             [CompletionResult]::new('--left-semi', '--left-semi', [CompletionResultType]::ParameterName, 'left-semi')
@@ -1368,6 +1369,7 @@ Register-ArgumentCompleter -Native -CommandName 'qsv' -ScriptBlock {
             [CompletionResult]::new('--len', '--len', [CompletionResultType]::ParameterName, 'len')
             [CompletionResult]::new('--index', '--index', [CompletionResultType]::ParameterName, 'index')
             [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'json')
+            [CompletionResult]::new('--invert', '--invert', [CompletionResultType]::ParameterName, 'invert')
             [CompletionResult]::new('--output', '--output', [CompletionResultType]::ParameterName, 'output')
             [CompletionResult]::new('--no-headers', '--no-headers', [CompletionResultType]::ParameterName, 'no-headers')
             [CompletionResult]::new('--delimiter', '--delimiter', [CompletionResultType]::ParameterName, 'delimiter')
