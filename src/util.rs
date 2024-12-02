@@ -2255,6 +2255,25 @@ pub fn optimal_batch_size(rconfig: &Config, batch_size: usize, num_jobs: usize) 
     }
 }
 
+/// Expand the tilde (`~`) from within the provided path.
+/// copied from https://github.com/splurf/simple-expand-tilde
+/// as it was just a small wrapper around simple_home_dir
+pub fn expand_tilde(path: impl AsRef<Path>) -> Option<PathBuf> {
+    let p = path.as_ref();
+
+    let expanded = if p.starts_with("~") {
+        let mut base = simple_home_dir::home_dir()?;
+
+        if !p.ends_with("~") {
+            base.extend(p.components().skip(1));
+        }
+        base
+    } else {
+        p.to_path_buf()
+    };
+    Some(expanded)
+}
+
 // comment out for now as this is still WIP
 // pub fn create_json_record(
 //     no_headers: bool,
