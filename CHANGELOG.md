@@ -8,44 +8,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2024-12-01
 
-## What's Changed
-* Parallelized template by @jqnatividad in https://github.com/dathere/qsv/pull/2273
-* build(deps): bump tokio from 1.41.0 to 1.41.1 by @dependabot in https://github.com/dathere/qsv/pull/2274
-* build(deps): bump sanitize-filename from 0.5.0 to 0.6.0 by @dependabot in https://github.com/dathere/qsv/pull/2275
-* Add minijinja contrib by @jqnatividad in https://github.com/dathere/qsv/pull/2276
-* build(deps): bump file-format from 0.25.0 to 0.26.0 by @dependabot in https://github.com/dathere/qsv/pull/2277
-* build(deps): bump tempfile from 3.13.0 to 3.14.0 by @dependabot in https://github.com/dathere/qsv/pull/2278
-* build(deps): bump mlua from 0.10.0 to 0.10.1 by @dependabot in https://github.com/dathere/qsv/pull/2280
+## qsv v1.0.0 is here! 🎉
+After over 3 years of development, nearly 200 releases, and 11,000+ commits, qsv has finally reached v1.0.0!
+
+What started as a hobby project to learn Rust during COVID has evolved into a powerful data wrangling tool used in multiple datHere products, open source projects, and even in several mission-critical production environments!
+
+To mark this major milestone, this larger than usual release includes major performance improvements, new features, and various optimizations!
+
+---
+
+### Added
+* `joinp`: add `--ignore-case` option https://github.com/dathere/qsv/pull/2287
+* `py`: add ability to load python expression from file https://github.com/dathere/qsv/pull/2295
+* `replace`: add `--not-one` flag (resolves #2305) by @rzmk in https://github.com/dathere/qsv/pull/2307
+* `slice`: add `--invert` option https://github.com/dathere/qsv/pull/2298
+* `stats`: add dataset-level stats https://github.com/dathere/qsv/pull/2297
+* `sqlp`: auto-decompression of gzip, zstd & zlib compressed csv files with `read_csv` table function (implements suggestion from @wardi in #2301) https://github.com/dathere/qsv/pull/2315
+* `template`: add lookup support https://github.com/dathere/qsv/pull/2313
+* added `ui` feature to make it easier to make a headless build of qsv https://github.com/dathere/qsv/pull/2289
+* added better panic handling https://github.com/dathere/qsv/pull/2304
+* added new benchmark for `template` command https://github.com/dathere/qsv/commit/cd7e480de5ff1e2766a16b8d21767b76fbf10d35
+* added 📚 `lookup support` legend https://github.com/dathere/qsv/commit/b46de73f57ba35ee08581a4f20809a5f581d461b
+
+### Changed
+* move qsv from personal Github repo to dathere GitHub org https://github.com/dathere/qsv/pull/2317
+* `template`: parallelized template rendering for significant speedups https://github.com/dathere/qsv/pull/2273
+* simplify input format check https://github.com/dathere/qsv/pull/2309
+* bump embedded `luau` from 0.650 to 0.653 https://github.com/dathere/qsv/commit/986a1d3b4e60f15c25ef8a157c7e9e205ae8e7a9
+* deps: Switch back to `simple-home-dir` from `simple-expand-tilde` https://github.com/dathere/qsv/pull/2319
+* deps: Add minijinja contrib https://github.com/dathere/qsv/pull/2276
 * build(deps): bump base62 from 2.0.2 to 2.0.3 by @dependabot in https://github.com/dathere/qsv/pull/2281
+* build(deps): bump bytemuck from 1.19.0 to 1.20.0 by @dependabot in https://github.com/dathere/qsv/pull/2299
+* build(deps): bump bytes from 1.8.0 to 1.9.0 by @dependabot in https://github.com/dathere/qsv/pull/2314
+* build(deps): bump file-format from 0.25.0 to 0.26.0 by @dependabot in https://github.com/dathere/qsv/pull/2277
+* build(deps): bump hashbrown from 0.15.1 to 0.15.2 by @dependabot in https://github.com/dathere/qsv/pull/2310
+* build(deps): bump itoa from 1.0.11 to 1.0.12 by @dependabot in https://github.com/dathere/qsv/pull/2300
+* build(deps): bump itoa from 1.0.12 to 1.0.13 by @dependabot in https://github.com/dathere/qsv/pull/2302
+* build(deps): bump itoa from 1.0.13 to 1.0.14 by @dependabot in https://github.com/dathere/qsv/pull/2311
+* build(deps): bump mlua from 0.10.0 to 0.10.1 by @dependabot in https://github.com/dathere/qsv/pull/2280
+* build(deps): bump mlua from 0.10.1 to 0.10.2 by @dependabot in https://github.com/dathere/qsv/pull/2316
+* build(deps): bump pyo3 from 0.23.0 to 0.23.1 by @dependabot in https://github.com/dathere/qsv/pull/2293
+* build(deps): bump pyo3 from 0.23.1 to 0.23.2 by @dependabot in https://github.com/dathere/qsv/pull/2312
 * build(deps): bump serial_test from 3.1.1 to 3.2.0 by @dependabot in https://github.com/dathere/qsv/pull/2279
 * build(deps): bump minijinja from 2.4.0 to 2.5.0 by @dependabot in https://github.com/dathere/qsv/pull/2284
 * build(deps): bump minijinja-contrib from 2.3.1 to 2.5.0 by @dependabot in https://github.com/dathere/qsv/pull/2283
-* build(deps): bump serde from 1.0.214 to 1.0.215 by @dependabot in https://github.com/dathere/qsv/pull/2286
-* `joinp`: add `--ignore-case` option by @jqnatividad in https://github.com/dathere/qsv/pull/2287
-* create `ui` feature to make it easier to make a headless build of qsv by @jqnatividad in https://github.com/dathere/qsv/pull/2289
 * build(deps): bump rfd from 0.15.0 to 0.15.1 by @dependabot in https://github.com/dathere/qsv/pull/2291
+* build(deps): bump sanitize-filename from 0.5.0 to 0.6.0 by @dependabot in https://github.com/dathere/qsv/pull/2275
+* build(deps): bump serde from 1.0.214 to 1.0.215 by @dependabot in https://github.com/dathere/qsv/pull/2286
 * build(deps): bump serde_json from 1.0.132 to 1.0.133 by @dependabot in https://github.com/dathere/qsv/pull/2292
-* build(deps): bump pyo3 from 0.23.0 to 0.23.1 by @dependabot in https://github.com/dathere/qsv/pull/2293
-* `py`: add ability to load python expression from file by @jqnatividad in https://github.com/dathere/qsv/pull/2295
-* fix: `get_stats_ records()` helper to handle input files with embedded spaces by @jqnatividad in https://github.com/dathere/qsv/pull/2296
-* `slice`: add `--invert` option by @jqnatividad in https://github.com/dathere/qsv/pull/2298
-* feat: add dataset-level stats by @jqnatividad in https://github.com/dathere/qsv/pull/2297
-* build(deps): bump bytemuck from 1.19.0 to 1.20.0 by @dependabot in https://github.com/dathere/qsv/pull/2299
-* build(deps): bump itoa from 1.0.11 to 1.0.12 by @dependabot in https://github.com/dathere/qsv/pull/2300
-* build(deps): bump itoa from 1.0.12 to 1.0.13 by @dependabot in https://github.com/dathere/qsv/pull/2302
-* add mime-type checking; better panic handling by @jqnatividad in https://github.com/dathere/qsv/pull/2304
-* simplify input format check by @jqnatividad in https://github.com/dathere/qsv/pull/2309
-* `replace`: add `--not-one` flag (resolves #2305) by @rzmk in https://github.com/dathere/qsv/pull/2307
+* build(deps): bump tempfile from 3.13.0 to 3.14.0 by @dependabot in https://github.com/dathere/qsv/pull/2278
+* build(deps): bump tokio from 1.41.0 to 1.41.1 by @dependabot in https://github.com/dathere/qsv/pull/2274
 * build(deps): bump url from 2.5.3 to 2.5.4 by @dependabot in https://github.com/dathere/qsv/pull/2306
-* build(deps): bump hashbrown from 0.15.1 to 0.15.2 by @dependabot in https://github.com/dathere/qsv/pull/2310
-* build(deps): bump itoa from 1.0.13 to 1.0.14 by @dependabot in https://github.com/dathere/qsv/pull/2311
-* build(deps): bump pyo3 from 0.23.1 to 0.23.2 by @dependabot in https://github.com/dathere/qsv/pull/2312
-* `template`: add lookup support by @jqnatividad in https://github.com/dathere/qsv/pull/2313
-* build(deps): bump bytes from 1.8.0 to 1.9.0 by @dependabot in https://github.com/dathere/qsv/pull/2314
-* `sqlp`: auto-decompression of gz, zstd & zlib compressed csv files with `read_csv` table function by @jqnatividad in https://github.com/dathere/qsv/pull/2315
-* move qsv to dathere org by @jqnatividad in https://github.com/dathere/qsv/pull/2317
-* build(deps): bump mlua from 0.10.1 to 0.10.2 by @dependabot in https://github.com/dathere/qsv/pull/2316
+* applied several clippy suggestions
+* bumped numerous indirect dependencies to latest versions
+* bumped MSRV to latest Rust stable (1.83.0)
+* bumped Rust nightly from 2024-11-01 to 2024-11-28, the same version used by Polars
 
+### Fixed
+* fix `get_stats_records()` helper to handle input files with embedded spaces (fixes #2294) https://github.com/dathere/qsv/pull/2296
+* added better panic handling (fixes #2301) https://github.com/dathere/qsv/pull/2304
+* implement simple format check for input files (fixes #2308) https://github.com/dathere/qsv/pull/2308
+
+### Removed
+* removed `simple-expand-tilde` dependency in favor of `simple-home-dir` https://github.com/dathere/qsv/pull/2318
+* removed patched fork of `indicatif` now that 0.17.9 is released, fixing GH unmaintained advisory for `instant` https://github.com/dathere/qsv/commit/33fa54a1651ce29d286c0e1ff4f3d77bbbd2ffd5
+* removed `clipboard` command from `qsvlite` binary variant https://github.com/dathere/qsv/commit/9c663d84da49cbbe53d7c9df6bd747cad0d9ba24
 
 **Full Changelog**: https://github.com/dathere/qsv/compare/0.138.0...1.0.0
 
