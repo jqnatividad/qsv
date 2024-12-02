@@ -407,7 +407,24 @@ maintainer           = "Konstantin Sivakov <konstantin@datHere.com>"
 copyright            = "2024, datHere Inc. <www.dathere.com>"
 extended-description = """A high performance CSV data-wrangling toolkit."""
 depends              = "$auto"
-features             = ["feature_capable"]
 section              = "utility"
 priority             = "optional"
-assets               = [["target/release/qsv", "/usr/local/bin/", "755"]]
+
+# Default feature and asset
+features             = ["feature_capable"]
+assets               = [
+    ["target/release/qsv", "/usr/local/bin/", "755"]
+]
+
+# Conditional features and assets
+[package.metadata.deb.variants.lite]
+features = ["lite"]
+assets   = [
+    ["target/release/qsvlite", "/usr/local/bin/", "755"]
+]
+
+[package.metadata.deb.variants.datapusher_plus]
+features = ["datapusher_plus", "luau"]
+assets   = [
+    ["target/release/qsvdp", "/usr/local/bin/", "755"]
+]
