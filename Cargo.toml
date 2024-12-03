@@ -189,7 +189,7 @@ polars = { version = "0.44.2", features = [
     "timezones",
 ], optional = true }
 publicsuffix = { version = "2.2", optional = true }
-pyo3 = { version = "0.21.2", features = ["auto-initialize"], optional = true }
+pyo3 = { version = "0.23.2", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.12"
 qsv_docopt = "1.8"
 qsv-stats = "0.22"
