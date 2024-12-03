@@ -102,7 +102,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     let headers = rdr.byte_headers()?.clone();
     let sel = rconfig.selection(&headers)?;
-    let record_count;
+    let mut record_count;
 
     // prep progress bar
     #[cfg(any(feature = "feature_capable", feature = "lite"))]
