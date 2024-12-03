@@ -1,0 +1,42 @@
+field,type,sum,min,max,min_length,max_length,mean,stddev,median,mode,cardinality
+Unique Key,Integer,32687965858032,11465364,48478173,8,8,32687965.858031992,9013895.335828979,32853358.5,N/A,1000000
+Created Date,Unicode,,01/01/2010 01:05:51 PM,12/31/2019 12:58:50 PM,22,22,,,,01/24/2013 12:00:00 AM,841014
+Closed Date,Unicode,,01/01/1900 12:00:00 AM,12/31/2019 12:59:00 PM,0,22,,,,,688837
+Agency,Unicode,,3-1-1,TLC,3,42,,,,NYPD,28
+Agency Name,Unicode,,3-1-1,Valuation Policy,3,82,,,,New York City Police Department,553
+Complaint Type,Unicode,,../../WEB-INF/web.xml;x=,ZTESTINT,3,41,,,,Noise - Residential,287
+Descriptor,Unicode,,1 Missed Collection,unknown odor/taste in drinking water (QA6),0,80,,,,Loud Music/Party,1392
+Location Type,Unicode,,"1-, 2- and 3- Family Home",Wooded Area,0,36,,,,RESIDENTIAL BUILDING,162
+Incident Zip,Unicode,,*,XXXXX,0,10,,,11204,,535
+Incident Address,Unicode,,* *,west 155 street and edgecombe avenue,0,55,,,,,341996
+Street Name,Unicode,,*,wyckoff avenue,0,55,,,,,14837
+Cross Street 1,Unicode,,1 AVE,mermaid,0,32,,,,,16238
+Cross Street 2,Unicode,,1 AVE,surf,0,35,,,,,16486
+Intersection Street 1,Unicode,,1 AVE,flatlands AVE,0,35,,,,,11237
+Intersection Street 2,Unicode,,1 AVE,glenwood RD,0,33,,,,,11674
+Address Type,Unicode,,ADDRESS,PLACENAME,0,12,,,,ADDRESS,6
+City,Unicode,,*,YORKTOWN HEIGHTS,0,22,,,,BROOKLYN,382
+Landmark,Unicode,,1 AVENUE,ZULETTE AVENUE,0,32,,,,,5915
+Facility Type,Unicode,,DSNY Garage,School District,0,15,,,,N/A,6
+Status,Unicode,,Assigned,Unspecified,4,16,,,,Closed,10
+Due Date,Unicode,,01/01/2010 01:26:03 PM,12/31/2018 12:59:20 PM,0,22,,,,,345077
+Resolution Description,Unicode,,A DOB violation was issued for failing to comply with an existing Stop Work Order.,"Your request was submitted to the Department of Homeless Services. The City?s outreach team will assess the homeless individual and offer appropriate assistance within 2 hours. If you asked to know the outcome of your request, you will get a call within 2 hours. No further status will be available through the NYC 311 App, 311, or 311 Online.",0,934,,,,The Police Department responded to the complaint and with the information available observed no evidence of the violation at that time.,1216
+Resolution Action Updated Date,Unicode,,01/01/2010 01:50:45 PM,12/31/2019 12:58:00 PM,0,22,,,,,690314
+Community Board,Unicode,,0 Unspecified,Unspecified STATEN ISLAND,8,25,,,,0 Unspecified,77
+BBL,Integer,2082985217282449,0,5270000501,0,10,2751798943.2415185,1168122117.9238496,3019480063,,268383
+Borough,Unicode,,BRONX,Unspecified,5,13,,,,BROOKLYN,6
+X Coordinate (State Plane),Integer,919555108413,913281,1067220,0,7,1005337.5451259633,22512.452810219616,1004546,,102556
+Y Coordinate (State Plane),Integer,188099299101,121152,271876,0,6,205646.4978205338,31723.19849376396,202514,,116092
+Open Data Channel Type,Unicode,,MOBILE,UNKNOWN,5,7,,,,PHONE,5
+Park Facility Name,Unicode,,"""Uncle"" Vito F. Maranzano Glendale Playground",Zimmerman Playground,3,82,,,,Unspecified,1889
+Park Borough,Unicode,,BRONX,Unspecified,5,13,,,,BROOKLYN,6
+Vehicle Type,Unicode,,Ambulette / Paratransit,Green Taxi,0,23,,,,,5
+Taxi Company Borough,Unicode,,BRONX,Staten Island,0,13,,,,,11
+Taxi Pick Up Location,Unicode,,1 5 AVENUE MANHATTAN,YORK AVENUE AND EAST 70 STREET,0,60,,,,,1903
+Bridge Highway Name,Unicode,,145th St. Br - Lenox Ave,Willis Ave Br - 125th St/1st Ave,0,42,,,,,68
+Bridge Highway Direction,Unicode,,Bronx Bound,Westbound/To Goethals Br,0,33,,,,,50
+Road Ramp,Unicode,,N/A,Roadway,0,7,,,,,4
+Bridge Highway Segment,Unicode,,1-1-1265963747,Wythe Ave/Kent Ave (Exit 31),0,100,,,,,937
+Latitude,Float,30355391.76044774,40.1123853,40.9128688,0,18,40.7288180817884,0.08931439676331547,40.7221652,,353694
+Longitude,Float,-55100392.949864306,-77.5195844,-73.7005968,0,18,-73.92999235194229,0.16351835417538263,-73.9279455,,353996
+Location,Unicode,,"(40.1123853, -77.5195844)","(40.9128688, -73.9024731)",0,40,,,,,375772
