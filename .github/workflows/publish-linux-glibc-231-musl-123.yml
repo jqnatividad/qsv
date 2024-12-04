@@ -48,7 +48,15 @@ jobs:
             addl-qsvlite-features:
             addl-qsvdp-features: polars
             name-suffix: musl-1.2.3
-
+          - os: ubuntu-20.04
+            os-name: linux
+            target: x86_64-unknown-linux-gnu
+            architecture: x86_64
+            addl-build-args: --features=apply,luau,fetch,foreach,self_update,polars,geocode
+            default-features:
+            addl-qsvlite-features:
+            addl-qsvdp-features: luau,polars
+            name-suffix: glibc-2.31-headless
     steps:
     - name: Installing Rust toolchain
       uses: actions-rs/toolchain@v1
