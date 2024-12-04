@@ -22,7 +22,7 @@ To check if your qsv build will have the option to self-update, run `qsv --versi
 ## Special Features for building qsv binary variants:
 
 * `feature_capable` - enable to build `qsv` binary variant which is feature-capable. (mutually exclusive with `lite` and `datapusher_plus`)
-  * `all_features` - shortcut to enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,geocode,luau,polars,python,to,self_update,ui).
+  * `all_features` - shortcut to build `qsv` binary variant with all features enabled (apply,fetch,foreach,geocode,luau,polars,python,to,self_update,ui).
 
 * `lite` - enable to build `qsvlite` binary variant with all features disabled. (mutually exclusive with `feature_capable` and `datapusher_plus`)
 * `datapusher_plus` - enable to build `qsvdp` binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary. (mutually exclusive with `feature_capable` and `lite`)
