@@ -19,10 +19,13 @@ You need not worry that your manually built qsv will be overwritten by a self-up
 To check if your qsv build will have the option to self-update, run `qsv --version`. If you see `self_update` in the enabled features, and QSV_KIND is `prebuilt*` at the end, then you have the option to self-update.
 * `ui` - enables commands that require linking UI libraries - `clipboard`, `lens` and `prompt`. Disable this feature if you're building for a headless environment. Note that `qsvdp` and `qsvlite` does not enable the `ui` feature by default.
 
-* `feature_capable` - enable to build `qsv` binary variant which is feature-capable.
-* `all_features` - enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,geocode,lens,luau,polars,prompt,python,to,self_update).
-* `lite` - enable to build `qsvlite` binary variant with all features disabled.
-* `datapusher_plus` - enable to build `qsvdp` binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary.
+## Special Features for building qsv binary variants:
+
+* `feature_capable` - enable to build `qsv` binary variant which is feature-capable. (mutually exclusive with `lite` and `datapusher_plus`)
+  * `all_features` - shortcut to enable to build `qsv` binary variant with all features enabled (apply,fetch,foreach,geocode,luau,polars,python,to,self_update,ui).
+
+* `lite` - enable to build `qsvlite` binary variant with all features disabled. (mutually exclusive with `feature_capable` and `datapusher_plus`)
+* `datapusher_plus` - enable to build `qsvdp` binary variant - the [DataPusher+](https://github.com/dathere/datapusher-plus) optimized qsv binary. (mutually exclusive with `feature_capable` and `lite`)
 * `nightly` - enable to turn on nightly/unstable features in the `crc32fast`, `hashbrown`, `polars`, `pyo3` & `rand` crates when building with Rust nightly/unstable.
 * `distrib_features` - enable to build `qsv` binary variant with all features enabled except `self_update`. This should make it easier for distro packagers to build `qsv` with all features enabled except `self_update` as qsv removes and adds features over time.
 

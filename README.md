@@ -250,7 +250,7 @@ To compile different [variants](#variants) and enable optional [features](#featu
 
 ```bash
 # to compile qsv with all features enabled
-cargo build --release --locked --bin qsv --features feature_capable,apply,luau,fetch,foreach,python,to,self_update,polars
+cargo build --release --locked --bin qsv --features feature_capable,apply,fetch,foreach,geocode,luau,polars,python,self_update,ui
 # shorthand
 cargo build --release --locked --bin qsv -F all_features
 
@@ -265,6 +265,7 @@ cargo build --release --locked --bin qsvdp -F datapusher_plus,luau,polars
 ```
 
 > **_NOTE:_** To build with Rust nightly, see [Nightly Release Builds](docs/PERFORMANCE.md#nightly-release-builds).
+The `feature_capable`, `lite` and `datapusher_plus` are MUTUALLY EXCLUSIVE features. See [Special Build Features](docs/FEATURES.md#special-features-for-building-qsv-binary-variants) for more info.
 
 ### Variants
 
