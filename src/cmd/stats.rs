@@ -1196,14 +1196,14 @@ impl Args {
         ]);
 
         // these are the stats columns that are only output if the user requested them
-        let all = self.flag_everything;
-        if self.flag_median && !self.flag_quartiles && !all {
+        let everything = self.flag_everything;
+        if self.flag_median && !self.flag_quartiles && !everything {
             fields.push("median");
         }
-        if self.flag_mad || all {
+        if self.flag_mad || everything {
             fields.push("mad");
         }
-        if self.flag_quartiles || all {
+        if self.flag_quartiles || everything {
             fields.extend_from_slice(&[
                 "lower_outer_fence",
                 "lower_inner_fence",
@@ -1216,10 +1216,10 @@ impl Args {
                 "skewness",
             ]);
         }
-        if self.flag_cardinality || all {
+        if self.flag_cardinality || everything {
             fields.push("cardinality");
         }
-        if self.flag_mode || all {
+        if self.flag_mode || everything {
             fields.extend_from_slice(&[
                 "mode",
                 "mode_count",
