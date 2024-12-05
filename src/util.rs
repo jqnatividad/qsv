@@ -2258,6 +2258,7 @@ pub fn optimal_batch_size(rconfig: &Config, batch_size: usize, num_jobs: usize) 
 /// Expand the tilde (`~`) from within the provided path.
 /// copied from https://github.com/splurf/simple-expand-tilde
 /// as it was just a small wrapper around simple_home_dir
+#[cfg(not(feature = "lite"))]
 pub fn expand_tilde(path: impl AsRef<Path>) -> Option<PathBuf> {
     let p = path.as_ref();
 
