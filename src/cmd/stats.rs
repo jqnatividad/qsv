@@ -473,7 +473,7 @@ const STATSDATA_TYPES_ARRAY: [JsonTypes; MAX_STAT_COLUMNS] = [
     JsonTypes::Int,    //antimode_occurrences
 ];
 
-static INFER_DATE_FLAGS: OnceLock<SmallVec<[bool; 8]>> = OnceLock::new();
+static INFER_DATE_FLAGS: OnceLock<SmallVec<[bool; 50]>> = OnceLock::new();
 static RECORD_COUNT: OnceLock<u64> = OnceLock::new();
 
 // standard overflow and underflow strings
