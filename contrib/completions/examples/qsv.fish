@@ -1223,6 +1223,7 @@ complete -c qsv -n "__fish_qsv_using_subcommand tojsonl" -l batch
 complete -c qsv -n "__fish_qsv_using_subcommand tojsonl" -l delimiter
 complete -c qsv -n "__fish_qsv_using_subcommand tojsonl" -l output
 complete -c qsv -n "__fish_qsv_using_subcommand tojsonl" -l memcheck
+complete -c qsv -n "__fish_qsv_using_subcommand tojsonl" -l quiet
 complete -c qsv -n "__fish_qsv_using_subcommand tojsonl" -s h -l help -d 'Print help'
 complete -c qsv -n "__fish_qsv_using_subcommand transpose" -l multipass
 complete -c qsv -n "__fish_qsv_using_subcommand transpose" -l output

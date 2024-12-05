@@ -3986,7 +3986,7 @@ _qsv() {
             return 0
             ;;
         qsv__tojsonl)
-            opts="-h --trim --no-boolean --jobs --batch --delimiter --output --memcheck --help"
+            opts="-h --trim --no-boolean --jobs --batch --delimiter --output --memcheck --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

@@ -1584,6 +1584,7 @@ set edit:completion:arg-completer[qsv] = {|@words|
             cand --delimiter 'delimiter'
             cand --output 'output'
             cand --memcheck 'memcheck'
+            cand --quiet 'quiet'
             cand -h 'Print help'
             cand --help 'Print help'
         }

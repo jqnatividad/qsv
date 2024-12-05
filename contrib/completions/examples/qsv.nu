@@ -1489,6 +1489,7 @@ module completions {
     --delimiter
     --output
     --memcheck
+    --quiet
     --help(-h)                # Print help
   ]
 

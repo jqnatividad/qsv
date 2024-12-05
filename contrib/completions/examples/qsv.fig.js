@@ -3891,6 +3891,9 @@ const completion: Fig.Spec = {
           name: "--memcheck",
         },
         {
+          name: "--quiet",
+        },
+        {
           name: ["-h", "--help"],
           description: "Print help",
         },
