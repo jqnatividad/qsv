@@ -41,6 +41,7 @@ Common options:
     -o, --output <file>    Write output to <file> instead of stdout.
     --memcheck             Check if there is enough memory to load the entire
                            CSV into memory using CONSERVATIVE heuristics.
+    -Q, --quiet            Do not display enum/const list inferencing messages.
 "#;
 
 use std::{fmt::Write, path::PathBuf, str::FromStr};
@@ -69,6 +70,7 @@ struct Args {
     flag_delimiter:  Option<Delimiter>,
     flag_output:     Option<String>,
     flag_memcheck:   bool,
+    flag_quiet:      bool,
 }
 
 impl From<std::fmt::Error> for CliError {
@@ -144,7 +146,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     };
     // build schema for each field by their inferred type, min/max value/length, and unique values
     let properties_map: Map<String, Value> =
-        match infer_schema_from_stats(&schema_args, &input_filename) {
+        match infer_schema_from_stats(&schema_args, &input_filename, args.flag_quiet) {
             Ok(map) => map,
             Err(e) => {
                 return fail_clierror!("Failed to infer field types: {e}");

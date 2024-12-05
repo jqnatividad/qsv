@@ -133,7 +133,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     // build schema for each field by their inferred type, min/max value/length, and unique values
     let mut properties_map: Map<String, Value> =
-        match infer_schema_from_stats(&args, &input_filename) {
+        match infer_schema_from_stats(&args, &input_filename, false) {
             Ok(map) => map,
             Err(e) => {
                 return fail_clierror!(
@@ -209,6 +209,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 pub fn infer_schema_from_stats(
     args: &util::SchemaArgs,
     input_filename: &str,
+    quiet: bool,
 ) -> CliResult<Map<String, Value>> {
     // invoke cmd::stats
     let (csv_fields, csv_stats) = util::get_stats_records(args, StatsMode::Schema)?;
@@ -404,14 +405,18 @@ pub fn infer_schema_from_stats(
         if enum_list.is_empty() {
             if const_value != Value::Null {
                 field_map.insert("const".to_string(), const_value.clone());
-                winfo!("Const generated for field '{header_string}': {const_value:?}");
+                if !quiet {
+                    winfo!("Const generated for field '{header_string}': {const_value:?}");
+                }
             }
         } else {
             field_map.insert("enum".to_string(), Value::Array(enum_list.clone()));
-            winfo!(
-                "Enum list generated for field '{header_string}' ({} value/s)",
-                enum_list.len()
-            );
+            if !quiet {
+                winfo!(
+                    "Enum list generated for field '{header_string}' ({} value/s)",
+                    enum_list.len()
+                );
+            }
         }
 
         // add current field definition to properties map
