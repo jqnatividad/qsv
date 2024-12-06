@@ -9,5 +9,6 @@ pub fn tojsonl_cmd() -> Command {
         arg!(--delimiter),
         arg!(--output),
         arg!(--memcheck),
+        arg!(--quiet),
     ])
 }

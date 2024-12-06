@@ -1915,6 +1915,7 @@ _arguments "${_arguments_options[@]}" : \
 '--delimiter[]' \
 '--output[]' \
 '--memcheck[]' \
+'--quiet[]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
