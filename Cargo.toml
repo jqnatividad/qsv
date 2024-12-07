@@ -192,7 +192,7 @@ publicsuffix = { version = "2.2", optional = true }
 pyo3 = { version = "0.21.2", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.12"
 qsv_docopt = "1.8"
-qsv-stats = "0.22"
+qsv-stats = "0.23"
 qsv_currency = "0.7"
 qsv-sniffer = { version = "0.10", default-features = false, features = [
     "runtime-dispatch-simd",
