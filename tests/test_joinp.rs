@@ -1284,3 +1284,141 @@ fn joinp_ignore_case() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn joinp_ignore_case_maintain_order_right() {
+    let wrk = Workdir::new("joinp_mo_r");
+
+    // Create test data with mixed case cities
+    wrk.create(
+        "cities_mixed.csv",
+        vec![
+            svec!["city", "state"],
+            svec!["BOSTON", "MA"],
+            svec!["new york", "NY"],
+            svec!["San Francisco", "CA"],
+            svec!["BUFFALO", "NY"],
+        ],
+    );
+
+    wrk.create(
+        "places_mixed.csv",
+        vec![
+            svec!["city", "place"],
+            svec!["Boston", "Logan Airport"],
+            svec!["boston", "Boston Garden"],
+            svec!["BUFFALO", "Ralph Wilson Stadium"],
+            svec!["orlando", "Disney World"],
+            svec!["new York", "Madison Square Garden"],
+            svec!["san francisco", "Fisherman's Wharf"],
+        ],
+    );
+
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["city", "cities_mixed.csv", "city", "places_mixed.csv"])
+        .arg("--ignore-case")
+        .args(["--maintain-order", "right"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["city", "state", "city_right", "place"],
+        svec!["BOSTON", "MA", "Boston", "Logan Airport"],
+        svec!["BOSTON", "MA", "boston", "Boston Garden"],
+        svec!["BUFFALO", "NY", "BUFFALO", "Ralph Wilson Stadium"],
+        svec!["new york", "NY", "new York", "Madison Square Garden"],
+        svec!["San Francisco", "CA", "san francisco", "Fisherman's Wharf"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn joinp_ignore_case_maintain_order_left() {
+    let wrk = Workdir::new("joinp_mo_l");
+
+    // Create test data with mixed case cities
+    wrk.create(
+        "cities_mixed.csv",
+        vec![
+            svec!["city", "state"],
+            svec!["BOSTON", "MA"],
+            svec!["new york", "NY"],
+            svec!["San Francisco", "CA"],
+            svec!["BUFFALO", "NY"],
+        ],
+    );
+
+    wrk.create(
+        "places_mixed.csv",
+        vec![
+            svec!["city", "place"],
+            svec!["Boston", "Logan Airport"],
+            svec!["boston", "Boston Garden"],
+            svec!["BUFFALO", "Ralph Wilson Stadium"],
+            svec!["orlando", "Disney World"],
+            svec!["new York", "Madison Square Garden"],
+            svec!["san francisco", "Fisherman's Wharf"],
+        ],
+    );
+
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["city", "cities_mixed.csv", "city", "places_mixed.csv"])
+        .arg("--ignore-case")
+        .args(["--maintain-order", "left"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["city", "state", "city_right", "place"],
+        svec!["BOSTON", "MA", "Boston", "Logan Airport"],
+        svec!["BOSTON", "MA", "boston", "Boston Garden"],
+        svec!["new york", "NY", "new York", "Madison Square Garden"],
+        svec!["San Francisco", "CA", "san francisco", "Fisherman's Wharf"],
+        svec!["BUFFALO", "NY", "BUFFALO", "Ralph Wilson Stadium"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn joinp_ignore_case_maintain_order_right_left() {
+    let wrk = Workdir::new("joinp_mo_rl");
+
+    // Create test data with mixed case cities
+    wrk.create(
+        "cities_mixed.csv",
+        vec![
+            svec!["city", "state"],
+            svec!["BOSTON", "MA"],
+            svec!["new york", "NY"],
+            svec!["San Francisco", "CA"],
+            svec!["BUFFALO", "NY"],
+        ],
+    );
+
+    wrk.create(
+        "places_mixed.csv",
+        vec![
+            svec!["city", "place"],
+            svec!["Boston", "Logan Airport"],
+            svec!["boston", "Boston Garden"],
+            svec!["BUFFALO", "Ralph Wilson Stadium"],
+            svec!["orlando", "Disney World"],
+            svec!["new York", "Madison Square Garden"],
+            svec!["san francisco", "Fisherman's Wharf"],
+        ],
+    );
+
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["city", "cities_mixed.csv", "city", "places_mixed.csv"])
+        .arg("--ignore-case")
+        .args(["--maintain-order", "left_right"]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["city", "state", "city_right", "place"],
+        svec!["BOSTON", "MA", "Boston", "Logan Airport"],
+        svec!["BOSTON", "MA", "boston", "Boston Garden"],
+        svec!["new york", "NY", "new York", "Madison Square Garden"],
+        svec!["San Francisco", "CA", "san francisco", "Fisherman's Wharf"],
+        svec!["BUFFALO", "NY", "BUFFALO", "Ralph Wilson Stadium"],
+    ];
+    assert_eq!(got, expected);
+}
