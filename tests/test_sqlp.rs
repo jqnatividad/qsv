@@ -71,6 +71,24 @@ sqlp_test!(
 );
 
 sqlp_test!(
+    sqlp_right_join,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.arg("select * from cities right join places on cities.city = places.city");
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = make_rows(
+            false,
+            vec![
+                svec!["Boston", "MA", "Boston", "Logan Airport"],
+                svec!["Boston", "MA", "Boston", "Boston Garden"],
+                svec!["Buffalo", "NY", "Buffalo", "Ralph Wilson Stadium"],
+                svec!["", "", "Orlando", "Disney World"],
+            ],
+        );
+        assert_eq!(got, expected);
+    }
+);
+
+sqlp_test!(
     sqlp_join_outer_left,
     |wrk: Workdir, mut cmd: process::Command| {
         cmd.arg("select * from cities left outer join places on cities.city = places.city");
