@@ -832,12 +832,12 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             // Compute hash of stats for data fingerprinting
             let stats_hash = {
-                let mut hash_input = Vec::with_capacity(16);
+                let mut hash_input = Vec::with_capacity(22);
 
                 // First, create a stable representation of the stats
                 for record in &stats_br_vec {
-                    // Take first 16 columns only
-                    for field in record.iter().take(16) {
+                    // Take first 22 columns only
+                    for field in record.iter().take(22) {
                         let s = String::from_utf8_lossy(field);
                         // Standardize number format
                         if let Ok(f) = s.parse::<f64>() {
