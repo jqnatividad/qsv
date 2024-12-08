@@ -448,6 +448,8 @@ const STATSDATA_TYPES_ARRAY: [JsonTypes; MAX_STAT_COLUMNS] = [
     JsonTypes::Float,  //avg_length
     JsonTypes::Float,  //mean
     JsonTypes::Float,  //sem
+    JsonTypes::Float,  //geometric_mean
+    JsonTypes::Float,  //harmonic_mean
     JsonTypes::Float,  //stddev
     JsonTypes::Float,  //variance
     JsonTypes::Float,  //cv
@@ -489,7 +491,7 @@ const MS_IN_DAY_INT: i64 = 86_400_000;
 const DAY_DECIMAL_PLACES: u32 = 5;
 
 // maximum number of output columns
-const MAX_STAT_COLUMNS: usize = 37;
+const MAX_STAT_COLUMNS: usize = 39;
 
 // maximum number of antimodes to display
 const MAX_ANTIMODES: usize = 10;
@@ -1187,6 +1189,8 @@ impl Args {
             "avg_length",
             "mean",
             "sem",
+            "geometric_mean",
+            "harmonic_mean",
             "stddev",
             "variance",
             "cv",
@@ -1539,6 +1543,8 @@ impl Stats {
             minmax_range_sortorder_pieces.extend_from_slice(&[empty(), empty(), empty(), empty()]);
         }
 
+        let record_count = *RECORD_COUNT.get().unwrap_or(&1);
+
         // modes/antimodes & cardinality
         // we do this second because we can use the sort order with cardinality, to skip sorting
         // if its not required. This makes not only cardinality computation faster, it also makes
@@ -1562,19 +1568,24 @@ impl Stats {
                 }
                 if self.which.mode {
                     // mode/s
-                    let (modes_result, modes_count, mode_occurrences) = v.modes();
-                    let modes_list = modes_result
-                        .iter()
-                        .map(|c| String::from_utf8_lossy(c))
-                        .join(",");
-                    mc_pieces.extend_from_slice(&[
-                        modes_list,
-                        modes_count.to_string(),
-                        mode_occurrences.to_string(),
-                    ]);
+                    if cardinality == record_count {
+                        // all values unique, short-circuit modes calculation as there is none
+                        mc_pieces.extend_from_slice(&[empty(), "0".to_string(), "0".to_string()]);
+                    } else {
+                        let (modes_result, modes_count, mode_occurrences) = v.modes();
+                        let modes_list = modes_result
+                            .iter()
+                            .map(|c| String::from_utf8_lossy(c))
+                            .join(",");
+                        mc_pieces.extend_from_slice(&[
+                            modes_list,
+                            modes_count.to_string(),
+                            mode_occurrences.to_string(),
+                        ]);
+                    }
 
                     // antimode/s
-                    if mode_occurrences == 0 {
+                    if cardinality == record_count {
                         // all the values are unique
                         // so instead of returning everything, just say *ALL
                         mc_pieces.extend_from_slice(&[
@@ -1680,10 +1691,7 @@ impl Stats {
                     // so we can compute avg_length
                     pieces.push(itoa::Buffer::new().format(stotlen).to_owned());
                     #[allow(clippy::cast_precision_loss)]
-                    pieces.push(util::round_num(
-                        stotlen as f64 / *RECORD_COUNT.get().unwrap_or(&1) as f64,
-                        4,
-                    ));
+                    pieces.push(util::round_num(stotlen as f64 / record_count as f64, 4));
                 } else {
                     // however, we saturated the sum, it means we had an overflow
                     // so we return OVERFLOW_STRING for sum and avg length
@@ -1699,19 +1707,31 @@ impl Stats {
             pieces.extend_from_slice(&[empty(), empty(), empty(), empty()]);
         }
 
-        // mean, sem, stddev, variance & cv
+        // mean, sem, geometric_mean, harmonic_mean, stddev, variance & cv
         if typ == TString || typ == TNull {
-            pieces.extend_from_slice(&[empty(), empty(), empty(), empty(), empty()]);
+            pieces.extend_from_slice(&[
+                empty(),
+                empty(),
+                empty(),
+                empty(),
+                empty(),
+                empty(),
+                empty(),
+            ]);
         } else if let Some(ref v) = self.online {
             let std_dev = v.stddev();
             #[allow(clippy::cast_precision_loss)]
             let sem = std_dev / (v.len() as f64).sqrt();
             let mean = v.mean();
             let cv = (std_dev / mean) * 100_f64;
+            let geometric_mean = v.geometric_mean();
+            let harmonic_mean = v.harmonic_mean();
             if self.typ == TFloat || self.typ == TInteger {
                 pieces.extend_from_slice(&[
                     util::round_num(mean, round_places),
                     util::round_num(sem, round_places),
+                    util::round_num(geometric_mean, round_places),
+                    util::round_num(harmonic_mean, round_places),
                     util::round_num(std_dev, round_places),
                     util::round_num(v.variance(), round_places),
                     util::round_num(cv, round_places),
@@ -1727,6 +1747,14 @@ impl Stats {
                     u32::max(round_places, DAY_DECIMAL_PLACES),
                 ));
                 pieces.push(util::round_num(
+                    geometric_mean / MS_IN_DAY,
+                    u32::max(round_places, DAY_DECIMAL_PLACES),
+                ));
+                pieces.push(util::round_num(
+                    harmonic_mean / MS_IN_DAY,
+                    u32::max(round_places, DAY_DECIMAL_PLACES),
+                ));
+                pieces.push(util::round_num(
                     std_dev / MS_IN_DAY,
                     u32::max(round_places, DAY_DECIMAL_PLACES),
                 ));
@@ -1737,7 +1765,15 @@ impl Stats {
                 pieces.push(util::round_num(cv, round_places));
             }
         } else {
-            pieces.extend_from_slice(&[empty(), empty(), empty(), empty(), empty()]);
+            pieces.extend_from_slice(&[
+                empty(),
+                empty(),
+                empty(),
+                empty(),
+                empty(),
+                empty(),
+                empty(),
+            ]);
         }
 
         // nullcount
