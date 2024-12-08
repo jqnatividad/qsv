@@ -1693,8 +1693,9 @@ dependencies = [
 
 [[package]]
 name = "csvlens"
-version = "0.10.1"
-source = "git+https://github.com/YS-L/csvlens?rev=f4e39cf#f4e39cfee834359fab371243bda74495983a0b66"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c994e0599f48ec8f41c7c0f361f4d4e0094f969502e3d96a9abb9b1c6da9cfb5"
 dependencies = [
  "anyhow",
  "arboard",
