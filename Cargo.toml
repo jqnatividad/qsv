@@ -163,7 +163,7 @@ mlua = { version = "0.10", features = [
 num_cpus = "1"
 odht = "0.3"
 phf = { version = "0.11", features = ["macros"], optional = true }
-polars = { version = "0.44.2", features = [
+polars = { version = "0.45", features = [
     "asof_join",
     "avro",
     "avx512",
@@ -192,7 +192,7 @@ publicsuffix = { version = "2.2", optional = true }
 pyo3 = { version = "0.21.2", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.12"
 qsv_docopt = "1.8"
-qsv-stats = "0.24"
+qsv-stats = "0.25"
 qsv_currency = "0.7"
 qsv-sniffer = { version = "0.10", default-features = false, features = [
     "runtime-dispatch-simd",
@@ -329,9 +329,9 @@ strum_macros = { git = "https://github.com/dathere/strum", branch = "bump-phf-to
 # BUILD NOTE: Be sure to set QSV_POLARS_REV below to the latest commit short hash or tag 
 # of polars/py-polars before building qsv. This allows us to show the polars rev/tag in --version.
 # if we are using a release version of Rust Polars, leave QSV_POLARS_REV empty
-# QSV_POLARS_REV=a6ca94d
+# QSV_POLARS_REV=
 # polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.16.0" }
-polars = { git = "https://github.com/pola-rs/polars", rev = "a6ca94d" }
+# polars = { git = "https://github.com/pola-rs/polars", rev = "a6ca94d" }
 
 [features]
 default = ["mimalloc"]
