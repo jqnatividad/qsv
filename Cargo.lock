@@ -2254,9 +2254,9 @@ checksum = "f8eb564c5c7423d25c886fb561d1e4ee69f72354d16918afa32c08811f6b6a55"
 
 [[package]]
 name = "fastrand"
-version = "2.2.0"
+version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "486f806e73c5707928240ddc295403b1b93c96a02038563881c4a2fd84b81ac4"
+checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 
 [[package]]
 name = "fiat-crypto"
@@ -3417,9 +3417,9 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "lexical-core"
-version = "1.0.3"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06d7a061b7feb8a4b233a4d90280d13e0965c4e0181566e9ad61af98e210ca9d"
+checksum = "b765c31809609075565a70b4b71402281283aeda7ecaf4818ac14a7b2ade8958"
 dependencies = [
  "lexical-parse-float",
  "lexical-parse-integer",
@@ -3430,9 +3430,9 @@ dependencies = [
 
 [[package]]
 name = "lexical-parse-float"
-version = "1.0.3"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0029bdee2a94a6c4393a86f7e6921c90f234218fa4f2154bc001c92bc51e8bf5"
+checksum = "de6f9cb01fb0b08060209a057c048fcbab8717b4c1ecd2eac66ebfe39a65b0f2"
 dependencies = [
  "lexical-parse-integer",
  "lexical-util",
@@ -3441,9 +3441,9 @@ dependencies = [
 
 [[package]]
 name = "lexical-parse-integer"
-version = "1.0.3"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "440a2398a08def518ff962b69e7146246c53bad8090e2b75d95fd5a469338958"
+checksum = "72207aae22fc0a121ba7b6d479e42cbfea549af1479c3f3a4f12c70dd66df12e"
 dependencies = [
  "lexical-util",
  "static_assertions",
@@ -3451,18 +3451,18 @@ dependencies = [
 
 [[package]]
 name = "lexical-util"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3100209587e35b13881068ce5a41241b112e0500b4d847ba16be172829c112ff"
+checksum = "ee72ef7886d94f30741743126c1ec123564749ee339281b9834d0e913f2d40fe"
 dependencies = [
  "static_assertions",
 ]
 
 [[package]]
 name = "lexical-write-float"
-version = "1.0.3"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27adf08e2f91ff44ab54bbac0c4579303f0865730870f91b58c044df821f114c"
+checksum = "c5afc668a27f460fb45a81a757b6bf2f43c2d7e30cb5a2dcd3abf294c78d62bd"
 dependencies = [
  "lexical-util",
  "lexical-write-integer",
@@ -3471,9 +3471,9 @@ dependencies = [
 
 [[package]]
 name = "lexical-write-integer"
-version = "1.0.3"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b4e5d27d742da13f013765f849efc0c4b6173e0e64404546475eb5ee0931e2c"
+checksum = "629ddff1a914a836fb245616a7888b62903aae58fa771e1d83943035efa0f978"
 dependencies = [
  "lexical-util",
  "static_assertions",
@@ -4650,7 +4650,7 @@ dependencies = [
  "serde",
  "serde_json",
  "strum_macros",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "version_check",
  "xxhash-rust",
 ]
@@ -4666,7 +4666,7 @@ dependencies = [
  "polars-arrow-format",
  "regex",
  "simdutf8",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
 ]
 
 [[package]]
@@ -5442,9 +5442,9 @@ dependencies = [
 
 [[package]]
 name = "qsv-stats"
-version = "0.22.0"
+version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d3d4715843b98e31967047e4a8d45ea5d733c3c90ad7bde81a62aafa9743d7b"
+checksum = "83c5455540fba94d3c28525e8aea8b168c9cea3064682a8762fe3683373c2da8"
 dependencies = [
  "ahash",
  "num-traits",
@@ -5545,7 +5545,7 @@ dependencies = [
  "rustc-hash",
  "rustls",
  "socket2",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "tokio",
  "tracing",
 ]
@@ -5564,7 +5564,7 @@ dependencies = [
  "rustls",
  "rustls-pki-types",
  "slab",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "tinyvec",
  "tracing",
  "web-time",
@@ -6812,11 +6812,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.4"
+version = "2.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f49a1853cf82743e3b7950f77e0f4d622ca36cf4317cba00c767838bac8d490"
+checksum = "8fec2a1820ebd077e2b90c4df007bebf344cd394098a13c563957d0afc83ea47"
 dependencies = [
- "thiserror-impl 2.0.4",
+ "thiserror-impl 2.0.6",
 ]
 
 [[package]]
@@ -6832,9 +6832,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.4"
+version = "2.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8381894bb3efe0c4acac3ded651301ceee58a15d47c2e34885ed1908ad667061"
+checksum = "d65750cab40f4ff1929fb1ba509e9914eb756131cef4210da8d5d700d26f6312"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -8293,7 +8293,7 @@ dependencies = [
  "pbkdf2",
  "rand",
  "sha1",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "time",
  "zeroize",
  "zopfli",
