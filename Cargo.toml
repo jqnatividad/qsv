@@ -408,20 +408,14 @@ section              = "utility"
 priority             = "optional"
 
 # Default feature and asset
-features             = ["feature_capable"]
-assets               = [
-    ["target/release/qsv", "/usr/local/bin/", "755"]
-]
+features = ["feature_capable"]
+assets   = [["target/release/qsv", "/usr/local/bin/", "755"]]
 
 # Conditional features and assets
 [package.metadata.deb.variants.lite]
 features = ["lite"]
-assets   = [
-    ["target/release/qsvlite", "/usr/local/bin/", "755"]
-]
+assets   = [["target/release/qsvlite", "/usr/local/bin/", "755"]]
 
 [package.metadata.deb.variants.datapusher_plus]
 features = ["datapusher_plus", "luau"]
-assets   = [
-    ["target/release/qsvdp", "/usr/local/bin/", "755"]
-]
+assets   = [["target/release/qsvdp", "/usr/local/bin/", "755"]]
