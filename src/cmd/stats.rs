@@ -6,18 +6,19 @@ UTF-8 encoded. If you encounter problems generating stats, use `qsv validate` to
 input CSV is valid.
 
 Summary statistics includes sum, min/max/range, sort order, min/max/sum/avg length, mean,
-standard error of the mean (SEM), stddev, variance, coefficient of variation (CV), nullcount,
-max_precision, sparsity, quartiles, interquartile range (IQR), lower/upper fences, skewness, median,
-cardinality, mode/s & "antimode/s", and median absolute deviation (MAD). Note that some statistics
-require loading the entire file into memory, so they must be enabled explicitly. 
+standard error of the mean (SEM), geometric mean, harmonic mean, stddev, variance, coefficient
+of variation (CV), nullcount, max_precision, sparsity, Median Absolute Deviation (MAD), quartiles,
+interquartile range (IQR), lower/upper fences, skewness, median, cardinality, mode/s & "antimode/s".
+Note that some stats require loading the entire file into memory, so they must be enabled explicitly. 
 
 By default, the following "streaming" statistics are reported for *every* column:
-sum, min/max/range values, sort order, min/max/sum/avg length, mean, sem, stddev, variance, cv,
-nullcount, max_precision & sparsity. The default set of statistics corresponds to ones that can be
-computed efficiently on a stream of data (i.e., constant memory) and works with arbitrarily large CSVs.
+sum, min/max/range values, sort order, min/max/sum/avg length, mean, sem, geometric_mean, harmonic_mean,
+stddev, variance, cv, nullcount, max_precision & sparsity. The default set of statistics corresponds to
+ones that can be computed efficiently on a stream of data (i.e., constant memory) and works with
+arbitrarily large CSVs.
 
 The following additional "non-streaming" statistics require loading the entire file into memory:
-cardinality, mode/antimode, median, MAD, quartiles and its related measures (IQR,
+cardinality, modes/antimodes, median, MAD, quartiles and its related measures (q1, q2, q3, IQR,
 lower/upper fences & skewness).
 
 When computing "non-streaming" statistics, an Out-Of-Memory (OOM) heuristic check is done.
@@ -27,10 +28,10 @@ preemptively prevented.
 
 "Antimode" is the least frequently occurring non-zero value and is the opposite of mode.
 It returns "*ALL" if all the values are unique, and only returns a preview of the first
-10 antimodes.
+10 antimodes, truncating after 100 characters (configurable with QSV_ANTIMODES_LEN).
 
 If you need all the antimode values of a column, run the `frequency` command with --limit set
-to zero. The resulting frequency table will have all the antimode values.
+to zero. The resulting frequency table will have all the "antimode" values.
 
 Summary statistics for dates are also computed when --infer-dates is enabled, with DateTime
 results in rfc3339 format and Date results in "yyyy-mm-dd" format in the UTC timezone.
@@ -477,6 +478,7 @@ const STATSDATA_TYPES_ARRAY: [JsonTypes; MAX_STAT_COLUMNS] = [
 
 static INFER_DATE_FLAGS: OnceLock<SmallVec<[bool; 50]>> = OnceLock::new();
 static RECORD_COUNT: OnceLock<u64> = OnceLock::new();
+static ANTIMODES_LEN: OnceLock<usize> = OnceLock::new();
 
 // standard overflow and underflow strings
 // for sum, sum_length and avg_length
@@ -495,8 +497,9 @@ const MAX_STAT_COLUMNS: usize = 39;
 
 // maximum number of antimodes to display
 const MAX_ANTIMODES: usize = 10;
-// maximum length of antimode string before truncating and appending "..."
-const MAX_ANTIMODE_LEN: usize = 100;
+// default length of antimode string before truncating and appending "..."
+const DEFAULT_ANTIMODES_LEN: usize = 100;
+const MAX_ANTIMODES_LEN: usize = 5192;
 
 // we do this so this is evaluated at compile-time
 pub const fn get_stats_data_types() -> [JsonTypes; MAX_STAT_COLUMNS] {
@@ -1596,7 +1599,22 @@ impl Stats {
                     } else {
                         let (antimodes_result, antimodes_count, antimode_occurrences) =
                             v.antimodes();
-                        let mut antimodes_list = String::new();
+
+                        let antimodes_len = ANTIMODES_LEN.get_or_init(|| {
+                            std::env::var("QSV_ANTIMODES_LEN")
+                                .map(|val| {
+                                    let parsed =
+                                        val.parse::<usize>().unwrap_or(DEFAULT_ANTIMODES_LEN);
+                                    if parsed == 0 {
+                                        MAX_ANTIMODES_LEN
+                                    } else {
+                                        parsed.min(MAX_ANTIMODES_LEN)
+                                    }
+                                })
+                                .unwrap_or(DEFAULT_ANTIMODES_LEN)
+                        });
+
+                        let mut antimodes_list = String::with_capacity(*antimodes_len);
 
                         // We only store the first 10 antimodes
                         // so if antimodes_count > 10, add the "*PREVIEW: " prefix
@@ -1613,9 +1631,9 @@ impl Stats {
                         }
                         antimodes_list.push_str(antimodes_vals);
 
-                        // and truncate at 100 characters with an ellipsis
-                        if antimodes_list.len() > MAX_ANTIMODE_LEN {
-                            util::utf8_truncate(&mut antimodes_list, MAX_ANTIMODE_LEN + 1);
+                        // and truncate at antimodes_len characters with an ellipsis
+                        if antimodes_list.len() > *antimodes_len {
+                            util::utf8_truncate(&mut antimodes_list, *antimodes_len + 1);
                             antimodes_list.push_str("...");
                         }
 
