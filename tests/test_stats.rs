@@ -1060,6 +1060,23 @@ fn stats_cache_negative_threshold_five() {
 }
 
 #[test]
+fn stats_antimodes_len_500() {
+    let wrk = Workdir::new("stats_antimodes_len_500");
+    let test_file = wrk.load_test_file("boston311-100.csv");
+
+    let mut cmd = wrk.command("stats");
+    cmd.env("QSV_ANTIMODES_LEN", "500")
+        .arg("--everything")
+        .arg(test_file);
+
+    let got: String = wrk.stdout(&mut cmd);
+
+    let expected = wrk.load_test_resource("boston311-100-antimodes-len500-stats.csv");
+
+    assert_eq!(dos2unix(&got), dos2unix(&expected).trim_end());
+}
+
+#[test]
 fn stats_infer_boolean_1_0() {
     let wrk = Workdir::new("stats_infer_boolean_1_0");
     let test_file = wrk.load_test_file("boston311-10-boolean-1or0.csv");
