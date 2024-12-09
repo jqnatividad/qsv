@@ -3482,9 +3482,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.167"
+version = "0.2.168"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09d6582e104315a817dff97f75133544b2e094ee22447d2acf4a74e189ba06fc"
+checksum = "5aaeb2981e0606ca11d79718f8bb01164f1d6ed75080182d3abf017e6d244b6d"
 
 [[package]]
 name = "libflate"
@@ -5573,9 +5573,9 @@ dependencies = [
 
 [[package]]
 name = "quinn-udp"
-version = "0.5.7"
+version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d5a626c6807713b15cac82a6acaccd6043c9a5408c24baae07611fec3f243da"
+checksum = "52cd4b1eff68bf27940dd39811292c49e007f4d0b4c357358dc9b0197be6b527"
 dependencies = [
  "cfg_aliases 0.2.1",
  "libc",
