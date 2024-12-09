@@ -1176,7 +1176,17 @@ pub fn log_end(mut qsv_args: String, now: std::time::Instant) {
     }
 }
 
-// taken from https://gist.github.com/dginev/f6da5e94335d545e0a7b
+/// Truncates a UTF-8 encoded string to a maximum byte length while preserving valid UTF-8 encoding.
+///
+/// This function ensures that the truncation happens at valid UTF-8 character boundaries to avoid
+/// splitting multi-byte characters. It modifies the input string in place.
+///
+/// # Arguments
+///
+/// * `input` - A mutable reference to the String to truncate
+/// * `maxsize` - The maximum desired length in bytes
+///
+/// taken from https://gist.github.com/dginev/f6da5e94335d545e0a7b
 pub fn utf8_truncate(input: &mut String, maxsize: usize) {
     let mut utf8_maxsize = input.len();
     if utf8_maxsize >= maxsize {
