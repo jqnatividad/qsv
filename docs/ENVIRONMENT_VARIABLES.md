@@ -7,6 +7,7 @@
 | `QSV_SNIFF_DELIMITER` | if set, the delimiter is automatically detected. Overrides `QSV_DEFAULT_DELIMITER` & `--delimiter` option. Note that this does not work with stdin. |
 | `QSV_NO_HEADERS` | if set, the first row will **NOT** be interpreted as headers. Supersedes `QSV_TOGGLE_HEADERS`. |
 | `QSV_TOGGLE_HEADERS` | if set to `1`, toggles header setting - i.e. inverts qsv header behavior, with no headers being the default, & setting `--no-headers` will actually mean headers will not be ignored. |
+| `QSV_ANTIMODES_LEN` | set to the maximum number of characters when listing "antimodes" in `stats`. Otherwise, the default is 100 (max: 5192). |
 | `QSV_AUTOINDEX_SIZE` | if set, specifies the minimum file size (in bytes) of a CSV file before an index is automatically created. Note that stale indices are automatically updated regardless of this setting. |
 | `QSV_CACHE_DIR` | The directory to use for caching downloaded lookup_table resources using the `luau` qsv_register_lookup() helper function. |
 | `QSV_CKAN_API` | The CKAN Action API endpoint to use with the `luau` qsv_register_lookup() helper function when using the "ckan://" scheme. |
