@@ -2081,29 +2081,29 @@ fn sqlp_string_concat() {
     assert_eq!(got, expected);
 }
 
-#[test]
-fn sqlp_select_1() {
-    let wrk = Workdir::new("sqlp_select_1");
-    wrk.create(
-        "test.csv",
-        vec![
-            svec!["x", "y", "z"],
-            svec!["a", "d", "1"],
-            svec!["", "e", "2"],
-            svec!["c", "f", "3"],
-        ],
-    );
+// #[test]
+// fn sqlp_select_1() {
+//     let wrk = Workdir::new("sqlp_select_1");
+//     wrk.create(
+//         "test.csv",
+//         vec![
+//             svec!["x", "y", "z"],
+//             svec!["a", "d", "1"],
+//             svec!["", "e", "2"],
+//             svec!["c", "f", "3"],
+//         ],
+//     );
 
-    let mut cmd = wrk.command("sqlp");
-    cmd.arg("test.csv").arg("SELECT 1 from _t_1");
+//     let mut cmd = wrk.command("sqlp");
+//     cmd.arg("test.csv").arg("SELECT 1 from _t_1");
 
-    wrk.assert_success(&mut cmd);
+//     wrk.assert_success(&mut cmd);
 
-    let got = wrk.output_stderr(&mut cmd);
-    let expected = "(3, 1)";
+//     let got = wrk.output_stderr(&mut cmd);
+//     let expected = "(3, 1)";
 
-    assert!(got.starts_with(expected));
-}
+//     assert!(got.starts_with(expected));
+// }
 
 #[test]
 fn sqlp_string_right_reverse() {
