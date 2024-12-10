@@ -97,11 +97,11 @@ impl Workdir {
     }
 
     /// read the contents of a file into a string
-    pub fn read_to_string(&self, filename: &str) -> String {
-        let mut file = File::open(self.path(filename)).unwrap();
+    pub fn read_to_string(&self, filename: &str) -> io::Result<String> {
+        let mut file = File::open(self.path(filename))?;
         let mut contents = String::new();
-        file.read_to_string(&mut contents).unwrap_or_default();
-        contents
+        file.read_to_string(&mut contents)?;
+        Ok(contents)
     }
 
     /// read stdout of a command

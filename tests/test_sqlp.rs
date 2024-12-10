@@ -1556,7 +1556,7 @@ fn sqlp_sql_tsv() {
 
     wrk.assert_success(&mut cmd);
 
-    let got = wrk.read_to_string(&output_file);
+    let got = wrk.read_to_string(&output_file).unwrap();
 
     let expected = "idx\tval\n0\tABC\n1\tabc\n2\t000\n3\tA0C\n4\ta0c\n";
 
@@ -1587,7 +1587,7 @@ fn sqlp_sql_ssv() {
 
     wrk.assert_success(&mut cmd);
 
-    let got = wrk.read_to_string(&output_file);
+    let got = wrk.read_to_string(&output_file).unwrap();
 
     let expected = "idx;val\n0;ABC\n1;abc\n2;000\n3;A0C\n4;a0c\n";
 
@@ -1619,7 +1619,7 @@ fn sqlp_sql_ssv_output() {
 
     wrk.assert_success(&mut cmd);
 
-    let got = wrk.read_to_string(&output_file);
+    let got = wrk.read_to_string(&output_file).unwrap();
 
     let expected = "idx;val\n0;ABC\n1;abc\n2;000\n3;A0C\n4;a0c\n";
 
@@ -2965,7 +2965,7 @@ fn sqlp_autotab_delim() {
 
     wrk.assert_success(&mut cmd);
 
-    let got = wrk.read_to_string(&output_file);
+    let got = wrk.read_to_string(&output_file).unwrap();
     let expected = r#"countryid	cities
 DB	Dubai,Abu Dhabi,Sharjah
 IN	Mumbai,Delhi,Bangalore
@@ -3009,7 +3009,7 @@ fn sqlp_dollar_quoting_string_literals() {
 
     wrk.assert_success(&mut cmd);
 
-    let got = wrk.read_to_string(&output_file);
+    let got = wrk.read_to_string(&output_file).unwrap();
     let expected = r#"country_id	complex_literal
 DB	"This is a literal $,%,',"""
 IN	"This is a literal $,%,',"""
@@ -3066,7 +3066,7 @@ IT	"This is a literal $,%,',"""
 
 //     assert_eq!(got, expected);
 
-//     let got_dot = wrk.read_to_string(&output_dotfile);
+//     let got_dot = wrk.read_to_string(&output_dotfile).unwrap();
 //     let expected_dot = r#"digraph {
 //     "Projection" -> "Filter";
 //     "Filter" -> "CsvScan";

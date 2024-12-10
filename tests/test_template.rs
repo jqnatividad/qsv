@@ -255,7 +255,7 @@ fn template_output_file() {
 
     wrk.assert_success(&mut cmd);
 
-    let got = wrk.read_to_string(output_file);
+    let got = wrk.read_to_string(output_file).unwrap();
     let expected = "John,New York\nJane,Boston\n";
     assert_eq!(got, expected);
 }
@@ -276,8 +276,8 @@ fn template_output_directory() {
     wrk.assert_success(&mut cmd);
 
     // Check that files were created with default ROWNO naming
-    let file1 = wrk.read_to_string(&format!("{outdir}/0/1.txt"));
-    let file2 = wrk.read_to_string(&format!("{outdir}/0/2.txt"));
+    let file1 = wrk.read_to_string(&format!("{outdir}/0/1.txt")).unwrap();
+    let file2 = wrk.read_to_string(&format!("{outdir}/0/2.txt")).unwrap();
 
     assert_eq!(file1, "Hello John from New York!");
     assert_eq!(file2, "Hello Jane from Boston!");
@@ -301,8 +301,12 @@ fn template_output_custom_filename() {
     wrk.assert_success(&mut cmd);
 
     // Check that files were created with custom naming
-    let file1 = wrk.read_to_string(&format!("{outdir}/0/John_greeting-1.txt"));
-    let file2 = wrk.read_to_string(&format!("{outdir}/0/Jane_greeting-2.txt"));
+    let file1 = wrk
+        .read_to_string(&format!("{outdir}/0/John_greeting-1.txt"))
+        .unwrap();
+    let file2 = wrk
+        .read_to_string(&format!("{outdir}/0/Jane_greeting-2.txt"))
+        .unwrap();
 
     assert_eq!(file1, "Greetings from New York!");
     assert_eq!(file2, "Greetings from Boston!");
@@ -325,8 +329,8 @@ fn template_output_directory_no_headers() {
     wrk.assert_success(&mut cmd);
 
     // Check files with row numbers
-    let file1 = wrk.read_to_string(&format!("{outdir}/0/1.txt"));
-    let file2 = wrk.read_to_string(&format!("{outdir}/0/2.txt"));
+    let file1 = wrk.read_to_string(&format!("{outdir}/0/1.txt")).unwrap();
+    let file2 = wrk.read_to_string(&format!("{outdir}/0/2.txt")).unwrap();
 
     assert_eq!(file1, "Record: John - New York");
     assert_eq!(file2, "Record: Jane - Boston");

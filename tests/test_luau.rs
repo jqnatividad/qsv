@@ -1007,7 +1007,7 @@ END {
     let expected_end = "Min/Max: 7/72 Grand total of 3 rows: 275\n".to_string();
     assert_eq!(end, expected_end);
 
-    let table_txt = wrk.read_to_string("count.txt");
+    let table_txt = wrk.read_to_string("count.txt").unwrap();
     let expected_table_txt = "4\n";
     assert_eq!(table_txt, expected_table_txt);
 
@@ -1141,7 +1141,7 @@ END {
     ];
     assert_eq!(got, expected);
 
-    let echo_text = wrk.read_to_string("echo.txt");
+    let echo_text = wrk.read_to_string("echo.txt").unwrap();
     let expected_echo_text = "the quick brown fox jumped over the lazy dog";
     assert_eq!(
         dos2unix(&echo_text).trim_end(),

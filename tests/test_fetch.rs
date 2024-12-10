@@ -353,7 +353,7 @@ fn fetch_simple_diskcache() {
     // sleep for a bit to make sure the cache is written to disk
     std::thread::sleep(std::time::Duration::from_secs(2));
 
-    let fetchreport = wrk.read_to_string("data.csv.fetch-report.tsv");
+    let fetchreport = wrk.read_to_string("data.csv.fetch-report.tsv").unwrap();
     wrk.create_from_string("no-elapsed.tsv", &fetchreport);
 
     // remove the elapsed_ms column from the report as this is not deterministic
@@ -1657,7 +1657,7 @@ fn fetchpost_payload_template_with_report() {
 
     assert_eq!(got, expected);
 
-    let report = wrk.read_to_string("data.csv.fetchpost-report.tsv");
+    let report = wrk.read_to_string("data.csv.fetchpost-report.tsv").unwrap();
     assert!(!report.is_empty());
 }
 

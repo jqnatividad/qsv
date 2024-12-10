@@ -94,7 +94,7 @@ fn fmt_output() {
 
     wrk.assert_success(&mut cmd);
 
-    let got = wrk.read_to_string(&output_file);
+    let got = wrk.read_to_string(&output_file).unwrap();
 
     let expected = r#"h1,h2
 abcdef,ghijkl

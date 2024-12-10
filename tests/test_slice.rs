@@ -155,7 +155,7 @@ fn test_slice(
 
         wrk.assert_success(&mut cmd);
 
-        let gots = wrk.read_to_string(&output_file);
+        let gots = wrk.read_to_string(&output_file).unwrap();
         let gotj: serde_json::Value = serde_json::from_str(&gots).unwrap();
         let got = gotj.to_string();
 
@@ -348,7 +348,7 @@ fn test_slice_invert(
 
         wrk.assert_success(&mut cmd);
 
-        let gots = wrk.read_to_string(&output_file);
+        let gots = wrk.read_to_string(&output_file).unwrap();
         let gotj: serde_json::Value = serde_json::from_str(&gots).unwrap();
         let got = gotj.to_string();
 

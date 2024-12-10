@@ -102,7 +102,7 @@ fn snappy_compress() {
     wrk.assert_success(&mut cmd);
 
     let expected = wrk.load_test_resource("boston311-100.csv");
-    let got = wrk.read_to_string("out.csv");
+    let got = wrk.read_to_string("out.csv").unwrap();
 
     assert_eq!(dos2unix(&got).trim_end(), dos2unix(&expected).trim_end());
 }
