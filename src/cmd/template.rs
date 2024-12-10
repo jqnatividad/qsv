@@ -63,6 +63,14 @@ template arguments:
     <outdir>                    The directory where the output files will be written.
                                 If it does not exist, it will be created.
                                 If not set, output will be sent to stdout or the specified --output.
+                                When writing to <outdir>, files are organized into subdirectories
+                                of --outsubdir-size (default: 1000) files each to avoid filesystem
+                                navigation & performance issues.
+                                For example, with 3500 records:
+                                  <outdir>/0000/0001.txt through <outdir>/0000/1000.txt
+                                  <outdir>/0001/1001.txt through <outdir>/0001/2000.txt
+                                  <outdir>/0002/2001.txt through <outdir>/0002/3000.txt
+                                  <outdir>/0003/3001.txt through <outdir>/0003/4000.txt
 template options:
     --template <str>            MiniJinja template string to use (alternative to --template-file)
     -t, --template-file <file>  MiniJinja template file to use
@@ -73,6 +81,8 @@ template options:
                                 Note that all the fields, including QSV_ROWNO, are available
                                 when defining the filename template.
                                 [default: QSV_ROWNO]
+    --outsubdir-size <num>      The number of files per subdirectory in <outdir>.
+                                [default: 1000]
     --customfilter-error <msg>  The value to return when a custom filter returns an error.
                                 Use "<empty string>" to return an empty string.
                                 [default: <FILTER_ERROR>]
@@ -140,6 +150,7 @@ struct Args {
     flag_template_file:      Option<String>,
     flag_output:             Option<String>,
     flag_outfilename:        String,
+    flag_outsubdir_size:     u16,
     flag_customfilter_error: String,
     flag_jobs:               Option<usize>,
     flag_batch:              usize,
@@ -479,11 +490,33 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
             .collect_into_vec(&mut batch_results);
 
         let mut outpath = std::path::PathBuf::new();
-        for result_record in &batch_results {
+        let mut current_subdir = None;
+        let outsubdir_numfiles = args.flag_outsubdir_size as usize;
+
+        for (idx, result_record) in batch_results.iter().enumerate() {
             if output_to_dir {
                 // safety: this is safe as output_to_dir = args.arg_outdir.is_some()
                 // and result_record.0 (the filename to use) is_some()
                 outpath.push(args.arg_outdir.as_ref().unwrap());
+
+                // Create subdirectory for every outsubdir_size files
+                // to make it easier to handle & navigate generated files
+                // particularly, if we're using a large input CSV
+                let subdir_num = idx / outsubdir_numfiles;
+
+                if current_subdir == Some(subdir_num) {
+                    outpath.push(format!("{subdir_num:0width$}"));
+                } else {
+                    // Only create new subdir when needed
+                    let subdir_name = format!("{subdir_num:0width$}");
+                    outpath.push(&subdir_name);
+
+                    if !outpath.exists() {
+                        fs::create_dir(&outpath)?;
+                    }
+                    current_subdir = Some(subdir_num);
+                }
+
                 outpath.push(result_record.0.as_deref().unwrap());
 
                 // if output_to_dir is true, we'll be writing a LOT of files (one for each row)
