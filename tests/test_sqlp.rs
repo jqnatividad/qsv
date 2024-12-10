@@ -2082,6 +2082,30 @@ fn sqlp_string_concat() {
 }
 
 #[test]
+fn sqlp_select_1() {
+    let wrk = Workdir::new("sqlp_select_1");
+    wrk.create(
+        "test.csv",
+        vec![
+            svec!["x", "y", "z"],
+            svec!["a", "d", "1"],
+            svec!["", "e", "2"],
+            svec!["c", "f", "3"],
+        ],
+    );
+
+    let mut cmd = wrk.command("sqlp");
+    cmd.arg("test.csv").arg("SELECT 1 from _t_1");
+
+    wrk.assert_success(&mut cmd);
+
+    let got = wrk.output_stderr(&mut cmd);
+    let expected = "(3, 1)";
+
+    assert!(got.starts_with(expected));
+}
+
+#[test]
 fn sqlp_string_right_reverse() {
     let wrk = Workdir::new("sqlp_string_right_reverse");
     wrk.create(
@@ -3015,21 +3039,23 @@ IT	"This is a literal $,%,',"""
 //     );
 
 //     let output_dotfile = wrk.path("output.dot").to_string_lossy().to_string();
-//     std::env::set_var("POLARS_VISUALIZE_PHYSICAL_PLAN", output_dotfile.as_str());
 
 //     let mut cmd = wrk.command("sqlp");
-//     cmd.arg("data.csv").arg(
-//         r#"
+//     cmd.env("POLARS_VISUALIZE_PHYSICAL_PLAN", output_dotfile.as_str())
+//         .arg("data.csv")
+//         .arg(
+//             r#"
 //         SELECT a, b, c
 //         FROM data
 //         WHERE a > 2
 //         ORDER BY a DESC
 //     "#,
-//     ).arg("--streaming");
+//         )
+//         .arg("--streaming");
 
 //     wrk.assert_success(&mut cmd);
 
-//     // assert!(std::path::Path::new(&output_dotfile).exists());
+//     assert!(std::path::Path::new(&output_dotfile).exists());
 
 //     let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
 //     let expected = vec![
