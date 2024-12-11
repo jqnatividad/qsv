@@ -28,7 +28,7 @@ dependencies = [
  "actix-http",
  "actix-web",
  "futures",
- "governor",
+ "governor 0.7.0",
 ]
 
 [[package]]
@@ -2659,6 +2659,27 @@ name = "governor"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0746aa765db78b521451ef74221663b57ba595bf83f75d0ce23cc09447c8139f"
+dependencies = [
+ "cfg-if",
+ "dashmap",
+ "futures-sink",
+ "futures-timer",
+ "futures-util",
+ "no-std-compat",
+ "nonzero_ext",
+ "parking_lot",
+ "portable-atomic",
+ "quanta",
+ "rand",
+ "smallvec",
+ "spinning_top",
+]
+
+[[package]]
+name = "governor"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "842dc78579ce01e6a1576ad896edc92fca002dd60c9c3746b7fc2bec6fb429d0"
 dependencies = [
  "cfg-if",
  "dashmap",
@@ -5330,7 +5351,7 @@ dependencies = [
  "gender_guesser",
  "geosuggest-core",
  "geosuggest-utils",
- "governor",
+ "governor 0.8.0",
  "grex",
  "gzp",
  "hashbrown 0.15.2",
