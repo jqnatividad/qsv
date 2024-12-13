@@ -303,6 +303,9 @@ calamine = { git = "https://github.com/tafia/calamine", rev = "cf86fa7" }
 # see https://github.com/jan-auer/dynfmt/pull/9
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 
+geosuggest-core = { git = "https://github.com/estin/geosuggest", rev = "77c4891"}
+geosuggest-utils = { git = "https://github.com/estin/geosuggest", rev = "77c4891"}
+
 # needed to get latest dependencies and unreleased fixes
 grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
 
