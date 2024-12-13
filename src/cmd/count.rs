@@ -397,6 +397,29 @@ pub fn polars_count_input(conf: &Config, low_memory: bool) -> CliResult<(u64, us
     let lazy_df: LazyFrame;
     let delimiter = conf.get_delimiter();
 
+    {
+        // First, try to read the first row to check if the file is empty
+        // do it in a block so schema_df is dropped early
+        let schema_df = match LazyCsvReader::new(filepath.clone())
+            .with_separator(delimiter)
+            .with_comment_prefix(comment_prefix.clone())
+            .with_n_rows(Some(1))
+            .finish()
+        {
+            Ok(df) => df.collect(),
+            Err(e) => {
+                log::warn!("polars error loading CSV: {e}");
+                let (count_regular, _) = count_input(conf, CountDelimsMode::NotRequired)?;
+                return Ok((count_regular, 0));
+            },
+        };
+
+        // If we can't read the schema or the DataFrame is empty, return 0
+        if schema_df.is_err() || schema_df.unwrap().height() == 0 {
+            return Ok((0, 0));
+        }
+    }
+
     // if its a "regular" CSV, use polars' read_csv() SQL table function
     // which is much faster than the LazyCsvReader
     let count_query = if comment_prefix.is_none() && delimiter == b',' && !low_memory {
@@ -449,7 +472,7 @@ pub fn polars_count_input(conf: &Config, low_memory: bool) -> CliResult<(u64, us
     };
 
     let mut count = if let Ok(cnt) = sqlresult_lf.collect()?["len"].u32() {
-        cnt.get(0).ok_or("polars error: cannot get count")? as u64
+        cnt.get(0).unwrap_or(0) as u64 // Use unwrap_or to handle empty results
     } else {
         // Polars error, fall back to the regular CSV reader
         log::warn!("polars error, falling back to regular reader");
