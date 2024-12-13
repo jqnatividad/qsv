@@ -248,6 +248,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .no_headers(args.flag_no_headers);
     let mut rdr = rconfig.reader()?;
 
+    // Get width of rowcount for padding leading zeroes and early return
+    let rowcount = util::count_rows(&rconfig)?;
+    if rconfig.no_headers && rowcount == 1 {
+        return Ok(());
+    }
+    let width = rowcount.to_string().len();
+
     // read headers
     let headers = if args.flag_no_headers {
         csv::StringRecord::new()
@@ -287,10 +294,6 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     } else {
         filename_env.template_from_str("")?
     };
-
-    // Get width of rowcount for padding leading zeroes
-    let rowcount = util::count_rows(&rconfig)?;
-    let width = rowcount.to_string().len();
 
     let mut bulk_wtr = if output_to_dir {
         fs::create_dir_all(args.arg_outdir.as_ref().unwrap())?;
