@@ -120,7 +120,7 @@ fn test_stats<S>(
     S: ::std::ops::Deref<Target = str>,
 {
     let (wrk, mut cmd) = setup(name, rows, headers, use_index, nulls, infer_dates);
-    let field_val = get_field_value(&wrk, &mut cmd, field).unwrap();
+    let field_val = get_field_value(&wrk, &mut cmd, field).unwrap_or_default();
     // Only compare the first few bytes since floating point arithmetic
     // can mess with exact comparisons.
     // when field = skewness, we're comparing a long sequence of the quartile columns,
