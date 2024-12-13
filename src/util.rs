@@ -358,55 +358,61 @@ pub fn show_env_vars() {
 
 #[inline]
 pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
+    // Check if ROW_COUNT is already initialized to avoid redundant counting
+    if let Some(count) = ROW_COUNT.get() {
+        return Ok(count.unwrap_or(0));
+    }
+
+    // If not, try using index if available
     if let Some(idx) = conf.indexed().unwrap_or(None) {
-        Ok(idx.count())
-    } else {
-        // index does not exist or is stale,
-        // count records by using polars mem-mapped reader if available
-        // otherwise, count records by iterating through records
-        // Do this only once per invocation and cache the result in ROW_COUNT,
-        // so we don't have to re-count rows every time we need to know the
-        // rowcount for CSVs that don't have an index.
-        #[cfg(feature = "polars")]
-        let count_opt = ROW_COUNT.get_or_init(|| {
-            if let Ok((count, _)) = polars_count_input(conf, false) {
-                Some(count)
-            } else {
-                // if polars_count_input fails, fall back to regular CSV reader
-                if let Ok(mut rdr) = conf.reader() {
-                    let mut count = 0_u64;
-                    let mut _record = csv::ByteRecord::new();
-                    #[allow(clippy::used_underscore_binding)]
-                    while rdr.read_byte_record(&mut _record).unwrap_or_default() {
-                        count += 1;
-                    }
-                    Some(count)
-                } else {
-                    None
-                }
-            }
-        });
+        return Ok(idx.count());
+    }
+    // index does not exist or is stale
 
-        #[cfg(not(feature = "polars"))]
-        let count_opt = ROW_COUNT.get_or_init(|| {
-            if let Ok(mut rdr) = conf.clone().skip_format_check(true).reader() {
-                let mut count = 0_u64;
-                let mut _record = csv::ByteRecord::new();
-                #[allow(clippy::used_underscore_binding)]
-                while rdr.read_byte_record(&mut _record).unwrap_or_default() {
-                    count += 1;
-                }
-                Some(count)
-            } else {
-                None
-            }
-        });
+    // Otherwise, count count records by using polars mem-mapped reader if available
+    // If polars is not enabled, count records by iterating through records
+    // Do this only once per invocation and cache the result in ROW_COUNT,
+    // so we don't have to re-count rows every time we need to know the
+    // rowcount for CSVs that don't have an index.
+    ROW_COUNT
+        .get_or_init(|| {
+            // Try different counting methods in order of preference
+            count_rows_with_best_method(conf)
+        })
+        .ok_or_else(|| CliError::Other("Unable to get row count".to_string()))
+}
 
-        match *count_opt {
-            Some(count) => Ok(count),
-            None => Err(CliError::Other("Unable to get row count".to_string())),
+#[cfg(feature = "polars")]
+fn count_rows_with_best_method(conf: &Config) -> Option<u64> {
+    if !conf.no_headers {
+        // Try polars first for files with headers
+        if let Ok((count, _)) = polars_count_input(conf, false) {
+            return Some(count);
         }
     }
+
+    // Fall back to CSV reader
+    count_with_csv_reader(conf)
+}
+
+#[cfg(not(feature = "polars"))]
+fn count_rows_with_best_method(conf: &Config) -> Option<u64> {
+    count_with_csv_reader(conf)
+}
+
+fn count_with_csv_reader(conf: &Config) -> Option<u64> {
+    conf.clone()
+        .skip_format_check(true)
+        .reader()
+        .ok()
+        .map(|mut rdr| {
+            let mut count = 0_u64;
+            let mut record = csv::ByteRecord::new();
+            while rdr.read_byte_record(&mut record).unwrap_or_default() {
+                count += 1;
+            }
+            count
+        })
 }
 
 /// Count rows using "regular" CSV reader
