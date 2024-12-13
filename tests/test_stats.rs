@@ -120,7 +120,7 @@ fn test_stats<S>(
     S: ::std::ops::Deref<Target = str>,
 {
     let (wrk, mut cmd) = setup(name, rows, headers, use_index, nulls, infer_dates);
-    let field_val = get_field_value(&wrk, &mut cmd, field);
+    let field_val = get_field_value(&wrk, &mut cmd, field).unwrap();
     // Only compare the first few bytes since floating point arithmetic
     // can mess with exact comparisons.
     // when field = skewness, we're comparing a long sequence of the quartile columns,
@@ -170,7 +170,11 @@ where
     (wrk, cmd)
 }
 
-fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> String {
+fn get_field_value(
+    wrk: &Workdir,
+    cmd: &mut process::Command,
+    field: &str,
+) -> Result<String, String> {
     if field == "median" {
         cmd.arg("--median");
     }
@@ -188,6 +192,9 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
     }
 
     let mut rows: Vec<Vec<String>> = wrk.read_stdout(cmd);
+    if rows.is_empty() {
+        return Err("Empty stats!".to_string());
+    }
     let headers = rows.remove(0);
     let mut sequence: Vec<&str> = vec![];
     for row in &rows {
@@ -200,19 +207,21 @@ fn get_field_value(wrk: &Workdir, cmd: &mut process::Command, field: &str) -> St
                     },
                     "skewness" => {
                         sequence.push(val);
-                        return sequence.join(",");
+                        return Ok(sequence.join(","));
                     },
                     _ => {},
                 },
                 _ => {
                     if &**h == field {
-                        return val.clone();
+                        return Ok(val.clone());
                     }
                 },
             }
         }
     }
-    panic!("BUG: Could not find field '{field}' in headers '{headers:?}' for command '{cmd:?}'.");
+    Err(format!(
+        "Could not find field '{field}' in headers '{headers:?}' for command '{cmd:?}'."
+    ))
 }
 
 stats_tests!(stats_infer_string, "type", &["a"], "String");
