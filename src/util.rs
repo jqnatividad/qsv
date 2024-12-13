@@ -369,7 +369,7 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
     }
     // index does not exist or is stale
 
-    // Otherwise, count count records by using polars mem-mapped reader if available
+    // Otherwise, count records by using polars mem-mapped reader if available
     // If polars is not enabled, count records by iterating through records
     // Do this only once per invocation and cache the result in ROW_COUNT,
     // so we don't have to re-count rows every time we need to know the
