@@ -193,7 +193,7 @@ fn get_field_value(
 
     let mut rows: Vec<Vec<String>> = wrk.read_stdout(cmd);
     if rows.is_empty() {
-        return Err("Empty stats!".to_string());
+        return Err(format!("Empty stats for command '{cmd:?}'."));
     }
     let headers = rows.remove(0);
     let mut sequence: Vec<&str> = vec![];
