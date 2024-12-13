@@ -21,14 +21,14 @@ dependencies = [
 
 [[package]]
 name = "actix-governor"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "072a3d7907b945b0956f9721e01c117ad5765ce5be2fd9bb1e44a117c669de22"
+checksum = "4a0cb8586d3fa368d00ef643e8ef77f5d3d5dfe5c7b333415a556bc12eb1c41a"
 dependencies = [
  "actix-http",
  "actix-web",
  "futures",
- "governor 0.7.0",
+ "governor",
 ]
 
 [[package]]
@@ -2653,27 +2653,6 @@ name = "glob"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
-
-[[package]]
-name = "governor"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0746aa765db78b521451ef74221663b57ba595bf83f75d0ce23cc09447c8139f"
-dependencies = [
- "cfg-if",
- "dashmap",
- "futures-sink",
- "futures-timer",
- "futures-util",
- "no-std-compat",
- "nonzero_ext",
- "parking_lot",
- "portable-atomic",
- "quanta",
- "rand",
- "smallvec",
- "spinning_top",
-]
 
 [[package]]
 name = "governor"
@@ -5351,7 +5330,7 @@ dependencies = [
  "gender_guesser",
  "geosuggest-core",
  "geosuggest-utils",
- "governor 0.8.0",
+ "governor",
  "grex",
  "gzp",
  "hashbrown 0.15.2",
