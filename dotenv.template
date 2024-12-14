@@ -113,7 +113,8 @@ QSV_WTR_BUFFER_CAPACITY = 524288
 # the percentage of free available memory required when running qsv in
 # "non-streaming" mode (i.e. the entire file needs to be loaded into memory).
 # If the incoming file is greater than the available memory after the headroom
-# is subtracted, qsv will not proceed. See Memory Management for more info.
+# is subtracted, qsv will not proceed. Set to 0 to skip memory check.
+# See Memory Management for more info.
 # (default: (percent) 20 )
 QSV_FREEMEMORY_HEADROOM_PCT = 20
 

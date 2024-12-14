@@ -623,15 +623,21 @@ pub fn mem_file_check(
 
     let conservative_memcheck_work = get_envvar_flag("QSV_MEMORY_CHECK") || conservative_memcheck;
 
+    let mut mem_pct = env::var("QSV_FREEMEMORY_HEADROOM_PCT")
+        .unwrap_or_else(|_| DEFAULT_FREEMEMORY_HEADROOM_PCT.to_string())
+        .parse::<u8>()
+        .unwrap_or(DEFAULT_FREEMEMORY_HEADROOM_PCT);
+
+    // if QSV_FREEMEMORY_HEADROOM_PCT is 0, we skip the memory check
+    if mem_pct == 0 {
+        return Ok(i64::MAX);
+    }
+
     let mut sys = sysinfo::System::new();
     sys.refresh_memory();
     let avail_mem = sys.available_memory();
     let free_swap = sys.free_swap();
     let total_mem = sys.total_memory();
-    let mut mem_pct = env::var("QSV_FREEMEMORY_HEADROOM_PCT")
-        .unwrap_or_else(|_| DEFAULT_FREEMEMORY_HEADROOM_PCT.to_string())
-        .parse::<u8>()
-        .unwrap_or(DEFAULT_FREEMEMORY_HEADROOM_PCT);
 
     // for safety, we don't want to go below 10% memory headroom
     // nor above 90% memory headroom as its too memory-restrictive
