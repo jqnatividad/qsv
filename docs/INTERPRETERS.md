@@ -14,20 +14,20 @@ As date manipulation is often needed, the [LuaDate](https://tieske.github.io/dat
 
 Finally, as [qsv's DSL](../README.md#luau_deeplink) (👑), `luau` will gain even more features over time compared to the `python` feature.
 
-[Luau 0.640](https://github.com/Roblox/luau/releases/tag/0.640) is currently embedded - qsv's policy is to use the latest stable Luau version at the time of each qsv release.
+[Luau 0.653](https://github.com/Roblox/luau/releases/tag/0.653) is currently embedded - qsv's policy is to use the latest stable Luau version at the time of each qsv release.
 
 ## Building qsv with python feature
 
-If you wish to build qsv with the `python` feature, make sure you have the development libraries for the desired Python version (Python 3.7 and above are supported) installed when doing so (e.g. on Debian/Ubuntu - `apt-get install python-dev`; on CentOS/RedHat/Amazon Linux - `yum install python-devel`; on Windows and macOS - use the [Python installer](https://www.python.org/downloads/) for the desired version).
+If you wish to build qsv with the `python` feature, make sure you have the development libraries for the desired Python version (Python 3.8 and above are supported) installed when doing so (e.g. on Debian/Ubuntu - `apt-get install python-dev`; on CentOS/RedHat/Amazon Linux - `yum install python-devel`; on Windows and macOS - use the [Python installer](https://www.python.org/downloads/) for the desired version).
 
 If you plan to distribute your manually built `qsv` with the `python` feature, `qsv` will look for the specific version of Python shared libraries (libpython* on Linux/macOS, python*.dll on Windows) against which it was compiled starting with the current directory & abort with an error if not found, detailing the Python library it was looking for. 
 
 Note that this will happen on qsv startup, even if you're NOT running the `py` command.
 
 When building from source - [PyO3](https://pyo3.rs) - the underlying crate that enables the `python` feature, uses a build script to determine the Python version & set the correct linker arguments. By default it uses the python3 executable.
-You can override this by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.7`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.17.1/building_and_distribution.html) for more information.
+You can override this by setting `PYO3_PYTHON` (e.g., `PYO3_PYTHON=python3.7`), before installing/compiling qsv. See the [PyO3 User Guide](https://pyo3.rs/v0.23.3/building-and-distribution.html) for more information.
 
 Consider using the [`luau`](/src/cmd/luau.rs#L2) command instead of the [`py`]((/src/cmd/python.rs#L2)) command if the operation you're trying to do can be done with `luau` - as `luau` is statically linked, has no external dependencies, much faster than `py`, can do aggregations, supports random access, has a bevy of qsv helper functions, and allows mapping of multiple new columns. 
 
-The `py` command cannot do aggregations because [PyO3's GIL-bound memory](https://pyo3.rs/v0.17.2/memory.html#gil-bound-memory) limitations will quickly consume a lot of memory (see [issue 449](https://github.com/dathere/qsv/issues/449#issuecomment-1226095316) for details).
-To prevent this, the `py` command processes CSVs in batches (default: 30,000 records), with a GIL pool for each batch, so no globals are available across batches.
+The `py` command cannot do aggregations because Python's Global Interpreter Lock (GIL) limitations will quickly consume a lot of memory (see [issue 449](https://github.com/dathere/qsv/issues/449#issuecomment-1226095316) for details).
+To prevent this, the `py` command processes CSVs in batches (default: 50,000 records), with a GIL pool for each batch, so no globals are available across batches.

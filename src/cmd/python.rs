@@ -1,5 +1,5 @@
 static USAGE: &str = r#"
-Create a new computed column or filter rows by evaluating a python expression on 
+Create a new computed column or filter rows by evaluating a Python expression on 
 every row of a CSV file.
 
 The executed Python has 4 ways to reference cell values (as strings):
@@ -72,9 +72,9 @@ Some usage examples:
   
   Also, the following Python modules are automatically loaded and available to the user -
   builtsin, math, random & datetime. The user can import additional modules with the --helper option,
-  with the ability to use any python module that's installed in the current python virtualenv. 
+  with the ability to use any Python module that's installed in the current Python virtualenv. 
 
-  The python expression is evaluated on a per record basis.
+  The Python expression is evaluated on a per record basis.
   With "py map", if the expression is invalid for a record, "<ERROR>" is returned for that record.
   With "py filter", if the expression is invalid for a record, that record is not filtered.
 
@@ -92,11 +92,11 @@ Usage:
     qsv py --help
 
 py argument:
-    <expression>           Can either be a python expression, or if it starts with
+    <expression>           Can either be a Python expression, or if it starts with
                            "file:" or ends with ".py" - the filepath from which to
-                           load the python expression.
+                           load the Python expression.
                            Note that argument expects a SINGLE expression, and not
-                           a full-blown python script. Use the --helper option
+                           a full-blown Python script. Use the --helper option
                            to load helper code that you can call from the expression.
 
 py options:
@@ -108,8 +108,7 @@ py options:
     -b, --batch <size>     The number of rows per batch to process before
                            releasing memory and acquiring a new GILpool.
                            Set to 0 to process the entire file in one batch.
-                           See https://pyo3.rs/v0.21.0/memory.html#gil-bound-memory
-                           for more info. [default: 50000]
+                           [default: 50000]
 
 Common options:
     -h, --help             Display this message
@@ -123,7 +122,7 @@ Common options:
     -p, --progressbar      Show progress bars. Not valid for stdin.
 "#;
 
-use std::fs;
+use std::{ffi::CString, fs};
 
 use indicatif::{ProgressBar, ProgressDrawTarget};
 use pyo3::{
@@ -201,34 +200,33 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if debug_flag {
         Python::with_gil(|py| {
-            let msg = format!("Detected python={}", py.version());
+            let msg = format!("Detected Python={}", py.version());
             winfo!("{msg}");
         });
     }
 
-    let arg_expression =
-        if let Some(expression_filepath) = args.arg_expression.strip_prefix("file:") {
-            match fs::read_to_string(expression_filepath) {
-                Ok(file_contents) => file_contents,
-                Err(e) => return fail_clierror!("Cannot load Python expression from file: {e}"),
-            }
-        } else if std::path::Path::new(&args.arg_expression)
-            .extension()
-            .is_some_and(|ext| ext.eq_ignore_ascii_case("py"))
-        {
-            match fs::read_to_string(args.arg_expression.clone()) {
-                Ok(file_contents) => file_contents,
-                Err(e) => return fail_clierror!("Cannot load .py file: {e}"),
-            }
-        } else {
-            args.arg_expression.clone()
-        };
+    let expression = if let Some(expression_filepath) = args.arg_expression.strip_prefix("file:") {
+        match fs::read_to_string(expression_filepath) {
+            Ok(file_contents) => file_contents,
+            Err(e) => return fail_clierror!("Cannot load Python expression from file: {e}"),
+        }
+    } else if std::path::Path::new(&args.arg_expression)
+        .extension()
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("py"))
+    {
+        match fs::read_to_string(args.arg_expression.clone()) {
+            Ok(file_contents) => file_contents,
+            Err(e) => return fail_clierror!("Cannot load .py file: {e}"),
+        }
+    } else {
+        args.arg_expression.clone()
+    };
 
     let mut helper_text = String::new();
     if let Some(helper_file) = args.flag_helper {
         helper_text = match fs::read_to_string(helper_file) {
             Ok(helper_file) => helper_file,
-            Err(e) => return fail_clierror!("Cannot load python file: {e}"),
+            Err(e) => return fail_clierror!("Cannot load Python file: {e}"),
         }
     }
 
@@ -263,7 +261,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    // ensure col/header names are valid and safe python variables
+    // ensure col/header names are valid and safe Python variables
     let (header_vec, _) = util::safe_header_names(&headers, true, false, None, "_", false);
 
     // amortize memory allocation by reusing record
@@ -280,14 +278,26 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     // reuse batch buffers
     let mut batch = Vec::with_capacity(batch_size);
 
+    // safety: safe to unwrap as these are statically defined
+    let helpers_code = CString::new(HELPERS).unwrap();
+    let helpers_filename = CString::new("qsv_helpers.py").unwrap();
+    let helpers_module_name = CString::new("qsv_helpers").unwrap();
+    let user_helpers_code = CString::new(helper_text)
+        .map_err(|e| format!("Failed to create CString from helper text: {e}"))?;
+    // safety: safe to unwrap as these are statically defined
+    let user_helpers_filename = CString::new("qsv_user_helpers.py").unwrap();
+    let user_helpers_module_name = CString::new("qsv_uh").unwrap();
+
+    let arg_expression = CString::new(expression)
+        .map_err(|e| format!("Failed to create CString from expression: {e}"))?;
+
     let mut row_number = 0_u64;
     let debug_flag = log::log_enabled!(log::Level::Debug);
 
     // main loop to read CSV and construct batches.
-    // we batch python operations so that the GILPool does not get very large
+    // we batch Python operations so that the GILPool does not get very large
     // as we release the pool after each batch
     // loop exits when batch is empty.
-    // see https://pyo3.rs/latest/memory.html#gil-bound-memory for more info.
     'batch_loop: loop {
         for _ in 0..batch_size {
             match rdr.read_record(&mut batch_record) {
@@ -312,19 +322,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
         Python::with_gil(|py| -> PyResult<()> {
             let batch_ref = &mut batch;
-            let helpers = PyModule::from_code_bound(py, HELPERS, "qsv_helpers.py", "qsv_helpers")?;
-            let batch_globals = PyDict::new_bound(py);
-            let batch_locals = PyDict::new_bound(py);
-
-            let user_helpers =
-                PyModule::from_code_bound(py, &helper_text, "qsv_user_helpers.py", "qsv_uh")?;
+            let helpers =
+                PyModule::from_code(py, &helpers_code, &helpers_filename, &helpers_module_name)?;
+            let batch_globals = PyDict::new(py);
+            let batch_locals = PyDict::new(py);
+            let user_helpers = PyModule::from_code(
+                py,
+                &user_helpers_code,
+                &user_helpers_filename,
+                &user_helpers_module_name,
+            )?;
             batch_globals.set_item(intern!(py, "qsv_uh"), user_helpers)?;
 
             // Global imports
-            let builtins = PyModule::import_bound(py, "builtins")?;
-            let math_module = PyModule::import_bound(py, "math")?;
-            let random_module = PyModule::import_bound(py, "random")?;
-            let datetime_module = PyModule::import_bound(py, "datetime")?;
+            let builtins = PyModule::import(py, "builtins")?;
+            let math_module = PyModule::import(py, "math")?;
+            let random_module = PyModule::import(py, "random")?;
+            let datetime_module = PyModule::import(py, "datetime")?;
 
             batch_globals.set_item("__builtins__", builtins)?;
             batch_globals.set_item("math", math_module)?;
@@ -367,8 +381,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 py_row.call_method1(intern!(py, "_update_underlying_data"), (row_data,))?;
 
                 let result =
-                    match py.eval_bound(&arg_expression, Some(&batch_globals), Some(&batch_locals))
-                    {
+                    match py.eval(&arg_expression, Some(&batch_globals), Some(&batch_locals)) {
                         Ok(result) => result,
                         Err(e) => {
                             error_count += 1;
