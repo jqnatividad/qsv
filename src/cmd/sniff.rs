@@ -812,7 +812,7 @@ async fn sniff_main(mut args: Args) -> CliResult<()> {
         .delimiter(args.flag_delimiter);
     let n_rows = if sfile_info.downloaded_records == 0 {
         //if we have the whole file and not just a sample, we can count the number of rows
-        match util::count_rows(&conf) {
+        match util::count_rows_regular(&conf) {
             Ok(n) => n as usize,
             Err(e) => {
                 cleanup_tempfile(sfile_info.tempfile_flag, tempfile_to_delete)?;
