@@ -1,5 +1,5 @@
 static USAGE: &str = r#"
-Create a new computed column or filter rows by evaluating a python expression on 
+Create a new computed column or filter rows by evaluating a Python expression on 
 every row of a CSV file.
 
 The executed Python has 4 ways to reference cell values (as strings):
@@ -72,9 +72,9 @@ Some usage examples:
   
   Also, the following Python modules are automatically loaded and available to the user -
   builtsin, math, random & datetime. The user can import additional modules with the --helper option,
-  with the ability to use any python module that's installed in the current python virtualenv. 
+  with the ability to use any Python module that's installed in the current Python virtualenv. 
 
-  The python expression is evaluated on a per record basis.
+  The Python expression is evaluated on a per record basis.
   With "py map", if the expression is invalid for a record, "<ERROR>" is returned for that record.
   With "py filter", if the expression is invalid for a record, that record is not filtered.
 
@@ -92,11 +92,11 @@ Usage:
     qsv py --help
 
 py argument:
-    <expression>           Can either be a python expression, or if it starts with
+    <expression>           Can either be a Python expression, or if it starts with
                            "file:" or ends with ".py" - the filepath from which to
-                           load the python expression.
+                           load the Python expression.
                            Note that argument expects a SINGLE expression, and not
-                           a full-blown python script. Use the --helper option
+                           a full-blown Python script. Use the --helper option
                            to load helper code that you can call from the expression.
 
 py options:
@@ -200,7 +200,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
     if debug_flag {
         Python::with_gil(|py| {
-            let msg = format!("Detected python={}", py.version());
+            let msg = format!("Detected Python={}", py.version());
             winfo!("{msg}");
         });
     }
@@ -226,7 +226,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     if let Some(helper_file) = args.flag_helper {
         helper_text = match fs::read_to_string(helper_file) {
             Ok(helper_file) => helper_file,
-            Err(e) => return fail_clierror!("Cannot load python file: {e}"),
+            Err(e) => return fail_clierror!("Cannot load Python file: {e}"),
         }
     }
 
@@ -261,7 +261,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         progress.set_draw_target(ProgressDrawTarget::hidden());
     }
 
-    // ensure col/header names are valid and safe python variables
+    // ensure col/header names are valid and safe Python variables
     let (header_vec, _) = util::safe_header_names(&headers, true, false, None, "_", false);
 
     // amortize memory allocation by reusing record
@@ -295,10 +295,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let debug_flag = log::log_enabled!(log::Level::Debug);
 
     // main loop to read CSV and construct batches.
-    // we batch python operations so that the GILPool does not get very large
+    // we batch Python operations so that the GILPool does not get very large
     // as we release the pool after each batch
     // loop exits when batch is empty.
-    // see https://pyo3.rs/latest/memory.html#gil-bound-memory for more info.
     'batch_loop: loop {
         for _ in 0..batch_size {
             match rdr.read_record(&mut batch_record) {
