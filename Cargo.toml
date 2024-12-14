@@ -154,6 +154,9 @@ minijinja-contrib = { version = "2", features = [
     "pycompat",
     "rand",
     "timezone",
+    "unicode_wordwrap",
+    "wordcount",
+    "wordwrap",
 ] }
 mlua = { version = "0.10", features = [
     "luau",
@@ -311,6 +314,10 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
 
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
+
+# use unreleased MiniJinja with features we need for DP+ DRUF workflow
+minijinja = { git = "https://github.com/mitsuhiko/minijinja", rev = "a5e7af5" }
+minijinja-contrib = { git = "https://github.com/mitsuhiko/minijinja", rev = "a5e7af5" }
 
 # use our patched fork of sled to get rid of unmaintained instant
 sled = { git = "https://github.com/dathere/sled", branch = "v0.34.7-bumped-parking_lot_to_0.12" }
