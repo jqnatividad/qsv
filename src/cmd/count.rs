@@ -156,7 +156,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                     if args.flag_no_polars || conf.is_snappy() {
                         count_input(&conf, count_delims_mode)?
                     } else {
-                        let (count, _) = polars_count_input(&conf, args.flag_low_memory)?;
+                        let count = polars_count_input(&conf, args.flag_low_memory)?;
                         (count, empty_record_stats)
                     }
 
@@ -213,6 +213,38 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     Ok(())
 }
 
+/// Counts the number of records in a CSV file and optionally calculates statistics about record
+/// widths.
+///
+/// # Arguments
+/// * `conf` - Configuration for reading the CSV file
+/// * `count_delims_mode` - Specifies whether to include delimiters in width calculations
+///
+/// # Returns
+/// A tuple containing:
+/// * The total number of records in the file
+/// * Statistics about record widths including:
+///   - Maximum width
+///   - Average width
+///   - Median width
+///   - Minimum width
+///   - Variance of widths
+///   - Standard deviation of widths
+///   - Median absolute deviation (MAD) of widths
+///
+/// # Details
+/// - If an index exists for the file, uses that for the record count
+/// - If only counting records (CountDelimsMode::NotRequired), just returns count
+/// - For width statistics:
+///   - Reads through file calculating width of each record
+///   - Width can optionally include delimiters based on CountDelimsMode
+///   - Uses parallel sorting for performance on large files
+///   - Handles potential numeric overflow in calculations
+///
+/// # Errors
+/// Returns error if:
+/// - Unable to read from the CSV file
+/// - Out of memory when allocating vectors for statistics
 fn count_input(conf: &Config, count_delims_mode: CountDelimsMode) -> CliResult<(u64, WidthStats)> {
     use rayon::{
         iter::{IntoParallelRefIterator, ParallelIterator},
@@ -356,15 +388,41 @@ fn count_input(conf: &Config, count_delims_mode: CountDelimsMode) -> CliResult<(
     }
 }
 
+/// Counts the number of records in a CSV file using Polars' optimized CSV reader
+///
+/// # Arguments
+/// * `conf` - Configuration for reading the CSV file
+/// * `low_memory` - Whether to use low memory mode when reading the file
+///
+/// # Returns
+/// * Total number of records in the file
+///
+/// # Details
+/// - For stdin input, creates a temporary file to allow Polars to read it
+/// - Uses Polars' SQL functionality with lazy evaluation for optimal performance
+/// - Handles comment characters and different delimiters
+/// - Falls back to regular CSV reader if Polars encounters errors
+/// - Adjusts count for no-headers mode since Polars always assumes headers
+///
+/// # Performance
+/// - Uses memory-mapped reading and multithreading for fast processing
+/// - For standard CSV files (comma-delimited, no comments), uses optimized read_csv() function
+/// - Otherwise uses LazyCsvReader with optimized settings
+///
+/// # Errors
+/// Returns error if:
+/// - Unable to create/write temporary file for stdin
+/// - Cannot read the CSV file
+/// - SQL query execution fails
 #[cfg(feature = "polars")]
-pub fn polars_count_input(conf: &Config, low_memory: bool) -> CliResult<(u64, usize)> {
+pub fn polars_count_input(conf: &Config, low_memory: bool) -> CliResult<u64> {
     use polars::{
         lazy::frame::{LazyFrame, OptFlags},
         prelude::*,
         sql::SQLContext,
     };
 
-    info!("using polars");
+    // info!("using polars");
 
     let is_stdin = conf.is_stdin();
 
@@ -410,13 +468,13 @@ pub fn polars_count_input(conf: &Config, low_memory: bool) -> CliResult<(u64, us
             Err(e) => {
                 log::warn!("polars error loading CSV: {e}");
                 let (count_regular, _) = count_input(conf, CountDelimsMode::NotRequired)?;
-                return Ok((count_regular, 0));
+                return Ok(count_regular);
             },
         };
 
         // If we can't read the schema or the DataFrame is empty, return 0
         if schema_df.is_err() || schema_df.unwrap().height() == 0 {
-            return Ok((0, 0));
+            return Ok(0);
         }
     }
 
@@ -440,7 +498,7 @@ pub fn polars_count_input(conf: &Config, low_memory: bool) -> CliResult<(u64, us
             Err(e) => {
                 log::warn!("polars error loading CSV: {e}");
                 let (count_regular, _) = count_input(conf, CountDelimsMode::NotRequired)?;
-                return Ok((count_regular, 0));
+                return Ok(count_regular);
             },
         };
         let optflags = OptFlags::from_bits_truncate(0)
@@ -467,7 +525,7 @@ pub fn polars_count_input(conf: &Config, low_memory: bool) -> CliResult<(u64, us
             // there was a Polars error, so we fall back to the regular CSV reader
             log::warn!("polars error executing count query: {e}");
             let (count_regular, _) = count_input(conf, CountDelimsMode::NotRequired)?;
-            return Ok((count_regular, 0));
+            return Ok(count_regular);
         },
     };
 
@@ -493,5 +551,5 @@ pub fn polars_count_input(conf: &Config, low_memory: bool) -> CliResult<(u64, us
         count += 1;
     }
 
-    Ok((count, 0))
+    Ok(count)
 }

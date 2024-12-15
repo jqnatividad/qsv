@@ -386,7 +386,7 @@ pub fn count_rows(conf: &Config) -> Result<u64, CliError> {
 fn count_rows_with_best_method(conf: &Config) -> Option<u64> {
     if !conf.no_headers {
         // Try polars first for files with headers
-        if let Ok((count, _)) = polars_count_input(conf, false) {
+        if let Ok(count) = polars_count_input(conf, false) {
             return Some(count);
         }
     }
