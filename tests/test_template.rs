@@ -461,8 +461,7 @@ fn template_render_error() {
 
     wrk.assert_err(&mut *&mut cmd);
     let got: String = wrk.output_stderr(&mut cmd);
-    let expected =
-        "syntax error: unexpected `}}`, expected end of variable block (in template:1)\n";
+    let expected = "syntax error: unexpected `}`, expected end of variable block (in template:1)\n";
     assert_eq!(got, expected);
 }
 
