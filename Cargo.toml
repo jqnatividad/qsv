@@ -251,7 +251,7 @@ tempfile = "3"
 thousands = { version = "0.2", optional = true }
 threadpool = "1.8"
 titlecase = { version = "3", optional = true }
-tokio = { version = "1", features = ["rt-multi-thread"] }
+tokio = { version = "1", features = ["parking_lot", "rt-multi-thread"] }
 uuid = { version = "1", features = ["v4", "v7"] }
 url = "2.5"
 whatlang = { version = "0.16", optional = true }
