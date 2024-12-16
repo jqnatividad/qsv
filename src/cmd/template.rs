@@ -74,6 +74,7 @@ template arguments:
 template options:
     --template <str>            MiniJinja template string to use (alternative to --template-file)
     -t, --template-file <file>  MiniJinja template file to use
+    -j, --globals-json <file>   A JSON file to load in the MiniJinja context
     --outfilename <str>         MiniJinja template string to use to create the filename of the output 
                                 files to write to <outdir>. If set to just QSV_ROWNO, the filestem
                                 is set to the current rowno of the record, padded with leading
@@ -116,6 +117,7 @@ Common options:
 use std::{
     fs,
     io::{BufWriter, Write},
+    path::PathBuf,
     sync::{
         atomic::{AtomicBool, AtomicU16, Ordering},
         OnceLock, RwLock,
@@ -131,7 +133,7 @@ use rayon::{
     prelude::IntoParallelRefIterator,
 };
 use serde::Deserialize;
-use simd_json::BorrowedValue;
+use simd_json::{json, BorrowedValue};
 
 use crate::{
     config::{Config, Delimiter, DEFAULT_WTR_BUFFER_CAPACITY},
@@ -148,6 +150,7 @@ struct Args {
     arg_outdir:              Option<String>,
     flag_template:           Option<String>,
     flag_template_file:      Option<String>,
+    flag_globals_json:       Option<PathBuf>,
     flag_output:             Option<String>,
     flag_outfilename:        String,
     flag_outsubdir_size:     u16,
@@ -218,6 +221,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         Ordering::Relaxed,
     );
 
+    // setup globals JSON context if specified
+    let mut globals_flag = false;
+    let globals_ctx = if let Some(globals_json) = args.flag_globals_json {
+        globals_flag = true;
+        match std::fs::read(globals_json) {
+            Ok(mut bytes) => match simd_json::from_slice(&mut bytes) {
+                Ok(json) => json,
+                Err(e) => return fail_clierror!("Failed to parse globals JSON file: {e}"),
+            },
+            Err(e) => return fail_clierror!("Failed to read globals JSON file: {e}"),
+        }
+    } else {
+        json!("")
+    };
+
+    let globals_ctx_borrowed: simd_json::BorrowedValue = globals_ctx.into();
+
     // Set up minijinja environment
     let mut env = Environment::new();
 
@@ -255,7 +275,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     }
     let width = rowcount.to_string().len();
 
-    // read headers
+    // read headers - the headers are used as MiniJinja variables in the template
     let headers = if args.flag_no_headers {
         csv::StringRecord::new()
     } else {
@@ -427,6 +447,13 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 let curr_record = record;
 
                 let mut context = simd_json::borrowed::Object::default();
+                // Add globals context to the record context
+                if globals_flag {
+                    context.insert(
+                        std::borrow::Cow::Borrowed("globals"),
+                        globals_ctx_borrowed.clone(),
+                    );
+                }
                 context.reserve(headers_len);
                 let mut row_number = 0_u64;
 
@@ -452,7 +479,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                         }
                     }
                 } else {
-                    // Use header names
+                    // Use header names as template variables
                     for (header, field) in headers.iter().zip(curr_record.iter()) {
                         context.insert(
                             std::borrow::Cow::Borrowed(header),
