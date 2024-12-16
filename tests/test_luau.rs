@@ -370,6 +370,9 @@ BEGIN {
     csv_indexed = qsv_autoindex();
 
     us_states_lookup_headers = qsv_register_lookup("us_states", "us-states-lookup.csv", 1000)
+    if not us_states_lookup_headers then
+        qsv_break("Failed to register us_states lookup table")
+    end
 
     -- note how we use the qsv_log function to log to the qsv log file
     qsv_log("debug", " _INDEX:", _INDEX, " _ROWCOUNT:", _ROWCOUNT, " csv_indexed:", csv_indexed)
@@ -461,6 +464,9 @@ BEGIN {
 
     us_states_lookup_headers = qsv_register_lookup("us_states", 
       "https://raw.githubusercontent.com/dathere/qsv/master/resources/test/us-states-lookup.csv", 100)
+    if not us_states_lookup_headers then
+        qsv_break("Failed to register us_states lookup table")
+    end
 
     -- note how we use the qsv_log function to log to the qsv log file
     qsv_log("debug", " _INDEX:", _INDEX, " _ROWCOUNT:", _ROWCOUNT, " csv_indexed:", csv_indexed)
@@ -554,6 +560,9 @@ BEGIN {
 
     us_states_lookup_headers = qsv_register_lookup("us_states", 
       "dathere://us-states-example.csv", 100)
+    if not us_states_lookup_headers then
+        qsv_break("Failed to register us_states lookup table")
+    end
 
     -- note how we use the qsv_log function to log to the qsv log file
     qsv_log("debug", " _INDEX:", _INDEX, " _ROWCOUNT:", _ROWCOUNT, " csv_indexed:", csv_indexed)
@@ -641,6 +650,9 @@ fn luau_register_lookup_table_ckan() {
 BEGIN {
 
     cityscore_headers = qsv_register_lookup("cityscore", "ckan://CityScore Summary?", 1000)
+    if not cityscore_headers then
+        qsv_break("Failed to register cityscore_headers lookup table")
+    end
 
     function spairs(t, order)
         -- collect the keys
