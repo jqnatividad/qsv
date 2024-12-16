@@ -3797,7 +3797,7 @@ checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 [[package]]
 name = "minijinja"
 version = "2.5.0"
-source = "git+https://github.com/mitsuhiko/minijinja?rev=7507470#75074708db58e3528d8589817f5843b05dd14d55"
+source = "git+https://github.com/mitsuhiko/minijinja?rev=d1ce496#d1ce496e101239bdfba01e29f407f0a57b8e4aed"
 dependencies = [
  "percent-encoding",
  "serde",
@@ -3809,7 +3809,7 @@ dependencies = [
 [[package]]
 name = "minijinja-contrib"
 version = "2.5.0"
-source = "git+https://github.com/mitsuhiko/minijinja?rev=7507470#75074708db58e3528d8589817f5843b05dd14d55"
+source = "git+https://github.com/mitsuhiko/minijinja?rev=d1ce496#d1ce496e101239bdfba01e29f407f0a57b8e4aed"
 dependencies = [
  "minijinja",
  "rand",

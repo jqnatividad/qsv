@@ -313,8 +313,8 @@ grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
 
 # use unreleased MiniJinja with features we need for DP+ DRUF workflow
-minijinja = { git = "https://github.com/mitsuhiko/minijinja", rev = "7507470" }
-minijinja-contrib = { git = "https://github.com/mitsuhiko/minijinja", rev = "7507470" }
+minijinja = { git = "https://github.com/mitsuhiko/minijinja", rev = "d1ce496" }
+minijinja-contrib = { git = "https://github.com/mitsuhiko/minijinja", rev = "d1ce496" }
 
 # use our patched fork of sled to get rid of unmaintained instant
 sled = { git = "https://github.com/dathere/sled", branch = "v0.34.7-bumped-parking_lot_to_0.12" }
