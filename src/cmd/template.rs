@@ -74,8 +74,10 @@ template arguments:
 template options:
     --template <str>            MiniJinja template string to use (alternative to --template-file)
     -t, --template-file <file>  MiniJinja template file to use
-    -j, --globals-json <file>   A JSON file to load in the MiniJinja context.
-                                The JSON properties become MiniJinja variables in the "globals" namespace. 
+    -j, --globals-json <file>   A JSON file containing global variables to make available in templates.
+                                The JSON properties can be accessed in templates using the "globals"
+                                namespace (e.g. {{globals.school_name}}, {{globals.year}}).
+                                This allows sharing common values across all template renders.
     --outfilename <str>         MiniJinja template string to use to create the filename of the output 
                                 files to write to <outdir>. If set to just QSV_ROWNO, the filestem
                                 is set to the current rowno of the record, padded with leading
