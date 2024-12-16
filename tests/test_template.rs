@@ -1113,3 +1113,78 @@ fn template_round_banker_filter() {
     );
     assert_eq!(got, expected);
 }
+
+#[test]
+fn template_globals_json() {
+    let wrk = Workdir::new("template_globals");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["name", "score"],
+            svec!["Alice", "85"],
+            svec!["Bob", "92"],
+        ],
+    );
+
+    wrk.create_from_string(
+        "globals.json",
+        r#"{
+            "passing_score": 90,
+            "school_name": "Test Academy",
+            "year": 2023
+        }"#,
+    );
+
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg(concat!(
+            "School: {{globals.school_name}}\n",
+            "Year: {{globals.year}}\n",
+            "Student: {{name}}\n",
+            "Score: {{score}}\n",
+            "Status: {% if score|int >= globals.passing_score %}PASS{% else %}FAIL{% endif \
+             %}\n\n\n"
+        ))
+        .arg("--globals-json")
+        .arg("globals.json")
+        .arg("data.csv");
+
+    let got: String = wrk.stdout(&mut cmd);
+    let expected = concat!(
+        "School: Test Academy\n",
+        "Year: 2023\n",
+        "Student: Alice\n",
+        "Score: 85\n",
+        "Status: FAIL\n\n",
+        "School: Test Academy\n",
+        "Year: 2023\n",
+        "Student: Bob\n",
+        "Score: 92\n",
+        "Status: PASS"
+    );
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn template_globals_json_invalid() {
+    let wrk = Workdir::new("template_globals_invalid");
+    wrk.create("data.csv", vec![svec!["name"], svec!["test"]]);
+
+    wrk.create_from_string(
+        "invalid.json",
+        r#"{
+            "bad_json": "missing_comma"
+            "another_field": true
+        }"#,
+    );
+
+    let mut cmd = wrk.command("template");
+    cmd.arg("--template")
+        .arg("{{name}}\n")
+        .arg("--globals-json")
+        .arg("invalid.json")
+        .arg("data.csv");
+
+    let got: String = wrk.output_stderr(&mut cmd);
+    assert!(got.contains("Failed to parse globals JSON file"));
+}
