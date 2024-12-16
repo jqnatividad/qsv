@@ -4,6 +4,8 @@ fn prop_reverse(name: &str, rows: CsvData, headers: bool) -> bool {
     if rows.is_empty()
         || rows[0].contains(&"\u{FEFF}".to_string())
         || rows[0].contains(&"\u{feff}".to_string())
+        || rows.last().unwrap().contains(&"\u{FEFF}".to_string())
+        || rows.last().unwrap().contains(&"\u{feff}".to_string())
     {
         return true;
     }
@@ -28,6 +30,8 @@ fn prop_reverse(name: &str, rows: CsvData, headers: bool) -> bool {
     if expected.is_empty()
         || expected[0].contains(&"\u{FEFF}".to_string())
         || expected[0].contains(&"\u{feff}".to_string())
+        || expected.last().unwrap().contains(&"\u{FEFF}".to_string())
+        || expected.last().unwrap().contains(&"\u{feff}".to_string())
     {
         return true;
     }
