@@ -1591,6 +1591,84 @@ fn fetchpost_payload_template() {
 }
 
 #[test]
+fn fetchpost_payload_template_with_globals() {
+    let wrk = Workdir::new("fetchpost_tpl");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["first_name", "last_name", "age", "city"],
+            svec!["John", "Smith", "35", "New York"],
+            svec!["Jane", "Doe", "28", "Los Angeles"],
+            svec!["Bob", "Jones", "42", "Chicago"],
+        ],
+    );
+
+    // Create template file
+    wrk.create_from_string(
+        "payload.tpl",
+        r#"{
+    "firstName": "{{ first_name }}",
+    "lastName": "{{ last_name }}",
+    "age": {{ age }},
+    "dog_age": {{ age|int * globals.dog_years_multiplier|int }},
+    "cat_age": {{ age|int * globals.cat_years_multiplier|int }},
+    "city": "{{ city }}"
+}"#,
+    );
+
+    // Create globals JSON file
+    wrk.create_from_string(
+        "globals.json",
+        r#"{
+        "dog_years_multiplier": "7",
+        "cat_years_multiplier": "14"
+    }"#,
+    );
+
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("https://httpbin.org/post")
+        .arg("--payload-tpl")
+        .arg("payload.tpl")
+        .args(["--globals-json", "globals.json"])
+        .arg("--new-column")
+        .arg("response")
+        .arg("--jaq")
+        .arg(r#"."data""#)
+        .arg("data.csv");
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+
+    let expected = vec![
+        svec!["first_name", "last_name", "age", "city", "response"],
+        svec![
+            "John",
+            "Smith",
+            "35",
+            "New York",
+            r#""{"firstName":"John","lastName":"Smith","age":35,"dog_age":245,"cat_age":490,"city":"New York"}""#
+        ],
+        svec![
+            "Jane",
+            "Doe",
+            "28",
+            "Los Angeles",
+            r#""{"firstName":"Jane","lastName":"Doe","age":28,"dog_age":196,"cat_age":392,"city":"Los Angeles"}""#
+        ],
+        svec![
+            "Bob",
+            "Jones",
+            "42",
+            "Chicago",
+            r#""{"firstName":"Bob","lastName":"Jones","age":42,"dog_age":294,"cat_age":588,"city":"Chicago"}""#
+        ],
+    ];
+
+    assert_eq!(got, expected);
+}
+
+#[test]
 fn fetchpost_payload_template_with_report() {
     let wrk = Workdir::new("fetchpost_tpl_report");
     wrk.create(
@@ -1799,4 +1877,38 @@ fn fetchpost_content_type() {
 
     let got = wrk.stdout::<String>(&mut cmd);
     assert_eq!(got, r#"{"message":"Hello World"}"#);
+}
+
+#[test]
+fn test_fetchpost_column_list_globals() {
+    let wrk = Workdir::new("fetchpost");
+    wrk.create_from_string(
+        "data.csv",
+        "URL,message\nhttps://httpbin.org/post,Hello World\n",
+    );
+
+    // Create globals JSON file
+    wrk.create_from_string(
+        "globals.json",
+        r#"{
+    "api_key": "secret123",
+    "user_id": "user456"
+}"#,
+    );
+
+    // Test form data with globals
+    let mut cmd = wrk.command("fetchpost");
+    cmd.arg("URL")
+        .arg("message")
+        .arg("--globals-json")
+        .arg("globals.json")
+        .arg("--jaq")
+        .arg(r#"."form""#)
+        .arg("data.csv");
+
+    let got = wrk.stdout::<String>(&mut cmd);
+    assert_eq!(
+        got,
+        r#"{"api_key":"secret123","message":"Hello World","user_id":"user456"}"#
+    );
 }
