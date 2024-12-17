@@ -152,6 +152,11 @@ Fetchpost options:
                                Typical alternative values are `multipart/form-data` and `text/plain`.
                                It is the responsibility of the user to format the payload accordingly
                                when using --payload-tpl.
+   -j, --globals-json <file>   A JSON file containing global variables.
+                               When posting as an HTML Form, this file is added to the Form data.
+                               When constructing a payload using a MiniJinja template, the JSON
+                               properties can be accessed in templates using the "globals" namespace
+                               (e.g. {{globals.api_key}}, {{globals.base_url}}).
     -c, --new-column <name>    Put the fetched values in a new column. Specifying this option
                                results in a CSV. Otherwise, the output is in JSONL format.
     --jaq <selector>           Apply jaq selector to API returned JSON response.
@@ -244,7 +249,7 @@ Common options:
                                Not valid for stdin.
 "#;
 
-use std::{fs, io::Write, num::NonZeroU32, sync::OnceLock, thread, time};
+use std::{fs, io::Write, num::NonZeroU32, path::PathBuf, sync::OnceLock, thread, time};
 
 use cached::{
     proc_macro::{cached, io_cached},
@@ -307,9 +312,10 @@ impl std::fmt::Display for ContentType {
 struct Args {
     flag_payload_tpl:    Option<String>,
     flag_content_type:   Option<String>,
+    flag_globals_json:   Option<PathBuf>,
     flag_new_column:     Option<String>,
     flag_jaq:            Option<String>,
-    flag_jaqfile:        Option<String>,
+    flag_jaqfile:        Option<PathBuf>,
     flag_pretty:         bool,
     flag_rate_limit:     u32,
     flag_timeout:        u16,
@@ -443,6 +449,21 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         CacheType::InMemory
     };
     log::info!("Cache Type: {cache_type:?}");
+
+    // setup globals JSON context if specified
+    let mut globals_flag = false;
+    let globals_ctx = if let Some(globals_json) = args.flag_globals_json {
+        globals_flag = true;
+        match std::fs::read(globals_json) {
+            Ok(mut bytes) => match simd_json::from_slice(&mut bytes) {
+                Ok(json) => json,
+                Err(e) => return fail_clierror!("Failed to parse globals JSON file: {e}"),
+            },
+            Err(e) => return fail_clierror!("Failed to read globals JSON file: {e}"),
+        }
+    } else {
+        json!("")
+    };
 
     let mut rconfig = Config::new(args.arg_input.as_ref())
         .delimiter(args.flag_delimiter)
@@ -761,7 +782,23 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
     let mut running_success_count = 0_u64;
     let mut was_cached;
     let mut now = time::Instant::now();
-    let mut form_body_jsonmap = serde_json::map::Map::with_capacity(col_list.len());
+    let mut form_body_jsonmap = serde_json::map::Map::with_capacity(col_list.len() + 1);
+
+    let globals_jsonmap = if globals_flag {
+        let mut map = serde_json::map::Map::new();
+        if payload_content_type == ContentType::Form {
+            if let Some(globals_obj) = globals_ctx.as_object() {
+                for (key, value) in globals_obj {
+                    map.insert(key.clone(), value.clone());
+                }
+            }
+        } else {
+            map.insert("globals".to_string(), globals_ctx);
+        }
+        map
+    } else {
+        serde_json::map::Map::new()
+    };
 
     let header_key_vec: Vec<String> = headers
         .iter()
@@ -780,7 +817,11 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         };
 
         // construct body per the column-list
-        form_body_jsonmap.clear();
+        if globals_flag {
+            form_body_jsonmap.clone_from(&globals_jsonmap);
+        } else {
+            form_body_jsonmap.clear();
+        }
         for col_idx in &*col_list {
             form_body_jsonmap.insert(
                 (header_key_vec[*col_idx]).to_string(),
