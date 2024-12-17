@@ -1138,12 +1138,11 @@ fn template_globals_json() {
     let mut cmd = wrk.command("template");
     cmd.arg("--template")
         .arg(concat!(
-            "School: {{globals.school_name}}\n",
-            "Year: {{globals.year}}\n",
+            "School: {{qsv_g.school_name}}\n",
+            "Year: {{qsv_g.year}}\n",
             "Student: {{name}}\n",
             "Score: {{score}}\n",
-            "Status: {% if score|int >= globals.passing_score %}PASS{% else %}FAIL{% endif \
-             %}\n\n\n"
+            "Status: {% if score|int >= qsv_g.passing_score %}PASS{% else %}FAIL{% endif %}\n\n\n"
         ))
         .arg("--globals-json")
         .arg("globals.json")

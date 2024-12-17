@@ -75,8 +75,8 @@ template options:
     --template <str>            MiniJinja template string to use (alternative to --template-file)
     -t, --template-file <file>  MiniJinja template file to use
     -j, --globals-json <file>   A JSON file containing global variables to make available in templates.
-                                The JSON properties can be accessed in templates using the "globals"
-                                namespace (e.g. {{globals.school_name}}, {{globals.year}}).
+                                The JSON properties can be accessed in templates using the "qsv_g"
+                                namespace (e.g. {{qsv_g.school_name}}, {{qsv_g.year}}).
                                 This allows sharing common values across all template renders.
     --outfilename <str>         MiniJinja template string to use to create the filename of the output 
                                 files to write to <outdir>. If set to just QSV_ROWNO, the filestem
@@ -152,7 +152,7 @@ struct Args {
     arg_input:               Option<String>,
     arg_outdir:              Option<String>,
     flag_template:           Option<String>,
-    flag_template_file:      Option<String>,
+    flag_template_file:      Option<PathBuf>,
     flag_globals_json:       Option<PathBuf>,
     flag_output:             Option<String>,
     flag_outfilename:        String,
@@ -453,7 +453,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 // Add globals context to the record context
                 if globals_flag {
                     context.insert(
-                        std::borrow::Cow::Borrowed("globals"),
+                        std::borrow::Cow::Borrowed("qsv_g"),
                         globals_ctx_borrowed.clone(),
                     );
                 }

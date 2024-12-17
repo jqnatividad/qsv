@@ -1610,8 +1610,8 @@ fn fetchpost_payload_template_with_globals() {
     "firstName": "{{ first_name }}",
     "lastName": "{{ last_name }}",
     "age": {{ age }},
-    "dog_age": {{ age|int * globals.dog_years_multiplier|int }},
-    "cat_age": {{ age|int * globals.cat_years_multiplier|int }},
+    "dog_age": {{ age|int * qsv_g.dog_years_multiplier|int }},
+    "cat_age": {{ age|int * qsv_g.cat_years_multiplier|int }},
     "city": "{{ city }}"
 }"#,
     );

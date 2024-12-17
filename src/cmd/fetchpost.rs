@@ -155,8 +155,8 @@ Fetchpost options:
    -j, --globals-json <file>   A JSON file containing global variables.
                                When posting as an HTML Form, this file is added to the Form data.
                                When constructing a payload using a MiniJinja template, the JSON
-                               properties can be accessed in templates using the "globals" namespace
-                               (e.g. {{globals.api_key}}, {{globals.base_url}}).
+                               properties can be accessed in templates using the "qsv_g" namespace
+                               (e.g. {{qsv_g.api_key}}, {{qsv_g.base_url}}).
     -c, --new-column <name>    Put the fetched values in a new column. Specifying this option
                                results in a CSV. Otherwise, the output is in JSONL format.
     --jaq <selector>           Apply jaq selector to API returned JSON response.
@@ -793,7 +793,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 }
             }
         } else {
-            map.insert("globals".to_string(), globals_ctx);
+            map.insert("qsv_g".to_string(), globals_ctx);
         }
         map
     } else {
