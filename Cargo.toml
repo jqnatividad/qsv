@@ -307,7 +307,7 @@ calamine = { git = "https://github.com/tafia/calamine", rev = "cf86fa7" }
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
 
 # needed to get latest dependencies and unreleased fixes
-grex = { git = "https://github.com/pemistahl/grex", rev = "bbf3064" }
+grex = { git = "https://github.com/pemistahl/grex", rev = "cb71c10" }
 
 # use modernized version of local_encoding
 local-encoding = { git = "https://github.com/slonopotamus/local-encoding-rs", branch = "travis-madness" }
