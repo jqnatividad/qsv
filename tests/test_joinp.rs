@@ -1468,3 +1468,178 @@ fn joinp_ignore_case_maintain_order_right_left() {
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn joinp_filter_pattern_matching() {
+    let wrk = Workdir::new("joinp_filter_pattern_matching");
+
+    // Create test data with pattern matching scenarios
+    wrk.create(
+        "prefixes.csv",
+        vec![
+            svec!["code", "description"],
+            svec!["ABC", "Alpha Beta Charlie"],
+            svec!["XYZ", "X-ray Yankee Zulu"],
+            svec!["123", "One Two Three"],
+        ],
+    );
+
+    wrk.create(
+        "values.csv",
+        vec![
+            svec!["id", "value"],
+            svec!["ABC123", "First"],
+            svec!["ABCDEF", "Second"],
+            svec!["XYZ789", "Third"],
+            svec!["123456", "Fourth"],
+            svec!["TEST123", "Fifth"],
+            svec!["DEF123", "Sixth"],
+        ],
+    );
+
+    // Test 1: Right starts-with left
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["code", "prefixes.csv", "id", "values.csv"])
+        .arg("--cross")
+        .args([
+            "--sql-filter",
+            "select * from join_result where STARTS_WITH(id, code)",
+        ]);
+
+    wrk.assert_success(&mut *&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["code", "description", "id", "value"],
+        svec!["ABC", "Alpha Beta Charlie", "ABC123", "First"],
+        svec!["ABC", "Alpha Beta Charlie", "ABCDEF", "Second"],
+        svec!["XYZ", "X-ray Yankee Zulu", "XYZ789", "Third"],
+        svec!["123", "One Two Three", "123456", "Fourth"],
+    ];
+    assert_eq!(got, expected);
+
+    // Test 2: Right contains left
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["code", "prefixes.csv", "id", "values.csv"])
+        .arg("--cross")
+        .args([
+            "--sql-filter",
+            "select * from join_result where STRPOS(id, code) > 0",
+        ]);
+
+    wrk.assert_success(&mut *&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["code", "description", "id", "value"],
+        svec!["ABC", "Alpha Beta Charlie", "ABC123", "First"],
+        svec!["ABC", "Alpha Beta Charlie", "ABCDEF", "Second"],
+        svec!["XYZ", "X-ray Yankee Zulu", "XYZ789", "Third"],
+        svec!["123", "One Two Three", "ABC123", "First"],
+        svec!["123", "One Two Three", "123456", "Fourth"],
+        svec!["123", "One Two Three", "TEST123", "Fifth"],
+        svec!["123", "One Two Three", "DEF123", "Sixth"],
+    ];
+    assert_eq!(got, expected);
+
+    // Test 3: Right ends-with left
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["code", "prefixes.csv", "id", "values.csv"])
+        .arg("--cross")
+        .args([
+            "--sql-filter",
+            "select * from join_result where ENDS_WITH(id, code)",
+        ]);
+
+    wrk.assert_success(&mut *&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["code", "description", "id", "value"],
+        svec!["123", "One Two Three", "ABC123", "First"],
+        svec!["123", "One Two Three", "TEST123", "Fifth"],
+        svec!["123", "One Two Three", "DEF123", "Sixth"],
+    ];
+    assert_eq!(got, expected);
+
+    // Create reversed test data for left-side pattern matching
+    wrk.create(
+        "full_codes.csv",
+        vec![
+            svec!["code", "description"],
+            svec!["ABC123", "Full Code 1"],
+            svec!["ABCDEF", "Full Code 2"],
+            svec!["XYZ789", "Full Code 3"],
+        ],
+    );
+
+    wrk.create(
+        "patterns.csv",
+        vec![
+            svec!["pattern", "meaning"],
+            svec!["ABC", "Alpha Beta Charlie"],
+            svec!["123", "One Two Three"],
+            svec!["XYZ", "X-ray Yankee Zulu"],
+        ],
+    );
+
+    // Test 4: Left starts-with right
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["code", "full_codes.csv", "pattern", "patterns.csv"])
+        .arg("--cross")
+        .args([
+            "--sql-filter",
+            "select * from join_result where STARTS_WITH(code, pattern) and LENGTH(pattern) < \
+             LENGTH(code)",
+        ]);
+
+    wrk.assert_success(&mut *&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["code", "description", "pattern", "meaning"],
+        svec!["ABC123", "Full Code 1", "ABC", "Alpha Beta Charlie"],
+        svec!["ABCDEF", "Full Code 2", "ABC", "Alpha Beta Charlie"],
+        svec!["XYZ789", "Full Code 3", "XYZ", "X-ray Yankee Zulu"],
+    ];
+    assert_eq!(got, expected);
+
+    // Test 5: Left contains right
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["code", "full_codes.csv", "pattern", "patterns.csv"])
+        .arg("--cross")
+        .args([
+            "--sql-filter",
+            "select * from join_result where STRPOS(code, pattern) > 0",
+        ]);
+
+    wrk.assert_success(&mut *&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["code", "description", "pattern", "meaning"],
+        svec!["ABC123", "Full Code 1", "ABC", "Alpha Beta Charlie"],
+        svec!["ABC123", "Full Code 1", "123", "One Two Three"],
+        svec!["ABCDEF", "Full Code 2", "ABC", "Alpha Beta Charlie"],
+        svec!["XYZ789", "Full Code 3", "XYZ", "X-ray Yankee Zulu"],
+    ];
+    assert_eq!(got, expected);
+
+    // Test 6: Left ends-with right
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["code", "full_codes.csv", "pattern", "patterns.csv"])
+        .arg("--cross")
+        .args([
+            "--sql-filter",
+            "select * from join_result where ENDS_WITH(code, pattern)",
+        ]);
+
+    wrk.assert_success(&mut *&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["code", "description", "pattern", "meaning"],
+        svec!["ABC123", "Full Code 1", "123", "One Two Three"],
+    ];
+    assert_eq!(got, expected);
+}

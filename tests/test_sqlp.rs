@@ -3024,6 +3024,107 @@ IT	"This is a literal $,%,',"""
     assert_eq!(got, expected);
 }
 
+#[test]
+fn sqlp_string_function_joins() {
+    let wrk = Workdir::new("sqlp_string_function_joins");
+
+    // Create left table with partial strings
+    wrk.create(
+        "left.csv",
+        vec![
+            svec!["id", "val"],
+            svec!["1", "cat"],
+            svec!["2", "dog"],
+            svec!["3", "bird"],
+            svec!["4", "fish"],
+        ],
+    );
+
+    // Create right table with full strings
+    wrk.create(
+        "right.csv",
+        vec![
+            svec!["id", "val"],
+            svec!["1", "category"],
+            svec!["2", "doghouse"],
+            svec!["3", "jailbird"],
+            svec!["4", "starfish"],
+            svec!["5", "catalog"],
+            svec!["6", "hotdog"],
+        ],
+    );
+
+    // Test STRPOS
+    let mut cmd = wrk.command("sqlp");
+    cmd.args(["left.csv", "right.csv"]).arg(
+        "SELECT l.val as left_val, r.val as right_val FROM left l CROSS JOIN right r WHERE \
+         STRPOS(r.val, l.val) > 0 ORDER BY l.val, r.val",
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["left_val", "right_val"],
+        svec!["bird", "jailbird"],
+        svec!["cat", "catalog"],
+        svec!["cat", "category"],
+        svec!["dog", "doghouse"],
+        svec!["dog", "hotdog"],
+        svec!["fish", "starfish"],
+    ];
+    assert_eq!(got, expected);
+
+    // Test STARTS_WITH
+    let mut cmd = wrk.command("sqlp");
+    cmd.args(["left.csv", "right.csv"]).arg(
+        "SELECT l.val as left_val, r.val as right_val FROM left l CROSS JOIN right r WHERE \
+         STARTS_WITH(r.val, l.val) ORDER BY l.val, r.val",
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["left_val", "right_val"],
+        svec!["cat", "catalog"],
+        svec!["cat", "category"],
+        svec!["dog", "doghouse"],
+    ];
+    assert_eq!(got, expected);
+
+    // Test ENDS_WITH
+    let mut cmd = wrk.command("sqlp");
+    cmd.args(["left.csv", "right.csv"]).arg(
+        "SELECT l.val as left_val, r.val as right_val FROM left l CROSS JOIN right r WHERE \
+         ENDS_WITH(r.val, l.val) ORDER BY l.val, r.val",
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["left_val", "right_val"],
+        svec!["bird", "jailbird"],
+        svec!["dog", "hotdog"],
+        svec!["fish", "starfish"],
+    ];
+    assert_eq!(got, expected);
+
+    // Test reverse STRPOS (left contains right)
+    let mut cmd = wrk.command("sqlp");
+    cmd.args(["left.csv", "right.csv"]).arg(
+        "SELECT l.val as left_val, r.val as right_val FROM left l CROSS JOIN right r WHERE \
+         STRPOS(l.val, r.val) > 0 ORDER BY l.val, r.val",
+    );
+
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![svec!["left_val", "right_val"]]; // Empty because no left values contain right values in our test data
+    assert_eq!(got, expected);
+}
+
 // #[test]
 // fn sqlp_generate_graphviz_plan() {
 //     let wrk = Workdir::new("sqlp_generate_graphviz_plan");
