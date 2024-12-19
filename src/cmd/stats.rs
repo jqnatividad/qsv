@@ -835,6 +835,7 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
 
             // Compute hash of stats for data fingerprinting
             let stats_hash = {
+                // the first 22 stats columns are used for the fingerprint hash
                 let mut hash_input = Vec::with_capacity(22);
 
                 // First, create a stable representation of the stats
@@ -1038,10 +1039,10 @@ impl Args {
         for i in 0..nchunks {
             let (send, args, sel) = (send.clone(), self.clone(), sel.clone());
             pool.execute(move || {
-                // safety: indexed() is safe as we know we have an index file
-                // if it does return an Err, you have a bigger problem as the index file was
-                // modified WHILE stats is running and you NEED to abort if that
-                // happens, however unlikely
+                // safety: indexed() & seek() are safe as we know we have an index file
+                // if indexed() or seek() does return an Err, you have a bigger problem
+                // as the index file was modified WHILE stats is running and you actually
+                // NEED to abort if that happens, however unlikely
                 let mut idx = unsafe {
                     args.rconfig()
                         .indexed()
@@ -1325,6 +1326,7 @@ impl Commute for WhichStats {
     }
 }
 
+#[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct Stats {
     typ:           FieldType,
@@ -1440,7 +1442,7 @@ impl Stats {
                     }
                 } else {
                     // safety: we know the sample is a valid f64, so we can use unwrap
-                    let n = fast_float2::parse(sample).unwrap();
+                    let n = unsafe { fast_float2::parse(sample).unwrap_unchecked() };
                     if let Some(v) = self.median.as_mut() {
                         v.add(n);
                     }
@@ -1457,7 +1459,13 @@ impl Stats {
                         let mut ryu_buffer = ryu::Buffer::new();
                         // safety: we know that n is a valid f64
                         // so there will always be a fraction part, even if it's 0
-                        let fractpart = ryu_buffer.format_finite(n).split('.').next_back().unwrap();
+                        let fractpart = unsafe {
+                            ryu_buffer
+                                .format_finite(n)
+                                .split('.')
+                                .next_back()
+                                .unwrap_unchecked()
+                        };
                         self.max_precision = std::cmp::max(
                             self.max_precision,
                             (if *fractpart == *"0" {
@@ -1998,41 +2006,41 @@ impl FieldType {
             return (FieldType::TString, None);
         }
 
-        if let Ok(s) = simdutf8::basic::from_utf8(sample) {
+        if let Ok(samp_int) = atoi_simd::parse::<i64>(sample) {
             // Check for integer, with leading zero check for strings like zip codes
-            if atoi_simd::parse::<i64>(s.as_bytes()).is_ok() {
-                if s == "0" || !s.starts_with('0') {
-                    return (FieldType::TInteger, None);
-                }
-                // If starts with '0' but not "0", it's a string
-                return (FieldType::TString, None);
+            // safety: we know sample is not null as we checked earlier
+            if samp_int == 0 || unsafe { *sample.get_unchecked(0) != b'0' } {
+                return (FieldType::TInteger, None);
             }
+            // If starts with '0' and a valid integer != 0, it's a string with a leading zero
+            return (FieldType::TString, None);
+        }
 
-            // Check for float
-            if fast_float2::parse::<f64, &[u8]>(s.as_bytes()).is_ok() {
-                return (FieldType::TFloat, None);
-            }
+        // Check for float
+        if fast_float2::parse::<f64, &[u8]>(sample).is_ok() {
+            return (FieldType::TFloat, None);
+        }
 
-            // Check for date/datetime if infer_dates is true
-            if infer_dates {
-                if let Ok(parsed_date) = parse_with_preference(s, prefer_dmy) {
-                    let ts_val = parsed_date.timestamp_millis();
-                    // check if the tstamp (Unix Epoch format) modulo by 86400000 (ms in a day)
-                    // if the remainder is 0, we says its Date type candidate, otherwise, its
-                    // DateTime. this is a performance optimization to avoid
-                    // parsing the date to rfc3339 and then checking if the time
-                    // component is T00:00:00, as was done previously
-                    // see https://stackoverflow.com/questions/40948290/is-it-safe-to-use-modulo-operator-with-unix-epoch-timestamp
-                    if ts_val % MS_IN_DAY_INT == 0 {
-                        return (FieldType::TDate, Some(ts_val));
-                    }
-                    return (FieldType::TDateTime, Some(ts_val));
-                }
+        // Only attempt UTF-8 validation and date parsing if infer_dates is true
+        if !infer_dates {
+            return (FieldType::TString, None);
+        }
+
+        // Check if valid UTF-8 first, return early if not
+        if let Ok(s) = simdutf8::basic::from_utf8(sample) {
+            // Try date parsing
+            if let Ok(parsed_date) = parse_with_preference(s, prefer_dmy) {
+                let ts_val = parsed_date.timestamp_millis();
+                return if ts_val % MS_IN_DAY_INT == 0 {
+                    (FieldType::TDate, Some(ts_val))
+                } else {
+                    (FieldType::TDateTime, Some(ts_val))
+                };
             }
         } else {
             // If not valid UTF-8, it's a binary string, return as TString
             return (FieldType::TString, None);
-        };
+        }
 
         // Default to TString if none of the above conditions are met
         (FieldType::TString, None)
