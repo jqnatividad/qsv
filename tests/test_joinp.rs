@@ -1589,8 +1589,7 @@ fn joinp_filter_pattern_matching() {
         .arg("--cross")
         .args([
             "--sql-filter",
-            "select * from join_result where STARTS_WITH(code, pattern) and LENGTH(pattern) < \
-             LENGTH(code)",
+            "select * from join_result where STARTS_WITH(code, pattern)",
         ]);
 
     wrk.assert_success(&mut *&mut cmd);
