@@ -1302,7 +1302,21 @@ impl ColumnNameParser {
     }
 }
 
-#[inline]
+#[inline]   
+/// Rounds a floating point number to a specified number of decimal places.
+///
+/// This function takes a 64-bit floating point number and rounds it to the specified number of decimal places
+/// using "Bankers Rounding" (Midpoint Nearest Even) strategy. It returns the result as a String.
+///
+/// # Arguments
+///
+/// * `dec_f64` - The floating point number to round
+/// * `places` - The number of decimal places to round to. If set to 9999, no rounding is performed.
+///
+/// # Returns
+///
+/// * A String containing the rounded number with trailing zeros removed and -0.0 normalized to 0.0
+///
 pub fn round_num(dec_f64: f64, places: u32) -> String {
     use rust_decimal::{Decimal, RoundingStrategy};
 
