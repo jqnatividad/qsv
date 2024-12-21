@@ -2313,8 +2313,8 @@ fn setup_helpers(
         };
 
         CUMALLS.with(|ca| {
-            let mut alls = ca.borrow_mut();
-            let all = alls.entry(name).or_insert(true);
+            let mut all_vals = ca.borrow_mut();
+            let all = all_vals.entry(name).or_insert(true);
             *all = *all && is_truthy;
             Ok(*all)
         })
