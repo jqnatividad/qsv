@@ -215,7 +215,8 @@ fn main() -> QsvExitCode {
     let num_commands = enabled_commands.split('\n').count();
 
     let now = Instant::now();
-    let (qsv_args, _) = match util::init_logger() {
+    #[allow(unused_variables)]
+    let (qsv_args, logger_handle) = match util::init_logger() {
         Ok((qsv_args, logger_handle)) => (qsv_args, logger_handle),
         Err(e) => {
             eprintln!("{e}");
