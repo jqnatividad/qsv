@@ -130,14 +130,12 @@ This is done so qsv doesn't falsely trigger on special variables mentioned in co
 When checking line numbers in DEBUG mode, be sure to refer to the comment-stripped
 scripts in the log file, not the original commented scripts.
 
-There are more Luau helper functions in addition to "qsv_log" - "qsv_break", "qsv_skip",
-"qsv_insertrecord", "qsv_autoindex", "qsv_coalesce", "qsv_sleep", "qsv_writefile",
-"qsv_cmd", "qsv_shellcmd", "qsv_setenv", "qsv_getenv" and last but not least -
-the powerful "qsv_register_lookup" which allows you to "lookup" values against other
+There are more Luau helper functions in addition to "qsv_log", notably the powerful
+"qsv_register_lookup" which allows you to "lookup" values against other
 CSVs on the filesystem, a URL, datHere's lookup repo or CKAN instances.
 
 Detailed descriptions of these helpers can be found in the "setup_helpers" section at
-the bottom of this file.
+the bottom of this file and on the Wiki (https://github.com/dathere/qsv/wiki/Luau-Development)
 
 For more detailed examples, see https://github.com/dathere/qsv/blob/master/tests/test_luau.rs.
 
