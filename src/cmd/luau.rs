@@ -238,6 +238,8 @@ Common options:
 "#;
 
 use std::{
+    cell::RefCell,
+    collections::HashMap,
     env, fs, io,
     io::Write,
     path::Path,
@@ -1762,6 +1764,71 @@ fn setup_helpers(
     )?;
     luau.globals().set("qsv_loadcsv", qsv_loadcsv)?;
 
+    // this is a helper function to load a JSON file into a Luau table.
+    //
+    //   qsv_loadjson(table_name: string, filepath: string)
+    //      table_name: the name of the Luau table to load the JSON data into.
+    //        filepath: the path of the JSON file to load
+    //         returns: true if successful.
+    //                  A Luau runtime error if the filepath is invalid or JSON parsing fails.
+    //
+    let qsv_loadjson =
+        luau.create_function(move |luau, (table_name, filepath): (String, String)| {
+            if filepath.is_empty() {
+                return helper_err!("qsv_loadjson", "filepath cannot be empty.");
+            }
+
+            let path = Path::new(&filepath);
+            if !path.exists() {
+                return helper_err!("qsv_loadjson", "\"{}\" does not exist.", path.display());
+            }
+
+            // Read the JSON file
+            let json_str = match fs::read_to_string(path) {
+                Ok(content) => content,
+                Err(e) => {
+                    return helper_err!(
+                        "qsv_loadjson",
+                        "Failed to read JSON file \"{}\": {e}",
+                        path.display()
+                    );
+                },
+            };
+
+            // Parse the JSON string
+            let json_value: serde_json::Value = match serde_json::from_str(&json_str) {
+                Ok(v) => v,
+                Err(e) => {
+                    return helper_err!(
+                        "qsv_loadjson",
+                        "Failed to parse JSON from \"{}\": {e}",
+                        path.display()
+                    );
+                },
+            };
+
+            // Convert JSON value to Luau value and store it in the global table
+            let luau_value = match luau.to_value(&json_value) {
+                Ok(v) => v,
+                Err(e) => {
+                    return helper_err!(
+                        "qsv_loadjson",
+                        "Failed to convert JSON to Luau value: {e}"
+                    );
+                },
+            };
+
+            luau.globals().raw_set(table_name.clone(), luau_value)?;
+
+            info!(
+                "{} successfully loaded JSON into table '{}'.",
+                filepath, table_name
+            );
+
+            Ok(true)
+        })?;
+    luau.globals().set("qsv_loadjson", qsv_loadjson)?;
+
     // this is a helper function that can be called from the BEGIN, MAIN & END scripts to write to
     // a file. The file will be created if it does not exist. The file will be appended to if it
     // already exists. The filename will be sanitized and will be written to the current working
@@ -2029,6 +2096,271 @@ fn setup_helpers(
         }
     })?;
     luau.globals().set("qsv_shellcmd", qsv_shellcmd)?;
+
+    // this is a helper function that calculates the cumulative sum of a numeric column.
+    // if the input cannot be converted to a number, it returns 0 for that row.
+    //
+    //   qsv_cumsum(name, value)
+    //          name: identifier for this cumulative sum (allows multiple sums to run in parallel)
+    //         value: the numeric value to add to the cumulative sum
+    //       returns: the cumulative sum up to the current row for the named sum
+    //
+    let qsv_cumsum = luau.create_function(|_, (name, value): (String, mlua::Value)| {
+        // Get static cumulative sums using thread_local storage
+        thread_local! {
+            static CUMSUMS: RefCell<HashMap<String, f64>> = RefCell::new(HashMap::new());
+        }
+
+        // Convert input value to number, defaulting to 0.0 if conversion fails
+        let num = match value {
+            Value::Number(n) => n,
+            Value::Integer(i) => i as f64,
+            Value::String(s) => s.to_string_lossy().parse::<f64>().unwrap_or_default(),
+            _ => 0.0,
+        };
+
+        // Update cumulative sum for this name
+        CUMSUMS.with(|cs| {
+            let mut sums = cs.borrow_mut();
+            let sum = sums.entry(name).or_insert(0.0);
+            *sum += num;
+            Ok(*sum)
+        })
+    })?;
+    luau.globals().set("qsv_cumsum", qsv_cumsum)?;
+
+    // this is a helper function that calculates the cumulative product of a numeric column.
+    // if the input cannot be converted to a number, it returns 1 for that row.
+    //
+    //   qsv_cumprod(name, value)
+    //          name: identifier for this cumulative product (allows multiple products to run in
+    // parallel)         value: the numeric value to multiply with the cumulative product
+    //       returns: the cumulative product up to the current row for the named product
+    //
+    let qsv_cumprod = luau.create_function(|_, (name, value): (String, mlua::Value)| {
+        thread_local! {
+            static CUMPRODS: RefCell<HashMap<String, f64>> = RefCell::new(HashMap::new());
+        }
+
+        let num = match value {
+            Value::Number(n) => n,
+            Value::Integer(i) => i as f64,
+            Value::String(s) => s.to_string_lossy().parse::<f64>().unwrap_or(1.0),
+            _ => 1.0,
+        };
+
+        CUMPRODS.with(|cp| {
+            let mut prods = cp.borrow_mut();
+            let prod = prods.entry(name).or_insert(1.0);
+            *prod *= num;
+            Ok(*prod)
+        })
+    })?;
+    luau.globals().set("qsv_cumprod", qsv_cumprod)?;
+
+    // this is a helper function that calculates the cumulative maximum of a numeric column.
+    // if the input cannot be converted to a number, it returns negative infinity for that row.
+    //
+    //   qsv_cummax(name, value)
+    //          name: identifier for this cumulative maximum (allows multiple maximums to run in
+    // parallel)         value: the numeric value to compare with the cumulative maximum
+    //       returns: the cumulative maximum up to the current row for the named maximum
+    //
+    let qsv_cummax = luau.create_function(|_, (name, value): (String, mlua::Value)| {
+        thread_local! {
+            static CUMMAXS: RefCell<HashMap<String, f64>> = RefCell::new(HashMap::new());
+        }
+
+        let num = match value {
+            Value::Number(n) => n,
+            Value::Integer(i) => i as f64,
+            Value::String(s) => s
+                .to_string_lossy()
+                .parse::<f64>()
+                .unwrap_or(f64::NEG_INFINITY),
+            _ => f64::NEG_INFINITY,
+        };
+
+        CUMMAXS.with(|cm| {
+            let mut maxs = cm.borrow_mut();
+            let max = maxs.entry(name).or_insert(f64::NEG_INFINITY);
+            *max = max.max(num);
+            Ok(*max)
+        })
+    })?;
+    luau.globals().set("qsv_cummax", qsv_cummax)?;
+
+    // this is a helper function that calculates the cumulative minimum of a numeric column.
+    // if the input cannot be converted to a number, it returns positive infinity for that row.
+    //
+    //   qsv_cummin(name, value)
+    //          name: identifier for this cumulative minimum (allows multiple minimums to run in
+    // parallel)         value: the numeric value to compare with the cumulative minimum
+    //       returns: the cumulative minimum up to the current row for the named minimum
+    //
+    let qsv_cummin = luau.create_function(|_, (name, value): (String, mlua::Value)| {
+        thread_local! {
+            static CUMMINS: RefCell<HashMap<String, f64>> = RefCell::new(HashMap::new());
+        }
+
+        let num = match value {
+            Value::Number(n) => n,
+            Value::Integer(i) => i as f64,
+            Value::String(s) => s.to_string_lossy().parse::<f64>().unwrap_or(f64::INFINITY),
+            _ => f64::INFINITY,
+        };
+
+        CUMMINS.with(|cm| {
+            let mut mins = cm.borrow_mut();
+            let min = mins.entry(name).or_insert(f64::INFINITY);
+            *min = min.min(num);
+            Ok(*min)
+        })
+    })?;
+    luau.globals().set("qsv_cummin", qsv_cummin)?;
+
+    // qsv_lag - returns lagged value with optional default
+    //
+    //   qsv_lag(name, value, lag, default)
+    //          name: identifier for this lag (allows multiple lags to run in parallel)
+    //         value: the value to lag
+    //           lag: (optional) number of rows to lag by (default: 1)
+    //       default: (optional) value to return for rows before lag is available (default: "0")
+    //       returns: the value from 'lag' rows ago, or default if not enough rows seen yet
+    let qsv_lag = luau.create_function(|luau, (name, value, lag, default): (String, mlua::Value, Option<i64>, Option<mlua::Value>)| {
+        thread_local! {
+            static LAGS: RefCell<HashMap<String, Vec<String>>> = RefCell::new(HashMap::new());
+        }
+
+        let lag = lag.unwrap_or(1);
+        let key = format!("{name}_{lag}");
+
+        // Convert the value to a string to store it
+        let value_str = match &value {
+            Value::String(s) => s.to_string_lossy(),
+            Value::Number(n) => n.to_string(),
+            Value::Integer(i) => i.to_string(),
+            Value::Boolean(b) => b.to_string(),
+            Value::Nil => String::new(),
+            _ => value.to_string().unwrap_or_default(),
+        };
+
+        LAGS.with(|l| {
+            let mut lags = l.borrow_mut();
+            let values = lags.entry(key).or_default();
+            values.push(value_str);
+
+            if values.len() as i64 <= lag {
+                // Return the default value when not enough history
+                Ok(default.unwrap_or_else(|| {
+                    mlua::Value::String(luau.create_string("0").unwrap())
+                }))
+            } else {
+                let lagged_value = &values[values.len() - 1 - lag as usize];
+                Ok(mlua::Value::String(luau.create_string(lagged_value)?))
+            }
+        })
+    })?;
+    luau.globals().set("qsv_lag", qsv_lag)?;
+
+    // qsv_cumany - returns true if any value so far has been truthy
+    //
+    //   qsv_cumany(name, value)
+    //          name: identifier for this cumulative any (allows multiple cumany's to run in
+    // parallel)         value: the value to check for truthiness
+    //       returns: true if any value seen so far has been truthy, false otherwise
+    let qsv_cumany = luau.create_function(|_, (name, value): (String, mlua::Value)| {
+        thread_local! {
+            static CUMANYS: RefCell<HashMap<String, bool>> = RefCell::new(HashMap::new());
+        }
+
+        let is_truthy = match value {
+            Value::Boolean(b) => b,
+            Value::Number(n) => n != 0.0,
+            Value::Integer(i) => i != 0,
+            Value::String(s) => !s.to_string_lossy().is_empty(),
+            Value::Nil => false,
+            _ => true, // Tables, functions, etc. are considered truthy
+        };
+
+        CUMANYS.with(|ca| {
+            let mut anys = ca.borrow_mut();
+            let any = anys.entry(name).or_insert(false);
+            *any = *any || is_truthy;
+            Ok(*any)
+        })
+    })?;
+    luau.globals().set("qsv_cumany", qsv_cumany)?;
+
+    // qsv_cumall - returns true if all values so far have been truthy
+    //
+    //   qsv_cumall(name, value)
+    //          name: identifier for this cumulative all (allows multiple cumall's to run in
+    // parallel)         value: the value to check for truthiness
+    //       returns: true if all values seen so far have been truthy, false otherwise
+    let qsv_cumall = luau.create_function(|_, (name, value): (String, mlua::Value)| {
+        thread_local! {
+            static CUMALLS: RefCell<HashMap<String, bool>> = RefCell::new(HashMap::new());
+        }
+
+        let is_truthy = match value {
+            Value::Boolean(b) => b,
+            Value::Number(n) => n != 0.0,
+            Value::Integer(i) => i != 0,
+            Value::String(s) => !s.to_string_lossy().is_empty(),
+            Value::Nil => false,
+            _ => true, // Tables, functions, etc. are considered truthy
+        };
+
+        CUMALLS.with(|ca| {
+            let mut alls = ca.borrow_mut();
+            let all = alls.entry(name).or_insert(true);
+            *all = *all && is_truthy;
+            Ok(*all)
+        })
+    })?;
+    luau.globals().set("qsv_cumall", qsv_cumall)?;
+
+    // qsv_diff - returns difference between current and previous value
+    //
+    //   qsv_diff(name, value[, periods])
+    //          name: identifier for this diff (allows multiple diffs to run in parallel)
+    //         value: the value to calculate difference for
+    //       periods: optional number of periods to look back (default: 1)
+    //       returns: difference between current value and value 'periods' rows back
+    //               returns 0 if not enough history available yet
+    let qsv_diff = luau.create_function(
+        |_, (name, value, periods): (String, mlua::Value, Option<i64>)| {
+            thread_local! {
+                static DIFFS: RefCell<HashMap<String, Vec<f64>>> = RefCell::new(HashMap::new());
+            }
+
+            let periods = periods.unwrap_or(1);
+            // Create a unique key that includes both the name and periods
+            let key = format!("{name}_{periods}");
+
+            let num = match value {
+                Value::Number(n) => n,
+                Value::Integer(i) => i as f64,
+                Value::String(s) => s.to_string_lossy().parse::<f64>().unwrap_or(0.0),
+                _ => 0.0,
+            };
+
+            DIFFS.with(|d| {
+                let mut diffs = d.borrow_mut();
+                let values = diffs.entry(key).or_default();
+                values.push(num);
+
+                if values.len() as i64 <= periods {
+                    Ok(0.0) // Return 0 when not enough history
+                } else {
+                    let prev_value = values[values.len() - 1 - periods as usize];
+                    Ok(num - prev_value)
+                }
+            })
+        },
+    )?;
+    luau.globals().set("qsv_diff", qsv_diff)?;
 
     // this is a helper function that can be called from the BEGIN script to register
     // and load a lookup table. It expects two arguments - the lookup_name & the
