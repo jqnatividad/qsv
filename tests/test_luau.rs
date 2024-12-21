@@ -2313,3 +2313,621 @@ return tonumber(number) > tonumber(limit)
     ];
     assert_eq!(got, expected);
 }
+
+#[test]
+fn luau_loadjson() {
+    let wrk = Workdir::new("luau_loadjson");
+
+    // Create a test JSON file
+    wrk.create_from_string(
+        "test.json",
+        r#"{
+            "string": "hello",
+            "number": 42,
+            "boolean": true,
+            "null": null,
+            "array": [1, 2, 3],
+            "object": {
+                "nested": "value",
+                "numbers": [4, 5, 6]
+            }
+        }"#,
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("result")
+        .arg(r#"
+BEGIN {
+    qsv_loadjson("config_tbl", "test.json");
+    qsv_log("debug", "Loaded JSON table:", config_tbl)
+    for k,v in pairs(config_tbl) do
+        qsv_log("debug", "Key:", k, "Value:", v)
+    end
+}!
+
+return config_tbl["string"] .. " " .. config_tbl["object"]["nested"] .. " " .. tostring(config_tbl["number"])
+"#)
+        .arg("--no-headers")
+        .arg("data.csv");
+
+    // Create a simple input CSV
+    wrk.create("data.csv", vec![svec!["a"], svec!["b"], svec!["c"]]);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["a", "hello value 42"],
+        svec!["b", "hello value 42"],
+        svec!["c", "hello value 42"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_loadjson_array() {
+    let wrk = Workdir::new("luau_loadjson_array");
+
+    // Create a test JSON file with an array
+    wrk.create_from_string(
+        "test.json",
+        r#"[
+            {"id": 1, "name": "Alice"},
+            {"id": 2, "name": "Bob"},
+            {"id": 3, "name": "Charlie"}
+        ]"#,
+    );
+
+    // Create input CSV with index references
+    wrk.create(
+        "data.csv",
+        vec![svec!["x"], svec!["1"], svec!["2"], svec!["3"]],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("name")
+        .arg(
+            r#"
+BEGIN {
+    qsv_loadjson("users", "test.json");
+}!
+
+local idx = tonumber(x)
+return users[idx]["name"]
+"#,
+        )
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["x", "name"],
+        svec!["1", "Alice"],
+        svec!["2", "Bob"],
+        svec!["3", "Charlie"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_loadjson_error_missing_file() {
+    let wrk = Workdir::new("luau_loadjson_error");
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("result")
+        .arg(
+            r#"
+BEGIN {
+    qsv_loadjson("config", "nonexistent.json");
+}!
+
+return "should not get here"
+"#,
+        )
+        .arg("--no-headers")
+        .arg("data.csv");
+
+    // Create a simple input CSV
+    wrk.create("data.csv", vec![svec!["a"]]);
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
+fn luau_loadjson_error_invalid_json() {
+    let wrk = Workdir::new("luau_loadjson_invalid");
+
+    // Create an invalid JSON file
+    wrk.create_from_string(
+        "invalid.json",
+        r#"{
+            "unclosed": "object"
+        "#, // Missing closing brace
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("result")
+        .arg(
+            r#"
+BEGIN {
+    qsv_loadjson("config", "invalid.json");
+}!
+
+return "should not get here"
+"#,
+        )
+        .arg("--no-headers")
+        .arg("data.csv");
+
+    // Create a simple input CSV
+    wrk.create("data.csv", vec![svec!["a"]]);
+
+    wrk.assert_err(&mut cmd);
+}
+
+#[test]
+fn luau_cumsum_single() {
+    let wrk = Workdir::new("luau_cumsum_single");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["amount"],
+            svec!["10"],
+            svec!["20"],
+            svec!["30"],
+            svec!["40"],
+            svec!["50"],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("running_total")
+        .arg(r#"qsv_cumsum("total", amount)"#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["amount", "running_total"],
+        svec!["10", "10"],
+        svec!["20", "30"],
+        svec!["30", "60"],
+        svec!["40", "100"],
+        svec!["50", "150"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_cumsum_multiple() {
+    let wrk = Workdir::new("luau_cumsum_multiple");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["revenue", "expenses"],
+            svec!["100", "50"],
+            svec!["200", "75"],
+            svec!["150", "80"],
+            svec!["300", "100"],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("revenue_total,expenses_total,profit_total")
+        .arg(
+            r#"{
+            qsv_cumsum("revenue", revenue),
+            qsv_cumsum("expenses", expenses),
+            qsv_cumsum("profit", tonumber(revenue) - tonumber(expenses))
+        }"#,
+        )
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec![
+            "revenue",
+            "expenses",
+            "revenue_total",
+            "expenses_total",
+            "profit_total"
+        ],
+        svec!["100", "50", "100", "50", "50"],
+        svec!["200", "75", "300", "125", "175"],
+        svec!["150", "80", "450", "205", "245"],
+        svec!["300", "100", "750", "305", "445"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_cumsum_invalid_input() {
+    let wrk = Workdir::new("luau_cumsum_invalid");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value"],
+            svec!["10"],
+            svec!["invalid"],
+            svec!["20"],
+            svec!["bad"],
+            svec!["30"],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("total")
+        .arg(r#"qsv_cumsum("sum", value)"#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["value", "total"],
+        svec!["10", "10"],
+        svec!["invalid", "10"], // Invalid input treated as 0
+        svec!["20", "30"],
+        svec!["bad", "30"], // Invalid input treated as 0
+        svec!["30", "60"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_cumprod() {
+    let wrk = Workdir::new("luau_cumprod");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value"],
+            svec!["2"],
+            svec!["3"],
+            svec!["4"],
+            svec!["5"],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("running_product")
+        .arg(r#"qsv_cumprod("prod", value)"#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["value", "running_product"],
+        svec!["2", "2"],
+        svec!["3", "6"],
+        svec!["4", "24"],
+        svec!["5", "120"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_cummax_cummin() {
+    let wrk = Workdir::new("luau_cummax_cummin");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value"],
+            svec!["10"],
+            svec!["5"],
+            svec!["15"],
+            svec!["3"],
+            svec!["12"],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("running_max,running_min")
+        .arg(r#"{qsv_cummax("max", value), qsv_cummin("min", value)}"#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["value", "running_max", "running_min"],
+        svec!["10", "10", "10"],
+        svec!["5", "10", "5"],
+        svec!["15", "15", "5"],
+        svec!["3", "15", "3"],
+        svec!["12", "15", "3"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_lag() {
+    let wrk = Workdir::new("luau_lag");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value"],
+            svec!["10"],
+            svec!["20"],
+            svec!["30"],
+            svec!["40"],
+            svec!["50"],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("lag1,lag2")
+        .arg(
+            r#"{
+            qsv_lag("val", value, 1, "0"),
+            qsv_lag("val", value, 2, "0")
+        }"#,
+        )
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["value", "lag1", "lag2"],
+        svec!["10", "0", "0"],
+        svec!["20", "10", "0"],
+        svec!["30", "20", "10"],
+        svec!["40", "30", "20"],
+        svec!["50", "40", "30"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_cumany_cumall() {
+    let wrk = Workdir::new("luau_cumany_cumall");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value"],
+            svec!["10"],
+            svec!["0"],
+            svec!["15"],
+            svec!["0"],
+            svec!["20"],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("has_zero,all_positive")
+        .arg(
+            r#"{
+            qsv_cumany("zero", value == "0"),
+            qsv_cumall("pos", tonumber(value) > 0)
+        }"#,
+        )
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["value", "has_zero", "all_positive"],
+        svec!["10", "false", "true"],
+        svec!["0", "true", "false"],
+        svec!["15", "true", "false"],
+        svec!["0", "true", "false"],
+        svec!["20", "true", "false"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_diff() {
+    let wrk = Workdir::new("luau_diff");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value"],
+            svec!["10"],
+            svec!["15"],
+            svec!["13"],
+            svec!["20"],
+            svec!["18"],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("diff1,diff2")
+        .arg(
+            r#"{
+            qsv_diff("val", value),
+            qsv_diff("val", value, 2)
+        }"#,
+        )
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["value", "diff1", "diff2"],
+        svec!["10", "0", "0"],
+        svec!["15", "5", "0"],
+        svec!["13", "-2", "3"],
+        svec!["20", "7", "5"],
+        svec!["18", "-2", "5"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_cumany_cumall_with_strings() {
+    let wrk = Workdir::new("luau_cumany_cumall_strings");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value"],
+            svec!["hello"],
+            svec![""],
+            svec!["world"],
+            svec![""],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("has_empty,all_nonempty")
+        .arg(
+            r#"{
+            qsv_cumany("empty", value == ""),
+            qsv_cumall("nonempty", value ~= "")
+        }"#,
+        )
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["value", "has_empty", "all_nonempty"],
+        svec!["hello", "false", "true"],
+        svec!["", "true", "false"],
+        svec!["world", "true", "false"],
+        svec!["", "true", "false"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_cumall_with_numbers() {
+    let wrk = Workdir::new("luau_cumall_numbers");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value"],
+            svec!["10"],
+            svec!["0"],
+            svec!["20"],
+            svec!["30"],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("all_positive")
+        .arg(r#"qsv_cumall("pos", tonumber(value) > 0)"#)
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["value", "all_positive"],
+        svec!["10", "true"],
+        svec!["0", "false"],
+        svec!["20", "false"],
+        svec!["30", "false"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_lag_with_default() {
+    let wrk = Workdir::new("luau_lag_default");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value"],
+            svec!["10"],
+            svec!["20"],
+            svec!["30"],
+            svec!["40"],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("prev,prev2")
+        .arg(
+            r#"{
+            qsv_lag("lag1", value, 1, "N/A"),
+            qsv_lag("lag2", value, 2, "N/A")
+        }"#,
+        )
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["value", "prev", "prev2"],
+        svec!["10", "N/A", "N/A"],
+        svec!["20", "10", "N/A"],
+        svec!["30", "20", "10"],
+        svec!["40", "30", "20"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_diff_with_lag() {
+    let wrk = Workdir::new("luau_diff_lag");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value"],
+            svec!["100"],
+            svec!["120"],
+            svec!["115"],
+            svec!["140"],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("diff1,diff2,pct_change")
+        .arg(
+            r#"{
+            qsv_diff("d1", value),
+            qsv_diff("d2", value, 2),
+            string.format("%.1f%%", ((tonumber(value) / tonumber(qsv_lag("pct", value))) - 1.0) * 100)
+        }"#,
+        )
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["value", "diff1", "diff2", "pct_change"],
+        svec!["100", "0", "0", "inf%"], // division by zero
+        svec!["120", "20", "0", "20.0%"],
+        svec!["115", "-5", "15", "-4.2%"],
+        svec!["140", "25", "20", "21.7%"],
+    ];
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn luau_cumulative_stats() {
+    let wrk = Workdir::new("luau_cumulative_stats");
+    wrk.create(
+        "data.csv",
+        vec![
+            svec!["value"],
+            svec!["15"],
+            svec!["10"],
+            svec!["25"],
+            svec!["5"],
+            svec!["20"],
+        ],
+    );
+
+    let mut cmd = wrk.command("luau");
+    cmd.arg("map")
+        .arg("running_max,running_min,running_sum")
+        .arg(
+            r#"{
+            qsv_cummax("max", value),
+            qsv_cummin("min", value),
+            qsv_cumsum("sum", value)
+        }"#,
+        )
+        .arg("data.csv");
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["value", "running_max", "running_min", "running_sum"],
+        svec!["15", "15", "15", "15"],
+        svec!["10", "15", "10", "25"],
+        svec!["25", "25", "10", "50"],
+        svec!["5", "25", "5", "55"],
+        svec!["20", "25", "5", "75"],
+    ];
+    assert_eq!(got, expected);
+}
