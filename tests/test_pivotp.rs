@@ -10,7 +10,7 @@ macro_rules! pivotp_test {
             use crate::workdir::Workdir;
 
             #[test]
-            fn testpivotp() {
+            fn main() {
                 let wrk = setup(stringify!($name));
                 let cmd = wrk.command("pivotp");
                 $fun(wrk, cmd);
@@ -70,6 +70,8 @@ pivotp_test!(
             "date,region",
             "--values",
             "sales",
+            "--agg",
+            "sum",
             "sales.csv",
         ]);
 
@@ -350,7 +352,7 @@ pivotp_test!(
         wrk.assert_success(&mut cmd);
 
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-        let expected = vec![svec!["date;A;B"], svec!["2023-01-01;100;150"]];
+        let expected = vec![svec!["date;A;B"], svec!["2023-01-01;1;1"]];
         assert_eq!(got, expected);
     }
 );
@@ -487,6 +489,123 @@ pivotp_test!(
             ],
             svec!["2023-01-01", "300", "150", "30", "15"],
             svec!["2023-01-02", "300", "600", "30", "60"],
+        ];
+        assert_eq!(got, expected);
+    }
+);
+
+// Test pivot with try-parsedates flag
+pivotp_test!(
+    pivotp_try_parsedates,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.args(&[
+            "product",
+            "--index",
+            "date",
+            "--values",
+            "sales",
+            "--try-parsedates",
+            "--agg",
+            "sum",
+            "sales.csv",
+        ]);
+
+        wrk.assert_success(&mut cmd);
+
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = vec![
+            svec!["date", "A", "B"],
+            svec!["2023-01-01", "300", "150"],
+            svec!["2023-01-02", "300", "600"],
+        ];
+        assert_eq!(got, expected);
+    }
+);
+
+// Test pivot with decimal comma
+pivotp_test!(
+    pivotp_decimal_comma,
+    |wrk: Workdir, mut cmd: process::Command| {
+        // Create data with decimal commas
+        let sales_decimal = vec![
+            svec!["date", "product", "region", "sales"],
+            svec!["2023-01-01", "A", "North", "100,50"],
+            svec!["2023-01-01", "B", "North", "150,75"],
+        ];
+        wrk.create_with_delim("sales_decimal.csv", sales_decimal, b';');
+
+        cmd.args(&[
+            "product",
+            "--index",
+            "date",
+            "--values",
+            "sales",
+            "--decimal-comma",
+            "--delimiter",
+            ";",
+            "sales_decimal.csv",
+        ]);
+
+        wrk.assert_success(&mut cmd);
+
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = vec![svec!["date;A;B"], svec!["2023-01-01;1;1"]];
+        assert_eq!(got, expected);
+    }
+);
+
+// Test pivot with validation
+pivotp_test!(
+    pivotp_validate,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.args(&[
+            "product",
+            "--index",
+            "date",
+            "--values",
+            "sales",
+            "--validate",
+            "sales.csv",
+        ]);
+
+        wrk.assert_success(&mut cmd);
+
+        let msg = wrk.output_stderr(&mut cmd);
+        let expected_msg = "Pivot column cardinalities:\n  product: 2\n(2, 3)\n";
+        assert_eq!(msg, expected_msg);
+
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = vec![
+            svec!["date", "A", "B"],
+            svec!["2023-01-01", "2", "1"],
+            svec!["2023-01-02", "1", "2"],
+        ];
+        assert_eq!(got, expected);
+    }
+);
+
+// Test pivot with custom infer length
+pivotp_test!(
+    pivotp_infer_len,
+    |wrk: Workdir, mut cmd: process::Command| {
+        cmd.args(&[
+            "product",
+            "--index",
+            "date",
+            "--values",
+            "sales",
+            "--infer-len",
+            "5",
+            "sales.csv",
+        ]);
+
+        wrk.assert_success(&mut cmd);
+
+        let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+        let expected = vec![
+            svec!["date", "A", "B"],
+            svec!["2023-01-01", "2", "1"],
+            svec!["2023-01-02", "1", "2"],
         ];
         assert_eq!(got, expected);
     }
