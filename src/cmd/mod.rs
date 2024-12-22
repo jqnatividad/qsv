@@ -61,6 +61,11 @@ pub mod lens;
 pub mod luau;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod partition;
+#[cfg(all(
+    feature = "polars",
+    any(feature = "feature_capable", feature = "datapusher_plus")
+))]
+pub mod pivotp;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 pub mod pro;
 #[cfg(feature = "prompt")]

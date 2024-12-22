@@ -161,10 +161,12 @@ fn main() -> QsvExitCode {
     #[cfg(all(feature = "luau", feature = "feature_capable"))]
     enabled_commands.push_str("    luau        Execute Luau script on CSV data\n");
 
-    enabled_commands.push_str(
-        "    partition   Partition CSV data based on a column value
-    pro         Interact with the qsv pro API\n",
-    );
+    enabled_commands.push_str("    partition   Partition CSV data based on a column value\n");
+
+    #[cfg(all(feature = "polars", feature = "feature_capable"))]
+    enabled_commands.push_str("    pivotp       Pivots CSV files using the Pola.rs engine\n");
+
+    enabled_commands.push_str("    pro         Interact with the qsv pro API\n");
 
     #[cfg(all(feature = "prompt", feature = "feature_capable"))]
     enabled_commands.push_str("    prompt      Open a file dialog to pick a file\n");
@@ -379,6 +381,8 @@ enum Command {
     #[cfg(all(feature = "luau", feature = "feature_capable"))]
     Luau,
     Partition,
+    #[cfg(all(feature = "polars", feature = "feature_capable"))]
+    PivotP,
     Pro,
     #[cfg(all(feature = "prompt", feature = "feature_capable"))]
     Prompt,
@@ -477,6 +481,8 @@ impl Command {
             #[cfg(all(feature = "luau", feature = "feature_capable"))]
             Command::Luau => cmd::luau::run(argv),
             Command::Partition => cmd::partition::run(argv),
+            #[cfg(all(feature = "polars", feature = "feature_capable"))]
+            Command::PivotP => cmd::pivotp::run(argv),
             Command::Pro => cmd::pro::run(argv),
             #[cfg(all(feature = "prompt", feature = "feature_capable"))]
             Command::Prompt => cmd::prompt::run(argv),
