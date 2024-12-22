@@ -39,7 +39,7 @@ pivotp options:
                               count - Count of values
                               last - Last value encountered
                               none - No aggregation is done. Raises error if multiple values are in group.
-                              smart - use value column statistics to pick an aggregation.
+                              smart - use value column data type & statistics to pick an aggregation.
                                       Will only work if there is one value column, otherwise
                                       it falls back to `first`
                               smartq - same as smart, but no messages.
