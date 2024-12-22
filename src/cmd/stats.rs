@@ -191,20 +191,21 @@ stats options:
     --stats-jsonl             Also write the stats in JSONL format. 
                               If set, the stats will be written to <FILESTEM>.stats.csv.data.jsonl.
                               Note that this option used internally by other qsv commands
-                              (currently `frequency`, `schema`. `tojsonl` & `sqlp`) to load cached stats. 
-                              You can preemptively create the stats-jsonl file by using
-                              this option BEFORE running the `frequency`, `schema` & `tojsonl`
-                              commands and they will automatically use it.
- -c, --cache-threshold <arg>  When greater than 1, the threshold in milliseconds before caching
-                              stats results. If a stats run takes longer than this threshold,
-                              the stats results will be cached.
-                              Set to 0 to suppress caching. 
-                              Set to 1 to force caching.
-                              Set to a negative number to automatically create an index
-                              when the input file size is greater than abs(arg) in bytes.
-                              If the negative number ends with 5, it will delete the index
-                              file and the stats cache file after the stats run. Otherwise,
-                              the index file and the cache files are kept.
+                              (currently frequency, joinp, pivotp, schema, tojsonl & sqlp)
+                              to load cached stats. You can preemptively create the stats-jsonl
+                              file by using this option BEFORE running the commands listed above
+                              and they will automatically use it.
+ -c, --cache-threshold <arg>  Controls the creation of stats cache files.
+                                - when greater than 1, the threshold in milliseconds before caching
+                                  stats results. If a stats run takes longer than this threshold,
+                                  the stats results will be cached.
+                                - 0 to suppress caching. 
+                                - 1 to force caching.
+                                - a negative number to automatically create an index when
+                                  the input file size is greater than abs(arg) in bytes.
+                                  If the negative number ends with 5, it will delete the index
+                                  file and the stats cache file after the stats run. Otherwise,
+                                  the index file and the cache files are kept.
                               [default: 5000]
 
 Common options:
