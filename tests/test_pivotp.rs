@@ -352,7 +352,7 @@ pivotp_test!(
         wrk.assert_success(&mut cmd);
 
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-        let expected = vec![svec!["date;A;B"], svec!["2023-01-01;1;1"]];
+        let expected = vec![svec!["date;A;B"], svec!["2023-01-01;100;150"]];
         assert_eq!(got, expected);
     }
 );
@@ -549,7 +549,7 @@ pivotp_test!(
         wrk.assert_success(&mut cmd);
 
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
-        let expected = vec![svec!["date;A;B"], svec!["2023-01-01;1;1"]];
+        let expected = vec![svec!["date;A;B"], svec!["2023-01-01;100.5;150.75"]];
         assert_eq!(got, expected);
     }
 );
@@ -577,8 +577,8 @@ pivotp_test!(
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
         let expected = vec![
             svec!["date", "A", "B"],
-            svec!["2023-01-01", "2", "1"],
-            svec!["2023-01-02", "1", "2"],
+            svec!["2023-01-01", "300", "150"],
+            svec!["2023-01-02", "300", "600"],
         ];
         assert_eq!(got, expected);
     }
@@ -604,8 +604,8 @@ pivotp_test!(
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
         let expected = vec![
             svec!["date", "A", "B"],
-            svec!["2023-01-01", "2", "1"],
-            svec!["2023-01-02", "1", "2"],
+            svec!["2023-01-01", "300", "150"],
+            svec!["2023-01-02", "300", "600"],
         ];
         assert_eq!(got, expected);
     }
