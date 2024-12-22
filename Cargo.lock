@@ -320,9 +320,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.94"
+version = "1.0.95"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1fd03a028ef38ba2276dce7e33fcd6369c158a1bca17946c4b1b701891c1ff7"
+checksum = "34ac096ce696dc2fcabef30516bb13c0a68a11d30131d3df6f04711467681b04"
 
 [[package]]
 name = "arbitrary"
@@ -730,7 +730,7 @@ checksum = "3b43422f69d8ff38f95f1b2bb76517c91589a924d1559a0e935d7c8ce0274c11"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -770,7 +770,7 @@ checksum = "c7c24de15d275a1ecfd47a380fb4d5ec9bfe0933f309ed5e705b775596a3574d"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -787,7 +787,7 @@ checksum = "721cae7de5c34fbb2acd27e21e6d2cf7b886dce0c27388d46c4e6c47ea4318dd"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -1030,7 +1030,7 @@ checksum = "3fa76293b4f7bb636ab88fd78228235b5248b4d05cc589aed610f954af5d7c7a"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -1107,7 +1107,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -1289,7 +1289,7 @@ dependencies = [
  "heck",
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -1793,7 +1793,7 @@ checksum = "f46882e17999c6cc590af592290432be3bce0428cb0d5f8b6715e4dc7b383eb3"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -1817,7 +1817,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "strsim",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -1828,7 +1828,7 @@ checksum = "d336a2a514f6ccccaa3e09b02d41d35330c07ddf03a62165fcec10bb561c7806"
 dependencies = [
  "darling_core",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -1918,7 +1918,7 @@ checksum = "d150dea618e920167e5973d70ae6ece4385b7164e0d799fe7c122dd0a5d912ad"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -1929,7 +1929,7 @@ checksum = "30542c1ad912e0e3d22a1935c290e12e8a29d704a420177a31faad4a601a0800"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -1942,7 +1942,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustc_version",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -1997,7 +1997,7 @@ checksum = "97369cbbc041bc366949bc74d34658d6cda5621039731c6310521892a3a20ae0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -2139,7 +2139,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -2160,7 +2160,7 @@ checksum = "de0d48a183585823424a4ce1aa132d174a6a81bd540895822eb4c8373a8e49e8"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -2180,7 +2180,7 @@ checksum = "3bf679796c0322556351f287a51b49e48f7c4986e727b5dd78c972d30e2e16cc"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -2389,7 +2389,7 @@ dependencies = [
  "crossbeam-queue",
  "flate2",
  "log",
- "thiserror 2.0.8",
+ "thiserror 2.0.9",
 ]
 
 [[package]]
@@ -2555,7 +2555,7 @@ checksum = "162ee34ebcb7c64a8abebc059ce0fee27c2262618d7b60ed8faf72fef13c3650"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -3148,7 +3148,7 @@ checksum = "1ec89e9337638ecdc08744df490b221a7399bf8d164eb52a665454e60e075ad6"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -3240,7 +3240,7 @@ dependencies = [
  "pretty_assertions",
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -4475,7 +4475,7 @@ dependencies = [
  "phf_shared",
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -4504,7 +4504,7 @@ checksum = "3c0f5fad0874fc7abcd4d750e76917eaebbecaa2c20bde22e1dbeeba8beb758c"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -4558,7 +4558,7 @@ dependencies = [
 [[package]]
 name = "polars"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "getrandom",
  "polars-arrow",
@@ -4577,7 +4577,7 @@ dependencies = [
 [[package]]
 name = "polars-arrow"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "ahash",
  "atoi",
@@ -4621,7 +4621,7 @@ dependencies = [
 [[package]]
 name = "polars-compute"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "atoi_simd",
  "bytemuck",
@@ -4642,7 +4642,7 @@ dependencies = [
 [[package]]
 name = "polars-core"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "ahash",
  "bitflags 2.6.0",
@@ -4670,7 +4670,7 @@ dependencies = [
  "serde",
  "serde_json",
  "strum_macros",
- "thiserror 2.0.8",
+ "thiserror 2.0.9",
  "version_check",
  "xxhash-rust",
 ]
@@ -4678,20 +4678,20 @@ dependencies = [
 [[package]]
 name = "polars-error"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "avro-schema",
  "object_store",
  "polars-arrow-format",
  "regex",
  "simdutf8",
- "thiserror 2.0.8",
+ "thiserror 2.0.9",
 ]
 
 [[package]]
 name = "polars-expr"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "ahash",
  "bitflags 2.6.0",
@@ -4714,7 +4714,7 @@ dependencies = [
 [[package]]
 name = "polars-io"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "ahash",
  "async-trait",
@@ -4762,7 +4762,7 @@ dependencies = [
 [[package]]
 name = "polars-json"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "ahash",
  "chrono",
@@ -4784,7 +4784,7 @@ dependencies = [
 [[package]]
 name = "polars-lazy"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "ahash",
  "bitflags 2.6.0",
@@ -4811,7 +4811,7 @@ dependencies = [
 [[package]]
 name = "polars-mem-engine"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "futures",
  "memmap2",
@@ -4832,7 +4832,7 @@ dependencies = [
 [[package]]
 name = "polars-ops"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "ahash",
  "argminmax",
@@ -4867,7 +4867,7 @@ dependencies = [
 [[package]]
 name = "polars-parquet"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "ahash",
  "async-stream",
@@ -4905,7 +4905,7 @@ dependencies = [
 [[package]]
 name = "polars-pipe"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "crossbeam-channel",
  "crossbeam-queue",
@@ -4931,7 +4931,7 @@ dependencies = [
 [[package]]
 name = "polars-plan"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "ahash",
  "bitflags 2.6.0",
@@ -4966,7 +4966,7 @@ dependencies = [
 [[package]]
 name = "polars-row"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "bitflags 2.6.0",
  "bytemuck",
@@ -4979,7 +4979,7 @@ dependencies = [
 [[package]]
 name = "polars-schema"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "indexmap",
  "polars-error",
@@ -4991,7 +4991,7 @@ dependencies = [
 [[package]]
 name = "polars-sql"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "hex",
  "once_cell",
@@ -5012,7 +5012,7 @@ dependencies = [
 [[package]]
 name = "polars-stream"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "atomic-waker",
  "crossbeam-deque",
@@ -5041,7 +5041,7 @@ dependencies = [
 [[package]]
 name = "polars-time"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "atoi",
  "bytemuck",
@@ -5063,7 +5063,7 @@ dependencies = [
 [[package]]
 name = "polars-utils"
 version = "0.45.1"
-source = "git+https://github.com/pola-rs/polars?rev=5f791b4#5f791b450aea81bc967da185a06b6ad8f767ad89"
+source = "git+https://github.com/pola-rs/polars?rev=68eec85#68eec855b37b2ea9a4499c951df821d7fe70050b"
 dependencies = [
  "ahash",
  "bincode",
@@ -5282,7 +5282,7 @@ dependencies = [
  "proc-macro2",
  "pyo3-macros-backend",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -5295,7 +5295,7 @@ dependencies = [
  "proc-macro2",
  "pyo3-build-config",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -5553,7 +5553,7 @@ dependencies = [
  "rustc-hash",
  "rustls",
  "socket2",
- "thiserror 2.0.8",
+ "thiserror 2.0.9",
  "tokio",
  "tracing",
 ]
@@ -5572,7 +5572,7 @@ dependencies = [
  "rustls",
  "rustls-pki-types",
  "slab",
- "thiserror 2.0.8",
+ "thiserror 2.0.9",
  "tinyvec",
  "tracing",
  "web-time",
@@ -5749,7 +5749,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "76009fbe0614077fc1a2ce255e3a1881a2e3a3527097d5dc6d8212c585e7e38b"
 dependencies = [
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -5809,7 +5809,7 @@ checksum = "bcc303e793d3734489387d205e9b186fac9c6cfacedd98cbb2e8a5943595f3e6"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -6273,7 +6273,7 @@ checksum = "46f859dbbf73865c6627ed570e78961cd3ac92407a2d117204c49232485da55e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -6297,7 +6297,7 @@ checksum = "6c64451ba24fc7a6a2d60fc75dd9c83c90903b19028d4eff35e88fc1e86564e9"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -6344,7 +6344,7 @@ checksum = "5d69265a08751de7844521fd15003ae0a888e035773ba05695c5c759a6f89eef"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -6542,7 +6542,7 @@ dependencies = [
  "heck",
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -6694,7 +6694,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustversion",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -6716,9 +6716,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.90"
+version = "2.0.91"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "919d3b74a5dd0ccd15aeb8f93e7006bd9e14c295087c9896a110f490752bcf31"
+checksum = "d53cbcb5a243bd33b7858b1d7f4aca2153490815872d86d955d6ea29f743c035"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6742,7 +6742,7 @@ checksum = "c8af7666ab7b6390ab78131fb5b0fce11d6b7a6951602017c35fa82800708971"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -6828,11 +6828,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.8"
+version = "2.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08f5383f3e0071702bf93ab5ee99b52d26936be9dedd9413067cbdcddcb6141a"
+checksum = "f072643fd0190df67a8bab670c20ef5d8737177d6ac6b2e9a236cb096206b2cc"
 dependencies = [
- "thiserror-impl 2.0.8",
+ "thiserror-impl 2.0.9",
 ]
 
 [[package]]
@@ -6843,18 +6843,18 @@ checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.8"
+version = "2.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2f357fcec90b3caef6623a099691be676d033b40a058ac95d2a6ade6fa0c943"
+checksum = "7b50fa271071aae2e6ee85f842e2e28ba8cd2c5fb67f11fcb1fd70b276f9e7d4"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -6987,7 +6987,7 @@ checksum = "693d596312e88961bc67d7f1f97af8a70227d9f90c31bba5806eec004978d752"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -7099,7 +7099,7 @@ checksum = "395ae124c09f9e6918a2310af6038fba074bcf474ac352496d5910dd59a2226d"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -7157,7 +7157,7 @@ checksum = "560b82d656506509d43abe30e0ba64c56b1953ab3d4fe7ba5902747a7a3cedd5"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -7470,7 +7470,7 @@ dependencies = [
  "log",
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
  "wasm-bindgen-shared",
 ]
 
@@ -7505,7 +7505,7 @@ checksum = "30d7a95b763d3c45903ed6c81f156801839e5ee968bb07e534c44df0fcd330c2"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -7777,7 +7777,7 @@ checksum = "9107ddc059d5b6fbfbffdfa7a7fe3e22a226def0b2608f72e9d552763d3e1ad7"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -7788,7 +7788,7 @@ checksum = "2bbd5b46c938e506ecbce286b6628a02171d56153ba733b6c741fc627ec9579b"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -7799,7 +7799,7 @@ checksum = "29bee4b38ea3cde66011baa44dba677c432a78593e202392d1e9070cf2a7fca7"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -7810,7 +7810,7 @@ checksum = "053c4c462dc91d3b1504c6fe5a726dd15e216ba718e84a0e46a88fbe5ded3515"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -8106,7 +8106,7 @@ checksum = "2380878cad4ac9aac1e2435f3eb4020e8374b5f13c296cb75b4620ff8e229154"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
  "synstructure",
 ]
 
@@ -8155,7 +8155,7 @@ dependencies = [
  "proc-macro-crate",
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
  "zbus_names",
  "zvariant",
  "zvariant_utils",
@@ -8191,7 +8191,7 @@ checksum = "fa4f8080344d4671fb4e831a13ad1e68092748387dfc4f55e356242fae12ce3e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -8211,7 +8211,7 @@ checksum = "595eed982f7d355beb85837f651fa22e90b3c044842dc7f2c2842c086f295808"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
  "synstructure",
 ]
 
@@ -8232,7 +8232,7 @@ checksum = "ce36e65b0d2999d2aafac989fb249189a141aee1f53c612c1f37d72631959f69"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -8254,7 +8254,7 @@ checksum = "6eafa6dfb17584ea3e2bd6e76e0cc15ad7af12b09abdd1ca55961bed9b1063c6"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -8279,7 +8279,7 @@ dependencies = [
  "pbkdf2",
  "rand",
  "sha1",
- "thiserror 2.0.8",
+ "thiserror 2.0.9",
  "time",
  "zeroize",
  "zopfli",
@@ -8363,7 +8363,7 @@ dependencies = [
  "proc-macro-crate",
  "proc-macro2",
  "quote",
- "syn 2.0.90",
+ "syn 2.0.91",
  "zvariant_utils",
 ]
 
@@ -8377,6 +8377,6 @@ dependencies = [
  "quote",
  "serde",
  "static_assertions",
- "syn 2.0.90",
+ "syn 2.0.91",
  "winnow",
 ]
