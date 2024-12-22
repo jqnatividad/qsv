@@ -68,6 +68,7 @@ static COMMAND_LIST: &str = r#"
     input       Read CSVs w/ special quoting, skipping, trimming & transcoding rules
     joinp       Join CSV files using the Pola.rs engine
     luau        Execute Luau script on CSV data
+    pivotp      Pivot CSV data
     pseudo      Pseudonymise the values of a column
     rename      Rename the columns of CSV data efficiently
     replace     Replace patterns in CSV data
@@ -257,6 +258,8 @@ enum Command {
     JoinP,
     #[cfg(feature = "luau")]
     Luau,
+    #[cfg(feature = "polars")]
+    PivotP,
     Pseudo,
     Rename,
     Replace,
@@ -314,6 +317,8 @@ impl Command {
             Command::JoinP => cmd::joinp::run(argv),
             #[cfg(feature = "luau")]
             Command::Luau => cmd::luau::run(argv),
+            #[cfg(feature = "polars")]
+            Command::PivotP => cmd::pivotp::run(argv),
             Command::Pseudo => cmd::pseudo::run(argv),
             Command::Rename => cmd::rename::run(argv),
             Command::Replace => cmd::replace::run(argv),
