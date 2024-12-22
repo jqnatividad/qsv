@@ -164,7 +164,7 @@ fn main() -> QsvExitCode {
     enabled_commands.push_str("    partition   Partition CSV data based on a column value\n");
 
     #[cfg(all(feature = "polars", feature = "feature_capable"))]
-    enabled_commands.push_str("    pivotp       Pivots CSV files using the Pola.rs engine\n");
+    enabled_commands.push_str("    pivotp      Pivots CSV files using the Pola.rs engine\n");
 
     enabled_commands.push_str("    pro         Interact with the qsv pro API\n");
 
