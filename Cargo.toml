@@ -177,6 +177,7 @@ polars = { version = "0.45", features = [
     "cross_join",
     "decompress-fast",
     # "dtype-full",
+    "dtype-struct",
     "extract_jsonpath",
     "ipc",
     "json",
@@ -184,13 +185,14 @@ polars = { version = "0.45", features = [
     "object",
     "parquet",
     "performant",
-    # "pivot",
+    "pivot",
     "semi_anti_join",
     "serde-lazy",
     "sql",
     "streaming",
     "timezones",
 ], optional = true }
+polars-ops = { version = "0.45", optional = true }
 publicsuffix = { version = "2.2", optional = true }
 pyo3 = { version = "0.23", features = ["auto-initialize"], optional = true }
 qsv-dateparser = "0.12"
@@ -336,6 +338,7 @@ strum_macros = { git = "https://github.com/dathere/strum", branch = "bump-phf-to
 # QSV_POLARS_REV=5f791b4
 # polars = { git = "https://github.com/pola-rs/polars", tag = "py-1.17.1" }
 polars = { git = "https://github.com/pola-rs/polars", rev = "5f791b4" }
+polars-ops = { git = "https://github.com/pola-rs/polars", rev = "5f791b4" }
 
 [features]
 default = ["mimalloc"]
@@ -388,7 +391,7 @@ geocode = [
     "sled",
 ]
 luau = ["mlua", "sanitize-filename"]
-polars = ["dep:polars", "bytemuck"]
+polars = ["dep:polars", "bytemuck", "dep:polars-ops"]
 prompt = ["rfd"]
 python = ["pyo3"]
 to = ["csvs_convert"]

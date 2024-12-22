@@ -10,7 +10,7 @@
 * `geocode` - enable `geocode` command.
 * `lens` - enable `lens` command.
 * `luau` - enable `luau` command. Embeds a [Luau](https://luau-lang.org) interpreter into qsv. [Luau has type-checking, sandboxing, additional language operators, increased performance & other improvements](https://luau-lang.org/2022/11/04/luau-origins-and-evolution.html) over Lua. Luau is the DSL of qsv - as its statically linked, has a MUCH smaller footprint (in both file size and memory without having to deal with Python's infamous [Global Interpreter Lock](https://wiki.python.org/moin/GlobalInterpreterLock)) & is faster (in both startup & execution time) than Python.
-* `polars` - enables all [Polars](https://pola.rs)-powered commands (currently, `joinp` and `sqlp`. Also enables polars mode in `count`). Note that Polars is a very powerful library, but it has a lot of dependencies that drastically increases both compile time and binary size.
+* `polars` - enables all [Polars](https://pola.rs)-powered commands (currently, `joinp`, `pivotp` and `sqlp`. Also enables polars mode in `count`). Note that Polars is a very powerful library, but it has a lot of dependencies that drastically increases both compile time and binary size.
 * `prompt` - enable `prompt` command.
 * `python` - enable `py` command. Note that qsv will look for the shared library for the Python version (Python 3.8 & above supported) it was compiled against & will abort on startup if the library is not found, even if you're NOT using the `py` command. Check [Python](#python) section for more info. Though Luau is the preferred DSL for qsv for all the reasons stated above, Python is still the lingua franca of data wrangling.
 * `to` - enables the `to` command.

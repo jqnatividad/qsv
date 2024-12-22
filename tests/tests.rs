@@ -93,6 +93,8 @@ mod test_jsonl;
 mod test_luau;
 #[cfg(any(feature = "feature_capable", feature = "lite"))]
 mod test_partition;
+#[cfg(feature = "polars")]
+mod test_pivotp;
 #[cfg(feature = "prompt")]
 mod test_prompt;
 mod test_pseudo;
