@@ -33,7 +33,14 @@ macro_rules! joinp_test_cache_schema {
             fn headers() {
                 let wrk = setup(stringify!($name));
                 let mut cmd = wrk.command("joinp");
-                cmd.args(&["city", "cities.csv", "city", "places.csv", "--cache-schema"]);
+                cmd.args(&[
+                    "city",
+                    "cities.csv",
+                    "city",
+                    "places.csv",
+                    "--cache-schema",
+                    "1",
+                ]);
                 $fun(wrk, cmd);
             }
         }
@@ -1641,4 +1648,91 @@ fn joinp_filter_pattern_matching() {
         svec!["ABC123", "Full Code 1", "123", "One Two Three"],
     ];
     assert_eq!(got, expected);
+}
+
+#[test]
+fn test_joinp_cache_schema() {
+    let wrk = Workdir::new("joinp_cache_schema");
+
+    // Create test files based on issue #2369
+    wrk.create(
+        "left.csv",
+        vec![
+            svec!["id", "has_text", "col3", "col4", "col5"],
+            svec!["1", "1", "a", "b", "c"],
+            svec!["2", "0", "d", "e", "f"],
+            svec!["3", "1", "g", "h", "i"],
+            svec!["4", "0", "j", "k", "l"],
+            svec!["5", "1", "m", "n", "o"],
+        ],
+    );
+
+    wrk.create(
+        "right.csv",
+        vec![
+            svec!["id", "has_text"],
+            svec!["1", "1"],
+            svec!["2", "0"],
+            svec!["4", "0"],
+        ],
+    );
+
+    // Test 1: No schema caching (default)
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["has_text", "left.csv", "has_text", "right.csv"]);
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    let expected = vec![
+        svec!["id", "has_text", "col3", "col4", "col5", "id_right"],
+        svec!["1", "1", "a", "b", "c", "1"],
+        svec!["2", "0", "d", "e", "f", "2"],
+        svec!["2", "0", "d", "e", "f", "4"],
+        svec!["3", "1", "g", "h", "i", "1"],
+        svec!["4", "0", "j", "k", "l", "2"],
+        svec!["4", "0", "j", "k", "l", "4"],
+        svec!["5", "1", "m", "n", "o", "1"],
+    ];
+    assert_eq!(got, expected);
+
+    // Test 2: Cache inferred schema
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["has_text", "left.csv", "has_text", "right.csv"])
+        .arg("--cache-schema")
+        .arg("1");
+
+    // error is expected as has_text is interpreted as bool, rather than a number of just a string
+    // recreates error reported in https://github.com/dathere/qsv/issues/2369
+    wrk.assert_err(&mut cmd);
+
+    // Verify schema files were created
+    assert!(wrk.path("left.pschema.json").exists());
+    assert!(wrk.path("right.pschema.json").exists());
+
+    // Test 3: Use string schema for all columns
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["has_text", "left.csv", "has_text", "right.csv"])
+        .arg("--cache-schema")
+        .arg("-1");
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    assert_eq!(got, expected);
+
+    // Test 4: Use and cache string schema
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["has_text", "left.csv", "has_text", "right.csv"])
+        .arg("--cache-schema")
+        .arg("-2");
+    wrk.assert_success(&mut cmd);
+
+    let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
+    assert_eq!(got, expected);
+
+    // Test 5: Invalid cache-schema value
+    let mut cmd = wrk.command("joinp");
+    cmd.args(&["has_text", "left.csv", "has_text", "right.csv"])
+        .arg("--cache-schema")
+        .arg("2");
+    wrk.assert_err(&mut cmd);
 }
