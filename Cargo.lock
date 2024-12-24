@@ -1118,14 +1118,14 @@ source = "git+https://github.com/jaemk/cached?rev=bbf457e#bbf457e8f9f386d2da105f
 [[package]]
 name = "calamine"
 version = "0.26.1"
-source = "git+https://github.com/tafia/calamine?rev=cf86fa7#cf86fa7f90aea114d52c34d16beed300106357c2"
+source = "git+https://github.com/jqnatividad/calamine?branch=bump-to-quick-xml-0.37#5ddf2bd19178804c711ed69165e521a9d3a31531"
 dependencies = [
  "byteorder",
  "chrono",
  "codepage",
  "encoding_rs",
  "log",
- "quick-xml 0.36.2",
+ "quick-xml 0.37.1",
  "serde",
  "zip",
 ]
@@ -3395,9 +3395,9 @@ dependencies = [
 
 [[package]]
 name = "jsonschema"
-version = "0.27.0"
+version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc38ec7f43c54485b3ae1970a345b2b54ba6681a52ce3919669f304a5d13ef78"
+checksum = "c9deec35f105267485e0b85b4da7861d444ad498bd476418ec10aeaec3c2ead1"
 dependencies = [
  "ahash",
  "base64",
@@ -5525,7 +5525,6 @@ version = "0.36.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7649a7b4df05aed9ea7ec6f628c67c9953a43869b8bc50929569b2999d443fe"
 dependencies = [
- "encoding_rs",
  "memchr",
 ]
 
@@ -5535,6 +5534,7 @@ version = "0.37.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f22f29bdff3987b4d8632ef95fd6424ec7e4e0a57e2f4fc63e489e75357f6a03"
 dependencies = [
+ "encoding_rs",
  "memchr",
  "serde",
 ]
@@ -5822,9 +5822,9 @@ dependencies = [
 
 [[package]]
 name = "referencing"
-version = "0.27.0"
+version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29c10f0563f85afe089e962995e19b64fe0af341883a6304c45e12fdcfc97b5e"
+checksum = "040034d1c0deb1c413e44dafaea2f8bd7d273f1b56de531ab8cee5a93acb1741"
 dependencies = [
  "ahash",
  "fluent-uri",
@@ -7241,9 +7241,9 @@ dependencies = [
 
 [[package]]
 name = "unicase"
-version = "2.8.0"
+version = "2.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e51b68083f157f853b6379db119d1c1be0e6e4dec98101079dec41f6f5cf6df"
+checksum = "75b844d17643ee918803943289730bec8aac480150456169e647ed0b576ba539"
 
 [[package]]
 name = "unicode-bidi"
