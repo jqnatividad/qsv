@@ -195,6 +195,8 @@ joinp_test!(joinp_inner, |wrk: Workdir, mut cmd: process::Command| {
 joinp_test_cache_schema!(
     joinp_inner_cache_schema,
     |wrk: Workdir, mut cmd: process::Command| {
+        wrk.assert_success(&mut cmd);
+
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
         let expected = make_rows(
             false,
@@ -1701,9 +1703,9 @@ fn test_joinp_cache_schema() {
         .arg("--cache-schema")
         .arg("1");
 
-    // error is expected as has_text is interpreted as bool, rather than a number of just a string
-    // recreates error reported in https://github.com/dathere/qsv/issues/2369
-    wrk.assert_err(&mut cmd);
+    // success is expected as has_text is no longer interpreted as bool
+    // confirms bug reported in https://github.com/dathere/qsv/issues/2369 no longer exists
+    wrk.assert_success(&mut cmd);
 
     // Verify schema files were created
     assert!(wrk.path("left.pschema.json").exists());

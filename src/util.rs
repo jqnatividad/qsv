@@ -2102,8 +2102,8 @@ pub fn get_stats_records(
             #[cfg(feature = "polars")]
             StatsMode::PolarsSchema => {
                 // StatsMode::PolarsSchema
-                // we need data types and ranges
-                format!("stats\t{input}\t--infer-boolean\t--stats-jsonl\t--output\t{tempfile_path}")
+                // we need data types, ranges & cardinality
+                format!("stats\t{input}\t--cardinality\t--stats-jsonl\t--output\t{tempfile_path}")
             },
             StatsMode::None => unreachable!(), // we returned early on None earlier
         };
