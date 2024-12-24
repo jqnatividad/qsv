@@ -1827,6 +1827,60 @@ fn setup_helpers(
         })?;
     luau.globals().set("qsv_loadjson", qsv_loadjson)?;
 
+    // this is a helper function to save a Luau table to a JSON file.
+    //
+    //   qsv_writejson(table_or_value: any, filepath: string, pretty: boolean)
+    //   table_or_value: the Luau table or value to save as JSON
+    //        filepath: the path of the JSON file to save
+    //          pretty: whether to format the JSON with indentation (optional, defaults to false)
+    //         returns: true if successful.
+    //                  A Luau runtime error if the filepath is invalid or JSON conversion fails.
+    //
+    let qsv_writejson = luau.create_function(
+        move |_, (table_or_value, filepath, pretty): (mlua::Value, String, Option<bool>)| {
+            use sanitize_filename::sanitize;
+
+            if filepath.is_empty() {
+                return helper_err!("qsv_writejson", "filepath cannot be empty.");
+            }
+
+            let sanitized_filename = sanitize(filepath);
+
+            // // Convert Lua value to serde_json::Value using proper serialization
+            // let json_value = serde_json::to_string(&table_or_value).map_err(|e| {
+            //     mlua::Error::RuntimeError(format!("Failed to convert Luau value to JSON: {e}"))
+            // })?;
+
+            // Create file
+            let file = std::fs::File::create(&sanitized_filename).map_err(|e| {
+                mlua::Error::RuntimeError(format!(
+                    "Failed to create JSON file \"{}\": {e}",
+                    sanitized_filename
+                ))
+            })?;
+
+            // Write JSON
+            if pretty.unwrap_or(false) {
+                serde_json::to_writer_pretty(file, &table_or_value).map_err(|e| {
+                    mlua::Error::RuntimeError(format!("Failed to write pretty JSON to file: {e}"))
+                })?;
+            } else {
+                serde_json::to_writer(file, &table_or_value).map_err(|e| {
+                    mlua::Error::RuntimeError(format!("Failed to write JSON to file: {e}"))
+                })?;
+            }
+
+            // info!(
+            //     "qsv_writejson() - saved {} bytes to file: {}",
+            //     json_value.to_string().len(),
+            //     sanitized_filename
+            // );
+
+            Ok(true)
+        },
+    )?;
+    luau.globals().set("qsv_writejson", qsv_writejson)?;
+
     // this is a helper function that can be called from the BEGIN, MAIN & END scripts to write to
     // a file. The file will be created if it does not exist. The file will be appended to if it
     // already exists. The filename will be sanitized and will be written to the current working
