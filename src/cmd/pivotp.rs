@@ -59,7 +59,7 @@ Common options:
     -o, --output <file>     Write output to <file> instead of stdout.
     -d, --delimiter <arg>   The field delimiter for reading/writing CSV data.
                             Must be a single character. (default: ,)
-    -Q, --quiet             Do not return smart aggregations chosen nor pivot shape to stderr.
+    -Q, --quiet             Do not return smart aggregation chosen nor pivot result shape to stderr.
 "#;
 
 use std::{fs::File, io, io::Write, path::Path, sync::OnceLock};
