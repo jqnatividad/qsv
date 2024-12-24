@@ -304,6 +304,9 @@ cached = { git = "https://github.com/jaemk/cached", rev = "bbf457e" }
 # use calamine with unreleased fixes
 calamine = { git = "https://github.com/tafia/calamine", rev = "cf86fa7" }
 
+# use csvlens with unreleased fixes
+csvlens = { git = "https://github.com/YS-L/csvlens", rev = "f9f062b" }
+
 # needed as dynfmt doesn't work in release mode without this
 # see https://github.com/jan-auer/dynfmt/pull/9
 dynfmt = { git = "https://github.com/jqnatividad/dynfmt", branch = "2021-clippy_ptr_as_ptr-bumpdeps" }
