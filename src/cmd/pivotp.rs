@@ -31,18 +31,17 @@ pivotp options:
                             will be used. At least one of --index and --values must be specified.
     -a, --agg <func>        The aggregation function to use:
                               first - First value encountered
+                              last - Last value encountered
                               sum - Sum of values
                               min - Minimum value
                               max - Maximum value
                               mean - Average value
                               median - Median value
                               count - Count of values
-                              last - Last value encountered
                               none - No aggregation is done. Raises error if multiple values are in group.
                               smart - use value column data type & statistics to pick an aggregation.
                                       Will only work if there is one value column, otherwise
                                       it falls back to `first`
-                              smartq - same as smart, but no messages.
                             [default: smart]
     --sort-columns          Sort the transposed columns by name. Default is by order of discovery.
     --col-separator <arg>   The separator in generated column names in case of multiple --values columns.
@@ -60,6 +59,7 @@ Common options:
     -o, --output <file>     Write output to <file> instead of stdout.
     -d, --delimiter <arg>   The field delimiter for reading/writing CSV data.
                             Must be a single character. (default: ,)
+    -Q, --quiet             Do not return smart aggregations chosen nor pivot shape to stderr.
 "#;
 
 use std::{fs::File, io, io::Write, path::Path, sync::OnceLock};
@@ -96,6 +96,7 @@ struct Args {
     flag_ignore_errors:  bool,
     flag_output:         Option<String>,
     flag_delimiter:      Option<Delimiter>,
+    flag_quiet:          bool,
 }
 
 /// Structure to hold pivot operation metadata
@@ -156,10 +157,10 @@ fn calculate_pivot_metadata(
         Some(cols) => cols.len() as u64,
         None => 1,
     };
-    let total_columns = total_new_columns.saturating_mul(value_cols_count);
+    let estimated_columns = total_new_columns.saturating_mul(value_cols_count);
 
     Ok(Some(PivotMetadata {
-        estimated_columns: total_columns,
+        estimated_columns,
         on_col_cardinalities,
     }))
 }
@@ -169,7 +170,11 @@ fn validate_pivot_operation(metadata: &PivotMetadata) -> CliResult<()> {
     const COLUMN_WARNING_THRESHOLD: u64 = 1000;
 
     // Print cardinality information
-    eprintln!("Pivot column cardinalities:");
+    if metadata.on_col_cardinalities.len() > 1 {
+        eprintln!("Pivot <on-cols> cardinalities:");
+    } else {
+        eprintln!("Pivot on-column cardinality:");
+    }
     for (col, card) in &metadata.on_col_cardinalities {
         eprintln!("  {col}: {}", HumanCount(*card));
     }
@@ -196,11 +201,7 @@ fn validate_pivot_operation(metadata: &PivotMetadata) -> CliResult<()> {
 
 /// Suggest an appropriate aggregation function based on column statistics
 #[allow(clippy::cast_precision_loss)]
-fn suggest_agg_function(
-    args: &Args,
-    value_cols: &[String],
-    quiet: bool,
-) -> CliResult<Option<PivotAgg>> {
+fn suggest_agg_function(args: &Args, value_cols: &[String]) -> CliResult<Option<PivotAgg>> {
     let schema_args = util::SchemaArgs {
         flag_enum_threshold:  0,
         flag_ignore_case:     false,
@@ -217,15 +218,17 @@ fn suggest_agg_function(
         flag_memcheck:        false,
     };
 
-    let (csv_fields, csv_stats) = STATS_RECORDS.get_or_init(|| {
-        get_stats_records(&schema_args, StatsMode::FrequencyForceStats)
-            .unwrap_or_else(|_| (ByteRecord::new(), Vec::new()))
-    });
-
     // If multiple value columns, default to First
     if value_cols.len() > 1 {
         return Ok(Some(PivotAgg::First));
     }
+
+    let quiet = args.flag_quiet;
+
+    let (csv_fields, csv_stats) = STATS_RECORDS.get_or_init(|| {
+        get_stats_records(&schema_args, StatsMode::FrequencyForceStats)
+            .unwrap_or_else(|_| (ByteRecord::new(), Vec::new()))
+    });
 
     // Get stats for the value column
     let value_col = &value_cols[0];
@@ -357,12 +360,10 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
                 "median" => PivotAgg::Median,
                 "count" => PivotAgg::Count,
                 "last" => PivotAgg::Last,
-                "smart" | "smartq" => {
+                "smart" => {
                     if let Some(value_cols) = &value_cols {
                         // Try to suggest an appropriate aggregation function
-                        if let Some(suggested_agg) =
-                            suggest_agg_function(&args, value_cols, lower_agg == "smartq")?
-                        {
+                        if let Some(suggested_agg) = suggest_agg_function(&args, value_cols)? {
                             suggested_agg
                         } else {
                             // fallback to first, which always works
@@ -443,7 +444,9 @@ pub fn run(argv: &[&str]) -> CliResult<()> {
         .finish(&mut pivot_result)?;
 
     // Print shape to stderr
-    eprintln!("{:?}", pivot_result.shape());
+    if !args.flag_quiet {
+        eprintln!("{:?}", pivot_result.shape());
+    }
 
     Ok(())
 }

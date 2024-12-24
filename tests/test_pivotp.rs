@@ -571,7 +571,7 @@ pivotp_test!(
         wrk.assert_success(&mut cmd);
 
         let msg = wrk.output_stderr(&mut cmd);
-        let expected_msg = "Pivot column cardinalities:\n  product: 2\n(2, 3)\n";
+        let expected_msg = "Pivot on-column cardinality:\n  product: 2\n(2, 3)\n";
         assert_eq!(msg, expected_msg);
 
         let got: Vec<Vec<String>> = wrk.read_stdout(&mut cmd);
